@@ -83,6 +83,7 @@ function AdminAlumnosContent() {
       id: a.id,
       nombre: a.nombre,
       apellido: a.apellido,
+      apellido_materno: null,
       email: a.email,
       telefono: a.telefono,
       avatar_url: a.avatar_url,
