@@ -10,6 +10,7 @@ import interactionPlugin from '@fullcalendar/interaction';
 import esLocale from '@fullcalendar/core/locales/es';
 import type { EventClickArg } from '@fullcalendar/core';
 import { useAsistencia } from '@/lib/hooks/useAsistencia';
+import { useTranslations, useLocale } from 'next-intl';
 
 const ESTADO_COLORS: Record<string, { bg: string; border: string; text: string }> = {
   pendiente:  { bg: 'var(--color-brand-gold)',  border: 'var(--color-brand-gold)',  text: '#1a1a1a' },
@@ -21,6 +22,9 @@ const ESTADO_COLORS: Record<string, { bg: string; border: string; text: string }
 export function CalendarioAlumno() {
   const router = useRouter();
   const { clases, loading } = useAsistencia();
+  const tc = useTranslations('common');
+  const ta = useTranslations('asistencia');
+  const locale = useLocale();
   const [isMobile, setIsMobile] = useState(false);
   const [currentView, setCurrentView] = useState('dayGridMonth');
   const calendarRef = useRef<FullCalendar>(null);
@@ -95,7 +99,7 @@ export function CalendarioAlumno() {
         {Object.entries(ESTADO_COLORS).map(([estado, colors]) => (
           <div key={estado} className="flex items-center gap-1.5">
             <span className="h-3 w-3 rounded-full" style={{ backgroundColor: colors.bg }} />
-            <span className="text-xs capitalize text-[var(--color-text-muted)]">{estado}</span>
+            <span className="text-xs capitalize text-[var(--color-text-muted)]">{ta(`estados.${estado}`)}</span>
           </div>
         ))}
       </div>
@@ -175,7 +179,7 @@ export function CalendarioAlumno() {
       <FullCalendar
         ref={calendarRef}
         plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
-        locale={esLocale}
+        locale={locale === 'en' ? undefined : esLocale}
         initialView={isMobile ? 'listWeek' : 'dayGridMonth'}
         headerToolbar={{
           left: isMobile ? 'prev,hoyIcono,next' : 'prev,next today',
@@ -185,7 +189,7 @@ export function CalendarioAlumno() {
         customButtons={{
           hoyIcono: {
             text: ' ',
-            hint: 'Hoy',
+            hint: tc('hoy'),
             click: () => calendarRef.current?.getApi().today(),
           },
         }}

@@ -5,19 +5,22 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
+import { useTheme } from 'next-themes';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import { getRolRedirectPath } from '@/lib/auth/helpers';
 import { loginSchema, type LoginFormData } from '@/lib/validations/auth.schema';
+import { setLocaleAction } from '@/app/actions/setLocale';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/common/Button';
 import { AppLogo } from '@/components/common/AppLogo';
-import type { UserRol } from '@/lib/supabase/types';
+import type { LocaleCode } from '@/lib/config/locales';
 
 export default function LoginPage() {
   const t = useTranslations('auth.login');
   const router = useRouter();
+  const { theme, setTheme } = useTheme();
   const [loading, setLoading] = useState(false);
 
   const {
@@ -43,10 +46,8 @@ export default function LoginPage() {
       return;
     }
 
-    // Get user profile to determine role
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    // Get user profile to determine role and preferences
+    const { data: { user } } = await supabase.auth.getUser();
 
     if (user) {
       const { data: profile } = await supabase
@@ -56,6 +57,25 @@ export default function LoginPage() {
         .single();
 
       if (profile) {
+        // ── Apply theme preference ─────────────────────────────────────
+        if (profile.tema && (profile.tema === 'light' || profile.tema === 'dark')) {
+          // User has an explicit DB preference → always apply it
+          setTheme(profile.tema);
+        } else {
+          // No DB preference yet (first login) → save the current localStorage theme
+          const currentTheme = theme ?? 'light';
+          fetch('/api/perfil', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tema: currentTheme }),
+          }).catch(() => {});
+        }
+
+        // ── Apply language preference ──────────────────────────────────
+        if (profile.idioma) {
+          await setLocaleAction(profile.idioma as LocaleCode).catch(() => {});
+        }
+
         router.push(getRolRedirectPath(profile.rol));
         router.refresh();
         return;

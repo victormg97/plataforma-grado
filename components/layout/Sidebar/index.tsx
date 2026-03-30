@@ -1,11 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useUIStore } from '@/stores/useUIStore';
 import { useUserStore } from '@/stores/useUserStore';
 import { AppLogo } from '@/components/common/AppLogo';
+import { useTranslations } from 'next-intl';
 import {
   LayoutDashboard,
   Calendar,
@@ -17,28 +18,28 @@ import {
 import type { UserRol } from '@/lib/supabase/types';
 
 interface NavItem {
-  label: string;
+  key: string;
   href: string;
   icon: React.ReactNode;
 }
 
 const navItems: Record<UserRol, NavItem[]> = {
   admin: [
-    { label: 'Dashboard', href: '/admin', icon: <LayoutDashboard className="h-4 w-4" /> },
-    { label: 'Agenda', href: '/admin/agenda', icon: <Calendar className="h-4 w-4" /> },
-    { label: 'Profesores', href: '/admin/profesores', icon: <BookOpen className="h-4 w-4" /> },
-    { label: 'Alumnos', href: '/admin/alumnos', icon: <GraduationCap className="h-4 w-4" /> },
+    { key: 'dashboard', href: '/admin', icon: <LayoutDashboard className="h-4 w-4" /> },
+    { key: 'agenda', href: '/admin/agenda', icon: <Calendar className="h-4 w-4" /> },
+    { key: 'profesores', href: '/admin/profesores', icon: <BookOpen className="h-4 w-4" /> },
+    { key: 'alumnos', href: '/admin/alumnos', icon: <GraduationCap className="h-4 w-4" /> },
   ],
   profesor: [
-    { label: 'Dashboard', href: '/profesor', icon: <LayoutDashboard className="h-4 w-4" /> },
-    { label: 'Agenda', href: '/profesor/agenda', icon: <Calendar className="h-4 w-4" /> },
-    { label: 'Mis alumnos', href: '/profesor/mis-alumnos', icon: <Users className="h-4 w-4" /> },
-    { label: 'Horarios', href: '/profesor/horarios', icon: <BookOpen className="h-4 w-4" /> },
+    { key: 'dashboard', href: '/profesor', icon: <LayoutDashboard className="h-4 w-4" /> },
+    { key: 'agenda', href: '/profesor/agenda', icon: <Calendar className="h-4 w-4" /> },
+    { key: 'mis_alumnos', href: '/profesor/mis-alumnos', icon: <Users className="h-4 w-4" /> },
+    { key: 'horarios', href: '/profesor/horarios', icon: <BookOpen className="h-4 w-4" /> },
   ],
   alumno: [
-    { label: 'Mis clases', href: '/alumno', icon: <LayoutDashboard className="h-4 w-4" /> },
-    { label: 'Agenda', href: '/alumno/agenda', icon: <Calendar className="h-4 w-4" /> },
-    { label: 'Horario', href: '/alumno/horario', icon: <GraduationCap className="h-4 w-4" /> },
+    { key: 'mis_clases', href: '/alumno', icon: <LayoutDashboard className="h-4 w-4" /> },
+    { key: 'agenda', href: '/alumno/agenda', icon: <Calendar className="h-4 w-4" /> },
+    { key: 'horario', href: '/alumno/horario', icon: <GraduationCap className="h-4 w-4" /> },
   ],
 };
 
@@ -46,6 +47,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const { sidebarOpen, setSidebarOpen } = useUIStore();
   const { user } = useUserStore();
+  const t = useTranslations('nav');
 
   const items = user ? navItems[user.rol] : [];
 
@@ -96,7 +98,7 @@ export function Sidebar() {
                 )}
               >
                 {item.icon}
-                {item.label}
+                {t(item.key)}
               </Link>
             );
           })}

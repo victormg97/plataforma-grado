@@ -3,13 +3,14 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { es, enUS } from 'date-fns/locale';
 import { Users, GraduationCap, CalendarDays, Clock, Bell } from 'lucide-react';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card } from '@/components/common/Card';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { CalendarioAdmin } from '@/components/calendario/CalendarioAdmin';
 import { useUserStore } from '@/stores/useUserStore';
+import { useTranslations, useLocale } from 'next-intl';
 
 type Stats = {
   total_alumnos: number;
@@ -43,6 +44,9 @@ type ClaseHoy = {
 
 export default function AdminDashboardPage() {
   const { user } = useUserStore();
+  const t = useTranslations('dashboard.admin');
+  const locale = useLocale();
+  const dateFnsLocale = locale === 'en' ? enUS : es;
 
   const { data: stats } = useQuery<Stats>({
     queryKey: ['admin-stats'],
@@ -73,18 +77,18 @@ export default function AdminDashboardPage() {
   const statCards = useMemo(() => {
     if (!stats) return [];
     return [
-      { label: 'Alumnos', value: stats.total_alumnos, icon: Users, color: 'var(--color-text-primary)' },
-      { label: 'Profesores', value: stats.total_profesores, icon: GraduationCap, color: 'var(--color-brand-gold)' },
-      { label: 'Clases hoy', value: stats.clases_hoy, icon: CalendarDays, color: 'var(--color-success)' },
-      { label: 'Pendientes', value: stats.pendientes, icon: Clock, color: 'var(--color-error)' },
+      { label: t('alumnos'), value: stats.total_alumnos, icon: Users, color: 'var(--color-text-primary)' },
+      { label: t('profesores'), value: stats.total_profesores, icon: GraduationCap, color: 'var(--color-brand-gold)' },
+      { label: t('clases_hoy'), value: stats.clases_hoy, icon: CalendarDays, color: 'var(--color-success)' },
+      { label: t('pendientes'), value: stats.pendientes, icon: Clock, color: 'var(--color-error)' },
     ];
-  }, [stats]);
+  }, [stats, t]);
 
   return (
     <div>
       <PageHeader
-        title="Dashboard"
-        subtitle={user ? `Bienvenido, ${user.nombre}` : 'Vista general de CTA Graduados'}
+        title={t('titulo')}
+        subtitle={user ? t('bienvenido', { nombre: user.nombre }) : t('subtitulo')}
       />
 
       {/* Estadísticas globales */}
@@ -112,10 +116,10 @@ export default function AdminDashboardPage() {
         {/* Actividad reciente */}
         <Card padding="lg">
           <h2 className="text-sm font-semibold uppercase text-[var(--color-text-muted)] mb-3 flex items-center gap-2">
-            <Bell className="h-4 w-4" /> Actividad reciente
+            <Bell className="h-4 w-4" /> {t('actividad_reciente')}
           </h2>
           {notificaciones.length === 0 ? (
-            <p className="text-sm text-[var(--color-text-muted)] py-4 text-center">Sin actividad reciente</p>
+            <p className="text-sm text-[var(--color-text-muted)] py-4 text-center">{t('sin_actividad')}</p>
           ) : (
             <div className="divide-y divide-[var(--color-border)] max-h-72 overflow-y-auto">
               {notificaciones.map((n) => (
@@ -131,7 +135,7 @@ export default function AdminDashboardPage() {
                             ? 'bg-[color-mix(in_srgb,var(--color-brand-gold)_15%,transparent)] text-[var(--color-brand-gold)]'
                             : 'bg-[color-mix(in_srgb,var(--color-info)_15%,transparent)] text-[var(--color-info)]'
                         }`}>
-                          {n.destinatario.rol}
+                          {n.destinatario.rol === 'profesor' ? t('rol_profesor') : t('rol_alumno')}
                         </span>
                       </p>
                     )}
@@ -140,7 +144,7 @@ export default function AdminDashboardPage() {
                         <>
                           <span className="inline-flex items-center gap-1 rounded-full border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-2 py-0.5 text-[10px] text-[var(--color-text-muted)]">
                             <CalendarDays className="h-2.5 w-2.5" />
-                            {format(new Date(n.horario.fecha + 'T12:00:00'), "d 'de' MMM", { locale: es })}
+                            {format(new Date(n.horario.fecha + 'T12:00:00'), "d 'de' MMM", { locale: dateFnsLocale })}
                           </span>
                           <span className="inline-flex items-center gap-1 rounded-full border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-2 py-0.5 text-[10px] text-[var(--color-text-muted)]">
                             <Clock className="h-2.5 w-2.5" />
@@ -149,7 +153,7 @@ export default function AdminDashboardPage() {
                         </>
                       )}
                       <span className="text-[10px] text-[var(--color-text-muted)]">
-                        {format(new Date(n.created_at), "d 'de' MMM, HH:mm", { locale: es })}
+                        {format(new Date(n.created_at), "d 'de' MMM, HH:mm", { locale: dateFnsLocale })}
                       </span>
                     </div>
                   </div>
@@ -162,10 +166,10 @@ export default function AdminDashboardPage() {
         {/* Clases hoy */}
         <Card padding="lg">
           <h2 className="text-sm font-semibold uppercase text-[var(--color-text-muted)] mb-3 flex items-center gap-2">
-            <CalendarDays className="h-4 w-4" /> Clases hoy
+            <CalendarDays className="h-4 w-4" /> {t('clases_hoy')}
           </h2>
           {clasesHoy.length === 0 ? (
-            <p className="text-sm text-[var(--color-text-muted)] py-4 text-center">No hay clases programadas para hoy</p>
+            <p className="text-sm text-[var(--color-text-muted)] py-4 text-center">{t('sin_clases_hoy')}</p>
           ) : (
             <div className="divide-y divide-[var(--color-border)] max-h-72 overflow-y-auto">
               {clasesHoy.map((c) => (

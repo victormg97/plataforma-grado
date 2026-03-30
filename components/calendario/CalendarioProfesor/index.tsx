@@ -16,10 +16,10 @@ import { StatusBadge } from '@/components/common/StatusBadge';
 import { Avatar } from '@/components/common/Avatar';
 import { Button } from '@/components/common/Button';
 import { HorarioForm } from '@/components/horarios/HorarioForm';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Calendar, Clock, FileText, MessageSquare, Pencil, UserX } from 'lucide-react';
 import { format } from 'date-fns';
-import { es as esDateFns } from 'date-fns/locale';
+import { es as esDateFns, enUS } from 'date-fns/locale';
 import { toast } from 'sonner';
 
 interface CalendarioProfesorProps {
@@ -33,6 +33,7 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
   const t = useTranslations('horarios');
   const tc = useTranslations('common');
   const ta = useTranslations('asistencia');
+  const locale = useLocale();
   const { events, stats, alumnos, rawData, refetch } = useHorarios(profesorId);
   const [selectedHorario, setSelectedHorario] = useState<HorarioConAsistencia | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -144,11 +145,11 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
         body: JSON.stringify({ estado: 'no_asistio' }),
       });
       if (!res.ok) throw new Error();
-      toast.success('Marcado como no asistió');
+      toast.success(t('no_asistio_toast'));
       setDetailOpen(false);
       refetch();
     } catch {
-      toast.error('No se pudo actualizar el estado');
+      toast.error(t('error_marcar'));
     } finally {
       setMarkingNoAsistio(false);
     }
@@ -232,7 +233,7 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
         <FullCalendar
           ref={calendarRef}
           plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
-          locale={esLocale}
+          locale={locale === 'en' ? undefined : esLocale}
           initialView={isMobile ? 'listWeek' : 'dayGridMonth'}
           headerToolbar={{
             left: isMobile ? 'prev,hoyIcono,next nuevaClase' : 'prev,next today',
@@ -252,12 +253,12 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
           datesSet={(arg) => setCurrentView(arg.view.type)}
           customButtons={{
             nuevaClase: {
-              text: '+ Nueva clase',
+              text: `+ ${t('nueva_clase')}`,
               click: handleNewClass,
             },
             hoyIcono: {
               text: ' ',
-              hint: 'Hoy',
+              hint: tc('hoy'),
               click: () => calendarRef.current?.getApi().today(),
             },
           }}
@@ -281,7 +282,7 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
                 loading={markingNoAsistio}
               >
                 <UserX className="mr-1.5 h-4 w-4" />
-                No asistió
+                {ta('estados.no_asistio')}
               </Button>
             )}
             <Button onClick={handleEditFromDetail}>
@@ -322,7 +323,7 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
               <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-bg-secondary)] px-2.5 py-1 text-xs text-[var(--color-text-secondary)]">
                 <Calendar className="h-3.5 w-3.5" style={{ color: 'var(--color-brand-gold)' }} />
                 <span className="capitalize">
-                  {format(new Date(selectedHorario.fecha + 'T12:00:00'), "EEEE d 'de' MMMM", { locale: esDateFns })}
+                  {format(new Date(selectedHorario.fecha + 'T12:00:00'), locale === 'en' ? "EEEE, MMMM d" : "EEEE d 'de' MMMM", { locale: locale === 'en' ? enUS : esDateFns })}
                 </span>
               </span>
               <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-bg-secondary)] px-2.5 py-1 text-xs text-[var(--color-text-secondary)]">

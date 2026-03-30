@@ -2,6 +2,7 @@
 
 import { Suspense, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslations } from 'next-intl';
 import { Search, Users } from 'lucide-react';
 import { PageHeader } from '@/components/common/PageHeader';
 import { AlumnoCard, type AlumnoConExtra } from '@/components/alumnos/AlumnoCard';
@@ -12,6 +13,7 @@ import { useQueryParam } from '@/lib/hooks/useQueryParam';
 type Tab = 'mis' | 'todos';
 
 function MisAlumnosContent() {
+  const t = useTranslations('alumnos');
   const { user } = useUser();
   const [tabParam, setTabParam] = useQueryParam('tab');
   const [qParam, setQParam] = useQueryParam('q');
@@ -51,15 +53,15 @@ function MisAlumnosContent() {
   return (
     <div>
       <PageHeader
-        title="Mis Alumnos"
-        subtitle={`${filtered.length} alumno${filtered.length !== 1 ? 's' : ''}`}
+        title={t('mis_alumnos_tab')}
+        subtitle={t('ficha_conteo', { count: filtered.length })}
       />
 
       {/* Tabs */}
       <div className="mt-[var(--space-md)] flex gap-1 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-1">
         {([
-          { key: 'mis' as Tab, label: 'Mis alumnos' },
-          { key: 'todos' as Tab, label: 'Todos los alumnos' },
+          { key: 'mis' as Tab, label: t('mis_alumnos_tab') },
+          { key: 'todos' as Tab, label: t('todos_alumnos_tab') },
         ]).map((t) => (
           <button
             key={t.key}
@@ -80,7 +82,7 @@ function MisAlumnosContent() {
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-text-muted)]" />
         <input
           type="text"
-          placeholder="Buscar por nombre o email…"
+          placeholder={t('buscar_nombre_email')}
           value={search}
           onChange={(e) => setQParam(e.target.value || null)}
           className="w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-bg)] py-2 pl-9 pr-4 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-brand-gold)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-gold)]"
@@ -96,7 +98,7 @@ function MisAlumnosContent() {
         <div className="mt-[var(--space-xl)] flex flex-col items-center gap-2 text-[var(--color-text-muted)]">
           <Users className="h-12 w-12 opacity-50" />
           <p className="text-sm">
-            {search ? 'No se encontraron alumnos con esa búsqueda.' : 'No tienes alumnos asignados.'}
+            {search ? t('sin_resultados_busqueda') : t('sin_asignados')}
           </p>
         </div>
       ) : (

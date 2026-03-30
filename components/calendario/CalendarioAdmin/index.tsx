@@ -16,7 +16,7 @@ import { StatusBadge } from '@/components/common/StatusBadge';
 import { Avatar } from '@/components/common/Avatar';
 import { Button } from '@/components/common/Button';
 import { HorarioForm } from '@/components/horarios/HorarioForm';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Clock, FileText, MessageSquare, Pencil, User } from 'lucide-react';
 import type { EstadoAsistencia } from '@/lib/supabase/types';
 
@@ -60,6 +60,7 @@ export function CalendarioAdmin() {
   const t = useTranslations('horarios');
   const tc = useTranslations('common');
   const ta = useTranslations('asistencia');
+  const locale = useLocale();
   const queryClient = useQueryClient();
   const { data: horarios = [] } = useQuery({
     queryKey: ['admin-horarios'],
@@ -287,7 +288,7 @@ export function CalendarioAdmin() {
         <FullCalendar
           ref={calendarRef}
           plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
-          locale={esLocale}
+          locale={locale === 'en' ? undefined : esLocale}
           initialView={isMobile ? 'listWeek' : 'dayGridMonth'}
           headerToolbar={{
             left: isMobile ? 'prev,hoyIcono,next nuevaClase' : 'prev,next today',
@@ -296,7 +297,7 @@ export function CalendarioAdmin() {
           }}
           customButtons={{
             nuevaClase: {
-              text: '+ Nueva clase',
+              text: `+ ${t('nueva_clase')}`,
               click: () => {
                 setEditingHorario(null);
                 setDefaultDate(undefined);
@@ -306,7 +307,7 @@ export function CalendarioAdmin() {
             },
             hoyIcono: {
               text: ' ',
-              hint: 'Hoy',
+              hint: tc('hoy'),
               click: () => calendarRef.current?.getApi().today(),
             },
           }}
@@ -379,7 +380,7 @@ export function CalendarioAdmin() {
 
             {/* Estado */}
             <div className="flex items-center gap-2">
-              <span className="text-sm text-[var(--color-text-muted)]">Estado:</span>
+              <span className="text-sm text-[var(--color-text-muted)]">{ta('estado_label')}:</span>
               <StatusBadge status={selectedHorario.asistencia?.[0]?.estado || 'pendiente'} />
             </div>
 

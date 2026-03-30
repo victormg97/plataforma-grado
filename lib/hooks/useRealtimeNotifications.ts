@@ -1,10 +1,14 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
+import type { TipoNotificacion } from '@/lib/supabase/types';
 
 export function useRealtimeNotifications(userId: string | undefined) {
+  const t = useTranslations('notificaciones');
+
   useEffect(() => {
     if (!userId) return;
 
@@ -25,9 +29,10 @@ export function useRealtimeNotifications(userId: string | undefined) {
           filter: `destinatario_id=eq.${userId}`,
         },
         (payload) => {
-          const notif = payload.new as { mensaje: string; tipo: string };
-          if (notif?.mensaje) {
-            toast.info(notif.mensaje, { duration: 6000 });
+          const notif = payload.new as { mensaje: string; tipo: TipoNotificacion };
+          if (notif?.tipo || notif?.mensaje) {
+            const translated = notif?.tipo ? t(`tipos.${notif.tipo}`) : '';
+            toast.info(translated || notif.mensaje, { duration: 6000 });
           }
         }
       )
@@ -36,5 +41,5 @@ export function useRealtimeNotifications(userId: string | undefined) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userId]);
+  }, [userId, t]);
 }

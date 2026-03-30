@@ -1,18 +1,22 @@
 'use client';
 
 import { useMemo } from 'react';
+import { HydrationBoundary, type DehydratedState } from '@tanstack/react-query';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Navbar } from '@/components/layout/Navbar';
 import { useRealtimeNotifications } from '@/lib/hooks/useRealtimeNotifications';
 import { useUserStore } from '@/stores/useUserStore';
+import { useThemeSync } from '@/lib/hooks/useThemeSync';
 import { HorarioDetailGlobal } from '@/components/horarios/HorarioDetailGlobal';
 import type { Profile } from '@/lib/supabase/types';
 
 export function DashboardLayoutClient({
   profile,
+  dehydratedState,
   children,
 }: {
   profile: Profile;
+  dehydratedState: DehydratedState;
   children: React.ReactNode;
 }) {
   // Synchronously seed the store before children render so that every
@@ -24,18 +28,23 @@ export function DashboardLayoutClient({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile.id]);
 
+  // Sync theme with DB (applies profile.tema on mount, saves changes debounced)
+  useThemeSync(profile.tema);
+
   useRealtimeNotifications(profile.id);
 
   return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <Navbar />
-        <main className="flex-1 overflow-y-auto py-[var(--container-padding)]">
-          <div className="container-app">{children}</div>
-        </main>
+    <HydrationBoundary state={dehydratedState}>
+      <div className="flex min-h-screen">
+        <Sidebar />
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <Navbar />
+          <main className="flex-1 overflow-y-auto py-[var(--container-padding)]">
+            <div className="container-app">{children}</div>
+          </main>
+        </div>
+        <HorarioDetailGlobal />
       </div>
-      <HorarioDetailGlobal />
-    </div>
+    </HydrationBoundary>
   );
 }

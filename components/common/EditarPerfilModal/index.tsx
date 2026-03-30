@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Camera, Loader2, Eye, EyeOff, ImagePlus, Trash2 } from 'lucide-react';
+import { useLocale } from 'next-intl';
+import { LanguageSelector } from '@/components/common/LanguageSelector';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
@@ -129,6 +131,9 @@ export function EditarPerfilModal({ open, onClose }: EditarPerfilModalProps) {
   const [processingImg, setProcessingImg] = useState(false);
   const [savingInfo, setSavingInfo] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // ── Language/locale state ─────────────────────────────────────────────────
+  const currentLocale = useLocale();
 
   // ── Security tab state ────────────────────────────────────────────────────
   const [nuevaPass, setNuevaPass] = useState('');
@@ -499,6 +504,19 @@ export function EditarPerfilModal({ open, onClose }: EditarPerfilModalProps) {
           )}
           aria-hidden={activeTab !== 'seguridad' ? true : undefined}
         >
+          {/* Idioma */}
+          <LanguageSelector
+            currentLocale={currentLocale}
+            onLocaleChange={async (locale) => {
+              // Persist language preference to DB
+              await fetch('/api/perfil', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idioma: locale }),
+              });
+            }}
+          />
+
           {/* Nueva contraseña */}
           <div className="space-y-1.5">
             <label className="block text-sm font-medium text-[var(--color-text-primary)]">

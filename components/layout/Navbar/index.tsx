@@ -9,6 +9,7 @@ import { EditarPerfilModal } from '@/components/common/EditarPerfilModal';
 import { useUIStore } from '@/stores/useUIStore';
 import { useUserStore } from '@/stores/useUserStore';
 import { createClient } from '@/lib/supabase/client';
+import { useTranslations } from 'next-intl';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +22,8 @@ export function Navbar() {
   const { toggleSidebar } = useUIStore();
   const { user, clearUser } = useUserStore();
   const [perfilOpen, setPerfilOpen] = useState(false);
+  const t = useTranslations('perfil');
+  const ta = useTranslations('auth');
 
   async function handleLogout() {
     try {
@@ -81,12 +84,12 @@ export function Navbar() {
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => setPerfilOpen(true)}>
                 <UserCog className="mr-2 h-4 w-4" />
-                Editar perfil
+                {t('editar_perfil')}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout} className="text-[var(--color-error)]">
                 <LogOut className="mr-2 h-4 w-4" />
-                Cerrar sesión
+                {ta('logout')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

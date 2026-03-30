@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { CalendarDays, CheckCircle, Clock, XCircle, Plus } from 'lucide-react';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card } from '@/components/common/Card';
@@ -11,6 +12,8 @@ import { useUser } from '@/lib/hooks/useUser';
 import { useHorarios } from '@/lib/hooks/useHorarios';
 
 export default function ProfesorDashboardPage() {
+  const t = useTranslations('dashboard.profesor');
+  const th = useTranslations('horarios');
   const { user } = useUser();
   const { stats } = useHorarios(user?.id);
   const [newClassTrigger, setNewClassTrigger] = useState(0);
@@ -26,21 +29,21 @@ export default function ProfesorDashboardPage() {
   if (!user) return null;
 
   const statCards = [
-    { label: 'Clases esta semana', value: stats.total, icon: CalendarDays, color: 'var(--color-text-primary)' },
-    { label: 'Pendientes', value: stats.pendientes, icon: Clock, color: 'var(--color-brand-gold)' },
-    { label: 'Confirmadas', value: stats.confirmadas, icon: CheckCircle, color: 'var(--color-success)' },
-    { label: 'Canceladas', value: stats.canceladas, icon: XCircle, color: 'var(--color-error)' },
+    { label: t('clases_semana'), value: stats.total, icon: CalendarDays, color: 'var(--color-text-primary)' },
+    { label: t('pendientes'), value: stats.pendientes, icon: Clock, color: 'var(--color-brand-gold)' },
+    { label: t('confirmadas'), value: stats.confirmadas, icon: CheckCircle, color: 'var(--color-success)' },
+    { label: t('canceladas'), value: stats.canceladas, icon: XCircle, color: 'var(--color-error)' },
   ];
 
   return (
     <div>
       <PageHeader
-        title="Dashboard"
-        subtitle="Gestión de clases y alumnos"
+        title={t('titulo')}
+        subtitle={t('subtitulo')}
         actions={
           <Button onClick={() => setNewClassTrigger((n) => n + 1)}>
             <Plus className="mr-1.5 h-4 w-4" />
-            Nueva clase
+            {th('nueva_clase')}
           </Button>
         }
       />

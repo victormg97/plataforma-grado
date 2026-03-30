@@ -11,6 +11,7 @@ import { Avatar } from '@/components/common/Avatar';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { Modal } from '@/components/common/Modal';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 
 type Profesor = {
   id: string;
@@ -26,6 +27,9 @@ type Profesor = {
 
 export default function ProfesoresPage() {
   const queryClient = useQueryClient();
+  const tp = useTranslations('profesores');
+  const tc = useTranslations('common');
+  const ta = useTranslations('alumnos');
   const { data: profesores = [], isLoading: loading } = useQuery<Profesor[]>({
     queryKey: ['admin-profesores'],
     queryFn: async () => {
@@ -72,11 +76,11 @@ export default function ProfesoresPage() {
         body: JSON.stringify({ nombre: editNombre, apellido: editApellido, telefono: editTelefono }),
       });
       if (!res.ok) throw new Error();
-      toast.success('Profesor actualizado');
+      toast.success(tp('exito_actualizado'));
       setEditModal(null);
       queryClient.invalidateQueries({ queryKey: ['admin-profesores'] });
     } catch {
-      toast.error('Error al actualizar profesor');
+      toast.error(tp('error_actualizar'));
     } finally {
       setEditSubmitting(false);
     }
@@ -84,7 +88,7 @@ export default function ProfesoresPage() {
 
   const handleCreate = async () => {
     if (!nombre || !apellido || !email) {
-      toast.error('Nombre, apellido y email son requeridos');
+      toast.error(tp('error_crear'));
       return;
     }
     setSubmitting(true);
@@ -96,13 +100,13 @@ export default function ProfesoresPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      toast.success('Profesor creado correctamente');
+      toast.success(tp('exito_creado'));
       setCreatedPassword(data.temp_password);
       setFormOpen(false);
       setNombre(''); setApellido(''); setEmail(''); setTelefono('');
       queryClient.invalidateQueries({ queryKey: ['admin-profesores'] });
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Error al crear profesor');
+      toast.error(err instanceof Error ? err.message : tp('error_crear'));
     } finally {
       setSubmitting(false);
     }
@@ -117,11 +121,11 @@ export default function ProfesoresPage() {
         body: JSON.stringify({ activo: !confirmAction.activo }),
       });
       if (!res.ok) throw new Error();
-      toast.success(confirmAction.activo ? 'Profesor deshabilitado' : 'Profesor habilitado');
+      toast.success(confirmAction.activo ? tp('exito_deshabilitado') : tp('exito_habilitado'));
       setConfirmAction(null);
       queryClient.invalidateQueries({ queryKey: ['admin-profesores'] });
     } catch {
-      toast.error('Error al actualizar profesor');
+      toast.error(tp('error_actualizar'));
     }
   };
 
@@ -136,12 +140,12 @@ export default function ProfesoresPage() {
   return (
     <div>
       <PageHeader
-        title="Profesores"
-        subtitle="Gestión de profesores"
+        title={tp('titulo')}
+        subtitle={tp('subtitulo')}
         actions={
           <Button onClick={() => setFormOpen(true)}>
             <Plus className="mr-1.5 h-4 w-4" />
-            Agregar profesor
+            {tp('nuevo_profesor')}
           </Button>
         }
       />
@@ -153,7 +157,7 @@ export default function ProfesoresPage() {
           </div>
         ) : profesores.length === 0 ? (
           <Card className="py-12 text-center">
-            <p className="text-[var(--color-text-muted)]">No hay profesores registrados</p>
+            <p className="text-[var(--color-text-muted)]">{tp('sin_profesores')}</p>
           </Card>
         ) : (
           profesores.map((p) => (
@@ -170,13 +174,13 @@ export default function ProfesoresPage() {
                     )}
                   </div>
                   <p className="text-sm text-[var(--color-text-muted)]">{p.email}</p>
-                  <p className="text-xs text-[var(--color-text-muted)]">{p.alumnos_count} alumnos asignados</p>
+                  <p className="text-xs text-[var(--color-text-muted)]">{tp('alumnos_asignados', { count: p.alumnos_count })}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2 ml-auto sm:ml-0">
                 <button
                   onClick={() => openEdit(p)}
-                  title="Editar"
+                  title={tc('editar')}
                   className="rounded p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)]"
                 >
                   <Pencil className="h-4 w-4" />
@@ -191,7 +195,7 @@ export default function ProfesoresPage() {
                     }`}
                   >
                     {p.activo ? <UserX className="h-3.5 w-3.5" /> : <UserCheck className="h-3.5 w-3.5" />}
-                    {p.activo ? 'Deshabilitar' : 'Habilitar'}
+                    {p.activo ? tp('deshabilitar') : tp('habilitar')}
                   </button>
                 )}
                 <Link
@@ -199,7 +203,7 @@ export default function ProfesoresPage() {
                   className="flex items-center gap-1 rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 py-1.5 text-xs font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)]"
                 >
                   <Eye className="h-3.5 w-3.5" />
-                  Ver alumnos
+                  {tp('ver_alumnos')}
                 </Link>
               </div>
             </Card>
@@ -211,27 +215,27 @@ export default function ProfesoresPage() {
       <Modal
         open={!!editModal}
         onClose={() => setEditModal(null)}
-        title="Editar profesor"
+        title={tp('editar_titulo')}
         footer={
           <div className="flex gap-2">
-            <Button variant="ghost" onClick={() => setEditModal(null)}>Cancelar</Button>
-            <Button onClick={handleEdit} loading={editSubmitting}>Guardar cambios</Button>
+            <Button variant="ghost" onClick={() => setEditModal(null)}>{tc('cancelar')}</Button>
+            <Button onClick={handleEdit} loading={editSubmitting}>{tc('guardar')}</Button>
           </div>
         }
       >
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">Nombre</label>
+              <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">{ta('nombre')}</label>
               <input value={editNombre} onChange={(e) => setEditNombre(e.target.value)} className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">Apellido</label>
+              <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">{ta('apellido')}</label>
               <input value={editApellido} onChange={(e) => setEditApellido(e.target.value)} className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm" />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">Teléfono</label>
+            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">{ta('telefono')}</label>
             <input value={editTelefono} onChange={(e) => setEditTelefono(e.target.value)} className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm" />
           </div>
         </div>
@@ -241,29 +245,29 @@ export default function ProfesoresPage() {
       <Modal
         open={formOpen}
         onClose={() => setFormOpen(false)}
-        title="Nuevo Profesor"
+        title={tp('nuevo_titulo')}
         footer={
           <div className="flex gap-2">
-            <Button variant="ghost" onClick={() => setFormOpen(false)}>Cancelar</Button>
-            <Button onClick={handleCreate} loading={submitting}>Crear profesor</Button>
+            <Button variant="ghost" onClick={() => setFormOpen(false)}>{tc('cancelar')}</Button>
+            <Button onClick={handleCreate} loading={submitting}>{tp('crear_btn')}</Button>
           </div>
         }
       >
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">Nombre</label>
+            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">{ta('nombre')}</label>
             <input value={nombre} onChange={(e) => setNombre(e.target.value)} className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">Apellido</label>
+            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">{ta('apellido')}</label>
             <input value={apellido} onChange={(e) => setApellido(e.target.value)} className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">Email</label>
+            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">{ta('email')}</label>
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">Teléfono</label>
+            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">{ta('telefono')}</label>
             <input value={telefono} onChange={(e) => setTelefono(e.target.value)} className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm" />
           </div>
         </div>
@@ -273,20 +277,20 @@ export default function ProfesoresPage() {
       <Modal
         open={!!confirmAction}
         onClose={() => setConfirmAction(null)}
-        title={confirmAction?.activo ? 'Deshabilitar profesor' : 'Habilitar profesor'}
+        title={confirmAction?.activo ? tp('deshabilitar_titulo') : tp('habilitar_titulo')}
         footer={
           <div className="flex gap-2">
-            <Button variant="ghost" onClick={() => setConfirmAction(null)}>Cancelar</Button>
+            <Button variant="ghost" onClick={() => setConfirmAction(null)}>{tc('cancelar')}</Button>
             <Button variant={confirmAction?.activo ? 'danger' : 'primary'} onClick={handleToggle}>
-              {confirmAction?.activo ? 'Deshabilitar' : 'Habilitar'}
+              {confirmAction?.activo ? tp('deshabilitar') : tp('habilitar')}
             </Button>
           </div>
         }
       >
         <p className="text-sm text-[var(--color-text-primary)]">
           {confirmAction?.activo
-            ? `¿Deshabilitar a ${confirmAction.nombre}? Sus alumnos seguirán activos.`
-            : `¿Habilitar a ${confirmAction?.nombre}? Podrá volver a acceder al sistema.`}
+            ? tp('confirm_deshabilitar', { nombre: confirmAction.nombre })
+            : tp('confirm_habilitar', { nombre: confirmAction?.nombre ?? '' })}
         </p>
       </Modal>
 
@@ -294,14 +298,14 @@ export default function ProfesoresPage() {
       <Modal
         open={!!createdPassword}
         onClose={() => { setCreatedPassword(null); setCopiedPw(false); }}
-        title="Profesor creado"
+        title={tp('creado_titulo')}
         footer={
-          <Button onClick={() => { setCreatedPassword(null); setCopiedPw(false); }}>Entendido</Button>
+          <Button onClick={() => { setCreatedPassword(null); setCopiedPw(false); }}>{tc('entendido')}</Button>
         }
       >
         <div className="space-y-3">
           <p className="text-sm text-[var(--color-text-primary)]">
-            El profesor fue creado. Comparte esta contraseña temporal:
+            {tp('creado_texto')}
           </p>
           <div className="flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-bg-secondary)] p-3 font-mono text-sm">
             <span className="flex-1 break-all">{createdPassword}</span>
@@ -310,7 +314,7 @@ export default function ProfesoresPage() {
             </button>
           </div>
           <p className="text-xs text-[var(--color-text-muted)]">
-            Esta contraseña solo se muestra una vez. El profesor deberá cambiarla al iniciar sesión.
+            {tp('creado_nota')}
           </p>
         </div>
       </Modal>

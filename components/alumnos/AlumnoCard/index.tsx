@@ -1,7 +1,8 @@
 'use client';
 
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { es, enUS } from 'date-fns/locale';
+import { useLocale, useTranslations } from 'next-intl';
 import { GraduationCap } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Avatar } from '@/components/common/Avatar';
@@ -26,6 +27,9 @@ interface AlumnoCardProps {
 }
 
 export function AlumnoCard({ alumno, onViewFicha, isOwn = true }: AlumnoCardProps) {
+  const t = useTranslations('alumnos');
+  const locale = useLocale();
+  const dateFnsLocale = locale === 'en' ? enUS : es;
   const extra = Array.isArray(alumno.alumnos_extra)
     ? alumno.alumnos_extra[0]
     : alumno.alumnos_extra;
@@ -62,9 +66,9 @@ export function AlumnoCard({ alumno, onViewFicha, isOwn = true }: AlumnoCardProp
 
       {alumno.proxima_clase && (
         <div className="mt-3 rounded-[var(--radius-sm)] bg-[var(--color-bg-secondary)] p-2">
-          <p className="text-xs text-[var(--color-text-muted)]">Próxima clase:</p>
+          <p className="text-xs text-[var(--color-text-muted)]">{t('proxima_clase_label')}:</p>
           <p className="text-sm font-medium text-[var(--color-text-primary)]">
-            {format(new Date(alumno.proxima_clase.fecha), "EEEE d/MM - HH:mm", { locale: es })}
+            {format(new Date(alumno.proxima_clase.fecha), locale === 'en' ? 'EEEE MM/d - HH:mm' : 'EEEE d/MM - HH:mm', { locale: dateFnsLocale })}
           </p>
           <StatusBadge status={alumno.proxima_clase.estado} className="mt-1" />
         </div>
@@ -72,7 +76,7 @@ export function AlumnoCard({ alumno, onViewFicha, isOwn = true }: AlumnoCardProp
 
       {!isOwn && alumno.profesor_nombre && (
         <p className="mt-2 text-xs text-[var(--color-text-muted)]">
-          Asignado a: <span className="font-medium">{alumno.profesor_nombre}</span>
+          {t('ficha_asignado_a')}: <span className="font-medium">{alumno.profesor_nombre}</span>
         </p>
       )}
 
@@ -82,7 +86,7 @@ export function AlumnoCard({ alumno, onViewFicha, isOwn = true }: AlumnoCardProp
 
       <div className="mt-3">
         <Button variant="secondary" size="sm" className="w-full" onClick={(e) => { e.stopPropagation(); onViewFicha(alumno); }}>
-          Ver ficha
+          {t('ficha_ver_ficha')}
         </Button>
       </div>
     </Card>

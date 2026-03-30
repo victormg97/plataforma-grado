@@ -17,6 +17,8 @@ export type Profile = {
   telefono: string | null;
   avatar_url: string | null;
   activo: boolean;
+  idioma: string | null;
+  tema: string | null;
   created_at: string;
   updated_at: string;
 }

@@ -2,13 +2,13 @@
 
 import { useEffect, useState, useRef, useCallback, startTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import {
   Bell, CheckCheck, CheckCircle2, XCircle, ArrowLeftRight,
   CalendarPlus, CalendarClock, CalendarOff, Trash2, Calendar, Clock,
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { es, enUS } from 'date-fns/locale';
 import { createClient } from '@/lib/supabase/client';
 import { useUIStore } from '@/stores/useUIStore';
 import { useUserStore } from '@/stores/useUserStore';
@@ -23,7 +23,7 @@ type Notificacion = {
   horario_id: string | null;
   alumno_id: string | null;
   alumno: { id: string; nombre: string; apellido: string } | null;
-  horario: { id: string; fecha: string; hora_inicio: string; hora_fin: string; descripcion: string | null } | null;
+  horario: { id: string; fecha: string; hora_inicio: string; hora_fin: string; titulo: string | null; descripcion: string | null } | null;
   created_at: string;
 };
 
@@ -55,6 +55,8 @@ export function NotificacionesPanel() {
   const { setHorarioDetailId } = useUIStore();
   const router = useRouter();
   const tn = useTranslations('notificaciones');
+  const locale = useLocale();
+  const dateFnsLocale = locale === 'en' ? enUS : es;
   const [notificaciones, setNotificaciones] = useState<Notificacion[]>([]);
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -142,6 +144,27 @@ export function NotificacionesPanel() {
     }
   };
 
+  const getNotificationMessage = useCallback((n: Notificacion): string => {
+    if (n.tipo === 'confirmacion' || n.tipo === 'cancelacion' || n.tipo === 'cambio_horario') {
+      const alumnoNombre = n.alumno
+        ? `${n.alumno.nombre} ${n.alumno.apellido}`
+        : tn('mensajes.alumno_generico');
+      return `${alumnoNombre} ${tn(`tipos.${n.tipo}`)}`;
+    }
+
+    const clase = n.horario?.titulo?.trim() || n.horario?.descripcion?.trim() || tn('mensajes.clase_generica');
+    const fecha = n.horario
+      ? format(
+          new Date(`${n.horario.fecha}T12:00:00`),
+          locale === 'en' ? 'MMM d' : "d 'de' MMM",
+          { locale: dateFnsLocale }
+        )
+      : '';
+    const detalle = [clase, fecha].filter(Boolean).join(' · ');
+    const accion = tn(`tipos.${n.tipo}`);
+    return detalle ? `${accion}: ${detalle}` : accion;
+  }, [tn, locale, dateFnsLocale]);
+
   return (
     <div ref={panelRef} className="relative">
       <button
@@ -198,7 +221,7 @@ export function NotificacionesPanel() {
                     {/* Content — clickable */}
                     <button onClick={() => handleClick(n)} className="min-w-0 flex-1 text-left">
                       <p className={`text-sm leading-snug ${!n.leida ? 'font-medium text-[var(--color-text-primary)]' : 'text-[var(--color-text-secondary)]'}`}>
-                        {n.mensaje}
+                        {getNotificationMessage(n)}
                       </p>
 
                       {/* Date / time badges */}
@@ -207,7 +230,11 @@ export function NotificacionesPanel() {
                           <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-bg-secondary)] px-2 py-0.5 text-xs text-[var(--color-text-muted)]">
                             <Calendar className="h-3 w-3" style={{ color: 'var(--color-brand-gold)' }} />
                             <span className="capitalize">
-                              {format(new Date(n.horario.fecha + 'T12:00:00'), "EEE d 'de' MMM", { locale: es })}
+                              {format(
+                                new Date(n.horario.fecha + 'T12:00:00'),
+                                locale === 'en' ? 'EEE MMM d' : "EEE d 'de' MMM",
+                                { locale: dateFnsLocale }
+                              )}
                             </span>
                           </span>
                           <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-bg-secondary)] px-2 py-0.5 text-xs text-[var(--color-text-muted)]">

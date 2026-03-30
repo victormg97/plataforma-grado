@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
 
   let query = supabase
     .from('notificaciones')
-    .select('*, alumno:alumno_id(id, nombre, apellido), horario:horario_id(id, fecha, hora_inicio, hora_fin, descripcion), destinatario:destinatario_id(id, nombre, apellido, rol)')
+    .select('*, alumno:alumno_id(id, nombre, apellido), horario:horario_id(id, fecha, hora_inicio, hora_fin, titulo, descripcion), destinatario:destinatario_id(id, nombre, apellido, rol)')
     .order('created_at', { ascending: false })
     .limit(limit);
 

@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { es, enUS } from 'date-fns/locale';
+import { useLocale, useTranslations } from 'next-intl';
 import { BookOpen, Calendar, Mail, Phone, Save, ShieldAlert, University } from 'lucide-react';
 import { Modal } from '@/components/common/Modal';
 import { Avatar } from '@/components/common/Avatar';
@@ -23,6 +24,9 @@ interface FichaAlumnoProps {
 }
 
 export function FichaAlumno({ alumno, open, onClose }: FichaAlumnoProps) {
+  const t = useTranslations('alumnos');
+  const locale = useLocale();
+  const dateFnsLocale = locale === 'en' ? enUS : es;
   const [clases, setClases] = useState<ClaseHistorial[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -49,7 +53,7 @@ export function FichaAlumno({ alumno, open, onClose }: FichaAlumnoProps) {
         setPasoPrueba(data.extra.paso_prueba ?? false);
       }
     } catch {
-      toast.error('No se pudo cargar la ficha del alumno');
+      toast.error(t('ficha_error_cargar'));
     } finally {
       setLoading(false);
     }
@@ -76,16 +80,16 @@ export function FichaAlumno({ alumno, open, onClose }: FichaAlumnoProps) {
         body: JSON.stringify({ notas, paso_prueba: pasoPrueba }),
       });
       if (!res.ok) throw new Error('Error guardando');
-      toast.success('Ficha actualizada correctamente');
+      toast.success(t('ficha_guardado'));
     } catch {
-      toast.error('No se pudo guardar la ficha');
+      toast.error(t('ficha_error_guardar'));
     } finally {
       setSaving(false);
     }
   };
 
   const handleBloquear = async () => {
-    if (!alumno || !confirm('¿Estás seguro de bloquear a este alumno?')) return;
+    if (!alumno || !confirm(t('confirm_bloquear', { nombre: `${alumno.nombre} ${alumno.apellido}` }))) return;
     try {
       const res = await fetch(`/api/alumnos/${alumno.id}/ficha`, {
         method: 'PATCH',
@@ -93,10 +97,10 @@ export function FichaAlumno({ alumno, open, onClose }: FichaAlumnoProps) {
         body: JSON.stringify({ activo: false }),
       });
       if (!res.ok) throw new Error('Error bloqueando');
-      toast.success('Alumno bloqueado');
+      toast.success(t('exito_bloqueado'));
       onClose();
     } catch {
-      toast.error('No se pudo bloquear al alumno');
+      toast.error(t('ficha_nopudo_bloquear'));
     }
   };
 
@@ -106,14 +110,14 @@ export function FichaAlumno({ alumno, open, onClose }: FichaAlumnoProps) {
     <Modal
       open={open}
       onClose={onClose}
-      title="Ficha del Alumno"
+      title={t('ficha_titulo')}
       footer={
         <div className="flex w-full items-center justify-between gap-2">
           <Button variant="danger" size="sm" onClick={handleBloquear}>
-            <ShieldAlert className="mr-1 h-4 w-4" /> Bloquear
+            <ShieldAlert className="mr-1 h-4 w-4" /> {t('ficha_bloquear')}
           </Button>
           <Button onClick={handleSave} disabled={saving}>
-            <Save className="mr-1 h-4 w-4" /> {saving ? 'Guardando…' : 'Guardar'}
+            <Save className="mr-1 h-4 w-4" /> {saving ? t('ficha_guardando') : t('ficha_guardar')}
           </Button>
         </div>
       }
@@ -152,7 +156,7 @@ export function FichaAlumno({ alumno, open, onClose }: FichaAlumnoProps) {
             )}
             {extra?.año_ingreso && (
               <div className="flex items-center gap-2 text-sm text-[var(--color-text-muted)]">
-                <BookOpen className="h-4 w-4" /> Ingreso: {extra.año_ingreso}
+                <BookOpen className="h-4 w-4" /> {t('ficha_ingreso')}: {extra.año_ingreso}
               </div>
             )}
           </div>
@@ -165,28 +169,28 @@ export function FichaAlumno({ alumno, open, onClose }: FichaAlumnoProps) {
               onChange={(e) => setPasoPrueba(e.target.checked)}
               className="h-4 w-4 accent-[var(--color-brand-gold)]"
             />
-            <span className="text-sm font-medium text-[var(--color-text-primary)]">Pasó la prueba de grado</span>
+            <span className="text-sm font-medium text-[var(--color-text-primary)]">{t('ficha_paso_prueba')}</span>
           </label>
 
           {/* Notas */}
           <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">Notas</label>
+            <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">{t('ficha_notas')}</label>
             <textarea
               value={notas}
               onChange={(e) => setNotas(e.target.value)}
               rows={3}
               className="w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-2 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-brand-gold)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-gold)]"
-              placeholder="Notas privadas sobre este alumno…"
+              placeholder={t('ficha_notas_placeholder')}
             />
           </div>
 
           {/* Historial de clases */}
           <div>
             <h4 className="mb-2 text-sm font-semibold text-[var(--color-text-primary)]">
-              <Calendar className="mr-1 inline-block h-4 w-4" /> Últimas clases
+              <Calendar className="mr-1 inline-block h-4 w-4" /> {t('ficha_ultimas_clases')}
             </h4>
             {clases.length === 0 ? (
-              <p className="text-sm text-[var(--color-text-muted)]">Sin clases registradas.</p>
+              <p className="text-sm text-[var(--color-text-muted)]">{t('ficha_sin_clases')}</p>
             ) : (
               <div className="max-h-48 space-y-1.5 overflow-y-auto">
                 {clases.map((c) => {
@@ -194,7 +198,7 @@ export function FichaAlumno({ alumno, open, onClose }: FichaAlumnoProps) {
                   return (
                     <div key={c.id} className="flex items-center justify-between rounded-[var(--radius-sm)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm">
                       <span className="text-[var(--color-text-primary)]">
-                        {format(new Date(c.fecha), 'd MMM yyyy', { locale: es })} — {c.hora_inicio.slice(0, 5)}
+                        {format(new Date(c.fecha), locale === 'en' ? 'MMM d yyyy' : 'd MMM yyyy', { locale: dateFnsLocale })} — {c.hora_inicio.slice(0, 5)}
                       </span>
                       <StatusBadge status={estado} />
                     </div>

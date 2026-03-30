@@ -2,7 +2,8 @@
 
 import { Suspense, useMemo, useState, useEffect, useRef } from 'react';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { es, enUS } from 'date-fns/locale';
+import { useLocale, useTranslations } from 'next-intl';
 import { Edit2, Plus, Search, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -27,6 +28,11 @@ function useDebouncedValue<T>(value: T, delay: number): T {
 }
 
 function HorariosContent() {
+  const t = useTranslations('horarios');
+  const ta = useTranslations('asistencia.estados');
+  const tc = useTranslations('common');
+  const locale = useLocale();
+  const dateFnsLocale = locale === 'en' ? enUS : es;
   const { user } = useUser();
   const { rawData, alumnos, loading, refetch } = useHorarios(user?.id);
 
@@ -76,14 +82,14 @@ function HorariosContent() {
   );
 
   const handleDelete = async (id: string) => {
-    if (!confirm('¿Eliminar este horario?')) return;
+    if (!confirm(t('confirmar_eliminar'))) return;
     try {
       const res = await fetch(`/api/horarios/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error();
-      toast.success('Horario eliminado');
+      toast.success(t('exito_eliminado'));
       refetch();
     } catch {
-      toast.error('No se pudo eliminar');
+      toast.error(t('error_eliminar'));
     }
   };
 
@@ -92,11 +98,11 @@ function HorariosContent() {
   return (
     <div>
       <PageHeader
-        title="Horarios"
-        subtitle="Gestión de horarios de clases"
+        title={t('titulo')}
+        subtitle={t('gestion_subtitulo')}
         actions={
           <Button onClick={() => setHorarioParam('new')}>
-            <Plus className="mr-1.5 h-4 w-4" /> Nueva clase
+            <Plus className="mr-1.5 h-4 w-4" /> {t('nueva_clase')}
           </Button>
         }
       />
@@ -107,7 +113,7 @@ function HorariosContent() {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-text-muted)]" />
           <input
             type="text"
-            placeholder="Buscar alumno o título…"
+            placeholder={t('buscar_placeholder')}
             value={search}
             onChange={(e) => { setQParam(e.target.value || null); setPage(0); }}
             className="w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-bg)] py-2 pl-9 pr-4 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-brand-gold)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-gold)]"
@@ -118,17 +124,17 @@ function HorariosContent() {
           onChange={(e) => { setEstadoParam(e.target.value || null); setPage(0); }}
           className="rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-brand-gold)] focus:outline-none"
         >
-          <option value="">Todos los estados</option>
-          <option value="pendiente">Pendiente</option>
-          <option value="confirmado">Confirmado</option>
-          <option value="cancelado">Cancelado</option>
-          <option value="cambiado">Cambio solicitado</option>
+          <option value="">{t('todos_estados')}</option>
+          <option value="pendiente">{ta('pendiente')}</option>
+          <option value="confirmado">{ta('confirmado')}</option>
+          <option value="cancelado">{ta('cancelado')}</option>
+          <option value="cambiado">{ta('cambiado')}</option>
         </select>
         <button
           onClick={() => setSortAsc((p) => !p)}
           className="rounded-[var(--radius-sm)] border border-[var(--color-border)] px-3 py-2 text-sm text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text-primary)]"
         >
-          Fecha {sortAsc ? '↑' : '↓'}
+          {t('fecha')} {sortAsc ? '↑' : '↓'}
         </button>
       </div>
 
@@ -140,18 +146,18 @@ function HorariosContent() {
           </div>
         ) : paged.length === 0 ? (
           <p className="py-8 text-center text-sm text-[var(--color-text-muted)]">
-            No hay horarios que mostrar.
+            {t('sin_resultados')}
           </p>
         ) : (
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-[var(--color-border)] text-left text-xs uppercase text-[var(--color-text-muted)]">
-                <th className="px-3 py-2">Alumno</th>
-                <th className="px-3 py-2">Título</th>
-                <th className="px-3 py-2">Fecha</th>
-                <th className="px-3 py-2">Hora</th>
-                <th className="px-3 py-2">Estado</th>
-                <th className="px-3 py-2 text-right">Acciones</th>
+                <th className="px-3 py-2">{t('campo_alumno')}</th>
+                <th className="px-3 py-2">{t('col_titulo_tabla')}</th>
+                <th className="px-3 py-2">{t('fecha')}</th>
+                <th className="px-3 py-2">{t('col_hora')}</th>
+                <th className="px-3 py-2">{tc('estado')}</th>
+                <th className="px-3 py-2 text-right">{t('acciones')}</th>
               </tr>
             </thead>
             <tbody>
@@ -171,7 +177,7 @@ function HorariosContent() {
                     </td>
                     <td className="px-3 py-2.5 text-[var(--color-text-primary)]">{h.titulo}</td>
                     <td className="px-3 py-2.5 text-[var(--color-text-muted)]">
-                      {format(new Date(h.fecha), 'EEE d MMM', { locale: es })}
+                      {format(new Date(h.fecha), locale === 'en' ? 'EEE MMM d' : 'EEE d MMM', { locale: dateFnsLocale })}
                     </td>
                     <td className="px-3 py-2.5 text-[var(--color-text-muted)]">
                       {h.hora_inicio.slice(0, 5)} – {h.hora_fin.slice(0, 5)}
@@ -184,14 +190,14 @@ function HorariosContent() {
                         <button
                           onClick={() => setHorarioParam(h.id)}
                           className="rounded p-1 text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-brand-gold)]"
-                          title="Editar"
+                          title={tc('editar')}
                         >
                           <Edit2 className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => handleDelete(h.id)}
                           className="rounded p-1 text-[var(--color-text-muted)] transition-colors hover:bg-red-50 hover:text-[var(--color-error)]"
-                          title="Eliminar"
+                          title={tc('eliminar')}
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -209,7 +215,7 @@ function HorariosContent() {
       {totalPages > 1 && (
         <div className="mt-[var(--space-md)] flex items-center justify-between text-sm">
           <span className="text-[var(--color-text-muted)]">
-            Página {page + 1} de {totalPages} ({filtered.length} resultados)
+            {t('pagina', { page: page + 1, total: totalPages, count: filtered.length })}
           </span>
           <div className="flex gap-1">
             <button
@@ -217,14 +223,14 @@ function HorariosContent() {
               disabled={page === 0}
               className="rounded-[var(--radius-sm)] border border-[var(--color-border)] px-3 py-1 text-[var(--color-text-muted)] disabled:opacity-40"
             >
-              Anterior
+              {t('anterior')}
             </button>
             <button
               onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
               disabled={page >= totalPages - 1}
               className="rounded-[var(--radius-sm)] border border-[var(--color-border)] px-3 py-1 text-[var(--color-text-muted)] disabled:opacity-40"
             >
-              Siguiente
+              {t('siguiente')}
             </button>
           </div>
         </div>

@@ -13,6 +13,7 @@ import { Modal } from '@/components/common/Modal';
 import { FichaAlumno } from '@/components/alumnos/FichaAlumno';
 import type { AlumnoConExtra } from '@/components/alumnos/AlumnoCard';
 import { useQueryParam } from '@/lib/hooks/useQueryParam';
+import { useTranslations } from 'next-intl';
 
 type AlumnoAdmin = {
   id: string;
@@ -41,6 +42,8 @@ type ProfesorOption = {
 
 function AdminAlumnosContent() {
   const queryClient = useQueryClient();
+  const ta = useTranslations('alumnos');
+  const tc = useTranslations('common');
 
   // Filters via URL
   const [q, setQ] = useQueryParam('q');
@@ -89,6 +92,8 @@ function AdminAlumnosContent() {
       avatar_url: a.avatar_url,
       activo: a.activo,
       rol: 'alumno' as const,
+      idioma: null,
+      tema: null,
       created_at: '',
       updated_at: '',
       alumnos_extra: a.profesor_id
@@ -162,7 +167,7 @@ function AdminAlumnosContent() {
 
   const handleCreate = async () => {
     if (!nombre || !apellido || !email) {
-      toast.error('Nombre, apellido y email son requeridos');
+      toast.error(ta('requeridos'));
       return;
     }
     setSubmitting(true);
@@ -174,14 +179,14 @@ function AdminAlumnosContent() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      toast.success('Alumno creado correctamente');
+      toast.success(ta('exito_creado'));
       setCreatedPassword(data.temp_password);
       setFormOpen(false);
       setNombre(''); setApellido(''); setEmail(''); setTelefono('');
       setProfesorId(''); setUniversidad(''); setAnioIngreso('');
       queryClient.invalidateQueries({ queryKey: ['admin-alumnos'] });
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Error al crear alumno');
+      toast.error(err instanceof Error ? err.message : ta('error_crear'));
     } finally {
       setSubmitting(false);
     }
@@ -196,11 +201,11 @@ function AdminAlumnosContent() {
         body: JSON.stringify({ activo: !confirmBlock.activo }),
       });
       if (!res.ok) throw new Error();
-      toast.success(confirmBlock.activo ? 'Alumno bloqueado' : 'Alumno desbloqueado');
+      toast.success(confirmBlock.activo ? ta('exito_bloqueado') : ta('exito_desbloqueado'));
       setConfirmBlock(null);
       queryClient.invalidateQueries({ queryKey: ['admin-alumnos'] });
     } catch {
-      toast.error('Error al actualizar alumno');
+      toast.error(ta('error_actualizar'));
     }
   };
 
@@ -213,12 +218,12 @@ function AdminAlumnosContent() {
         body: JSON.stringify({ profesor_id: newProfesorId }),
       });
       if (!res.ok) throw new Error();
-      toast.success('Alumno reasignado');
+      toast.success(ta('exito_reasignado'));
       setReassign(null);
       setNewProfesorId('');
       queryClient.invalidateQueries({ queryKey: ['admin-alumnos'] });
     } catch {
-      toast.error('Error al reasignar');
+      toast.error(ta('error_reasignar'));
     }
   };
 
@@ -231,11 +236,11 @@ function AdminAlumnosContent() {
         body: JSON.stringify({ paso_prueba: true, fecha_prueba: fechaPrueba }),
       });
       if (!res.ok) throw new Error();
-      toast.success('Alumno marcado como graduado 🎓');
+      toast.success(ta('confirmar_graduacion'));
       setGraduateModal(null);
       queryClient.invalidateQueries({ queryKey: ['admin-alumnos'] });
     } catch {
-      toast.error('Error al graduar alumno');
+      toast.error(ta('error_actualizar'));
     }
   };
 
@@ -274,11 +279,11 @@ function AdminAlumnosContent() {
         }),
       });
       if (!res.ok) throw new Error();
-      toast.success('Información actualizada');
+      toast.success(ta('exito_actualizado'));
       setEditModal(null);
       queryClient.invalidateQueries({ queryKey: ['admin-alumnos'] });
     } catch {
-      toast.error('Error al actualizar');
+      toast.error(ta('error_actualizar'));
     } finally {
       setEditSubmitting(false);
     }
@@ -293,12 +298,12 @@ function AdminAlumnosContent() {
   return (
     <div>
       <PageHeader
-        title="Alumnos"
-        subtitle="Gestión global de alumnos"
+        title={ta('titulo')}
+        subtitle={ta('subtitulo')}
         actions={
           <Button onClick={() => setFormOpen(true)}>
             <Plus className="mr-1.5 h-4 w-4" />
-            Agregar alumno
+            {ta('nuevo_alumno')}
           </Button>
         }
       />
@@ -315,7 +320,7 @@ function AdminAlumnosContent() {
               if (searchDebounce.current) clearTimeout(searchDebounce.current);
               searchDebounce.current = setTimeout(() => setQ(val || null), 400);
             }}
-            placeholder="Buscar alumno..."
+            placeholder={ta('buscar_placeholder')}
             className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] pl-9 pr-3 py-2 text-sm"
           />
         </div>
@@ -324,17 +329,17 @@ function AdminAlumnosContent() {
           onChange={(e) => setEstadoFilter(e.target.value || null)}
           className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm"
         >
-          <option value="">Todos los estados</option>
-          <option value="activo">Activos</option>
-          <option value="bloqueado">Bloqueados</option>
-          <option value="graduado">Graduados</option>
+          <option value="">{ta('todos_estados')}</option>
+          <option value="activo">{ta('estado_activo')}</option>
+          <option value="bloqueado">{ta('estado_bloqueado')}</option>
+          <option value="graduado">{ta('estado_graduado')}</option>
         </select>
         <select
           value={profesorFilter || ''}
           onChange={(e) => setProfesorFilter(e.target.value || null)}
           className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm"
         >
-          <option value="">Todos los profesores</option>
+          <option value="">{ta('todos_profesores')}</option>
           {profesores.map((p) => (
             <option key={p.id} value={p.id}>{p.nombre} {p.apellido}</option>
           ))}        </select>
@@ -348,7 +353,7 @@ function AdminAlumnosContent() {
           </div>
         ) : alumnos.length === 0 ? (
           <Card className="py-12 text-center">
-            <p className="text-[var(--color-text-muted)]">No hay alumnos que coincidan con los filtros</p>
+            <p className="text-[var(--color-text-muted)]">{ta('no_coinciden')}</p>
           </Card>
         ) : (
           <>
@@ -382,14 +387,14 @@ function AdminAlumnosContent() {
                   >
                     <button
                       onClick={() => openEdit(a)}
-                      title="Editar"
+                      title={tc('editar')}
                       className="cursor-pointer rounded p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)]"
                     >
                       <Pencil className="h-4 w-4" />
                     </button>
                     <button
                       onClick={() => { setReassign(a); setNewProfesorId(a.profesor_id || ''); }}
-                      title="Reasignar profesor"
+                      title={ta('reasignar_titulo')}
                       className="cursor-pointer rounded p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)]"
                     >
                       <ArrowRight className="h-4 w-4" />
@@ -397,7 +402,7 @@ function AdminAlumnosContent() {
                     {!a.paso_prueba && a.activo && (
                       <button
                         onClick={() => setGraduateModal(a)}
-                        title="Marcar graduado"
+                        title={ta('graduar_titulo')}
                         className="cursor-pointer rounded p-1.5 text-[var(--color-brand-gold)] hover:bg-[var(--color-brand-gold-muted)]"
                       >
                         <GraduationCap className="h-4 w-4" />
@@ -405,7 +410,7 @@ function AdminAlumnosContent() {
                     )}
                     <button
                       onClick={() => setConfirmBlock(a)}
-                      title={a.activo ? 'Bloquear' : 'Desbloquear'}
+                      title={a.activo ? ta('bloquear') : ta('desbloquear')}
                       className={`cursor-pointer rounded p-1.5 ${a.activo ? 'text-[var(--color-error)] hover:bg-red-50 dark:hover:bg-red-950/20' : 'text-[var(--color-success)] hover:bg-green-50 dark:hover:bg-green-950/20'}`}
                     >
                       {a.activo ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
@@ -421,11 +426,11 @@ function AdminAlumnosContent() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-left text-xs font-semibold uppercase text-[var(--color-text-muted)]">
-                      <th className="px-4 py-3">Alumno</th>
-                      <th className="px-4 py-3">Profesor</th>
-                      <th className="px-4 py-3">Estado</th>
-                      <th className="px-4 py-3 hidden lg:table-cell">Universidad</th>
-                      <th className="px-4 py-3 text-right">Acciones</th>
+                      <th className="px-4 py-3">{ta('col_alumno')}</th>
+                      <th className="px-4 py-3">{ta('col_profesor')}</th>
+                      <th className="px-4 py-3">{tc('estado')}</th>
+                      <th className="px-4 py-3 hidden lg:table-cell">{ta('col_universidad')}</th>
+                      <th className="px-4 py-3 text-right">{ta('col_acciones')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -461,14 +466,14 @@ function AdminAlumnosContent() {
                           <div className="flex items-center justify-end gap-1">
                             <button
                               onClick={() => openEdit(a)}
-                              title="Editar"
+                              title={tc('editar')}
                               className="cursor-pointer rounded p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)]"
                             >
                               <Pencil className="h-4 w-4" />
                             </button>
                             <button
                               onClick={() => { setReassign(a); setNewProfesorId(a.profesor_id || ''); }}
-                              title="Reasignar"
+                              title={ta('reasignar_titulo')}
                               className="cursor-pointer rounded p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)]"
                             >
                               <ArrowRight className="h-4 w-4" />
@@ -476,7 +481,7 @@ function AdminAlumnosContent() {
                             {!a.paso_prueba && a.activo && (
                               <button
                                 onClick={() => setGraduateModal(a)}
-                                title="Marcar graduado"
+                                title={ta('graduar_titulo')}
                                 className="cursor-pointer rounded p-1.5 text-[var(--color-brand-gold)] hover:bg-[var(--color-brand-gold-muted)]"
                               >
                                 <GraduationCap className="h-4 w-4" />
@@ -484,7 +489,7 @@ function AdminAlumnosContent() {
                             )}
                             <button
                               onClick={() => setConfirmBlock(a)}
-                              title={a.activo ? 'Bloquear' : 'Desbloquear'}
+                              title={a.activo ? ta('bloquear') : ta('desbloquear')}
                               className={`cursor-pointer rounded p-1.5 ${a.activo ? 'text-[var(--color-error)] hover:bg-red-50 dark:hover:bg-red-950/20' : 'text-[var(--color-success)] hover:bg-green-50 dark:hover:bg-green-950/20'}`}
                             >
                               {a.activo ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
@@ -515,41 +520,41 @@ function AdminAlumnosContent() {
       <Modal
         open={!!editModal}
         onClose={() => setEditModal(null)}
-        title="Editar alumno"
+        title={ta('editar_titulo')}
         footer={
           <div className="flex gap-2">
-            <Button variant="ghost" onClick={() => setEditModal(null)}>Cancelar</Button>
-            <Button onClick={handleEdit} loading={editSubmitting}>Guardar cambios</Button>
+            <Button variant="ghost" onClick={() => setEditModal(null)}>{tc('cancelar')}</Button>
+            <Button onClick={handleEdit} loading={editSubmitting}>{tc('guardar_cambios')}</Button>
           </div>
         }
       >
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">Nombre</label>
+              <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">{ta('nombre')}</label>
               <input value={editNombre} onChange={(e) => setEditNombre(e.target.value)} className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">Apellido</label>
+              <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">{ta('apellido')}</label>
               <input value={editApellido} onChange={(e) => setEditApellido(e.target.value)} className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm" />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">Teléfono</label>
+            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">{ta('telefono')}</label>
             <input value={editTelefono} onChange={(e) => setEditTelefono(e.target.value)} className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm" />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">Universidad</label>
+              <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">{ta('universidad')}</label>
               <input value={editUniversidad} onChange={(e) => setEditUniversidad(e.target.value)} className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">Año de ingreso</label>
+              <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">{ta('año_ingreso')}</label>
               <input type="number" value={editAno} onChange={(e) => setEditAno(e.target.value)} className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm" />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">Notas del alumno</label>
+            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">{ta('notas_alumno')}</label>
             <textarea rows={3} value={editNotas} onChange={(e) => setEditNotas(e.target.value)} className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm resize-none" />
           </div>
         </div>
@@ -559,37 +564,37 @@ function AdminAlumnosContent() {
       <Modal
         open={formOpen}
         onClose={() => setFormOpen(false)}
-        title="Nuevo Alumno"
+        title={ta('nuevo_titulo')}
         footer={
           <div className="flex gap-2">
-            <Button variant="ghost" onClick={() => setFormOpen(false)}>Cancelar</Button>
-            <Button onClick={handleCreate} loading={submitting}>Crear alumno</Button>
+            <Button variant="ghost" onClick={() => setFormOpen(false)}>{tc('cancelar')}</Button>
+            <Button onClick={handleCreate} loading={submitting}>{ta('crear_btn')}</Button>
           </div>
         }
       >
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">Nombre</label>
+              <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">{ta('nombre')}</label>
               <input value={nombre} onChange={(e) => setNombre(e.target.value)} className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">Apellido</label>
+              <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">{ta('apellido')}</label>
               <input value={apellido} onChange={(e) => setApellido(e.target.value)} className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm" />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">Email</label>
+            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">{ta('email')}</label>
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">Teléfono</label>
+            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">{ta('telefono')}</label>
             <input value={telefono} onChange={(e) => setTelefono(e.target.value)} className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">Asignar a profesor</label>
+            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">{ta('asignar_profesor')}</label>
             <select value={profesorId} onChange={(e) => setProfesorId(e.target.value)} className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm">
-              <option value="">Sin asignar</option>
+              <option value="">{ta('sin_asignar')}</option>
               {profesores.map((p) => (
                 <option key={p.id} value={p.id}>{p.nombre} {p.apellido}</option>
               ))}
@@ -597,11 +602,11 @@ function AdminAlumnosContent() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">Universidad</label>
+              <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">{ta('universidad')}</label>
               <input value={universidad} onChange={(e) => setUniversidad(e.target.value)} className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">Año de ingreso</label>
+              <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">{ta('año_ingreso')}</label>
               <input type="number" value={anioIngreso} onChange={(e) => setAnioIngreso(e.target.value)} className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm" />
             </div>
           </div>
@@ -612,20 +617,20 @@ function AdminAlumnosContent() {
       <Modal
         open={!!confirmBlock}
         onClose={() => setConfirmBlock(null)}
-        title={confirmBlock?.activo ? 'Bloquear alumno' : 'Desbloquear alumno'}
+        title={confirmBlock?.activo ? ta('bloquear_titulo') : ta('desbloquear_titulo')}
         footer={
           <div className="flex gap-2">
-            <Button variant="ghost" onClick={() => setConfirmBlock(null)}>Cancelar</Button>
+            <Button variant="ghost" onClick={() => setConfirmBlock(null)}>{tc('cancelar')}</Button>
             <Button variant={confirmBlock?.activo ? 'danger' : 'primary'} onClick={handleToggleBlock}>
-              {confirmBlock?.activo ? 'Bloquear' : 'Desbloquear'}
+              {confirmBlock?.activo ? ta('bloquear_btn') : ta('desbloquear_btn')}
             </Button>
           </div>
         }
       >
         <p className="text-sm text-[var(--color-text-primary)]">
           {confirmBlock?.activo
-            ? `¿Bloquear a ${confirmBlock.nombre} ${confirmBlock.apellido}? No podrá acceder al sistema.`
-            : `¿Desbloquear a ${confirmBlock?.nombre} ${confirmBlock?.apellido}?`}
+            ? ta('confirm_bloquear', { nombre: `${confirmBlock.nombre} ${confirmBlock.apellido}` })
+            : ta('confirm_desbloquear', { nombre: `${confirmBlock?.nombre} ${confirmBlock?.apellido}` })}
         </p>
       </Modal>
 
@@ -633,24 +638,24 @@ function AdminAlumnosContent() {
       <Modal
         open={!!reassign}
         onClose={() => setReassign(null)}
-        title="Reasignar alumno"
+        title={ta('reasignar_titulo')}
         footer={
           <div className="flex gap-2">
-            <Button variant="ghost" onClick={() => setReassign(null)}>Cancelar</Button>
-            <Button onClick={handleReassign} disabled={!newProfesorId}>Reasignar</Button>
+            <Button variant="ghost" onClick={() => setReassign(null)}>{tc('cancelar')}</Button>
+            <Button onClick={handleReassign} disabled={!newProfesorId}>{ta('reasignar_btn')}</Button>
           </div>
         }
       >
         <div className="space-y-3">
           <p className="text-sm text-[var(--color-text-primary)]">
-            Reasignar a <strong>{reassign?.nombre} {reassign?.apellido}</strong>:
+            {ta('reasignar_texto', { nombre: `${reassign?.nombre} ${reassign?.apellido}` })}
           </p>
           <select
             value={newProfesorId}
             onChange={(e) => setNewProfesorId(e.target.value)}
             className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm"
           >
-            <option value="">Seleccionar profesor</option>
+            <option value="">{ta('seleccionar_profesor')}</option>
             {profesores.filter((p) => p.rol !== 'admin' || p.id !== reassign?.profesor_id).map((p) => (
               <option key={p.id} value={p.id}>{p.nombre} {p.apellido}</option>
             ))}
@@ -662,20 +667,20 @@ function AdminAlumnosContent() {
       <Modal
         open={!!graduateModal}
         onClose={() => setGraduateModal(null)}
-        title="🎓 Marcar como graduado"
+        title={ta('graduar_titulo')}
         footer={
           <div className="flex gap-2">
-            <Button variant="ghost" onClick={() => setGraduateModal(null)}>Cancelar</Button>
-            <Button onClick={handleGraduate}>Confirmar graduación</Button>
+            <Button variant="ghost" onClick={() => setGraduateModal(null)}>{tc('cancelar')}</Button>
+            <Button onClick={handleGraduate}>{ta('confirmar_graduacion')}</Button>
           </div>
         }
       >
         <div className="space-y-3">
           <p className="text-sm text-[var(--color-text-primary)]">
-            ¿Marcar a <strong>{graduateModal?.nombre} {graduateModal?.apellido}</strong> como graduado?
+            {ta('confirm_graduar', { nombre: `${graduateModal?.nombre} ${graduateModal?.apellido}` })}
           </p>
           <div>
-            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">Fecha de la prueba</label>
+            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">{ta('fecha_prueba')}</label>
             <input
               type="date"
               value={fechaPrueba}
@@ -690,12 +695,12 @@ function AdminAlumnosContent() {
       <Modal
         open={!!createdPassword}
         onClose={() => { setCreatedPassword(null); setCopiedPw(false); }}
-        title="Alumno creado"
-        footer={<Button onClick={() => { setCreatedPassword(null); setCopiedPw(false); }}>Entendido</Button>}
+        title={ta('creado_titulo')}
+        footer={<Button onClick={() => { setCreatedPassword(null); setCopiedPw(false); }}>{tc('entendido')}</Button>}
       >
         <div className="space-y-3">
           <p className="text-sm text-[var(--color-text-primary)]">
-            El alumno fue creado. Comparte esta contraseña temporal:
+            {ta('creado_texto')}
           </p>
           <div className="flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-bg-secondary)] p-3 font-mono text-sm">
             <span className="flex-1 break-all">{createdPassword}</span>

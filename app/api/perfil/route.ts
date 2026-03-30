@@ -79,6 +79,18 @@ export async function PATCH(request: NextRequest) {
       profileUpdate.avatar_url = body.avatar_url || null;
     }
 
+    // Preference fields
+    if (body.idioma !== undefined) {
+      const VALID_LOCALES = ['es', 'en'];
+      const idioma = String(body.idioma).trim();
+      if (VALID_LOCALES.includes(idioma)) profileUpdate.idioma = idioma;
+    }
+
+    if (body.tema !== undefined) {
+      const tema = String(body.tema).trim();
+      if (tema === 'light' || tema === 'dark') profileUpdate.tema = tema;
+    }
+
     const { data: updatedProfile, error: profileError } = await supabase
       .from('profiles')
       .update(profileUpdate)
