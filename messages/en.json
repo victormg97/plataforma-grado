@@ -1,0 +1,196 @@
+{
+  "app": {
+    "nombre": "CTA Graduates",
+    "slogan": "Bar Exam Preparation"
+  },
+  "common": {
+    "guardar": "Save",
+    "cancelar": "Cancel",
+    "cerrar": "Close",
+    "eliminar": "Delete",
+    "editar": "Edit",
+    "confirmar": "Confirm",
+    "cargando": "Loading...",
+    "estado": "Status",
+    "error": "An error occurred",
+    "exito": "Operation successful",
+    "sin_datos": "No data available",
+    "ver_todos": "View all",
+    "volver": "Back",
+    "buscar": "Search...",
+    "filtrar": "Filter",
+    "exportar": "Export",
+    "activo": "Active",
+    "inactivo": "Inactive",
+    "si": "Yes",
+    "no": "No"
+  },
+  "auth": {
+    "login": {
+      "titulo": "Welcome",
+      "subtitulo": "Sign in to your CTA Graduates account",
+      "email": "Email",
+      "password": "Password",
+      "boton": "Sign in",
+      "cargando": "Signing in...",
+      "error_credenciales": "Invalid email or password",
+      "error_generico": "Login error"
+    },
+    "logout": "Sign out"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "horarios": "Schedules",
+    "mis_clases": "My classes",
+    "alumnos": "Students",
+    "mis_alumnos": "My students",
+    "profesores": "Professors",
+    "notificaciones": "Notifications",
+    "perfil": "My profile",
+    "configuracion": "Settings"
+  },
+  "dashboard": {
+    "admin": {
+      "titulo": "Dashboard",
+      "subtitulo": "CTA Graduates overview",
+      "total_alumnos": "Total students",
+      "total_profesores": "Active professors",
+      "clases_hoy": "Classes today",
+      "confirmaciones_pendientes": "Pending confirmations"
+    },
+    "profesor": {
+      "titulo": "My Dashboard",
+      "subtitulo": "Class and student management"
+    },
+    "alumno": {
+      "titulo": "My Classes",
+      "subtitulo": "Manage your academic schedule"
+    }
+  },
+  "horarios": {
+    "titulo": "Schedules",
+    "nueva_clase": "New class",
+    "nueva_descripcion": "Schedule a new class with a student",
+    "editar_clase": "Edit class",
+    "editar_descripcion": "Modify the class details",
+    "editar_horario": "Edit schedule",
+    "eliminar_clase": "Delete class",
+    "fecha": "Date",
+    "hora_inicio": "Start time",
+    "hora_fin": "End time",
+    "titulo_clase": "Class title",
+    "titulo_placeholder": "E.g.: Civil Law - Session 1",
+    "descripcion": "Description",
+    "descripcion_placeholder": "What will be covered in the class...",
+    "opcional": "(optional)",
+    "campo_alumno": "Student",
+    "buscar_alumno_placeholder": "Search student by name\u2026",
+    "sin_alumno": "No student",
+    "no_alumnos_encontrados": "No students found",
+    "guardar_cambios": "Save changes",
+    "crear_clase": "Create class",
+    "confirmar_asistencia": "Confirm attendance",
+    "cancelar_asistencia": "Cannot attend",
+    "pedir_cambio": "Request schedule change",
+    "sin_horarios": "No classes scheduled",
+    "exito_creado": "Class created successfully",
+    "exito_actualizado": "Schedule updated",
+    "exito_eliminado": "Schedule deleted",
+    "error_guardar": "Error saving",
+    "error_eliminar": "Error deleting schedule"
+  },
+  "asistencia": {
+    "estados": {
+      "pendiente": "Pending",
+      "confirmado": "Confirmed",
+      "cancelado": "Cancelled",
+      "cambiado": "Change requested"
+    },
+    "estado_label": "Status",
+    "nota_alumno_title": "Student note",
+    "confirmar_titulo": "Confirm attendance?",
+    "cancelar_titulo": "Cannot attend?",
+    "cambio_titulo": "Request schedule change",
+    "nota_placeholder": "Optional message for your professor...",
+    "elegir_horario": "Choose an available schedule",
+    "sin_horarios_disponibles": "No schedules available at this time"
+  },
+  "alumnos": {
+    "titulo": "Students",
+    "nuevo_alumno": "Add student",
+    "ficha": "Student profile",
+    "nombre": "First name",
+    "apellido": "Last name",
+    "email": "Email",
+    "telefono": "Phone",
+    "universidad": "University",
+    "año_ingreso": "Year of admission",
+    "notas": "Professor notes",
+    "notas_placeholder": "Add notes about the student...",
+    "paso_prueba": "Passed the bar exam",
+    "fecha_prueba": "Exam date",
+    "graduado_badge": "🎓 Graduated",
+    "bloquear": "Block student",
+    "desbloquear": "Unblock student",
+    "sin_alumnos": "No students assigned yet"
+  },
+  "profesores": {
+    "titulo": "Professors",
+    "nuevo_profesor": "Add professor",
+    "habilitar": "Enable",
+    "deshabilitar": "Disable",
+    "sin_profesores": "No professors registered"
+  },
+  "perfil": {
+    "titulo": "Edit profile",
+    "editar_perfil": "Edit profile",
+    "tab_info": "Information",
+    "tab_seguridad": "Security",
+    "nombre": "First name",
+    "apellidos": "Last names",
+    "apellidos_hint": "Enter both last names separated by a space",
+    "telefono": "Phone",
+    "universidad": "University",
+    "año_ingreso": "Year of admission",
+    "opcional": "(optional)",
+    "foto_hint": "JPG, PNG or WEBP · Max 10 MB",
+    "foto_aria": "Change profile photo",
+    "guardar": "Save changes",
+    "nueva_password": "New password",
+    "confirmar_password": "Confirm password",
+    "password_min": "At least 8 characters",
+    "password_hint": "Password must be at least 8 characters ({actual}/8)",
+    "password_no_coincide": "Passwords do not match",
+    "cambiar_password": "Change password",
+    "exito_perfil": "Profile updated successfully",
+    "exito_password": "Password updated successfully",
+    "error_nombre": "First name is required",
+    "error_apellido": "Last name is required",
+    "error_foto_tipo": "Could not process the image. Try a different file.",
+    "error_foto_tamaño": "Image cannot exceed 10 MB",
+    "error_foto_upload": "Error uploading photo",
+    "error_perfil": "Error saving profile",
+    "error_password_min": "Password must be at least 8 characters",
+    "error_password_match": "Passwords do not match",
+    "error_password": "Error changing password"
+  },
+  "notificaciones": {
+    "titulo": "Notifications",
+    "sin_notificaciones": "No notifications",
+    "marcar_leida": "Mark as read",
+    "marcar_todas_leidas": "Mark all as read",
+    "marcar_todo": "Mark all",
+    "eliminar": "Delete notification",
+    "tiempo": {
+      "ahora": "just now",
+      "minutos": "{mins}m ago",
+      "horas": "{hrs}h ago",
+      "dias": "{days}d ago"
+    },
+    "tipos": {
+      "confirmacion": "confirmed attendance",
+      "cancelacion": "cancelled attendance",
+      "cambio_horario": "requested schedule change"
+    }
+  }
+}

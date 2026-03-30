@@ -1,0 +1,79 @@
+'use client';
+
+import { useCallback, useState } from 'react';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { CalendarDays, CheckCircle, Clock, XCircle, Plus } from 'lucide-react';
+import { PageHeader } from '@/components/common/PageHeader';
+import { Card } from '@/components/common/Card';
+import { Button } from '@/components/common/Button';
+import { CalendarioProfesor } from '@/components/calendario/CalendarioProfesor';
+import { useUser } from '@/lib/hooks/useUser';
+import { useHorarios } from '@/lib/hooks/useHorarios';
+
+export default function ProfesorDashboardPage() {
+  const { user } = useUser();
+  const { stats } = useHorarios(user?.id);
+  const [newClassTrigger, setNewClassTrigger] = useState(0);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const openHorarioId = searchParams.get('horario');
+
+  const handleHorarioOpened = useCallback(() => {
+    router.replace(pathname);
+  }, [router, pathname]);
+
+  if (!user) return null;
+
+  const statCards = [
+    { label: 'Clases esta semana', value: stats.total, icon: CalendarDays, color: 'var(--color-text-primary)' },
+    { label: 'Pendientes', value: stats.pendientes, icon: Clock, color: 'var(--color-brand-gold)' },
+    { label: 'Confirmadas', value: stats.confirmadas, icon: CheckCircle, color: 'var(--color-success)' },
+    { label: 'Canceladas', value: stats.canceladas, icon: XCircle, color: 'var(--color-error)' },
+  ];
+
+  return (
+    <div>
+      <PageHeader
+        title="Dashboard"
+        subtitle="Gestión de clases y alumnos"
+        actions={
+          <Button onClick={() => setNewClassTrigger((n) => n + 1)}>
+            <Plus className="mr-1.5 h-4 w-4" />
+            Nueva clase
+          </Button>
+        }
+      />
+
+      {/* Stats Cards */}
+      <div className="mt-[var(--space-lg)] grid grid-cols-2 gap-[var(--space-md)] md:grid-cols-4">
+        {statCards.map((stat) => (
+          <Card key={stat.label} padding="md">
+            <div className="flex items-center gap-3">
+              <div
+                className="flex h-10 w-10 items-center justify-center rounded-full"
+                style={{ backgroundColor: `color-mix(in srgb, ${stat.color} 12%, transparent)` }}
+              >
+                <stat.icon className="h-5 w-5" style={{ color: stat.color }} />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-[var(--color-text-primary)]">{stat.value}</p>
+                <p className="text-xs text-[var(--color-text-muted)]">{stat.label}</p>
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      {/* Calendar — single source of truth for horarios data */}
+      <div className="mt-[var(--space-lg)]">
+        <CalendarioProfesor
+          profesorId={user.id}
+          openNewClassTrigger={newClassTrigger}
+          openHorarioId={openHorarioId}
+          onHorarioOpened={handleHorarioOpened}
+        />
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,199 @@
+{
+  "app": {
+    "nombre": "CTA Graduados",
+    "slogan": "Preparación para la Prueba de Grado"
+  },
+  "common": {
+    "guardar": "Guardar",
+    "cancelar": "Cancelar",
+    "cerrar": "Cerrar",
+    "eliminar": "Eliminar",
+    "editar": "Editar",
+    "confirmar": "Confirmar",
+    "cargando": "Cargando...",
+    "estado": "Estado",
+    "error": "Ocurrió un error",
+    "exito": "Operación exitosa",
+    "sin_datos": "No hay datos disponibles",
+    "ver_todos": "Ver todos",
+    "volver": "Volver",
+    "buscar": "Buscar...",
+    "filtrar": "Filtrar",
+    "exportar": "Exportar",
+    "activo": "Activo",
+    "inactivo": "Inactivo",
+    "si": "Sí",
+    "no": "No"
+  },
+  "auth": {
+    "login": {
+      "titulo": "Bienvenido",
+      "subtitulo": "Ingresa a tu cuenta de CTA Graduados",
+      "email": "Correo electrónico",
+      "password": "Contraseña",
+      "boton": "Ingresar",
+      "cargando": "Ingresando...",
+      "error_credenciales": "Correo o contraseña incorrectos",
+      "error_generico": "Error al iniciar sesión"
+    },
+    "logout": "Cerrar sesión"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "horarios": "Horarios",
+    "mis_clases": "Mis clases",
+    "alumnos": "Alumnos",
+    "mis_alumnos": "Mis alumnos",
+    "profesores": "Profesores",
+    "notificaciones": "Notificaciones",
+    "perfil": "Mi perfil",
+    "configuracion": "Configuración"
+  },
+  "dashboard": {
+    "admin": {
+      "titulo": "Dashboard",
+      "subtitulo": "Vista general de CTA Graduados",
+      "total_alumnos": "Total alumnos",
+      "total_profesores": "Profesores activos",
+      "clases_hoy": "Clases hoy",
+      "confirmaciones_pendientes": "Confirmaciones pendientes"
+    },
+    "profesor": {
+      "titulo": "Mi Dashboard",
+      "subtitulo": "Gestión de clases y alumnos"
+    },
+    "alumno": {
+      "titulo": "Mis Clases",
+      "subtitulo": "Gestión de tu horario académico"
+    }
+  },
+  "horarios": {
+    "titulo": "Horarios",
+    "nueva_clase": "Nueva clase",
+    "nueva_descripcion": "Programa una nueva clase con un alumno",
+    "editar_clase": "Editar clase",
+    "editar_descripcion": "Modifica los datos de la clase",
+    "editar_horario": "Editar horario",
+    "eliminar_clase": "Eliminar clase",
+    "fecha": "Fecha",
+    "hora_inicio": "Hora de inicio",
+    "hora_fin": "Hora de fin",
+    "titulo_clase": "Título de la clase",
+    "titulo_placeholder": "Ej: Derecho Civil - Sesión 1",
+    "descripcion": "Descripción",
+    "descripcion_placeholder": "Qué se verá en la clase...",
+    "opcional": "(opcional)",
+    "campo_alumno": "Alumno",
+    "buscar_alumno_placeholder": "Buscar alumno por nombre…",
+    "sin_alumno": "Sin alumno",
+    "no_alumnos_encontrados": "No se encontraron alumnos",
+    "guardar_cambios": "Guardar cambios",
+    "crear_clase": "Crear clase",
+    "confirmar_asistencia": "Confirmar asistencia",
+    "cancelar_asistencia": "No podré asistir",
+    "pedir_cambio": "Pedir cambio de horario",
+    "sin_horarios": "No hay clases programadas",
+    "exito_creado": "Clase creada exitosamente",
+    "exito_actualizado": "Horario actualizado",
+    "exito_eliminado": "Horario eliminado",
+    "error_guardar": "Error al guardar",
+    "error_eliminar": "Error al eliminar el horario"
+  },
+  "asistencia": {
+    "estados": {
+      "pendiente": "Pendiente",
+      "confirmado": "Confirmado",
+      "cancelado": "Cancelado",
+      "cambiado": "Cambio solicitado"
+    },
+    "estado_label": "Estado",
+    "nota_alumno_title": "Nota del alumno",
+    "confirmar_titulo": "¿Confirmar asistencia?",
+    "cancelar_titulo": "¿No podrás asistir?",
+    "cambio_titulo": "Solicitar cambio de horario",
+    "nota_placeholder": "Mensaje opcional para tu profesor...",
+    "elegir_horario": "Elige un horario disponible",
+    "sin_horarios_disponibles": "No hay horarios disponibles en este momento"
+  },
+  "alumnos": {
+    "titulo": "Alumnos",
+    "nuevo_alumno": "Agregar alumno",
+    "ficha": "Ficha del alumno",
+    "nombre": "Nombre",
+    "apellido": "Apellido",
+    "email": "Correo",
+    "telefono": "Teléfono",
+    "universidad": "Universidad",
+    "año_ingreso": "Año de ingreso",
+    "notas": "Notas del profesor",
+    "notas_placeholder": "Agrega notas sobre el alumno...",
+    "paso_prueba": "Aprobó la prueba de grado",
+    "fecha_prueba": "Fecha de la prueba",
+    "graduado_badge": "🎓 Graduado",
+    "bloquear": "Bloquear alumno",
+    "desbloquear": "Desbloquear alumno",
+    "sin_alumnos": "No tienes alumnos asignados aún"
+  },
+  "profesores": {
+    "titulo": "Profesores",
+    "nuevo_profesor": "Agregar profesor",
+    "habilitar": "Habilitar",
+    "deshabilitar": "Deshabilitar",
+    "sin_profesores": "No hay profesores registrados"
+  },
+  "perfil": {
+    "titulo": "Editar perfil",
+    "editar_perfil": "Editar perfil",
+    "tab_info": "Información",
+    "tab_seguridad": "Seguridad",
+    "nombre": "Nombre",
+    "apellidos": "Apellidos",
+    "apellidos_hint": "Escribe ambos apellidos separados por un espacio",
+    "telefono": "Teléfono",
+    "universidad": "Universidad",
+    "año_ingreso": "Año de ingreso",
+    "opcional": "(opcional)",
+    "foto_hint": "JPG, PNG, WEBP o HEIC · Máx. 10 MB",
+    "foto_aria": "Cambiar foto de perfil",
+    "guardar": "Guardar cambios",
+    "nueva_password": "Nueva contraseña",
+    "confirmar_password": "Confirmar contraseña",
+    "password_min": "Mínimo 8 caracteres",
+    "password_hint": "La contraseña debe tener al menos 8 caracteres ({actual}/8)",
+    "password_no_coincide": "Las contraseñas no coinciden",
+    "cambiar_password": "Cambiar contraseña",
+    "exito_perfil": "Perfil actualizado correctamente",
+    "exito_password": "Contraseña actualizada correctamente",
+    "error_nombre": "El nombre es requerido",
+    "error_apellido": "El apellido es requerido",
+    "error_foto_tipo": "No se pudo procesar la imagen. Intenta con otro archivo.",
+    "error_foto_tamaño": "La imagen no puede superar 10 MB",
+    "error_foto_upload": "Error al subir la foto",
+    "error_perfil": "Error al guardar el perfil",
+    "error_password_min": "La contraseña debe tener al menos 8 caracteres",
+    "error_password_match": "Las contraseñas no coinciden",
+    "error_password": "Error al cambiar la contraseña",
+    "foto_cargar": "Cargar foto",
+    "foto_eliminar": "Eliminar foto de perfil",
+    "error_foto_eliminar": "Error al eliminar la foto"
+  },
+  "notificaciones": {
+    "titulo": "Notificaciones",
+    "sin_notificaciones": "Sin notificaciones",
+    "marcar_leida": "Marcar como leída",
+    "marcar_todas_leidas": "Marcar todas como leídas",
+    "marcar_todo": "Marcar todo",
+    "eliminar": "Eliminar notificación",
+    "tiempo": {
+      "ahora": "ahora",
+      "minutos": "hace {mins} min",
+      "horas": "hace {hrs}h",
+      "dias": "hace {days}d"
+    },
+    "tipos": {
+      "confirmacion": "confirmó su asistencia",
+      "cancelacion": "canceló su asistencia",
+      "cambio_horario": "solicitó cambio de horario"
+    }
+  }
+}

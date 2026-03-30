@@ -1,0 +1,29 @@
+import type { UserRol } from '@/lib/supabase/types';
+
+export function getRolRedirectPath(rol: UserRol): string {
+  switch (rol) {
+    case 'admin':
+      return '/admin';
+    case 'profesor':
+      return '/profesor';
+    case 'alumno':
+      return '/alumno';
+    default:
+      return '/login';
+  }
+}
+
+export function isProtectedRoute(pathname: string): boolean {
+  return (
+    pathname.startsWith('/admin') ||
+    pathname.startsWith('/profesor') ||
+    pathname.startsWith('/alumno')
+  );
+}
+
+export function getRequiredRoles(pathname: string): UserRol[] {
+  if (pathname.startsWith('/admin')) return ['admin'];
+  if (pathname.startsWith('/profesor')) return ['admin', 'profesor'];
+  if (pathname.startsWith('/alumno')) return ['alumno'];
+  return [];
+}
