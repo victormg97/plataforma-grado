@@ -22,6 +22,7 @@ export function CalendarioAlumno() {
   const router = useRouter();
   const { clases, loading } = useAsistencia();
   const [isMobile, setIsMobile] = useState(false);
+  const [currentView, setCurrentView] = useState('dayGridMonth');
   const calendarRef = useRef<FullCalendar>(null);
 
   useEffect(() => {
@@ -30,6 +31,27 @@ export function CalendarioAlumno() {
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
   }, []);
+
+  useEffect(() => {
+    if (currentView === 'timeGridWeek') {
+      calendarRef.current?.getApi().scrollToTime('08:00:00');
+    }
+  }, [currentView]);
+
+  useEffect(() => {
+    if (!isMobile) return;
+    const timer = setTimeout(() => {
+      const btn = document.querySelector('.calendario-alumno .fc-hoyIcono-button') as HTMLButtonElement | null;
+      if (btn) {
+        btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>`;
+        btn.style.display = 'inline-flex';
+        btn.style.alignItems = 'center';
+        btn.style.justifyContent = 'center';
+        btn.style.lineHeight = '0';
+      }
+    }, 50);
+    return () => clearTimeout(timer);
+  }, [isMobile, currentView]);
 
   const events = clases.map((c) => {
     const colors = ESTADO_COLORS[c.estado] || ESTADO_COLORS.pendiente;
@@ -136,6 +158,18 @@ export function CalendarioAlumno() {
         .calendario-alumno .fc .fc-scrollgrid {
           border-color: var(--color-border);
         }
+        @media (max-width: 640px) {
+          .calendario-alumno .fc .fc-toolbar-title {
+            font-size: 0.95rem;
+          }
+          .calendario-alumno .fc .fc-button {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.45rem;
+          }
+          .calendario-alumno .fc .fc-toolbar.fc-header-toolbar {
+            gap: 0.35rem;
+          }
+        }
       `}</style>
 
       <FullCalendar
@@ -144,17 +178,26 @@ export function CalendarioAlumno() {
         locale={esLocale}
         initialView={isMobile ? 'listWeek' : 'dayGridMonth'}
         headerToolbar={{
-          left: 'prev,next today',
+          left: isMobile ? 'prev,hoyIcono,next' : 'prev,next today',
           center: 'title',
-          right: isMobile ? 'listWeek' : 'dayGridMonth,timeGridWeek,listWeek',
+          right: 'dayGridMonth,timeGridWeek,listWeek',
+        }}
+        customButtons={{
+          hoyIcono: {
+            text: ' ',
+            hint: 'Hoy',
+            click: () => calendarRef.current?.getApi().today(),
+          },
         }}
         events={[]}
         eventClick={handleEventClick}
         eventDisplay="block"
-        height="auto"
+        height={currentView === 'timeGridWeek' ? (isMobile ? '65vh' : '78vh') : 'auto'}
         aspectRatio={1.8}
+        scrollTime="08:00:00"
         nowIndicator={true}
         weekends={true}
+        datesSet={(arg) => setCurrentView(arg.view.type)}
       />
     </div>
   );

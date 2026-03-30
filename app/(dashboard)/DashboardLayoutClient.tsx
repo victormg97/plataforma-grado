@@ -31,7 +31,7 @@ export function DashboardLayoutClient({
       <Sidebar />
       <div className="flex flex-1 flex-col overflow-hidden">
         <Navbar />
-        <main className="flex-1 overflow-y-auto p-[var(--container-padding)]">
+        <main className="flex-1 overflow-y-auto py-[var(--container-padding)]">
           <div className="container-app">{children}</div>
         </main>
       </div>

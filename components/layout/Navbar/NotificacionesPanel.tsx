@@ -158,7 +158,7 @@ export function NotificacionesPanel() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-11 z-50 w-96 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg)] shadow-lg">
+        <div className="fixed left-[var(--container-padding)] right-[var(--container-padding)] top-16 z-50 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg)] shadow-lg sm:absolute sm:left-auto sm:right-0 sm:top-11 sm:w-96">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-[var(--color-border)] px-4 py-3">
             <span className="text-sm font-semibold text-[var(--color-text-primary)]">
@@ -176,7 +176,7 @@ export function NotificacionesPanel() {
           </div>
 
           {/* List */}
-          <div className="max-h-[480px] divide-y divide-[var(--color-border)] overflow-y-auto">
+          <div className="max-h-[60vh] divide-y divide-[var(--color-border)] overflow-y-auto sm:max-h-[480px]">
             {notificaciones.length === 0 ? (
               <div className="px-4 py-8 text-center text-sm text-[var(--color-text-muted)]">
                 {tn('sin_notificaciones')}

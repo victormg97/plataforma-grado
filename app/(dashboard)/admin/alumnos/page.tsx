@@ -340,8 +340,8 @@ function AdminAlumnosContent() {
           ))}        </select>
       </div>
 
-      {/* Table */}
-      <div className="mt-[var(--space-md)] overflow-x-auto">
+      {/* Table / Cards */}
+      <div className="mt-[var(--space-md)]">
         {loading ? (
           <div className="flex justify-center py-12">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-brand-gold)] border-t-transparent" />
@@ -351,83 +351,153 @@ function AdminAlumnosContent() {
             <p className="text-[var(--color-text-muted)]">No hay alumnos que coincidan con los filtros</p>
           </Card>
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-[var(--color-border)] text-left text-xs font-semibold uppercase text-[var(--color-text-muted)]">
-                <th className="pb-3 pr-4">Alumno</th>
-                <th className="pb-3 pr-4 hidden md:table-cell">Profesor</th>
-                <th className="pb-3 pr-4">Estado</th>
-                <th className="pb-3 pr-4 hidden lg:table-cell">Universidad</th>
-                <th className="pb-3 text-right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
+          <>
+            {/* ── Mobile: card list (< md) ── */}
+            <div className="space-y-[var(--space-sm)] md:hidden">
               {alumnos.map((a) => (
-                <tr
+                <div
                   key={a.id}
-                  className="cursor-pointer border-b border-[var(--color-border)] last:border-0 hover:bg-[var(--color-bg-secondary)]"
+                  className="cursor-pointer rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] p-[var(--space-md)] transition-colors hover:bg-[var(--color-bg-secondary)]"
                   onClick={() => setFichaAlumno(toFichaAlumno(a))}
                 >
-                  <td className="py-3 pr-4">
-                    <div className="flex items-center gap-3">
-                      <Avatar nombre={a.nombre} apellido={a.apellido} avatarUrl={a.avatar_url} size="sm" />
-                      <div>
-                        <p className="font-medium text-[var(--color-text-primary)]">{a.nombre} {a.apellido}</p>
-                        <p className="text-xs text-[var(--color-text-muted)]">{a.email}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="py-3 pr-4 hidden md:table-cell">
-                    {a.profesor ? (
-                      <span className="text-[var(--color-text-primary)]">{a.profesor.nombre} {a.profesor.apellido}</span>
-                    ) : (
-                      <span className="text-[var(--color-text-muted)]">—</span>
-                    )}
-                  </td>
-                  <td className="py-3 pr-4">
-                    <StatusBadge status={getAlumnoStatus(a)} />
-                  </td>
-                  <td className="py-3 pr-4 hidden lg:table-cell text-[var(--color-text-muted)]">
-                    {a.universidad || '—'}
-                  </td>
-                  <td className="py-3 text-right" onClick={(e) => e.stopPropagation()}>
-                    <div className="flex items-center justify-end gap-1">
-                      <button
-                        onClick={() => openEdit(a)}
-                        title="Editar"
-                        className="cursor-pointer rounded p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)]"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => { setReassign(a); setNewProfesorId(a.profesor_id || ''); }}
-                        title="Reasignar"
-                        className="cursor-pointer rounded p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)]"
-                      >
-                        <ArrowRight className="h-4 w-4" />
-                      </button>
-                      {!a.paso_prueba && a.activo && (
-                        <button
-                          onClick={() => setGraduateModal(a)}
-                          title="Marcar graduado"
-                          className="cursor-pointer rounded p-1.5 text-[var(--color-brand-gold)] hover:bg-[var(--color-brand-gold-muted)]"
-                        >
-                          <GraduationCap className="h-4 w-4" />
-                        </button>
+                  {/* Info row */}
+                  <div className="flex items-center gap-3">
+                    <Avatar nombre={a.nombre} apellido={a.apellido} avatarUrl={a.avatar_url} size="sm" />
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-[var(--color-text-primary)] truncate">{a.nombre} {a.apellido}</p>
+                      <p className="text-xs text-[var(--color-text-muted)] truncate">{a.email}</p>
+                      {a.profesor && (
+                        <p className="mt-0.5 text-xs text-[var(--color-text-secondary)]">
+                          Prof. {a.profesor.nombre} {a.profesor.apellido}
+                        </p>
                       )}
-                      <button
-                        onClick={() => setConfirmBlock(a)}
-                        title={a.activo ? 'Bloquear' : 'Desbloquear'}
-                        className={`cursor-pointer rounded p-1.5 ${a.activo ? 'text-[var(--color-error)] hover:bg-red-50 dark:hover:bg-red-950/20' : 'text-[var(--color-success)] hover:bg-green-50 dark:hover:bg-green-950/20'}`}
-                      >
-                        {a.activo ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
-                      </button>
                     </div>
-                  </td>
-                </tr>
+                    <StatusBadge status={getAlumnoStatus(a)} />
+                  </div>
+
+                  {/* Actions row */}
+                  <div
+                    className="mt-[var(--space-sm)] flex items-center justify-end gap-1 border-t border-[var(--color-border)] pt-[var(--space-sm)]"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <button
+                      onClick={() => openEdit(a)}
+                      title="Editar"
+                      className="cursor-pointer rounded p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)]"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => { setReassign(a); setNewProfesorId(a.profesor_id || ''); }}
+                      title="Reasignar profesor"
+                      className="cursor-pointer rounded p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)]"
+                    >
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
+                    {!a.paso_prueba && a.activo && (
+                      <button
+                        onClick={() => setGraduateModal(a)}
+                        title="Marcar graduado"
+                        className="cursor-pointer rounded p-1.5 text-[var(--color-brand-gold)] hover:bg-[var(--color-brand-gold-muted)]"
+                      >
+                        <GraduationCap className="h-4 w-4" />
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setConfirmBlock(a)}
+                      title={a.activo ? 'Bloquear' : 'Desbloquear'}
+                      className={`cursor-pointer rounded p-1.5 ${a.activo ? 'text-[var(--color-error)] hover:bg-red-50 dark:hover:bg-red-950/20' : 'text-[var(--color-success)] hover:bg-green-50 dark:hover:bg-green-950/20'}`}
+                    >
+                      {a.activo ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+
+            {/* ── Desktop: table (md+) ── */}
+            <div className="hidden md:block overflow-hidden rounded-[var(--radius-md)] border border-[var(--color-border)]">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-left text-xs font-semibold uppercase text-[var(--color-text-muted)]">
+                      <th className="px-4 py-3">Alumno</th>
+                      <th className="px-4 py-3">Profesor</th>
+                      <th className="px-4 py-3">Estado</th>
+                      <th className="px-4 py-3 hidden lg:table-cell">Universidad</th>
+                      <th className="px-4 py-3 text-right">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {alumnos.map((a) => (
+                      <tr
+                        key={a.id}
+                        className="cursor-pointer border-b border-[var(--color-border)] last:border-0 hover:bg-[var(--color-bg-secondary)] transition-colors"
+                        onClick={() => setFichaAlumno(toFichaAlumno(a))}
+                      >
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-3">
+                            <Avatar nombre={a.nombre} apellido={a.apellido} avatarUrl={a.avatar_url} size="sm" />
+                            <div>
+                              <p className="font-medium text-[var(--color-text-primary)]">{a.nombre} {a.apellido}</p>
+                              <p className="text-xs text-[var(--color-text-muted)]">{a.email}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          {a.profesor ? (
+                            <span className="text-[var(--color-text-primary)]">{a.profesor.nombre} {a.profesor.apellido}</span>
+                          ) : (
+                            <span className="text-[var(--color-text-muted)]">—</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <StatusBadge status={getAlumnoStatus(a)} />
+                        </td>
+                        <td className="px-4 py-3 hidden lg:table-cell text-[var(--color-text-muted)]">
+                          {a.universidad || '—'}
+                        </td>
+                        <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center justify-end gap-1">
+                            <button
+                              onClick={() => openEdit(a)}
+                              title="Editar"
+                              className="cursor-pointer rounded p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)]"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => { setReassign(a); setNewProfesorId(a.profesor_id || ''); }}
+                              title="Reasignar"
+                              className="cursor-pointer rounded p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)]"
+                            >
+                              <ArrowRight className="h-4 w-4" />
+                            </button>
+                            {!a.paso_prueba && a.activo && (
+                              <button
+                                onClick={() => setGraduateModal(a)}
+                                title="Marcar graduado"
+                                className="cursor-pointer rounded p-1.5 text-[var(--color-brand-gold)] hover:bg-[var(--color-brand-gold-muted)]"
+                              >
+                                <GraduationCap className="h-4 w-4" />
+                              </button>
+                            )}
+                            <button
+                              onClick={() => setConfirmBlock(a)}
+                              title={a.activo ? 'Bloquear' : 'Desbloquear'}
+                              className={`cursor-pointer rounded p-1.5 ${a.activo ? 'text-[var(--color-error)] hover:bg-red-50 dark:hover:bg-red-950/20' : 'text-[var(--color-success)] hover:bg-green-50 dark:hover:bg-green-950/20'}`}
+                            >
+                              {a.activo ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
         )}
       </div>
 

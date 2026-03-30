@@ -49,5 +49,10 @@ next-env.d.ts
 CLAUDE.md
 AGENTS.md
 
+# Supabase SQL files (migrations and seed — managed via Supabase CLI, not source control)
+*.sql
+supabase/migrations/
+supabase/seed.sql
+
 # VSCode workspace settings (contains MCP server config with project refs)
 .vscode/

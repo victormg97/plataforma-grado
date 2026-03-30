@@ -41,6 +41,7 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
   const [defaultDate, setDefaultDate] = useState<string | undefined>(undefined);
   const [defaultTime, setDefaultTime] = useState<string | undefined>(undefined);
   const [isMobile, setIsMobile] = useState(false);
+  const [currentView, setCurrentView] = useState('dayGridMonth');
   const [markingNoAsistio, setMarkingNoAsistio] = useState(false);
   const calendarRef = useRef<FullCalendar>(null);
 
@@ -50,6 +51,27 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
   }, []);
+
+  useEffect(() => {
+    if (currentView === 'timeGridWeek') {
+      calendarRef.current?.getApi().scrollToTime('08:00:00');
+    }
+  }, [currentView]);
+
+  useEffect(() => {
+    if (!isMobile) return;
+    const timer = setTimeout(() => {
+      const btn = document.querySelector('.calendario-profesor .fc-hoyIcono-button') as HTMLButtonElement | null;
+      if (btn) {
+        btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>`;
+        btn.style.display = 'inline-flex';
+        btn.style.alignItems = 'center';
+        btn.style.justifyContent = 'center';
+        btn.style.lineHeight = '0';
+      }
+    }, 50);
+    return () => clearTimeout(timer);
+  }, [isMobile, currentView]);
 
   // Imperatively sync events to FullCalendar so the calendar updates
   // immediately after a save or a Supabase Realtime event — bypassing any
@@ -194,6 +216,18 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
           .calendario-profesor .fc .fc-scrollgrid {
             border-color: var(--color-border);
           }
+          @media (max-width: 640px) {
+            .calendario-profesor .fc .fc-toolbar-title {
+              font-size: 0.95rem;
+            }
+            .calendario-profesor .fc .fc-button {
+              font-size: 0.7rem;
+              padding: 0.2rem 0.45rem;
+            }
+            .calendario-profesor .fc .fc-toolbar.fc-header-toolbar {
+              gap: 0.35rem;
+            }
+          }
         `}</style>
         <FullCalendar
           ref={calendarRef}
@@ -201,23 +235,30 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
           locale={esLocale}
           initialView={isMobile ? 'listWeek' : 'dayGridMonth'}
           headerToolbar={{
-            left: 'prev,next today',
+            left: isMobile ? 'prev,hoyIcono,next nuevaClase' : 'prev,next today',
             center: 'title',
-            right: isMobile ? 'listWeek' : 'dayGridMonth,timeGridWeek,listWeek',
+            right: isMobile ? 'dayGridMonth,timeGridWeek,listWeek' : 'nuevaClase dayGridMonth,timeGridWeek,listWeek',
           }}
           events={[]}
           eventDisplay="block"
-          height="auto"
+          height={currentView === 'timeGridWeek' ? (isMobile ? '65vh' : '78vh') : 'auto'}
           aspectRatio={1.8}
+          scrollTime="08:00:00"
           nowIndicator={true}
           weekends={true}
           editable={false}
           eventClick={handleEventClick}
           dateClick={handleDateClick}
+          datesSet={(arg) => setCurrentView(arg.view.type)}
           customButtons={{
             nuevaClase: {
               text: '+ Nueva clase',
               click: handleNewClass,
+            },
+            hoyIcono: {
+              text: ' ',
+              hint: 'Hoy',
+              click: () => calendarRef.current?.getApi().today(),
             },
           }}
         />

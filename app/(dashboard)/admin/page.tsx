@@ -108,7 +108,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Two-column: Actividad reciente + Clases hoy */}
-      <div className="mt-[var(--space-lg)] grid gap-[var(--space-md)] lg:grid-cols-2">
+      <div className="mt-[var(--space-lg)] grid grid-cols-1 gap-[var(--space-md)] lg:grid-cols-2">
         {/* Actividad reciente */}
         <Card padding="lg">
           <h2 className="text-sm font-semibold uppercase text-[var(--color-text-muted)] mb-3 flex items-center gap-2">
