@@ -5,6 +5,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { Toaster } from "sonner";
 import { QueryProvider } from "@/lib/queryClient";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 
 const playfairDisplay = Playfair_Display({
@@ -45,6 +46,7 @@ export default async function RootLayout({
             <NextIntlClientProvider messages={messages}>
               {children}
               <Toaster position="top-right" richColors />
+              <SpeedInsights />
             </NextIntlClientProvider>
           </QueryProvider>
         </ThemeProvider>
