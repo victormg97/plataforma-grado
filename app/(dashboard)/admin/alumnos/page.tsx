@@ -2,7 +2,8 @@
 
 import { Suspense, useState, useMemo, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, UserX, UserCheck, ArrowRight, GraduationCap, Copy, Check, Pencil } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Plus, Search, UserX, UserCheck, ArrowRight, GraduationCap, Copy, Check, Pencil, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card } from '@/components/common/Card';
@@ -10,10 +11,16 @@ import { Button } from '@/components/common/Button';
 import { Avatar } from '@/components/common/Avatar';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { Modal } from '@/components/common/Modal';
-import { FichaAlumno } from '@/components/alumnos/FichaAlumno';
-import type { AlumnoConExtra } from '@/components/alumnos/AlumnoCard';
+
 import { useQueryParam } from '@/lib/hooks/useQueryParam';
 import { useTranslations } from 'next-intl';
+import { Tooltip } from '@/components/common/Tooltip';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu';
 
 type AlumnoAdmin = {
   id: string;
@@ -44,6 +51,7 @@ function AdminAlumnosContent() {
   const queryClient = useQueryClient();
   const ta = useTranslations('alumnos');
   const tc = useTranslations('common');
+  const router = useRouter();
 
   // Filters via URL
   const [q, setQ] = useQueryParam('q');
@@ -78,40 +86,8 @@ function AdminAlumnosContent() {
     staleTime: 60_000,
   });
 
-  // Ficha alumno modal
-  const [fichaAlumno, setFichaAlumno] = useState<AlumnoConExtra | null>(null);
-
-  function toFichaAlumno(a: AlumnoAdmin): AlumnoConExtra {
-    return {
-      id: a.id,
-      nombre: a.nombre,
-      apellido: a.apellido,
-      apellido_materno: null,
-      email: a.email,
-      telefono: a.telefono,
-      avatar_url: a.avatar_url,
-      activo: a.activo,
-      rol: 'alumno' as const,
-      idioma: null,
-      tema: null,
-      created_at: '',
-      updated_at: '',
-      alumnos_extra: a.profesor_id
-        ? [{
-            id: '',
-            alumno_id: a.id,
-            profesor_id: a.profesor_id,
-            universidad: a.universidad ?? null,
-            año_ingreso: a.año_ingreso ?? null,
-            notas: a.notas ?? null,
-            paso_prueba: a.paso_prueba,
-            fecha_prueba: a.fecha_prueba ?? null,
-            created_at: '',
-            updated_at: '',
-          }]
-        : null,
-    };
-  }
+  // Ficha alumno — navigate to full page
+  const openFicha = (alumnoId: string) => router.push(`/admin/alumnos/${alumnoId}`);
 
   // Client-side filtering (instant, no network call per keystroke)
   const alumnos = useMemo(() => {
@@ -324,25 +300,40 @@ function AdminAlumnosContent() {
             className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] pl-9 pr-3 py-2 text-sm"
           />
         </div>
-        <select
-          value={estadoFilter || ''}
-          onChange={(e) => setEstadoFilter(e.target.value || null)}
-          className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm"
-        >
-          <option value="">{ta('todos_estados')}</option>
-          <option value="activo">{ta('estado_activo')}</option>
-          <option value="bloqueado">{ta('estado_bloqueado')}</option>
-          <option value="graduado">{ta('estado_graduado')}</option>
-        </select>
-        <select
-          value={profesorFilter || ''}
-          onChange={(e) => setProfesorFilter(e.target.value || null)}
-          className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm"
-        >
-          <option value="">{ta('todos_profesores')}</option>
-          {profesores.map((p) => (
-            <option key={p.id} value={p.id}>{p.nombre} {p.apellido}</option>
-          ))}        </select>
+        <DropdownMenu>
+          <DropdownMenuTrigger className="flex items-center justify-between gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm min-w-[160px]">
+            <span>
+              {estadoFilter === 'activo' ? ta('estado_activo')
+                : estadoFilter === 'bloqueado' ? ta('estado_bloqueado')
+                : estadoFilter === 'graduado' ? ta('estado_graduado')
+                : ta('todos_estados')}
+            </span>
+            <ChevronDown className="h-4 w-4 shrink-0 text-[var(--color-text-muted)]" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => setEstadoFilter(null)}>{ta('todos_estados')}</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setEstadoFilter('activo')}>{ta('estado_activo')}</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setEstadoFilter('bloqueado')}>{ta('estado_bloqueado')}</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setEstadoFilter('graduado')}>{ta('estado_graduado')}</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <DropdownMenu>
+          <DropdownMenuTrigger className="flex items-center justify-between gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm min-w-[180px]">
+            <span className="truncate">
+              {(() => {
+                const p = profesores.find((p) => p.id === profesorFilter);
+                return p ? `${p.nombre} ${p.apellido}` : ta('todos_profesores');
+              })()}
+            </span>
+            <ChevronDown className="h-4 w-4 shrink-0 text-[var(--color-text-muted)]" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => setProfesorFilter(null)}>{ta('todos_profesores')}</DropdownMenuItem>
+            {profesores.map((p) => (
+              <DropdownMenuItem key={p.id} onClick={() => setProfesorFilter(p.id)}>{p.nombre} {p.apellido}</DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Table / Cards */}
@@ -363,7 +354,7 @@ function AdminAlumnosContent() {
                 <div
                   key={a.id}
                   className="cursor-pointer rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] p-[var(--space-md)] transition-colors hover:bg-[var(--color-bg-secondary)]"
-                  onClick={() => setFichaAlumno(toFichaAlumno(a))}
+                  onClick={() => openFicha(a.id)}
                 >
                   {/* Info row */}
                   <div className="flex items-center gap-3">
@@ -385,36 +376,40 @@ function AdminAlumnosContent() {
                     className="mt-[var(--space-sm)] flex items-center justify-end gap-1 border-t border-[var(--color-border)] pt-[var(--space-sm)]"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <button
-                      onClick={() => openEdit(a)}
-                      title={tc('editar')}
-                      className="cursor-pointer rounded p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)]"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => { setReassign(a); setNewProfesorId(a.profesor_id || ''); }}
-                      title={ta('reasignar_titulo')}
-                      className="cursor-pointer rounded p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)]"
-                    >
-                      <ArrowRight className="h-4 w-4" />
-                    </button>
-                    {!a.paso_prueba && a.activo && (
+                    <Tooltip content={tc('editar')}>
                       <button
-                        onClick={() => setGraduateModal(a)}
-                        title={ta('graduar_titulo')}
-                        className="cursor-pointer rounded p-1.5 text-[var(--color-brand-gold)] hover:bg-[var(--color-brand-gold-muted)]"
+                        onClick={() => openEdit(a)}
+                        className="cursor-pointer rounded p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)]"
                       >
-                        <GraduationCap className="h-4 w-4" />
+                        <Pencil className="h-4 w-4" />
                       </button>
+                    </Tooltip>
+                    <Tooltip content={ta('reasignar_titulo')}>
+                      <button
+                        onClick={() => { setReassign(a); setNewProfesorId(a.profesor_id || ''); }}
+                        className="cursor-pointer rounded p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)]"
+                      >
+                        <ArrowRight className="h-4 w-4" />
+                      </button>
+                    </Tooltip>
+                    {!a.paso_prueba && a.activo && (
+                      <Tooltip content={ta('graduar_titulo')}>
+                        <button
+                          onClick={() => setGraduateModal(a)}
+                          className="cursor-pointer rounded p-1.5 text-[var(--color-brand-gold)] hover:bg-[var(--color-brand-gold-muted)]"
+                        >
+                          <GraduationCap className="h-4 w-4" />
+                        </button>
+                      </Tooltip>
                     )}
-                    <button
-                      onClick={() => setConfirmBlock(a)}
-                      title={a.activo ? ta('bloquear') : ta('desbloquear')}
-                      className={`cursor-pointer rounded p-1.5 ${a.activo ? 'text-[var(--color-error)] hover:bg-red-50 dark:hover:bg-red-950/20' : 'text-[var(--color-success)] hover:bg-green-50 dark:hover:bg-green-950/20'}`}
-                    >
-                      {a.activo ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
-                    </button>
+                    <Tooltip content={a.activo ? ta('bloquear') : ta('desbloquear')}>
+                      <button
+                        onClick={() => setConfirmBlock(a)}
+                        className={`cursor-pointer rounded p-1.5 ${a.activo ? 'text-[var(--color-error)] hover:bg-red-50 dark:hover:bg-red-950/20' : 'text-[var(--color-success)] hover:bg-green-50 dark:hover:bg-green-950/20'}`}
+                      >
+                        {a.activo ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
+                      </button>
+                    </Tooltip>
                   </div>
                 </div>
               ))}
@@ -438,7 +433,7 @@ function AdminAlumnosContent() {
                       <tr
                         key={a.id}
                         className="cursor-pointer border-b border-[var(--color-border)] last:border-0 hover:bg-[var(--color-bg-secondary)] transition-colors"
-                        onClick={() => setFichaAlumno(toFichaAlumno(a))}
+                        onClick={() => openFicha(a.id)}
                       >
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-3">
@@ -464,36 +459,40 @@ function AdminAlumnosContent() {
                         </td>
                         <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center justify-end gap-1">
-                            <button
-                              onClick={() => openEdit(a)}
-                              title={tc('editar')}
-                              className="cursor-pointer rounded p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)]"
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </button>
-                            <button
-                              onClick={() => { setReassign(a); setNewProfesorId(a.profesor_id || ''); }}
-                              title={ta('reasignar_titulo')}
-                              className="cursor-pointer rounded p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)]"
-                            >
-                              <ArrowRight className="h-4 w-4" />
-                            </button>
-                            {!a.paso_prueba && a.activo && (
+                            <Tooltip content={tc('editar')}>
                               <button
-                                onClick={() => setGraduateModal(a)}
-                                title={ta('graduar_titulo')}
-                                className="cursor-pointer rounded p-1.5 text-[var(--color-brand-gold)] hover:bg-[var(--color-brand-gold-muted)]"
+                                onClick={() => openEdit(a)}
+                                className="cursor-pointer rounded p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)]"
                               >
-                                <GraduationCap className="h-4 w-4" />
+                                <Pencil className="h-4 w-4" />
                               </button>
+                            </Tooltip>
+                            <Tooltip content={ta('reasignar_titulo')}>
+                              <button
+                                onClick={() => { setReassign(a); setNewProfesorId(a.profesor_id || ''); }}
+                                className="cursor-pointer rounded p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)]"
+                              >
+                                <ArrowRight className="h-4 w-4" />
+                              </button>
+                            </Tooltip>
+                            {!a.paso_prueba && a.activo && (
+                              <Tooltip content={ta('graduar_titulo')}>
+                                <button
+                                  onClick={() => setGraduateModal(a)}
+                                  className="cursor-pointer rounded p-1.5 text-[var(--color-brand-gold)] hover:bg-[var(--color-brand-gold-muted)]"
+                                >
+                                  <GraduationCap className="h-4 w-4" />
+                                </button>
+                              </Tooltip>
                             )}
-                            <button
-                              onClick={() => setConfirmBlock(a)}
-                              title={a.activo ? ta('bloquear') : ta('desbloquear')}
-                              className={`cursor-pointer rounded p-1.5 ${a.activo ? 'text-[var(--color-error)] hover:bg-red-50 dark:hover:bg-red-950/20' : 'text-[var(--color-success)] hover:bg-green-50 dark:hover:bg-green-950/20'}`}
-                            >
-                              {a.activo ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
-                            </button>
+                            <Tooltip content={a.activo ? ta('bloquear') : ta('desbloquear')}>
+                              <button
+                                onClick={() => setConfirmBlock(a)}
+                                className={`cursor-pointer rounded p-1.5 ${a.activo ? 'text-[var(--color-error)] hover:bg-red-50 dark:hover:bg-red-950/20' : 'text-[var(--color-success)] hover:bg-green-50 dark:hover:bg-green-950/20'}`}
+                              >
+                                {a.activo ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
+                              </button>
+                            </Tooltip>
                           </div>
                         </td>
                       </tr>
@@ -505,16 +504,6 @@ function AdminAlumnosContent() {
           </>
         )}
       </div>
-
-      {/* Ficha alumno */}
-      <FichaAlumno
-        alumno={fichaAlumno}
-        open={!!fichaAlumno}
-        onClose={() => {
-          setFichaAlumno(null);
-          queryClient.invalidateQueries({ queryKey: ['admin-alumnos'] });
-        }}
-      />
 
       {/* Edit alumno modal */}
       <Modal
@@ -593,12 +582,23 @@ function AdminAlumnosContent() {
           </div>
           <div>
             <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">{ta('asignar_profesor')}</label>
-            <select value={profesorId} onChange={(e) => setProfesorId(e.target.value)} className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm">
-              <option value="">{ta('sin_asignar')}</option>
-              {profesores.map((p) => (
-                <option key={p.id} value={p.id}>{p.nombre} {p.apellido}</option>
-              ))}
-            </select>
+            <DropdownMenu>
+              <DropdownMenuTrigger className="w-full flex items-center justify-between gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm">
+                <span className="truncate">
+                  {(() => {
+                    const p = profesores.find((p) => p.id === profesorId);
+                    return p ? `${p.nombre} ${p.apellido}` : ta('sin_asignar');
+                  })()}
+                </span>
+                <ChevronDown className="h-4 w-4 shrink-0 text-[var(--color-text-muted)]" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => setProfesorId('')}>{ta('sin_asignar')}</DropdownMenuItem>
+                {profesores.map((p) => (
+                  <DropdownMenuItem key={p.id} onClick={() => setProfesorId(p.id)}>{p.nombre} {p.apellido}</DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -650,16 +650,23 @@ function AdminAlumnosContent() {
           <p className="text-sm text-[var(--color-text-primary)]">
             {ta('reasignar_texto', { nombre: `${reassign?.nombre} ${reassign?.apellido}` })}
           </p>
-          <select
-            value={newProfesorId}
-            onChange={(e) => setNewProfesorId(e.target.value)}
-            className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm"
-          >
-            <option value="">{ta('seleccionar_profesor')}</option>
-            {profesores.filter((p) => p.rol !== 'admin' || p.id !== reassign?.profesor_id).map((p) => (
-              <option key={p.id} value={p.id}>{p.nombre} {p.apellido}</option>
-            ))}
-          </select>
+          <DropdownMenu>
+            <DropdownMenuTrigger className="w-full flex items-center justify-between gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm">
+              <span className="truncate">
+                {(() => {
+                  const p = profesores.find((p) => p.id === newProfesorId);
+                  return p ? `${p.nombre} ${p.apellido}` : ta('seleccionar_profesor');
+                })()}
+              </span>
+              <ChevronDown className="h-4 w-4 shrink-0 text-[var(--color-text-muted)]" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => setNewProfesorId('')}>{ta('seleccionar_profesor')}</DropdownMenuItem>
+              {profesores.filter((p) => p.rol !== 'admin' || p.id !== reassign?.profesor_id).map((p) => (
+                <DropdownMenuItem key={p.id} onClick={() => setNewProfesorId(p.id)}>{p.nombre} {p.apellido}</DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </Modal>
 

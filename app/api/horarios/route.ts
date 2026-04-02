@@ -86,5 +86,17 @@ export async function POST(request: NextRequest) {
     nota_alumno: null,
   });
 
+  // If marked as exam, create a linked prueba record
+  if (body.es_prueba === true) {
+    await supabase.from('pruebas').insert({
+      alumno_id: body.alumno_id,
+      profesor_id: profesorId,
+      horario_id: horario.id,
+      nombre: body.titulo,
+      fecha: body.fecha,
+      estado: 'pendiente',
+    });
+  }
+
   return NextResponse.json(horario, { status: 201 });
 }

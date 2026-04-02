@@ -34,6 +34,9 @@ export type HorarioConAsistencia = {
     email: string;
     avatar_url: string | null;
   } | null;
+  notas_count?: number;
+  /** Populated only when fetching a single horario via GET /api/horarios/:id */
+  pruebas?: { id: string; nombre: string; estado: string }[];
 };
 
 export type CalendarEvent = {
@@ -108,7 +111,11 @@ export function useHorarios(profesorId?: string) {
       return { horarios, stats: null, alumnos: null };
     },
     enabled: !!targetId,
-    staleTime: 30_000,
+    // 5 minutes until data becomes "stale" (requires background refetch).
+    // The realtime webhooks already force refetches on DB changes.
+    staleTime: 1000 * 60 * 5,
+    // 1 Hour in RAM memory. Fixes "loading spinners" when returning to page
+    gcTime: 1000 * 60 * 60,
   });
 
   const rawData: HorarioConAsistencia[] = useMemo(() => data?.horarios ?? [], [data]);

@@ -1,15 +1,17 @@
 'use client';
 
-import { useEffect, useState, useRef, useCallback, startTransition } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Bell, CheckCheck, CheckCircle2, XCircle, ArrowLeftRight,
-  CalendarPlus, CalendarClock, CalendarOff, Trash2, Calendar, Clock,
+  CalendarPlus, CalendarClock, CalendarOff, ClipboardList,
+  Calendar, Clock, Trash2,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
-import { createClient } from '@/lib/supabase/client';
+import { buildAlumnoHorarioDetailHref } from '@/lib/utils/horarioNavigation';
 import { useUIStore } from '@/stores/useUIStore';
 import { useUserStore } from '@/stores/useUserStore';
 import type { TipoNotificacion } from '@/lib/supabase/types';
@@ -22,18 +24,20 @@ type Notificacion = {
   leida: boolean;
   horario_id: string | null;
   alumno_id: string | null;
+  programa_id: string | null;
   alumno: { id: string; nombre: string; apellido: string } | null;
   horario: { id: string; fecha: string; hora_inicio: string; hora_fin: string; titulo: string | null; descripcion: string | null } | null;
   created_at: string;
 };
 
 const TIPO_ICON: Record<TipoNotificacion, { icon: React.ElementType; color: string }> = {
-  confirmacion:     { icon: CheckCircle2,  color: 'var(--color-success)' },
-  cancelacion:      { icon: XCircle,       color: 'var(--color-error)' },
-  cambio_horario:   { icon: ArrowLeftRight, color: 'var(--color-info)' },
-  nueva_clase:      { icon: CalendarPlus,  color: 'var(--color-brand-gold)' },
-  clase_modificada: { icon: CalendarClock, color: 'var(--color-info)' },
-  clase_cancelada:  { icon: CalendarOff,   color: 'var(--color-error)' },
+  confirmacion:       { icon: CheckCircle2,   color: 'var(--color-success)' },
+  cancelacion:        { icon: XCircle,        color: 'var(--color-error)' },
+  cambio_horario:     { icon: ArrowLeftRight,  color: 'var(--color-info)' },
+  nueva_clase:        { icon: CalendarPlus,   color: 'var(--color-brand-gold)' },
+  clase_modificada:   { icon: CalendarClock,  color: 'var(--color-info)' },
+  clase_cancelada:    { icon: CalendarOff,    color: 'var(--color-error)' },
+  programa_asignado:  { icon: ClipboardList,  color: 'var(--color-brand-gold)' },
 };
 
 type TranslateFn = (key: string, values?: Record<string, string | number>) => string;
@@ -50,47 +54,37 @@ function timeAgo(dateStr: string, t: TranslateFn): string {
   return t('tiempo.dias', { days });
 }
 
+async function fetchNotificacionesQuery(): Promise<Notificacion[]> {
+  const res = await fetch('/api/notificaciones?limit=30');
+  if (!res.ok) throw new Error('Failed to fetch notificaciones');
+  const data = await res.json();
+  return Array.isArray(data) ? data : [];
+}
+
 export function NotificacionesPanel() {
   const { user } = useUserStore();
   const { setHorarioDetailId } = useUIStore();
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const tn = useTranslations('notificaciones');
   const locale = useLocale();
   const dateFnsLocale = locale === 'en' ? enUS : es;
-  const [notificaciones, setNotificaciones] = useState<Notificacion[]>([]);
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+  const currentPath = useMemo(() => {
+    const qs = searchParams.toString();
+    return qs ? `${pathname}?${qs}` : pathname;
+  }, [pathname, searchParams]);
+
+  const { data: notificaciones = [] } = useQuery<Notificacion[]>({
+    queryKey: ['notificaciones'],
+    queryFn: fetchNotificacionesQuery,
+    staleTime: 30_000,
+  });
 
   const sinLeer = notificaciones.filter((n) => !n.leida).length;
-
-  const fetchNotificaciones = useCallback(async () => {
-    try {
-      const res = await fetch('/api/notificaciones?limit=30');
-      const data = await res.json();
-      if (Array.isArray(data)) setNotificaciones(data);
-    } catch { /* ignore */ }
-  }, []);
-
-  useEffect(() => {
-    startTransition(() => { fetchNotificaciones(); });
-  }, [fetchNotificaciones]);
-
-  // Realtime subscription — filtered server-side to current user
-  useEffect(() => {
-    if (!user) return;
-    const supabase = createClient();
-
-    const channel = supabase
-      .channel(`notif-panel-${user.id}`)
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'notificaciones', filter: `destinatario_id=eq.${user.id}` },
-        () => fetchNotificaciones(),
-      )
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
-  }, [user, fetchNotificaciones]);
 
   // Close on click outside
   useEffect(() => {
@@ -103,6 +97,10 @@ export function NotificacionesPanel() {
     return () => document.removeEventListener('mousedown', handleOutside);
   }, [open]);
 
+  const invalidate = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['notificaciones'] });
+  }, [queryClient]);
+
   const marcarTodo = async () => {
     try {
       await fetch('/api/notificaciones', {
@@ -110,7 +108,7 @@ export function NotificacionesPanel() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ marcar_todo: true }),
       });
-      setNotificaciones((prev) => prev.map((n) => ({ ...n, leida: true })));
+      invalidate();
     } catch { /* ignore */ }
   };
 
@@ -118,7 +116,7 @@ export function NotificacionesPanel() {
     e.stopPropagation();
     try {
       await fetch(`/api/notificaciones?id=${id}`, { method: 'DELETE' });
-      setNotificaciones((prev) => prev.filter((n) => n.id !== id));
+      invalidate();
     } catch { /* ignore */ }
   };
 
@@ -129,18 +127,20 @@ export function NotificacionesPanel() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ids: [n.id] }),
       });
-      setNotificaciones((prev) =>
-        prev.map((item) => (item.id === n.id ? { ...item, leida: true } : item)),
-      );
+      invalidate();
     }
     setOpen(false);
 
     if (n.horario_id) {
       if (user?.rol === 'alumno') {
-        router.push(`/alumno/horario?id=${n.horario_id}`);
+        router.push(buildAlumnoHorarioDetailHref(n.horario_id, currentPath));
       } else {
         setHorarioDetailId(n.horario_id);
       }
+    } else if (n.programa_id && user?.rol === 'alumno') {
+      const params = new URLSearchParams();
+      params.set('from', currentPath);
+      router.push(`/alumno/programas/${n.programa_id}?${params.toString()}`);
     }
   };
 
@@ -150,6 +150,11 @@ export function NotificacionesPanel() {
         ? `${n.alumno.nombre} ${n.alumno.apellido}`
         : tn('mensajes.alumno_generico');
       return `${alumnoNombre} ${tn(`tipos.${n.tipo}`)}`;
+    }
+
+    // For program assignments use the stored message (contains program name)
+    if (n.tipo === 'programa_asignado') {
+      return n.mensaje || tn(`tipos.${n.tipo}`);
     }
 
     const clase = n.horario?.titulo?.trim() || n.horario?.descripcion?.trim() || tn('mensajes.clase_generica');

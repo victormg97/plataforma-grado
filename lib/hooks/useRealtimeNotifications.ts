@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
@@ -8,6 +9,12 @@ import type { TipoNotificacion } from '@/lib/supabase/types';
 
 export function useRealtimeNotifications(userId: string | undefined) {
   const t = useTranslations('notificaciones');
+  const queryClient = useQueryClient();
+
+  // Use a ref so the channel effect only depends on userId (stable primitive),
+  // not on `t` which may return a new reference each render in next-intl.
+  const tRef = useRef(t);
+  tRef.current = t;
 
   useEffect(() => {
     if (!userId) return;
@@ -31,8 +38,9 @@ export function useRealtimeNotifications(userId: string | undefined) {
         (payload) => {
           const notif = payload.new as { mensaje: string; tipo: TipoNotificacion };
           if (notif?.tipo || notif?.mensaje) {
-            const translated = notif?.tipo ? t(`tipos.${notif.tipo}`) : '';
+            const translated = notif?.tipo ? tRef.current(`tipos.${notif.tipo}`) : '';
             toast.info(translated || notif.mensaje, { duration: 6000 });
+            queryClient.invalidateQueries({ queryKey: ['notificaciones'] });
           }
         }
       )
@@ -41,5 +49,5 @@ export function useRealtimeNotifications(userId: string | undefined) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userId, t]);
+  }, [userId, queryClient]);
 }

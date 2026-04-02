@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import type { CalendarEvent } from '@/lib/hooks/useHorarios';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
@@ -17,10 +17,18 @@ import { Avatar } from '@/components/common/Avatar';
 import { Button } from '@/components/common/Button';
 import { HorarioForm } from '@/components/horarios/HorarioForm';
 import { useTranslations, useLocale } from 'next-intl';
-import { Calendar, Clock, FileText, MessageSquare, Pencil, UserX } from 'lucide-react';
+import { Calendar, Clock, FileText, MessageSquare, Pencil, UserX, ExternalLink, GraduationCap } from 'lucide-react';
+import { CalendarioDownloadButton, type CalendarioExportEvent } from '@/components/calendario/CalendarioDownloadButton';
+import { resolveCssVar } from '@/lib/utils/cssTokens';
+import Link from 'next/link';
+import { NotasIndicator } from '@/components/notas/NotasIndicator';
+import { useNotasCount } from '@/lib/hooks/useNotasCount';
+import { buildClaseDetailHref } from '@/lib/utils/horarioNavigation';
+import { useUserStore } from '@/stores/useUserStore';
 import { format } from 'date-fns';
 import { es as esDateFns, enUS } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { usePruebas } from '@/lib/hooks/usePruebas';
 
 interface CalendarioProfesorProps {
   profesorId: string;
@@ -45,6 +53,41 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
   const [currentView, setCurrentView] = useState('dayGridMonth');
   const [markingNoAsistio, setMarkingNoAsistio] = useState(false);
   const calendarRef = useRef<FullCalendar>(null);
+  const { user } = useUserStore();
+  const userRol: 'profesor' | 'admin' = user?.rol === 'admin' ? 'admin' : 'profesor';
+  const notasCounts = useNotasCount(selectedHorario ? [selectedHorario.id] : []);
+
+  // Build a Set of horario IDs that are exam classes
+  const { data: pruebas = [] } = usePruebas();
+  const pruebaHorarioIds = useMemo(
+    () => new Set(pruebas.filter((p) => p.horario_id).map((p) => p.horario_id!)),
+    [pruebas]
+  );
+
+  // Estado colour map — resolved at render time from globals.css CSS vars
+  const estadoHex: Record<string, string> = {
+    pendiente:  resolveCssVar('--color-brand-gold',   '#C9993F'),
+    confirmado: resolveCssVar('--color-success',      '#2D6A4F'),
+    cancelado:  resolveCssVar('--color-error',        '#C0392B'),
+    cambiado:   resolveCssVar('--color-info',         '#2C5F8A'),
+    no_asistio: resolveCssVar('--color-text-muted',   '#888888'),
+  };
+
+  // Normalised events for PDF export
+  const profesorExportEvents = useMemo<CalendarioExportEvent[]>(
+    () =>
+      rawData.map((h) => ({
+        id: h.id,
+        title: h.titulo,
+        start: new Date(`${h.fecha}T${h.hora_inicio}`),
+        end: new Date(`${h.fecha}T${h.hora_fin}`),
+        color: estadoHex[h.asistencia?.[0]?.estado ?? 'pendiente'] ?? estadoHex.pendiente,
+        subtitle: h.alumno ? `${h.alumno.nombre} ${h.alumno.apellido}` : undefined,
+        status: h.asistencia?.[0]?.estado,
+      })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [rawData],
+  );
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -157,6 +200,15 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
 
   return (
     <>
+      {/* Download button: desktop injects into FC toolbar, mobile shows popup on view-button tap */}
+      <CalendarioDownloadButton
+        calendarRef={calendarRef}
+        currentView={currentView}
+        isMobile={isMobile}
+        containerClass=".calendario-profesor"
+        exportEvents={profesorExportEvents}
+      />
+
       <div className="calendario-profesor">
         <style>{`
           .calendario-profesor .fc {
@@ -217,6 +269,9 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
           .calendario-profesor .fc .fc-scrollgrid {
             border-color: var(--color-border);
           }
+          .calendario-profesor .fc .fc-descargar-button {
+            padding: 0.25rem 0.5rem;
+          }
           @media (max-width: 640px) {
             .calendario-profesor .fc .fc-toolbar-title {
               font-size: 0.95rem;
@@ -238,7 +293,7 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
           headerToolbar={{
             left: isMobile ? 'prev,hoyIcono,next nuevaClase' : 'prev,next today',
             center: 'title',
-            right: isMobile ? 'dayGridMonth,timeGridWeek,listWeek' : 'nuevaClase dayGridMonth,timeGridWeek,listWeek',
+            right: isMobile ? 'dayGridMonth,timeGridWeek,listWeek' : 'nuevaClase descargar dayGridMonth,timeGridWeek,listWeek',
           }}
           events={[]}
           eventDisplay="block"
@@ -251,10 +306,34 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
           eventClick={handleEventClick}
           dateClick={handleDateClick}
           datesSet={(arg) => setCurrentView(arg.view.type)}
+          eventContent={(arg) => {
+            const isExam = pruebaHorarioIds.has(arg.event.id);
+            return (
+              <div style={{ display: 'flex', alignItems: 'center', width: '100%', overflow: 'hidden', gap: '3px', padding: '0 4px' }}>
+                {arg.timeText && (
+                  <b style={{ fontSize: '0.65rem', whiteSpace: 'nowrap', flexShrink: 0 }}>{arg.timeText}&nbsp;</b>
+                )}
+                <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.75rem', fontWeight: 600 }}>
+                  {arg.event.title}
+                </span>
+                {isExam && (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, opacity: 0.9 }}>
+                    <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                    <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+                  </svg>
+                )}
+              </div>
+            );
+          }}
           customButtons={{
             nuevaClase: {
               text: `+ ${t('nueva_clase')}`,
               click: handleNewClass,
+            },
+            descargar: {
+              text: ' ',
+              hint: locale === 'es' ? 'Descargar' : 'Download',
+              click: () => {},
             },
             hoyIcono: {
               text: ' ',
@@ -316,6 +395,14 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
             <div className="flex items-center gap-2">
               <span className="text-sm text-[var(--color-text-muted)]">{ta('estado_label')}:</span>
               <StatusBadge status={selectedHorario.asistencia?.[0]?.estado || 'pendiente'} />
+              <NotasIndicator count={notasCounts[selectedHorario.id] ?? 0} />
+              {pruebaHorarioIds.has(selectedHorario.id) && (
+                <span className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium"
+                  style={{ backgroundColor: 'var(--color-brand-gold-muted)', borderColor: 'color-mix(in srgb, var(--color-brand-gold) 40%, transparent)', color: 'var(--color-brand-gold)' }}>
+                  <GraduationCap className="h-3 w-3" />
+                  {t('badge_examen')}
+                </span>
+              )}
             </div>
 
             {/* Horario */}
@@ -352,6 +439,16 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
                 </p>
               </div>
             )}
+
+            {/* Link to detail page */}
+            <Link
+              href={buildClaseDetailHref(selectedHorario.id, userRol, `/${userRol}`)}
+              className="flex items-center gap-1.5 text-sm text-[var(--color-brand-gold)] hover:underline"
+              onClick={() => setDetailOpen(false)}
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              {t('ver_detalle_completo')}
+            </Link>
           </div>
         )}
       </Modal>

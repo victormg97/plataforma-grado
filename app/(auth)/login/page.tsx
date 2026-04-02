@@ -1,14 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
 import { useTheme } from 'next-themes';
 import { toast } from 'sonner';
-import { createClient } from '@/lib/supabase/client';
-import { getRolRedirectPath } from '@/lib/auth/helpers';
+import { Eye, EyeOff } from 'lucide-react';
 import { loginSchema, type LoginFormData } from '@/lib/validations/auth.schema';
 import { setLocaleAction } from '@/app/actions/setLocale';
 import { Input } from '@/components/ui/input';
@@ -22,6 +21,33 @@ export default function LoginPage() {
   const router = useRouter();
   const { theme, setTheme } = useTheme();
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  // Seconds remaining before the user can try again after a 429
+  const [cooldownSeconds, setCooldownSeconds] = useState(0);
+  const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Countdown timer — ticks every second, stops at 0
+  function startCooldown(seconds: number) {
+    if (cooldownRef.current) clearInterval(cooldownRef.current);
+    setCooldownSeconds(seconds);
+    cooldownRef.current = setInterval(() => {
+      setCooldownSeconds((prev) => {
+        if (prev <= 1) {
+          clearInterval(cooldownRef.current!);
+          cooldownRef.current = null;
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }
+
+  // Clean up interval on unmount
+  useEffect(() => {
+    return () => {
+      if (cooldownRef.current) clearInterval(cooldownRef.current);
+    };
+  }, []);
 
   const {
     register,
@@ -32,58 +58,79 @@ export default function LoginPage() {
   });
 
   async function onSubmit(data: LoginFormData) {
+    // Block submit while in cooldown
+    if (cooldownSeconds > 0) return;
+
     setLoading(true);
-    const supabase = createClient();
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email: data.email,
-      password: data.password,
-    });
-
-    if (error) {
-      toast.error(t('error_credenciales'));
+    let res: Response;
+    try {
+      res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: data.email, password: data.password }),
+      });
+    } catch {
+      toast.error(t('error_servidor'));
       setLoading(false);
       return;
     }
 
-    // Get user profile to determine role and preferences
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (user) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (profile) {
-        // ── Apply theme preference ─────────────────────────────────────
-        if (profile.tema && (profile.tema === 'light' || profile.tema === 'dark')) {
-          // User has an explicit DB preference → always apply it
-          setTheme(profile.tema);
-        } else {
-          // No DB preference yet (first login) → save the current localStorage theme
-          const currentTheme = theme ?? 'light';
-          fetch('/api/perfil', {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ tema: currentTheme }),
-          }).catch(() => {});
-        }
-
-        // ── Apply language preference ──────────────────────────────────
-        if (profile.idioma) {
-          await setLocaleAction(profile.idioma as LocaleCode).catch(() => {});
-        }
-
-        router.push(getRolRedirectPath(profile.rol));
-        router.refresh();
-        return;
-      }
+    // ── 429 Too Many Requests ────────────────────────────────────────────────
+    if (res.status === 429) {
+      const body = await res.json().catch(() => ({}));
+      const retryAfter: number = body.retryAfter ?? 60;
+      const minutes = Math.ceil(retryAfter / 60);
+      startCooldown(retryAfter);
+      toast.error(t('error_demasiados_intentos', { minutes }));
+      setLoading(false);
+      return;
     }
 
-    toast.error(t('error_generico'));
-    setLoading(false);
+    // ── 401 Invalid credentials ──────────────────────────────────────────────
+    if (res.status === 401) {
+      const body = await res.json().catch(() => ({}));
+      const remaining: number = typeof body.remaining === 'number' ? body.remaining : -1;
+      if (remaining > 0) {
+        toast.error(
+          `${t('error_credenciales')} — ${t('intentos_restantes', { count: remaining })}`,
+        );
+      } else {
+        toast.error(t('error_credenciales'));
+      }
+      setLoading(false);
+      return;
+    }
+
+    // ── 5xx Server error ─────────────────────────────────────────────────────
+    if (!res.ok) {
+      toast.error(t('error_servidor'));
+      setLoading(false);
+      return;
+    }
+
+    // ── 200 Success ──────────────────────────────────────────────────────────
+    const body = await res.json().catch(() => ({}));
+
+    // Apply theme preference returned by the server
+    if (body.tema === 'light' || body.tema === 'dark') {
+      setTheme(body.tema);
+    } else {
+      // No DB preference yet — persist current localStorage theme
+      fetch('/api/perfil', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tema: theme ?? 'light' }),
+      }).catch(() => {});
+    }
+
+    // Apply language preference
+    if (body.idioma) {
+      await setLocaleAction(body.idioma as LocaleCode).catch(() => {});
+    }
+
+    router.push(body.redirectPath ?? '/login');
+    router.refresh();
   }
 
   return (
@@ -128,13 +175,23 @@ export default function LoginPage() {
             <Label htmlFor="password" className="text-[var(--color-text-secondary)]">
               {t('password')}
             </Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              {...register('password')}
-              className="h-11"
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="••••••••"
+                {...register('password')}
+                className="h-11 pr-11"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-2 top-1/2 z-10 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text-secondary)]"
+                aria-label={showPassword ? t('ocultar_password') : t('mostrar_password')}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
             {errors.password && (
               <p className="text-xs text-[var(--color-error)]">
                 {errors.password.message}
@@ -142,8 +199,17 @@ export default function LoginPage() {
             )}
           </div>
 
-          <Button type="submit" fullWidth loading={loading}>
-            {loading ? t('cargando') : t('boton')}
+          <Button
+            type="submit"
+            fullWidth
+            loading={loading}
+            disabled={loading || cooldownSeconds > 0}
+          >
+            {loading
+              ? t('cargando')
+              : cooldownSeconds > 0
+                ? `${t('boton')} (${cooldownSeconds}s)`
+                : t('boton')}
           </Button>
         </form>
       </div>

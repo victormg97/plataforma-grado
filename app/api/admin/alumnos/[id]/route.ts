@@ -53,6 +53,8 @@ export async function PATCH(
     extraUpdates.paso_prueba = body.paso_prueba;
     if (body.paso_prueba && body.fecha_prueba) {
       extraUpdates.fecha_prueba = body.fecha_prueba;
+    } else if (!body.paso_prueba) {
+      extraUpdates.fecha_prueba = null;
     }
   }
 

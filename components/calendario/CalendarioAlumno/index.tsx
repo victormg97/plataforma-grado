@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -9,8 +9,14 @@ import listPlugin from '@fullcalendar/list';
 import interactionPlugin from '@fullcalendar/interaction';
 import esLocale from '@fullcalendar/core/locales/es';
 import type { EventClickArg } from '@fullcalendar/core';
+import { GraduationCap } from 'lucide-react';
 import { useAsistencia } from '@/lib/hooks/useAsistencia';
+import { usePruebas } from '@/lib/hooks/usePruebas';
+import { buildAlumnoHorarioDetailHref } from '@/lib/utils/horarioNavigation';
 import { useTranslations, useLocale } from 'next-intl';
+import { CalendarioDownloadButton, type CalendarioExportEvent } from '@/components/calendario/CalendarioDownloadButton';
+import { resolveCssVar } from '@/lib/utils/cssTokens';
+import { useUserStore } from '@/stores/useUserStore';
 
 const ESTADO_COLORS: Record<string, { bg: string; border: string; text: string }> = {
   pendiente:  { bg: 'var(--color-brand-gold)',  border: 'var(--color-brand-gold)',  text: '#1a1a1a' },
@@ -21,13 +27,26 @@ const ESTADO_COLORS: Record<string, { bg: string; border: string; text: string }
 
 export function CalendarioAlumno() {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { clases, loading } = useAsistencia();
+  const { user } = useUserStore();
+  const { data: pruebas = [] } = usePruebas(user?.id);
   const tc = useTranslations('common');
   const ta = useTranslations('asistencia');
   const locale = useLocale();
   const [isMobile, setIsMobile] = useState(false);
   const [currentView, setCurrentView] = useState('dayGridMonth');
   const calendarRef = useRef<FullCalendar>(null);
+  const currentPath = useMemo(() => {
+    const qs = searchParams.toString();
+    return qs ? `${pathname}?${qs}` : pathname;
+  }, [pathname, searchParams]);
+
+  const pruebaHorarioIds = useMemo(
+    () => new Set(pruebas.filter((p) => p.horario_id).map((p) => p.horario_id!)),
+    [pruebas]
+  );
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -71,6 +90,31 @@ export function CalendarioAlumno() {
     };
   });
 
+  // Normalised events for PDF export
+  const alumnoExportEvents = useMemo<CalendarioExportEvent[]>(
+    () => {
+      const estadoHex: Record<string, string> = {
+        pendiente:  resolveCssVar('--color-brand-gold',  '#C9993F'),
+        confirmado: resolveCssVar('--color-success',     '#2D6A4F'),
+        cancelado:  resolveCssVar('--color-error',       '#C0392B'),
+        cambiado:   resolveCssVar('--color-info',        '#2C5F8A'),
+        no_asistio: resolveCssVar('--color-text-muted',  '#888888'),
+      };
+      return clases.map((c) => ({
+        id: c.horario.id,
+        title: c.horario.titulo,
+        start: new Date(`${c.horario.fecha}T${c.horario.hora_inicio}`),
+        end: new Date(`${c.horario.fecha}T${c.horario.hora_fin}`),
+        color: estadoHex[c.estado] ?? estadoHex.pendiente,
+        subtitle: c.horario.profesor
+          ? `${c.horario.profesor.nombre} ${c.horario.profesor.apellido}`
+          : undefined,
+        status: c.estado,
+      }));
+    },
+    [clases],
+  );
+
   // Sync events imperatively
   useEffect(() => {
     const api = calendarRef.current?.getApi();
@@ -81,7 +125,7 @@ export function CalendarioAlumno() {
   }, [clases]);
 
   function handleEventClick(info: EventClickArg) {
-    router.push(`/alumno/horario?id=${info.event.id}`);
+    router.push(buildAlumnoHorarioDetailHref(info.event.id, currentPath));
   }
 
   if (loading) {
@@ -94,15 +138,25 @@ export function CalendarioAlumno() {
 
   return (
     <div className="calendario-alumno">
-      {/* Legend */}
-      <div className="mb-3 flex flex-wrap gap-3">
-        {Object.entries(ESTADO_COLORS).map(([estado, colors]) => (
-          <div key={estado} className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-full" style={{ backgroundColor: colors.bg }} />
-            <span className="text-xs capitalize text-[var(--color-text-muted)]">{ta(`estados.${estado}`)}</span>
-          </div>
-        ))}
+      {/* Legend row */}
+      <div className="mb-3 flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap gap-3">
+          {Object.entries(ESTADO_COLORS).map(([estado, colors]) => (
+            <div key={estado} className="flex items-center gap-1.5">
+              <span className="h-3 w-3 rounded-full" style={{ backgroundColor: colors.bg }} />
+              <span className="text-xs capitalize text-[var(--color-text-muted)]">{ta(`estados.${estado}`)}</span>
+            </div>
+          ))}
+        </div>
       </div>
+
+      <CalendarioDownloadButton
+        calendarRef={calendarRef}
+        currentView={currentView}
+        isMobile={isMobile}
+        containerClass=".calendario-alumno"
+        exportEvents={alumnoExportEvents}
+      />
 
       <style>{`
         .calendario-alumno .fc {
@@ -137,6 +191,7 @@ export function CalendarioAlumno() {
           border-color: var(--color-brand-gold) !important;
           color: var(--color-brand-black) !important;
         }
+        .calendario-alumno .fc .fc-descargar-button { padding: 0.25rem 0.5rem; }
         .calendario-alumno .fc .fc-col-header-cell {
           padding: 0.5rem 0;
           font-weight: 600;
@@ -184,7 +239,7 @@ export function CalendarioAlumno() {
         headerToolbar={{
           left: isMobile ? 'prev,hoyIcono,next' : 'prev,next today',
           center: 'title',
-          right: 'dayGridMonth,timeGridWeek,listWeek',
+          right: 'descargar dayGridMonth,timeGridWeek,listWeek',
         }}
         customButtons={{
           hoyIcono: {
@@ -192,6 +247,7 @@ export function CalendarioAlumno() {
             hint: tc('hoy'),
             click: () => calendarRef.current?.getApi().today(),
           },
+          descargar: { text: ' ', hint: locale === 'es' ? 'Descargar' : 'Download', click: () => {} },
         }}
         events={[]}
         eventClick={handleEventClick}
@@ -202,6 +258,25 @@ export function CalendarioAlumno() {
         nowIndicator={true}
         weekends={true}
         datesSet={(arg) => setCurrentView(arg.view.type)}
+        eventContent={(arg) => {
+          const isExam = pruebaHorarioIds.has(arg.event.id);
+          return (
+            <div style={{ display: 'flex', alignItems: 'center', width: '100%', overflow: 'hidden', gap: '3px', padding: '0 4px' }}>
+              {arg.timeText && (
+                <b style={{ fontSize: '0.65rem', whiteSpace: 'nowrap', flexShrink: 0 }}>{arg.timeText}&nbsp;</b>
+              )}
+              <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.75rem', fontWeight: 600 }}>
+                {arg.event.title}
+              </span>
+              {isExam && (
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, opacity: 0.9 }}>
+                  <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                  <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+                </svg>
+              )}
+            </div>
+          );
+        }}
       />
     </div>
   );

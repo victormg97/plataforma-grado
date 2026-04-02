@@ -15,7 +15,7 @@ export async function GET(
 
   const { data, error } = await supabase
     .from('horarios')
-    .select('*, asistencia:asistencia!asistencia_horario_id_fkey(*), alumno:profiles!horarios_alumno_id_fkey(*), profesor:profiles!horarios_profesor_id_fkey(*)')
+    .select('*, asistencia:asistencia!asistencia_horario_id_fkey(*), alumno:profiles!horarios_alumno_id_fkey(*), profesor:profiles!horarios_profesor_id_fkey(*), pruebas:pruebas!pruebas_horario_id_fkey(id, nombre, estado)')
     .eq('id', id)
     .single();
 
@@ -78,6 +78,30 @@ export async function PATCH(
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  // Handle exam flag
+  if (typeof body.es_prueba === 'boolean') {
+    const { data: existingPrueba } = await supabase
+      .from('pruebas')
+      .select('id')
+      .eq('horario_id', id)
+      .maybeSingle();
+
+    if (body.es_prueba && !existingPrueba) {
+      // Mark as exam: create linked prueba
+      await supabase.from('pruebas').insert({
+        alumno_id: body.alumno_id,
+        profesor_id: body.profesor_id || existing.profesor_id,
+        horario_id: id,
+        nombre: body.titulo,
+        fecha: body.fecha,
+        estado: 'pendiente',
+      });
+    } else if (!body.es_prueba && existingPrueba) {
+      // Unmark as exam: remove linked prueba
+      await supabase.from('pruebas').delete().eq('id', existingPrueba.id);
+    }
   }
 
   return NextResponse.json(data);

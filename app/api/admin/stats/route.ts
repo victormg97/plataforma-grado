@@ -26,10 +26,12 @@ export async function GET() {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const stats = data as any;
   return NextResponse.json({
-    total_alumnos: data?.total_alumnos ?? 0,
-    total_profesores: data?.total_profesores ?? 0,
-    clases_hoy: data?.clases_hoy ?? 0,
-    pendientes: data?.pendientes_confirmar ?? 0,
+    total_alumnos: stats?.total_alumnos ?? 0,
+    total_profesores: stats?.total_profesores ?? 0,
+    clases_hoy: stats?.clases_hoy ?? 0,
+    pendientes: stats?.pendientes_confirmar ?? 0,
   });
 }

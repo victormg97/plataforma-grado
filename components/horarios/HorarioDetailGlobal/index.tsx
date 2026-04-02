@@ -4,13 +4,18 @@ import { useEffect, useState, startTransition } from 'react';
 import { useTranslations } from 'next-intl';
 import { format } from 'date-fns';
 import { es as esDateFns } from 'date-fns/locale';
-import { Calendar, Clock, FileText, MessageSquare } from 'lucide-react';
+import { Calendar, Clock, FileText, MessageSquare, ExternalLink, GraduationCap } from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useUIStore } from '@/stores/useUIStore';
 import { useUserStore } from '@/stores/useUserStore';
 import { Modal } from '@/components/common/Modal';
 import { Avatar } from '@/components/common/Avatar';
 import { StatusBadge } from '@/components/common/StatusBadge';
+import { NotasIndicator } from '@/components/notas/NotasIndicator';
 import { Button } from '@/components/common/Button';
+import { useNotasCount } from '@/lib/hooks/useNotasCount';
+import { buildClaseDetailHref } from '@/lib/utils/horarioNavigation';
 import type { HorarioConAsistencia } from '@/lib/hooks/useHorarios';
 
 export function HorarioDetailGlobal() {
@@ -21,6 +26,9 @@ export function HorarioDetailGlobal() {
   const ta = useTranslations('asistencia');
   const [horario, setHorario] = useState<HorarioConAsistencia | null>(null);
   const [loading, setLoading] = useState(false);
+  const pathname = usePathname();
+  const userRol: 'profesor' | 'admin' = user?.rol === 'admin' ? 'admin' : 'profesor';
+  const notasCounts = useNotasCount(horarioDetailId ? [horarioDetailId] : []);
 
   useEffect(() => {
     if (!horarioDetailId) return;
@@ -81,6 +89,14 @@ export function HorarioDetailGlobal() {
           <div className="flex items-center gap-2">
             <span className="text-sm text-[var(--color-text-muted)]">{ta('estado_label')}:</span>
             <StatusBadge status={horario.asistencia?.[0]?.estado || 'pendiente'} />
+            <NotasIndicator count={notasCounts[horario.id] ?? 0} />
+            {(horario.pruebas?.length ?? 0) > 0 && (
+              <span className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium"
+                style={{ backgroundColor: 'var(--color-brand-gold-muted)', borderColor: 'color-mix(in srgb, var(--color-brand-gold) 40%, transparent)', color: 'var(--color-brand-gold)' }}>
+                <GraduationCap className="h-3 w-3" />
+                {t('badge_examen')}
+              </span>
+            )}
           </div>
 
           {/* Date / time badges */}
@@ -117,6 +133,16 @@ export function HorarioDetailGlobal() {
               </p>
             </div>
           )}
+
+          {/* Link to detail page */}
+          <Link
+            href={buildClaseDetailHref(horario.id, userRol, pathname)}
+            className="flex items-center gap-1.5 text-sm text-[var(--color-brand-gold)] hover:underline"
+            onClick={handleClose}
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+            {t('ver_detalle_completo')}
+          </Link>
         </div>
       )}
     </Modal>

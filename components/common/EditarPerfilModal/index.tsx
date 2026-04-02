@@ -21,11 +21,12 @@ import { Avatar } from '@/components/common/Avatar';
 import { Button } from '@/components/common/Button';
 import { cn } from '@/lib/utils';
 import type { Profile, AlumnoExtra } from '@/lib/supabase/types';
+import { ClipboardCheck } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type PerfilResponse = Profile & {
-  alumno_extra: Pick<AlumnoExtra, 'universidad' | 'año_ingreso'> | null;
+  alumno_extra: Pick<AlumnoExtra, 'universidad' | 'año_ingreso' | 'ha_dado_examen' | 'intentos_prueba'> | null;
 };
 
 interface EditarPerfilModalProps {
@@ -125,6 +126,8 @@ export function EditarPerfilModal({ open, onClose }: EditarPerfilModalProps) {
   const [telefono, setTelefono] = useState('');
   const [universidad, setUniversidad] = useState('');
   const [añoIngreso, setAñoIngreso] = useState('');
+  const [haDadoExamen, setHaDadoExamen] = useState(false);
+  const [intentosPrueba, setIntentosPrueba] = useState('');
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [pendingBlob, setPendingBlob] = useState<Blob | null>(null);
   const [pendingDelete, setPendingDelete] = useState(false);
@@ -157,6 +160,8 @@ export function EditarPerfilModal({ open, onClose }: EditarPerfilModalProps) {
       setShowNueva(false);
       setShowConfirma(false);
       setActiveTab('info');
+      setHaDadoExamen(false);
+      setIntentosPrueba('');
     }
   }, [open]);
 
@@ -168,6 +173,10 @@ export function EditarPerfilModal({ open, onClose }: EditarPerfilModalProps) {
       setTelefono(perfilData.telefono ?? '');
       setUniversidad(perfilData.alumno_extra?.universidad ?? '');
       setAñoIngreso(perfilData.alumno_extra?.año_ingreso ?? '');
+      const haDado = perfilData.alumno_extra?.ha_dado_examen ?? false;
+      const intentos = perfilData.alumno_extra?.intentos_prueba;
+      setHaDadoExamen(haDado);
+      setIntentosPrueba(intentos != null && intentos > 0 ? String(intentos) : '');
       setInitialized(true);
     }
   }, [perfilData, initialized]);
@@ -231,12 +240,15 @@ export function EditarPerfilModal({ open, onClose }: EditarPerfilModalProps) {
       }
 
       const isAlumno = (perfilData?.rol ?? user.rol) === 'alumno';
+      const intentosPruebaNum = intentosPrueba.trim() ? Number(intentosPrueba.trim()) : null;
       const body: Record<string, unknown> = {
         nombre: nombre.trim(),
         apellidos: apellidos.trim(),
         telefono: telefono.trim() || null,
         ...(isAlumno && { universidad: universidad.trim() || null }),
         ...(isAlumno && { año_ingreso: añoIngreso.trim() || null }),
+        ...(isAlumno && { ha_dado_examen: haDadoExamen }),
+        ...(isAlumno && { intentos_prueba: haDadoExamen && intentosPruebaNum ? intentosPruebaNum : null }),
       };
       if (avatarUrl !== undefined) body.avatar_url = avatarUrl;
 
@@ -479,6 +491,73 @@ export function EditarPerfilModal({ open, onClose }: EditarPerfilModalProps) {
                       maxLength={4}
                       className={inputCls}
                     />
+                  </div>
+
+                  {/* ── Examen de grado ── */}
+                  <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 space-y-3">
+                    {/* Checkbox row */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setHaDadoExamen((v) => !v);
+                        if (haDadoExamen) setIntentosPrueba('');
+                      }}
+                      className="flex w-full items-start gap-3 text-left"
+                      aria-checked={haDadoExamen}
+                      role="checkbox"
+                    >
+                      {/* Custom toggle box */}
+                      <div
+                        className={cn(
+                          'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-[var(--radius-sm)] border-2 transition-all duration-200',
+                          haDadoExamen
+                            ? 'border-[var(--color-brand-gold)] bg-[var(--color-brand-gold)]'
+                            : 'border-[var(--color-border-strong)] bg-[var(--color-bg)]',
+                        )}
+                      >
+                        {haDadoExamen && (
+                          <svg className="h-3 w-3 text-white" viewBox="0 0 12 12" fill="none">
+                            <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-[var(--color-text-primary)] leading-snug">
+                          {t('ha_dado_examen')}
+                        </p>
+                        <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                          {t('ha_dado_examen_desc')}
+                        </p>
+                      </div>
+                    </button>
+
+                    {/* Animated count field */}
+                    <div
+                      className={cn(
+                        'grid transition-all duration-300 ease-in-out',
+                        haDadoExamen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0',
+                      )}
+                    >
+                      <div className="overflow-hidden">
+                        <div className="pt-1 space-y-1.5">
+                          <label className="flex items-center gap-1.5 text-sm font-medium text-[var(--color-text-primary)]">
+                            <ClipboardCheck className="h-4 w-4 text-[var(--color-brand-gold)]" />
+                            {t('veces_dado')}{' '}
+                            <span className="font-normal text-[var(--color-text-muted)]">{t('opcional')}</span>
+                          </label>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            value={intentosPrueba}
+                            onChange={(e) => setIntentosPrueba(e.target.value.replace(/\D/g, '').slice(0, 2))}
+                            placeholder={t('veces_dado_placeholder')}
+                            maxLength={2}
+                            className={inputCls}
+                            tabIndex={haDadoExamen ? 0 : -1}
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </>
               )}

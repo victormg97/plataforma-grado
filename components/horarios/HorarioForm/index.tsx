@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
+import { GraduationCap } from 'lucide-react';
 import { horarioSchema, type HorarioFormData } from '@/lib/validations/horario.schema';
 import { createClient } from '@/lib/supabase/client';
 import { Modal } from '@/components/common/Modal';
@@ -39,6 +40,7 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
   const dropdownRef = useRef<HTMLDivElement>(null);
   // In admin mode, track which professor will teach this class
   const [activeProfId, setActiveProfId] = useState(profesorId);
+  const [esExamen, setEsExamen] = useState(false);
   const isEditing = !!horario;
 
   const { register, handleSubmit, reset, watch, setValue, formState: { errors, isSubmitting } } = useForm<HorarioFormData>({
@@ -84,6 +86,14 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
       setAlumnoSearch(
         horario.alumno ? `${horario.alumno.nombre} ${horario.alumno.apellido}` : ''
       );
+      // Check if this class already has a linked prueba
+      const supabase = createClient();
+      supabase
+        .from('pruebas')
+        .select('id')
+        .eq('horario_id', horario.id)
+        .maybeSingle()
+        .then(({ data }) => setEsExamen(!!data));
     } else {
       const endTime = defaultTime
         ? `${String(Math.min(Number(defaultTime.split(':')[0]) + 1, 23)).padStart(2, '0')}:${defaultTime.split(':')[1]}`
@@ -97,6 +107,7 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
         hora_fin: endTime,
       });
       setAlumnoSearch('');
+      setEsExamen(false);
     }
   }, [horario, defaultDate, defaultTime, open, reset]);
 
@@ -194,6 +205,7 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
+          es_prueba: esExamen,
           // Admin mode: send chosen professor_id
           ...(adminProfesores && activeProfId ? { profesor_id: activeProfId } : {}),
         }),
@@ -395,6 +407,37 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
             {errors.hora_fin && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.hora_fin.message}</p>}
           </div>
         </div>
+
+        {/* Es Examen toggle */}
+        <button
+          type="button"
+          onClick={() => setEsExamen(!esExamen)}
+          className={`flex w-full items-center gap-3 rounded-[var(--radius-md)] border p-3 text-left transition-colors ${
+            esExamen
+              ? 'border-[var(--color-brand-gold)] bg-[var(--color-brand-gold-muted)]'
+              : 'border-[var(--color-border)] hover:bg-[var(--color-bg-secondary)]'
+          }`}
+        >
+          {/* Toggle switch */}
+          <div
+            className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${
+              esExamen ? 'bg-[var(--color-brand-gold)]' : 'bg-[var(--color-border)]'
+            }`}
+          >
+            <div
+              className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
+                esExamen ? 'translate-x-4' : 'translate-x-0.5'
+              }`}
+            />
+          </div>
+          <div className="flex-1">
+            <p className={`text-sm font-medium ${
+              esExamen ? 'text-[var(--color-brand-gold)]' : 'text-[var(--color-text-primary)]'
+            }`}>{t('es_examen')}</p>
+            <p className="text-xs text-[var(--color-text-muted)]">{t('es_examen_desc')}</p>
+          </div>
+          {esExamen && <GraduationCap className="h-4 w-4 shrink-0 text-[var(--color-brand-gold)]" />}
+        </button>
       </form>
     </Modal>
   );

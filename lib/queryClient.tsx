@@ -10,7 +10,7 @@ export function QueryProvider({ children }: { children: ReactNode }) {
         defaultOptions: {
           queries: {
             staleTime: 30_000,       // 30s before considered stale
-            gcTime: 5 * 60_000,      // 5min garbage collection
+            gcTime: 30 * 60_000,     // 30min garbage collection (increased from 5min)
             refetchOnWindowFocus: true,
             retry: 1,
           },

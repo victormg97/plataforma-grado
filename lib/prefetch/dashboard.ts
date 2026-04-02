@@ -20,11 +20,13 @@ export async function prefetchDashboardData(userId: string, rol: UserRol) {
         queryKey: ['admin-stats'],
         queryFn: async () => {
           const { data } = await supabase.rpc('get_admin_stats');
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const stats = data as any;
           return {
-            total_alumnos: data?.total_alumnos ?? 0,
-            total_profesores: data?.total_profesores ?? 0,
-            clases_hoy: data?.clases_hoy ?? 0,
-            pendientes: data?.pendientes_confirmar ?? 0,
+            total_alumnos: stats?.total_alumnos ?? 0,
+            total_profesores: stats?.total_profesores ?? 0,
+            clases_hoy: stats?.clases_hoy ?? 0,
+            pendientes: stats?.pendientes_confirmar ?? 0,
           };
         },
         staleTime: 60_000,

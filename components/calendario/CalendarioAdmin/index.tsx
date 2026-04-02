@@ -17,7 +17,9 @@ import { Avatar } from '@/components/common/Avatar';
 import { Button } from '@/components/common/Button';
 import { HorarioForm } from '@/components/horarios/HorarioForm';
 import { useTranslations, useLocale } from 'next-intl';
-import { Clock, FileText, MessageSquare, Pencil, User } from 'lucide-react';
+import { Clock, FileText, MessageSquare, Pencil, User, GraduationCap } from 'lucide-react';
+import { CalendarioDownloadButton, type CalendarioExportEvent } from '@/components/calendario/CalendarioDownloadButton';
+import { resolveCssVar } from '@/lib/utils/cssTokens';
 import type { EstadoAsistencia } from '@/lib/supabase/types';
 
 const PROFESOR_COLORS = [
@@ -43,13 +45,14 @@ type HorarioGlobal = {
   asistencia: { id: string; estado: EstadoAsistencia; nota_alumno: string | null }[];
   alumno: { id: string; nombre: string; apellido: string; email: string; avatar_url: string | null } | null;
   profesor: { id: string; nombre: string; apellido: string; avatar_url: string | null } | null;
+  pruebas?: { id: string }[];
 };
 
 async function fetchAdminHorarios() {
   const supabase = createClient();
   const { data, error } = await supabase
     .from('horarios')
-    .select('*, asistencia:asistencia!asistencia_horario_id_fkey(*), alumno:profiles!horarios_alumno_id_fkey(*), profesor:profiles!horarios_profesor_id_fkey(id, nombre, apellido, avatar_url)')
+    .select('*, asistencia:asistencia!asistencia_horario_id_fkey(*), alumno:profiles!horarios_alumno_id_fkey(*), profesor:profiles!horarios_profesor_id_fkey(id, nombre, apellido, avatar_url), pruebas:pruebas!pruebas_horario_id_fkey(id)')
     .eq('activo', true)
     .order('fecha', { ascending: true });
   if (error) throw new Error(error.message);
@@ -135,6 +138,33 @@ export function CalendarioAdmin() {
     return map;
   }, [horarios]);
 
+  // Hex colour map per professor (for PDF export — read from CSS vars at call time)
+  const profesorHexMap = useMemo(() => {
+    const CSS_VARS = [
+      '--color-profe-1', '--color-profe-2', '--color-profe-3', '--color-profe-4',
+      '--color-profe-5', '--color-profe-6', '--color-profe-7',
+    ];
+    const uniqueIds = [...new Set(horarios.map((h) => h.profesor_id))];
+    const map: Record<string, string> = {};
+    uniqueIds.forEach((id, i) => { map[id] = resolveCssVar(CSS_VARS[i % CSS_VARS.length]); });
+    return map;
+  }, [horarios]);
+
+  // Normalised events for PDF export
+  const adminExportEvents = useMemo<CalendarioExportEvent[]>(
+    () =>
+      horarios.map((h) => ({
+        id: h.id,
+        title: h.titulo,
+        start: new Date(`${h.fecha}T${h.hora_inicio}`),
+        end: new Date(`${h.fecha}T${h.hora_fin}`),
+        color: profesorHexMap[h.profesor_id] ?? '#C9993F',
+        subtitle: h.alumno ? `${h.alumno.nombre} ${h.alumno.apellido}` : undefined,
+        status: h.asistencia?.[0]?.estado,
+      })),
+    [horarios, profesorHexMap],
+  );
+
   // Legend
   const legend = useMemo(() => {
     const seen = new Map<string, { nombre: string; color: string }>();
@@ -165,6 +195,11 @@ export function CalendarioAdmin() {
         };
       }),
     [horarios, profesorColorMap]
+  );
+
+  const pruebaHorarioIds = useMemo(
+    () => new Set(horarios.filter((h) => (h.pruebas?.length ?? 0) > 0).map((h) => h.id)),
+    [horarios]
   );
 
   // Imperatively sync events to FullCalendar so the calendar updates
@@ -200,9 +235,9 @@ export function CalendarioAdmin() {
 
   return (
     <>
-      {/* Legend */}
-      {legend.length > 0 && (
-        <div className="mb-3 flex flex-wrap gap-3">
+      {/* Legend row + desktop download button */}
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-3">
           {legend.map((l) => (
             <div key={l.nombre} className="flex items-center gap-1.5">
               <span className="h-3 w-3 rounded-full" style={{ backgroundColor: l.color }} />
@@ -210,8 +245,20 @@ export function CalendarioAdmin() {
             </div>
           ))}
         </div>
-      )}
+        {!isMobile && (
+          <>
+          </>
+        )}
+      </div>
 
+      {/* Download button: desktop injects into FC toolbar, mobile shows popup on view-button tap */}
+      <CalendarioDownloadButton
+        calendarRef={calendarRef}
+        currentView={currentView}
+        isMobile={isMobile}
+        containerClass=".calendario-admin"
+        exportEvents={adminExportEvents}
+      />
       <div className="calendario-admin">
         <style>{`
           .calendario-admin .fc {
@@ -272,6 +319,9 @@ export function CalendarioAdmin() {
           .calendario-admin .fc .fc-scrollgrid {
             border-color: var(--color-border);
           }
+          .calendario-admin .fc .fc-descargar-button {
+            padding: 0.25rem 0.5rem;
+          }
           @media (max-width: 640px) {
             .calendario-admin .fc .fc-toolbar-title {
               font-size: 0.95rem;
@@ -293,7 +343,7 @@ export function CalendarioAdmin() {
           headerToolbar={{
             left: isMobile ? 'prev,hoyIcono,next nuevaClase' : 'prev,next today',
             center: 'title',
-            right: isMobile ? 'dayGridMonth,timeGridWeek,listWeek' : 'nuevaClase dayGridMonth,timeGridWeek,listWeek',
+            right: isMobile ? 'dayGridMonth,timeGridWeek,listWeek' : 'nuevaClase descargar dayGridMonth,timeGridWeek,listWeek',
           }}
           customButtons={{
             nuevaClase: {
@@ -304,6 +354,11 @@ export function CalendarioAdmin() {
                 setDefaultTime(undefined);
                 setFormOpen(true);
               },
+            },
+            descargar: {
+              text: ' ',
+              hint: locale === 'es' ? 'Descargar' : 'Download',
+              click: () => {},
             },
             hoyIcono: {
               text: ' ',
@@ -323,6 +378,25 @@ export function CalendarioAdmin() {
           nowIndicator={true}
           weekends={true}
           datesSet={(arg) => setCurrentView(arg.view.type)}
+          eventContent={(arg) => {
+            const isExam = pruebaHorarioIds.has(arg.event.id);
+            return (
+              <div style={{ display: 'flex', alignItems: 'center', width: '100%', overflow: 'hidden', gap: '3px', padding: '0 4px' }}>
+                {arg.timeText && (
+                  <b style={{ fontSize: '0.65rem', whiteSpace: 'nowrap', flexShrink: 0 }}>{arg.timeText}&nbsp;</b>
+                )}
+                <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.75rem', fontWeight: 600 }}>
+                  {arg.event.title}
+                </span>
+                {isExam && (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, opacity: 0.9 }}>
+                    <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                    <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+                  </svg>
+                )}
+              </div>
+            );
+          }}
         />
       </div>
 
@@ -382,6 +456,13 @@ export function CalendarioAdmin() {
             <div className="flex items-center gap-2">
               <span className="text-sm text-[var(--color-text-muted)]">{ta('estado_label')}:</span>
               <StatusBadge status={selectedHorario.asistencia?.[0]?.estado || 'pendiente'} />
+              {(selectedHorario.pruebas?.length ?? 0) > 0 && (
+                <span className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium"
+                  style={{ backgroundColor: 'var(--color-brand-gold-muted)', borderColor: 'color-mix(in srgb, var(--color-brand-gold) 40%, transparent)', color: 'var(--color-brand-gold)' }}>
+                  <GraduationCap className="h-3 w-3" />
+                  {t('badge_examen')}
+                </span>
+              )}
             </div>
 
             {/* Horario */}

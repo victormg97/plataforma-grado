@@ -10,77 +10,71 @@ import { Avatar } from '@/components/common/Avatar';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { Button } from '@/components/common/Button';
 import { toast } from 'sonner';
-import type { AlumnoConExtra } from '@/components/alumnos/AlumnoCard';
-import type { Asistencia, Horario } from '@/lib/supabase/types';
-
-type ClaseHistorial = Horario & {
-  asistencia: Asistencia[];
-};
 
 interface FichaAlumnoProps {
-  alumno: AlumnoConExtra | null;
+  alumnoId: string | null;
   open: boolean;
   onClose: () => void;
 }
 
-export function FichaAlumno({ alumno, open, onClose }: FichaAlumnoProps) {
+export function FichaAlumno({ alumnoId, open, onClose }: FichaAlumnoProps) {
   const t = useTranslations('alumnos');
   const locale = useLocale();
   const dateFnsLocale = locale === 'en' ? enUS : es;
-  const [clases, setClases] = useState<ClaseHistorial[]>([]);
+  
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [data, setData] = useState<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [clases, setClases] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const extra = alumno
-    ? Array.isArray(alumno.alumnos_extra)
-      ? alumno.alumnos_extra[0]
-      : alumno.alumnos_extra
-    : null;
-
-  const [notas, setNotas] = useState(extra?.notas ?? '');
-  const [pasoPrueba, setPasoPrueba] = useState(extra?.paso_prueba ?? false);
+  const [notas, setNotas] = useState('');
+  const [pasoPrueba, setPasoPrueba] = useState(false);
 
   const fetchFicha = useCallback(async () => {
-    if (!alumno) return;
+    if (!alumnoId) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/alumnos/${alumno.id}/ficha`);
+      const res = await fetch(`/api/alumnos/${alumnoId}/ficha`);
       if (!res.ok) throw new Error('Error cargando ficha');
-      const data = await res.json();
-      setClases(data.clases ?? []);
-      if (data.extra) {
-        setNotas(data.extra.notas ?? '');
-        setPasoPrueba(data.extra.paso_prueba ?? false);
+      const json = await res.json();
+      setData(json);
+      setClases(json.historial_clases ?? []);
+      if (json.alumnos_extra) {
+        setNotas(json.alumnos_extra.notas ?? '');
+        setPasoPrueba(json.alumnos_extra.paso_prueba ?? false);
+      } else {
+        setNotas('');
+        setPasoPrueba(false);
       }
     } catch {
       toast.error(t('ficha_error_cargar'));
     } finally {
       setLoading(false);
     }
-  }, [alumno]);
+  }, [alumnoId, t]);
 
   useEffect(() => {
-    if (open && alumno) fetchFicha();
-  }, [open, alumno, fetchFicha]);
-
-  useEffect(() => {
-    if (extra) {
-      setNotas(extra.notas ?? '');
-      setPasoPrueba(extra.paso_prueba ?? false);
+    if (open && alumnoId) fetchFicha();
+    if (!open) {
+      setData(null);
+      setClases([]);
     }
-  }, [extra]);
+  }, [open, alumnoId, fetchFicha]);
 
   const handleSave = async () => {
-    if (!alumno) return;
+    if (!alumnoId) return;
     setSaving(true);
     try {
-      const res = await fetch(`/api/alumnos/${alumno.id}/ficha`, {
+      const res = await fetch(`/api/alumnos/${alumnoId}/ficha`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ notas, paso_prueba: pasoPrueba }),
       });
       if (!res.ok) throw new Error('Error guardando');
       toast.success(t('ficha_guardado'));
+      fetchFicha();
     } catch {
       toast.error(t('ficha_error_guardar'));
     } finally {
@@ -89,9 +83,9 @@ export function FichaAlumno({ alumno, open, onClose }: FichaAlumnoProps) {
   };
 
   const handleBloquear = async () => {
-    if (!alumno || !confirm(t('confirm_bloquear', { nombre: `${alumno.nombre} ${alumno.apellido}` }))) return;
+    if (!data || !confirm(t('confirm_bloquear', { nombre: `${data.nombre} ${data.apellido}` }))) return;
     try {
-      const res = await fetch(`/api/alumnos/${alumno.id}/ficha`, {
+      const res = await fetch(`/api/alumnos/${alumnoId}/ficha`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ activo: false }),
@@ -104,7 +98,9 @@ export function FichaAlumno({ alumno, open, onClose }: FichaAlumnoProps) {
     }
   };
 
-  if (!alumno) return null;
+  if (!alumnoId) return null;
+
+  const extra = data?.alumnos_extra;
 
   return (
     <Modal
@@ -113,16 +109,16 @@ export function FichaAlumno({ alumno, open, onClose }: FichaAlumnoProps) {
       title={t('ficha_titulo')}
       footer={
         <div className="flex w-full items-center justify-between gap-2">
-          <Button variant="danger" size="sm" onClick={handleBloquear}>
+          <Button variant="danger" size="sm" onClick={handleBloquear} disabled={loading || !data}>
             <ShieldAlert className="mr-1 h-4 w-4" /> {t('ficha_bloquear')}
           </Button>
-          <Button onClick={handleSave} disabled={saving}>
+          <Button onClick={handleSave} disabled={saving || loading || !data}>
             <Save className="mr-1 h-4 w-4" /> {saving ? t('ficha_guardando') : t('ficha_guardar')}
           </Button>
         </div>
       }
     >
-      {loading ? (
+      {loading || !data ? (
         <div className="flex justify-center py-8">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-brand-gold)] border-t-transparent" />
         </div>
@@ -130,10 +126,10 @@ export function FichaAlumno({ alumno, open, onClose }: FichaAlumnoProps) {
         <div className="space-y-5">
           {/* Header */}
           <div className="flex items-center gap-4">
-            <Avatar nombre={alumno.nombre} apellido={alumno.apellido} avatarUrl={alumno.avatar_url} size="lg" />
+            <Avatar nombre={data.nombre} apellido={data.apellido} avatarUrl={data.avatar_url} size="lg" />
             <div>
               <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
-                {alumno.nombre} {alumno.apellido}
+                {data.nombre} {data.apellido}
               </h3>
               {extra?.paso_prueba && <StatusBadge status="graduado" />}
             </div>
@@ -142,11 +138,11 @@ export function FichaAlumno({ alumno, open, onClose }: FichaAlumnoProps) {
           {/* Contact */}
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <div className="flex items-center gap-2 text-sm text-[var(--color-text-muted)]">
-              <Mail className="h-4 w-4" /> {alumno.email}
+              <Mail className="h-4 w-4" /> {data.email}
             </div>
-            {alumno.telefono && (
+            {data.telefono && (
               <div className="flex items-center gap-2 text-sm text-[var(--color-text-muted)]">
-                <Phone className="h-4 w-4" /> {alumno.telefono}
+                <Phone className="h-4 w-4" /> {data.telefono}
               </div>
             )}
             {extra?.universidad && (

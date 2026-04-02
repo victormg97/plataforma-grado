@@ -1,16 +1,21 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
-import { CalendarOff, CheckCircle, XCircle, ArrowRight, Calendar, Clock } from 'lucide-react';
+import { CalendarOff, CheckCircle, XCircle, ArrowRight, Calendar, Clock, GraduationCap } from 'lucide-react';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card } from '@/components/common/Card';
 import { StatusBadge } from '@/components/common/StatusBadge';
+import { NotasIndicator } from '@/components/notas/NotasIndicator';
 import { ConfirmacionForm } from '@/components/horarios/ConfirmacionForm';
 import { CancelacionForm } from '@/components/horarios/CancelacionForm';
 import { CambioHorarioForm } from '@/components/horarios/CambioHorarioForm';
 import { useAsistencia } from '@/lib/hooks/useAsistencia';
+import { useNotasCount } from '@/lib/hooks/useNotasCount';
+import { usePruebas } from '@/lib/hooks/usePruebas';
+import { buildAlumnoHorarioDetailHref } from '@/lib/utils/horarioNavigation';
 import { useUserStore } from '@/stores/useUserStore';
 import type { ClaseAlumno } from '@/lib/hooks/useAsistencia';
 import Link from 'next/link';
@@ -19,11 +24,33 @@ import { useTranslations, useLocale } from 'next-intl';
 function AlumnoDashboardContent() {
   const { user } = useUserStore();
   const { proximas, historial, proximaClase, loading, confirmar, cancelar, pedirCambio } = useAsistencia();
+  const { data: pruebas = [] } = usePruebas(user?.id);
   const t = useTranslations('horarios');
   const td = useTranslations('dashboard.alumno');
   const locale = useLocale();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const dateFnsLocale = locale === 'en' ? enUS : es;
   const [modal, setModal] = useState<{ type: 'confirmar' | 'cancelar' | 'cambio'; clase: ClaseAlumno } | null>(null);
+  const currentPath = useMemo(() => {
+    const qs = searchParams.toString();
+    return qs ? `${pathname}?${qs}` : pathname;
+  }, [pathname, searchParams]);
+
+  const pruebaHorarioIds = useMemo(
+    () => new Set(pruebas.filter((p) => p.horario_id).map((p) => p.horario_id!)),
+    [pruebas]
+  );
+
+  // Notes counts for historial classes
+  const notableIds = useMemo(
+    () => historial
+      .filter((c) => c.estado === 'confirmado' || c.estado === 'no_asistio')
+      .slice(0, 5)
+      .map((c) => c.horario.id),
+    [historial]
+  );
+  const notasCounts = useNotasCount(notableIds);
 
   const borderColor = (estado: string) => {
     switch (estado) {
@@ -62,9 +89,18 @@ function AlumnoDashboardContent() {
               <div className="flex flex-col gap-4">
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="text-lg font-semibold text-[var(--color-text-primary)]">
-                      {proximaClase.horario.titulo}
-                    </p>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-lg font-semibold text-[var(--color-text-primary)]">
+                        {proximaClase.horario.titulo}
+                      </p>
+                      {pruebaHorarioIds.has(proximaClase.horario.id) && (
+                        <span className="inline-flex items-center gap-0.5 rounded-full border px-1.5 py-0.5 text-[10px] font-semibold"
+                          style={{ backgroundColor: 'var(--color-brand-gold-muted)', borderColor: 'color-mix(in srgb, var(--color-brand-gold) 40%, transparent)', color: 'var(--color-brand-gold)' }}>
+                          <GraduationCap className="h-2.5 w-2.5" />
+                          {t('badge_examen')}
+                        </span>
+                      )}
+                    </div>
                     {proximaClase.horario.descripcion && (
                       <p className="text-sm text-[var(--color-text-muted)] mt-0.5">{proximaClase.horario.descripcion}</p>
                     )}
@@ -155,10 +191,19 @@ function AlumnoDashboardContent() {
             <h2 className="text-sm font-semibold uppercase text-[var(--color-text-muted)] mb-3">{t('proximas_clases')}</h2>
             <div className="grid gap-3 sm:grid-cols-2">
               {proximas.slice(1).map((clase) => (
-                <Link key={clase.id} href={`/alumno/horario?id=${clase.horario.id}`}>
+                <Link key={clase.id} href={buildAlumnoHorarioDetailHref(clase.horario.id, currentPath)}>
                   <Card hover>
                     <div className="flex items-start justify-between mb-2">
-                      <p className="text-sm font-medium text-[var(--color-text-primary)]">{clase.horario.titulo}</p>
+                      <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                        <p className="text-sm font-medium text-[var(--color-text-primary)]">{clase.horario.titulo}</p>
+                        {pruebaHorarioIds.has(clase.horario.id) && (
+                          <span className="inline-flex items-center gap-0.5 rounded-full border px-1.5 py-0.5 text-[10px] font-semibold shrink-0"
+                            style={{ backgroundColor: 'var(--color-brand-gold-muted)', borderColor: 'color-mix(in srgb, var(--color-brand-gold) 40%, transparent)', color: 'var(--color-brand-gold)' }}>
+                            <GraduationCap className="h-2.5 w-2.5" />
+                            {t('badge_examen')}
+                          </span>
+                        )}
+                      </div>
                       <StatusBadge status={clase.estado} />
                     </div>
                     <div className="flex flex-wrap items-center gap-1.5">
@@ -189,22 +234,36 @@ function AlumnoDashboardContent() {
             <h2 className="text-sm font-semibold uppercase text-[var(--color-text-muted)] mb-3">{t('historial_reciente')}</h2>
             <div className="space-y-2">
               {historial.slice(0, 5).map((clase) => (
-                <Card key={clase.id} className="py-3">
-                  <div className="flex items-start justify-between mb-1.5">
-                    <p className="text-sm font-medium text-[var(--color-text-primary)]">{clase.horario.titulo}</p>
-                    <StatusBadge status={clase.estado} />
-                  </div>
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-bg-secondary)] px-2 py-0.5 text-xs text-[var(--color-text-muted)]">
-                      <Calendar className="h-3 w-3 text-[var(--color-brand-gold)]" />
-                      <span className="capitalize">{format(new Date(clase.horario.fecha + 'T12:00:00'), locale === 'en' ? "MMMM d" : "d 'de' MMMM", { locale: dateFnsLocale })}</span>
-                    </span>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-bg-secondary)] px-2 py-0.5 text-xs text-[var(--color-text-muted)]">
-                      <Clock className="h-3 w-3 text-[var(--color-brand-gold)]" />
-                      {clase.horario.hora_inicio}
-                    </span>
-                  </div>
-                </Card>
+                <Link key={clase.id} href={buildAlumnoHorarioDetailHref(clase.horario.id, currentPath)}>
+                  <Card hover className="py-3">
+                    <div className="flex items-start justify-between mb-1.5">
+                      <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                        <p className="text-sm font-medium text-[var(--color-text-primary)]">{clase.horario.titulo}</p>
+                        {pruebaHorarioIds.has(clase.horario.id) && (
+                          <span className="inline-flex items-center gap-0.5 rounded-full border px-1.5 py-0.5 text-[10px] font-semibold shrink-0"
+                            style={{ backgroundColor: 'var(--color-brand-gold-muted)', borderColor: 'color-mix(in srgb, var(--color-brand-gold) 40%, transparent)', color: 'var(--color-brand-gold)' }}>
+                            <GraduationCap className="h-2.5 w-2.5" />
+                            {t('badge_examen')}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <NotasIndicator count={notasCounts[clase.horario.id] ?? 0} />
+                        <StatusBadge status={clase.estado} />
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-bg-secondary)] px-2 py-0.5 text-xs text-[var(--color-text-muted)]">
+                        <Calendar className="h-3 w-3 text-[var(--color-brand-gold)]" />
+                        <span className="capitalize">{format(new Date(clase.horario.fecha + 'T12:00:00'), locale === 'en' ? "MMMM d" : "d 'de' MMMM", { locale: dateFnsLocale })}</span>
+                      </span>
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-bg-secondary)] px-2 py-0.5 text-xs text-[var(--color-text-muted)]">
+                        <Clock className="h-3 w-3 text-[var(--color-brand-gold)]" />
+                        {clase.horario.hora_inicio}
+                      </span>
+                    </div>
+                  </Card>
+                </Link>
               ))}
             </div>
           </section>

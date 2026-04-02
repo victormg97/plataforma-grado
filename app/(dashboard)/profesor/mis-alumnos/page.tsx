@@ -3,10 +3,10 @@
 import { Suspense, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
 import { Search, Users } from 'lucide-react';
 import { PageHeader } from '@/components/common/PageHeader';
 import { AlumnoCard, type AlumnoConExtra } from '@/components/alumnos/AlumnoCard';
-import { FichaAlumno } from '@/components/alumnos/FichaAlumno';
 import { useUser } from '@/lib/hooks/useUser';
 import { useQueryParam } from '@/lib/hooks/useQueryParam';
 
@@ -15,9 +15,9 @@ type Tab = 'mis' | 'todos';
 function MisAlumnosContent() {
   const t = useTranslations('alumnos');
   const { user } = useUser();
+  const router = useRouter();
   const [tabParam, setTabParam] = useQueryParam('tab');
   const [qParam, setQParam] = useQueryParam('q');
-  const [alumnoParam, setAlumnoParam] = useQueryParam('alumno');
 
   const tab: Tab = tabParam === 'todos' ? 'todos' : 'mis';
   const search = qParam ?? '';
@@ -44,11 +44,7 @@ function MisAlumnosContent() {
     );
   }, [alumnos, search]);
 
-  // Find alumno for ficha modal from URL param
-  const fichaAlumno = useMemo(
-    () => (alumnoParam ? alumnos.find((a) => a.id === alumnoParam) ?? null : null),
-    [alumnoParam, alumnos]
-  );
+
 
   return (
     <div>
@@ -107,19 +103,13 @@ function MisAlumnosContent() {
             <AlumnoCard
               key={alumno.id}
               alumno={alumno}
-              onViewFicha={(a) => setAlumnoParam(a.id)}
+              onViewFicha={(a) => router.push(`/profesor/alumnos/${a.id}`)}
               isOwn={tab === 'mis'}
             />
           ))}
         </div>
       )}
 
-      {/* Ficha modal — opens from URL param */}
-      <FichaAlumno
-        alumno={fichaAlumno}
-        open={!!alumnoParam}
-        onClose={() => setAlumnoParam(null)}
-      />
     </div>
   );
 }

@@ -1,7 +1,19 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { checkApiRateLimit, getIp, tooManyRequestsResponse } from '@/lib/utils/rateLimit';
 
 export async function proxy(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+
+  // ── Rate limit: /api/* (except /api/auth/login which has its own stricter limiter) ──
+  if (pathname.startsWith('/api/') && pathname !== '/api/auth/login') {
+    const ip = getIp(request);
+    const result = await checkApiRateLimit(ip);
+    if (!result.allowed) {
+      return tooManyRequestsResponse(result.retryAfterSeconds, 'RATE_LIMITED');
+    }
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   });
@@ -32,8 +44,6 @@ export async function proxy(request: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
-  const pathname = request.nextUrl.pathname;
 
   // Public routes
   if (pathname === '/login') {

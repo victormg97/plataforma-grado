@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { createAdminClient } from '@/lib/supabase/admin';
 
 export async function GET() {
   const supabase = await createClient();
@@ -20,7 +19,7 @@ export async function GET() {
     if (profile.rol === 'alumno') {
       const { data: extra } = await supabase
         .from('alumnos_extra')
-        .select('universidad, año_ingreso')
+        .select('universidad, año_ingreso, ha_dado_examen, intentos_prueba')
         .eq('alumno_id', user.id)
         .maybeSingle();
 
@@ -91,6 +90,21 @@ export async function PATCH(request: NextRequest) {
       if (tema === 'light' || tema === 'dark') profileUpdate.tema = tema;
     }
 
+    if (body.duracion_clase_default_min !== undefined) {
+      const { data: currentProfile } = await supabase
+        .from('profiles')
+        .select('rol')
+        .eq('id', user.id)
+        .single();
+      if (currentProfile?.rol === 'profesor' || currentProfile?.rol === 'admin') {
+        const val = Number(body.duracion_clase_default_min);
+        if (!Number.isInteger(val) || val < 15 || val > 480) {
+          return NextResponse.json({ error: 'duracion_clase_default_min debe ser un entero entre 15 y 480' }, { status: 400 });
+        }
+        profileUpdate.duracion_clase_default_min = val;
+      }
+    }
+
     const { data: updatedProfile, error: profileError } = await supabase
       .from('profiles')
       .update(profileUpdate)
@@ -100,22 +114,31 @@ export async function PATCH(request: NextRequest) {
 
     if (profileError) return NextResponse.json({ error: profileError.message }, { status: 500 });
 
-    // For alumnos: upsert editable extra fields (universidad, año_ingreso only)
-    // Uses admin client because there is no UPDATE RLS policy for the alumno role on alumnos_extra.
+    // For alumnos: upsert editable extra fields
+    // RLS policy "Alumno edita sus propios campos de perfil" allows UPDATE on own row.
     if (updatedProfile.rol === 'alumno') {
-      const hasExtraFields = body.universidad !== undefined || body.año_ingreso !== undefined;
+      const hasExtraFields =
+        body.universidad !== undefined ||
+        body.año_ingreso !== undefined ||
+        'ha_dado_examen' in body ||
+        'intentos_prueba' in body;
       if (hasExtraFields) {
-        const admin = createAdminClient();
         const extraUpdate: Record<string, unknown> = {
           alumno_id: user.id,
           updated_at: new Date().toISOString(),
         };
         if (body.universidad !== undefined) extraUpdate.universidad = body.universidad || null;
         if (body.año_ingreso !== undefined) extraUpdate.año_ingreso = body.año_ingreso || null;
+        if ('ha_dado_examen' in body) extraUpdate.ha_dado_examen = Boolean(body.ha_dado_examen);
+        if ('intentos_prueba' in body) extraUpdate.intentos_prueba = body.intentos_prueba ?? null;
 
-        await admin
+        const { error: upsertError } = await supabase
           .from('alumnos_extra')
           .upsert(extraUpdate, { onConflict: 'alumno_id' });
+
+        if (upsertError) {
+          return NextResponse.json({ error: upsertError.message }, { status: 500 });
+        }
       }
     }
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus, UserCheck, UserX, Eye, Copy, Check, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
@@ -12,6 +12,7 @@ import { StatusBadge } from '@/components/common/StatusBadge';
 import { Modal } from '@/components/common/Modal';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
+import { Tooltip } from '@/components/common/Tooltip';
 
 type Profesor = {
   id: string;
@@ -129,6 +130,15 @@ export default function ProfesoresPage() {
     }
   };
 
+  const sortedProfesores = useMemo(
+    () => [...profesores].sort((a, b) => {
+      if (a.rol === 'admin' && b.rol !== 'admin') return -1;
+      if (a.rol !== 'admin' && b.rol === 'admin') return 1;
+      return 0;
+    }),
+    [profesores]
+  );
+
   const copyPassword = () => {
     if (createdPassword) {
       navigator.clipboard.writeText(createdPassword);
@@ -160,7 +170,7 @@ export default function ProfesoresPage() {
             <p className="text-[var(--color-text-muted)]">{tp('sin_profesores')}</p>
           </Card>
         ) : (
-          profesores.map((p) => (
+          sortedProfesores.map((p) => (
             <Card key={p.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex items-center gap-3">
                 <Avatar nombre={p.nombre} apellido={p.apellido} avatarUrl={p.avatar_url} size="md" />
@@ -178,33 +188,38 @@ export default function ProfesoresPage() {
                 </div>
               </div>
               <div className="flex items-center gap-2 ml-auto sm:ml-0">
-                <button
-                  onClick={() => openEdit(p)}
-                  title={tc('editar')}
-                  className="rounded p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)]"
-                >
-                  <Pencil className="h-4 w-4" />
-                </button>
-                {p.rol !== 'admin' && (
+                <Tooltip content={tc('editar')}>
                   <button
-                    onClick={() => setConfirmAction({ id: p.id, nombre: `${p.nombre} ${p.apellido}`, activo: p.activo })}
-                    className={`flex items-center gap-1 rounded-[var(--radius-md)] border px-3 py-1.5 text-xs font-medium transition-colors ${
-                      p.activo
-                        ? 'border-[var(--color-error)] text-[var(--color-error)] hover:bg-red-50 dark:hover:bg-red-950/20'
-                        : 'border-[var(--color-success)] text-[var(--color-success)] hover:bg-green-50 dark:hover:bg-green-950/20'
-                    }`}
+                    onClick={() => openEdit(p)}
+                    className="rounded p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)]"
                   >
-                    {p.activo ? <UserX className="h-3.5 w-3.5" /> : <UserCheck className="h-3.5 w-3.5" />}
-                    {p.activo ? tp('deshabilitar') : tp('habilitar')}
+                    <Pencil className="h-4 w-4" />
                   </button>
+                </Tooltip>
+                {p.rol !== 'admin' && (
+                  <Tooltip content={p.activo ? tp('deshabilitar') : tp('habilitar')}>
+                    <button
+                      onClick={() => setConfirmAction({ id: p.id, nombre: `${p.nombre} ${p.apellido}`, activo: p.activo })}
+                      className={`flex items-center gap-1 rounded-[var(--radius-md)] border px-3 py-1.5 text-xs font-medium transition-colors ${
+                        p.activo
+                          ? 'border-[var(--color-error)] text-[var(--color-error)] hover:bg-red-50 dark:hover:bg-red-950/20'
+                          : 'border-[var(--color-success)] text-[var(--color-success)] hover:bg-green-50 dark:hover:bg-green-950/20'
+                      }`}
+                    >
+                      {p.activo ? <UserX className="h-3.5 w-3.5" /> : <UserCheck className="h-3.5 w-3.5" />}
+                      {p.activo ? tp('deshabilitar') : tp('habilitar')}
+                    </button>
+                  </Tooltip>
                 )}
-                <Link
-                  href={`/admin/alumnos?profesor_id=${p.id}`}
-                  className="flex items-center gap-1 rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 py-1.5 text-xs font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)]"
-                >
-                  <Eye className="h-3.5 w-3.5" />
-                  {tp('ver_alumnos')}
-                </Link>
+                <Tooltip content={tp('ver_alumnos')}>
+                  <Link
+                    href={`/admin/alumnos?profesor_id=${p.id}`}
+                    className="flex items-center gap-1 rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 py-1.5 text-xs font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)]"
+                  >
+                    <Eye className="h-3.5 w-3.5" />
+                    {tp('ver_alumnos')}
+                  </Link>
+                </Tooltip>
               </div>
             </Card>
           ))

@@ -13,6 +13,8 @@ import {
   Users,
   GraduationCap,
   BookOpen,
+  ClipboardList,
+  User,
   X,
 } from 'lucide-react';
 import type { UserRol } from '@/lib/supabase/types';
@@ -29,17 +31,20 @@ const navItems: Record<UserRol, NavItem[]> = {
     { key: 'agenda', href: '/admin/agenda', icon: <Calendar className="h-4 w-4" /> },
     { key: 'profesores', href: '/admin/profesores', icon: <BookOpen className="h-4 w-4" /> },
     { key: 'alumnos', href: '/admin/alumnos', icon: <GraduationCap className="h-4 w-4" /> },
+    { key: 'programas', href: '/admin/programas', icon: <ClipboardList className="h-4 w-4" /> },
   ],
   profesor: [
     { key: 'dashboard', href: '/profesor', icon: <LayoutDashboard className="h-4 w-4" /> },
     { key: 'agenda', href: '/profesor/agenda', icon: <Calendar className="h-4 w-4" /> },
     { key: 'mis_alumnos', href: '/profesor/mis-alumnos', icon: <Users className="h-4 w-4" /> },
     { key: 'horarios', href: '/profesor/horarios', icon: <BookOpen className="h-4 w-4" /> },
+    { key: 'programas', href: '/profesor/programas', icon: <ClipboardList className="h-4 w-4" /> },
   ],
   alumno: [
     { key: 'mis_clases', href: '/alumno', icon: <LayoutDashboard className="h-4 w-4" /> },
     { key: 'agenda', href: '/alumno/agenda', icon: <Calendar className="h-4 w-4" /> },
     { key: 'horario', href: '/alumno/horario', icon: <GraduationCap className="h-4 w-4" /> },
+    { key: 'perfil', href: '/alumno/perfil', icon: <User className="h-4 w-4" /> },
   ],
 };
 
