@@ -308,11 +308,11 @@ export default function AdminProgramaDetailPage({ params }: Props) {
                     <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--color-brand-gold)]/10 text-xs font-bold text-[var(--color-brand-gold)]">
                       {asig.alumno?.nombre?.[0]?.toUpperCase() ?? '?'}
                     </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-[var(--color-text-primary)]">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-[var(--color-text-primary)]">
                         {asig.alumno?.nombre} {asig.alumno?.apellido}
                       </p>
-                      <p className="text-xs text-[var(--color-text-muted)]">{asig.alumno?.email}</p>
+                      <p className="truncate text-xs text-[var(--color-text-muted)]">{asig.alumno?.email}</p>
                     </div>
                     <Tooltip content={t('desvincular_tooltip')} position="left">
                       <button

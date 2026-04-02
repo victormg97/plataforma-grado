@@ -164,7 +164,7 @@ export function ClasesEditor({
                         if (isDefault) e.target.select();
                       }}
                       className={cn(
-                        'flex-1 bg-transparent text-sm outline-none placeholder:text-[var(--color-text-muted)] focus:underline',
+                        'min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-[var(--color-text-muted)] focus:underline',
                         isEmpty
                           ? 'text-[var(--color-error)] placeholder:text-[var(--color-error)]/50'
                           : 'text-[var(--color-text-primary)]'
@@ -188,43 +188,41 @@ export function ClasesEditor({
                     </div>
                   )}
 
-                  {/* Move up/down */}
+                  {/* Move up/down + Delete — grouped so there's no gap between arrows and trash */}
                   {!readOnly && (
-                    <div className="flex shrink-0 flex-col gap-0.5">
-                      <Tooltip content={t('editor.mover_arriba')} position="left" variant="subtle">
+                    <div className="flex shrink-0 items-center gap-0.5">
+                      <div className="flex flex-col gap-0.5">
+                        <Tooltip content={t('editor.mover_arriba')} position="left" variant="subtle">
+                          <button
+                            type="button"
+                            disabled={idx === 0}
+                            onClick={() => moveClase(key, -1)}
+                            className="flex h-5 w-5 items-center justify-center rounded text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] disabled:opacity-30 text-[10px] leading-none transition-colors"
+                          >
+                            ▲
+                          </button>
+                        </Tooltip>
+                        <Tooltip content={t('editor.mover_abajo')} position="left" variant="subtle">
+                          <button
+                            type="button"
+                            disabled={idx === clases.length - 1}
+                            onClick={() => moveClase(key, 1)}
+                            className="flex h-5 w-5 items-center justify-center rounded text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] disabled:opacity-30 text-[10px] leading-none transition-colors"
+                          >
+                            ▼
+                          </button>
+                        </Tooltip>
+                      </div>
+                      <Tooltip content={t('editor.eliminar_clase_tooltip')} position="left">
                         <button
                           type="button"
-                          disabled={idx === 0}
-                          onClick={() => moveClase(key, -1)}
-                          className="flex h-5 w-5 items-center justify-center rounded text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] disabled:opacity-30 text-[10px] leading-none transition-colors"
+                          onClick={() => removeClase(key)}
+                          className="flex h-6 w-6 items-center justify-center rounded text-[var(--color-text-muted)] hover:bg-red-50 hover:text-[var(--color-error)] dark:hover:bg-red-950/20 transition-colors"
                         >
-                          ▲
-                        </button>
-                      </Tooltip>
-                      <Tooltip content={t('editor.mover_abajo')} position="left" variant="subtle">
-                        <button
-                          type="button"
-                          disabled={idx === clases.length - 1}
-                          onClick={() => moveClase(key, 1)}
-                          className="flex h-5 w-5 items-center justify-center rounded text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] disabled:opacity-30 text-[10px] leading-none transition-colors"
-                        >
-                          ▼
+                          <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       </Tooltip>
                     </div>
-                  )}
-
-                  {/* Delete */}
-                  {!readOnly && (
-                    <Tooltip content={t('editor.eliminar_clase_tooltip')} position="left">
-                      <button
-                        type="button"
-                        onClick={() => removeClase(key)}
-                        className="shrink-0 flex h-6 w-6 items-center justify-center rounded text-[var(--color-text-muted)] hover:bg-red-50 hover:text-[var(--color-error)] dark:hover:bg-red-950/20 transition-colors"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </Tooltip>
                   )}
                 </div>
 
