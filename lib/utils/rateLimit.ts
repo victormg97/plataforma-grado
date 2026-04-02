@@ -9,13 +9,13 @@ let redis: Redis | null = null;
 let loginLimiter: Ratelimit | null = null;
 let apiLimiter: Ratelimit | null = null;
 
-if (
-  process.env.UPSTASH_REDIS_REST_URL &&
-  process.env.UPSTASH_REDIS_REST_TOKEN
-) {
+const redisUrl = process.env.UPSTASH_REDIS_REST_URL?.replace(/^["']|["']$/g, '');
+const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN?.replace(/^["']|["']$/g, '');
+
+if (redisUrl && redisToken && redisUrl.startsWith('https://')) {
   redis = new Redis({
-    url: process.env.UPSTASH_REDIS_REST_URL,
-    token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    url: redisUrl,
+    token: redisToken,
   });
 
   // Login: strict — 5 attempts per 15 minutes per IP+email combination
