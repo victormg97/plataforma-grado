@@ -134,7 +134,8 @@ export async function PATCH(request: NextRequest) {
 
         const { error: upsertError } = await supabase
           .from('alumnos_extra')
-          .upsert(extraUpdate, { onConflict: 'alumno_id' });
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .upsert(extraUpdate as any, { onConflict: 'alumno_id' });
 
         if (upsertError) {
           return NextResponse.json({ error: upsertError.message }, { status: 500 });
