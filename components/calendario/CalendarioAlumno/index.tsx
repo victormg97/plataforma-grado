@@ -214,17 +214,6 @@ export function CalendarioAlumno() {
         .calendario-alumno .fc .fc-list-event:hover td {
           background: var(--color-bg-secondary);
         }
-        .calendario-alumno .fc .fc-list-table {
-          table-layout: fixed;
-          width: 100%;
-        }
-        .calendario-alumno .fc .fc-list-event-time {
-          width: 5.5rem;
-          white-space: nowrap;
-        }
-        .calendario-alumno .fc .fc-list-event-graphic {
-          width: 1.5rem;
-        }
         .calendario-alumno .fc .fc-list-event-title {
           overflow: hidden;
         }
