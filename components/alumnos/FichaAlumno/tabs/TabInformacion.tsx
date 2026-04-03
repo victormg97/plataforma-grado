@@ -17,6 +17,7 @@ import { StatusBadge } from '@/components/common/StatusBadge';
 import { Tooltip } from '@/components/common/Tooltip';
 import { Button } from '@/components/common/Button';
 import { useRouter } from 'next/navigation';
+import { toChileTime } from '@/lib/hooks/useServerTime';
 
 interface NotaAlumno {
   id: string;
@@ -258,12 +259,17 @@ export function TabInformacion({ alumnoId, data, role = 'profesor' }: TabInforma
                 </div>
               ) : (
                 <>
-                  <p className="whitespace-pre-wrap text-sm text-[var(--color-text-primary)]">{nota.contenido}</p>
-                  <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-                    {fmtFecha(nota.created_at)}
-                    {nota.updated_at !== nota.created_at && ` · ${tf('editada')}`}
-                  </p>
-                  <div className="absolute right-2 top-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                  <p className="whitespace-pre-wrap break-words text-sm text-[var(--color-text-primary)] pr-12">{nota.contenido}</p>
+                  <div className="mt-1 flex items-center justify-between gap-2">
+                    <p className="text-xs text-[var(--color-text-muted)]">
+                      {fmtFecha(nota.created_at)}
+                      {nota.updated_at !== nota.created_at && ` · ${tf('editada')}`}
+                    </p>
+                    <p className="text-xs text-[var(--color-text-muted)] shrink-0">
+                      {toChileTime(nota.created_at).slice(0, 5)} hrs
+                    </p>
+                  </div>
+                  <div className="absolute right-2 top-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100 [@media(hover:none)]:opacity-100">
                     <Tooltip content={tc('editar')} position="top">
                       <button
                         onClick={() => { setEditingNota(nota.id); setEditContent(nota.contenido); }}

@@ -220,6 +220,7 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
       // Invalidate all horarios and asistencia caches (affects profesor calendar + alumno schedule)
       queryClient.invalidateQueries({ queryKey: ['horarios'] });
       queryClient.invalidateQueries({ queryKey: ['asistencia'] });
+      queryClient.invalidateQueries({ queryKey: ['pruebas'] });
       onSuccess();
       onClose();
     } catch (err) {
@@ -236,6 +237,7 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
       toast.success(t('exito_eliminado'));
       queryClient.invalidateQueries({ queryKey: ['horarios'] });
       queryClient.invalidateQueries({ queryKey: ['asistencia'] });
+      queryClient.invalidateQueries({ queryKey: ['pruebas'] });
       onSuccess();
       onClose();
     } catch {

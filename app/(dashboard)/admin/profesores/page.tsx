@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, UserCheck, UserX, Eye, Copy, Check, Pencil } from 'lucide-react';
+import { Plus, UserCheck, UserX, Eye, Copy, Check, Pencil, CalendarDays } from 'lucide-react';
 import { toast } from 'sonner';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card } from '@/components/common/Card';
@@ -218,6 +218,15 @@ export default function ProfesoresPage() {
                   >
                     <Eye className="h-3.5 w-3.5" />
                     {tp('ver_alumnos')}
+                  </Link>
+                </Tooltip>
+                <Tooltip content={tp('ver_clases')}>
+                  <Link
+                    href={`/admin/profesores/${p.id}/horarios`}
+                    className="flex items-center gap-1 rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 py-1.5 text-xs font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)]"
+                  >
+                    <CalendarDays className="h-3.5 w-3.5" />
+                    {tp('ver_clases')}
                   </Link>
                 </Tooltip>
               </div>
