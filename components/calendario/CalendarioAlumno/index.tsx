@@ -137,7 +137,7 @@ export function CalendarioAlumno() {
   }
 
   return (
-    <div className="calendario-alumno">
+    <div className="calendario-alumno" style={{ overflow: 'hidden' }}>
       {/* Legend row */}
       <div className="mb-3 flex flex-wrap items-center gap-3">
         <div className="flex flex-wrap gap-3">
@@ -213,6 +213,20 @@ export function CalendarioAlumno() {
         }
         .calendario-alumno .fc .fc-list-event:hover td {
           background: var(--color-bg-secondary);
+        }
+        .calendario-alumno .fc .fc-list-table {
+          table-layout: fixed;
+          width: 100%;
+        }
+        .calendario-alumno .fc .fc-list-event-time {
+          width: 5.5rem;
+          white-space: nowrap;
+        }
+        .calendario-alumno .fc .fc-list-event-graphic {
+          width: 1.5rem;
+        }
+        .calendario-alumno .fc .fc-list-event-title {
+          overflow: hidden;
         }
         .calendario-alumno .fc .fc-scrollgrid {
           border-color: var(--color-border);

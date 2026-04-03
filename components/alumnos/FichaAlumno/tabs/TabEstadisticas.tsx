@@ -24,7 +24,7 @@ interface TabEstadisticasProps {
   };
 }
 
-type Categoria = 'todas' | 'confirmadas' | 'canceladas' | 'prueba' | 'notas';
+type Categoria = 'todas' | 'confirmadas' | 'canceladas' | 'pendientes' | 'prueba' | 'notas';
 type TipoGrafico = 'bar' | 'line' | 'pie';
 
 const GOLD = '#C9993F';
@@ -54,6 +54,9 @@ export function TabEstadisticas({ data }: TabEstadisticasProps) {
     return f >= fechaInicio && f <= fechaFin;
   });
 
+  // Whether notas category is available
+  const hasNotas = data.pruebas.some((p) => p.nota !== null);
+
   // Build monthly chart data
   const chartData = useCallback(() => {
     if (!clasesFiltradas.length) return [];
@@ -70,16 +73,24 @@ export function TabEstadisticas({ data }: TabEstadisticasProps) {
       const enMes = clasesFiltradas.filter((c) => c.fecha >= inicio && c.fecha <= fin);
       const confirmadas = enMes.filter((c) => c.asistencia?.[0]?.estado === 'confirmado').length;
       const canceladas = enMes.filter((c) => c.asistencia?.[0]?.estado === 'cancelado').length;
+      const pendientes = enMes.filter((c) => !c.asistencia?.[0] || c.asistencia[0].estado === 'pendiente').length;
       const prueba = enMes.filter((c) => c.from_programa).length;
+      // Average nota for pruebas in this month
+      const pruebasMes = data.pruebas.filter((p) => p.fecha >= inicio && p.fecha <= fin && p.nota !== null);
+      const nota_promedio = pruebasMes.length
+        ? Math.round((pruebasMes.reduce((sum, p) => sum + Number(p.nota), 0) / pruebasMes.length) * 10) / 10
+        : null;
       return {
         mes: label,
         total: enMes.length,
         confirmadas,
         canceladas,
+        pendientes,
         prueba,
+        nota_promedio,
       };
     });
-  }, [clasesFiltradas, fechaInicio, fechaFin])();
+  }, [clasesFiltradas, fechaInicio, fechaFin, data.pruebas])();
 
   // Pie data (overall)
   const pieData = (() => {
@@ -89,7 +100,7 @@ export function TabEstadisticas({ data }: TabEstadisticasProps) {
     return [
       { name: t('stat_confirmadas'), value: confirmadas, color: SUCCESS },
       { name: t('stat_canceladas'), value: canceladas, color: ERROR },
-      { name: 'Pendientes', value: pendientes, color: GOLD },
+      { name: t('cat_pendientes'), value: pendientes, color: GOLD },
     ].filter((d) => d.value > 0);
   })();
 
@@ -97,8 +108,9 @@ export function TabEstadisticas({ data }: TabEstadisticasProps) {
     { value: 'todas', label: t('cat_todas') },
     { value: 'confirmadas', label: t('cat_confirmadas') },
     { value: 'canceladas', label: t('cat_canceladas') },
+    { value: 'pendientes', label: t('cat_pendientes') },
     { value: 'prueba', label: t('cat_prueba') },
-    { value: 'notas', label: t('cat_notas') },
+    ...(hasNotas ? [{ value: 'notas', label: t('cat_notas') }] : []),
   ];
 
   const downloadPNG = () => {
@@ -125,8 +137,8 @@ export function TabEstadisticas({ data }: TabEstadisticasProps) {
 
   const downloadCSV = () => {
     const rows = [
-      ['Mes', 'Total', 'Confirmadas', 'Canceladas', 'Prueba'],
-      ...chartData.map((d) => [d.mes, d.total, d.confirmadas, d.canceladas, d.prueba]),
+      ['Mes', 'Total', 'Confirmadas', 'Canceladas', 'Pendientes', 'Prueba'],
+      ...chartData.map((d) => [d.mes, d.total, d.confirmadas, d.canceladas, d.pendientes, d.prueba]),
     ];
     const csv = rows.map((r) => r.join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -142,13 +154,15 @@ export function TabEstadisticas({ data }: TabEstadisticasProps) {
     switch (categoria) {
       case 'confirmadas': return [{ key: 'confirmadas', color: SUCCESS, label: t('cat_confirmadas') }];
       case 'canceladas': return [{ key: 'canceladas', color: ERROR, label: t('cat_canceladas') }];
+      case 'pendientes': return [{ key: 'pendientes', color: GOLD, label: t('cat_pendientes') }];
       case 'prueba': return [{ key: 'prueba', color: INFO, label: t('cat_prueba') }];
-      case 'notas': return [{ key: 'total', color: GOLD, label: t('cat_todas') }]; // notas no tiene serie propia aún
+      case 'notas': return [{ key: 'nota_promedio', color: GOLD, label: t('cat_notas') }];
       default:
         return [
-          { key: 'total', color: GOLD_LIGHT, label: t('cat_todas') },
+          { key: 'total', color: GOLD_LIGHT, label: t('stat_total') },
           { key: 'confirmadas', color: SUCCESS, label: t('cat_confirmadas') },
           { key: 'canceladas', color: ERROR, label: t('cat_canceladas') },
+          { key: 'pendientes', color: GOLD, label: t('cat_pendientes') },
           { key: 'prueba', color: INFO, label: t('cat_prueba') },
         ];
     }

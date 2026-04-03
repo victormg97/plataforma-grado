@@ -777,6 +777,7 @@
     "cat_todas": "View all",
     "cat_confirmadas": "Confirmed",
     "cat_canceladas": "Cancelled",
+    "cat_pendientes": "Pending",
     "cat_prueba": "Program classes",
     "cat_notas": "Exam grades",
     "tabla_mes": "Month"

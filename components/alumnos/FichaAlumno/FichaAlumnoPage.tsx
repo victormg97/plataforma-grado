@@ -122,7 +122,7 @@ export function FichaAlumnoPage({ alumnoId, role = 'profesor', backHref }: Ficha
       {/* Graduation effect — confetti & floating particles */}
       <GraduadoEffect active={pasoPrueba} />
 
-      <div className="relative z-10 container-app py-[var(--space-lg)]">
+      <div className="relative z-10 py-[var(--space-lg)]">
         {/* ── Back button (hidden for alumno self-profile) ── */}
         {role !== 'alumno' && (
           <button

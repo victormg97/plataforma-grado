@@ -259,7 +259,7 @@ export function CalendarioAdmin() {
         containerClass=".calendario-admin"
         exportEvents={adminExportEvents}
       />
-      <div className="calendario-admin">
+      <div className="calendario-admin" style={{ overflow: 'hidden' }}>
         <style>{`
           .calendario-admin .fc {
             --fc-border-color: var(--color-border);
@@ -315,6 +315,20 @@ export function CalendarioAdmin() {
           }
           .calendario-admin .fc .fc-list-event:hover td {
             background: var(--color-bg-secondary);
+          }
+          .calendario-admin .fc .fc-list-table {
+            table-layout: fixed;
+            width: 100%;
+          }
+          .calendario-admin .fc .fc-list-event-time {
+            width: 5.5rem;
+            white-space: nowrap;
+          }
+          .calendario-admin .fc .fc-list-event-graphic {
+            width: 1.5rem;
+          }
+          .calendario-admin .fc .fc-list-event-title {
+            overflow: hidden;
           }
           .calendario-admin .fc .fc-scrollgrid {
             border-color: var(--color-border);

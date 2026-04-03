@@ -209,7 +209,7 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
         exportEvents={profesorExportEvents}
       />
 
-      <div className="calendario-profesor">
+      <div className="calendario-profesor" style={{ overflow: 'hidden' }}>
         <style>{`
           .calendario-profesor .fc {
             --fc-border-color: var(--color-border);
@@ -265,6 +265,20 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
           }
           .calendario-profesor .fc .fc-list-event:hover td {
             background: var(--color-bg-secondary);
+          }
+          .calendario-profesor .fc .fc-list-table {
+            table-layout: fixed;
+            width: 100%;
+          }
+          .calendario-profesor .fc .fc-list-event-time {
+            width: 5.5rem;
+            white-space: nowrap;
+          }
+          .calendario-profesor .fc .fc-list-event-graphic {
+            width: 1.5rem;
+          }
+          .calendario-profesor .fc .fc-list-event-title {
+            overflow: hidden;
           }
           .calendario-profesor .fc .fc-scrollgrid {
             border-color: var(--color-border);
