@@ -23,15 +23,8 @@ import {
 } from '@/lib/hooks/useProgramas';
 import { usePruebas, useCalificarPrueba } from '@/lib/hooks/usePruebas';
 import { useQuery } from '@tanstack/react-query';
-import type { AsignacionConAlumno, ClasePrograma, Prueba, ProgramaClaseConConteo } from '@/lib/supabase/types';
+import type { AsignacionConAlumno, ClaseItem, Prueba, ProgramaClaseConConteo } from '@/lib/supabase/types';
 import type { ProgramaFormData } from '@/lib/validations/programa.schema';
-
-type ClaseItem = Omit<Pick<ClasePrograma, 'id' | 'nombre' | 'tipo' | 'orden'>, 'tipo'> & {
-  tipo: 'materia' | 'prueba';
-  descripcion?: string | null;
-  duracion_min?: number | null;
-  tempId?: string;
-};
 
 async function fetchAlumnos() {
   const res = await fetch('/api/alumnos');

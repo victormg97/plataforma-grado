@@ -6,11 +6,7 @@ import { Check, ChevronRight, User, Calendar } from 'lucide-react';
 import { Modal } from '@/components/common/Modal';
 import { Button } from '@/components/common/Button';
 import { cn } from '@/lib/utils';
-import type { ClasePrograma } from '@/lib/supabase/types';
-
-type ClaseItem = Pick<ClasePrograma, 'id' | 'nombre' | 'tipo' | 'orden'> & {
-  duracion_min?: number | null;
-};
+import type { ClaseItem } from '@/lib/supabase/types';
 
 type AlumnoOption = {
   id: string;

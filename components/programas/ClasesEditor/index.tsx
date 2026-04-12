@@ -7,13 +7,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/common/Button';
 import { Tooltip } from '@/components/common/Tooltip';
-import type { ClasePrograma } from '@/lib/supabase/types';
-
-type ClaseItem = Pick<ClasePrograma, 'id' | 'nombre' | 'tipo' | 'orden'> & {
-  descripcion?: string | null;
-  duracion_min?: number | null;
-  tempId?: string;
-};
+import type { ClaseItem } from '@/lib/supabase/types';
 
 interface ClasesEditorProps {
   clases: ClaseItem[];

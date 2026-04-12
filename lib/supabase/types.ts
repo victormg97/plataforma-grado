@@ -931,8 +931,15 @@ export type EstadoPrograma = 'activo' | 'eliminado';
 export type EstadoPrueba = 'pendiente' | 'realizada' | 'calificada';
 
 // ─── Simple table row aliases ─────────────────────────────────────────────────
-export type ClasePrograma = Tables<'clases_programa'>;
+export type ClasePrograma = Omit<Tables<'clases_programa'>, 'tipo'> & {
+  tipo: 'materia' | 'prueba';
+};
 export type Prueba = Tables<'pruebas'>;
+
+// ─── Shared component types ──────────────────────────────────────────────────
+export type ClaseItem = Pick<ClasePrograma, 'id' | 'nombre' | 'tipo' | 'orden' | 'descripcion' | 'duracion_min'> & {
+  tempId?: string;
+};
 
 // ─── Helper narrow types (internal) ──────────────────────────────────────────
 type ProfesorBasico = { id: string; nombre: string; apellido: string; avatar_url: string | null };

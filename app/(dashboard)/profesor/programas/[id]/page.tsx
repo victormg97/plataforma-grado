@@ -24,14 +24,7 @@ import {
 import { usePruebas, useCalificarPrueba } from '@/lib/hooks/usePruebas';
 import { useUser } from '@/lib/hooks/useUser';
 import { useQuery } from '@tanstack/react-query';
-import type { AsignacionConAlumno, ClasePrograma, Prueba } from '@/lib/supabase/types';
-
-type ClaseItem = Omit<Pick<ClasePrograma, 'id' | 'nombre' | 'tipo' | 'orden'>, 'tipo'> & {
-  tipo: 'materia' | 'prueba';
-  descripcion?: string | null;
-  duracion_min?: number | null;
-  tempId?: string;
-};
+import type { AsignacionConAlumno, ClaseItem, Prueba } from '@/lib/supabase/types';
 
 // Sub-component: renders pruebas for a single alumno within this program
 function AlumnoPruebasSection({
