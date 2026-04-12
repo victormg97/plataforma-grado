@@ -1,5 +1,10 @@
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Json = any;
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
@@ -329,6 +334,33 @@ export type Database = {
           },
         ]
       }
+      invitations: {
+        Row: {
+          code: string
+          created_at: string | null
+          expires_at: string
+          id: string
+          used: boolean | null
+          user_id: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          expires_at: string
+          id?: string
+          used?: boolean | null
+          user_id?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          used?: boolean | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       notas_alumno: {
         Row: {
           alumno_id: string
@@ -490,6 +522,7 @@ export type Database = {
           id: string
           idioma: string | null
           nombre: string
+          puede_crear_alumno: boolean | null
           rol: Database["public"]["Enums"]["user_rol"]
           telefono: string | null
           tema: string | null
@@ -506,6 +539,7 @@ export type Database = {
           id: string
           idioma?: string | null
           nombre: string
+          puede_crear_alumno?: boolean | null
           rol?: Database["public"]["Enums"]["user_rol"]
           telefono?: string | null
           tema?: string | null
@@ -522,6 +556,7 @@ export type Database = {
           id?: string
           idioma?: string | null
           nombre?: string
+          puede_crear_alumno?: boolean | null
           rol?: Database["public"]["Enums"]["user_rol"]
           telefono?: string | null
           tema?: string | null
@@ -550,17 +585,17 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "programa_profesores_programa_id_fkey"
-            columns: ["programa_id"]
-            isOneToOne: false
-            referencedRelation: "programas_clases"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "programa_profesores_profesor_id_fkey"
             columns: ["profesor_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "programa_profesores_programa_id_fkey"
+            columns: ["programa_id"]
+            isOneToOne: false
+            referencedRelation: "programas_clases"
             referencedColumns: ["id"]
           },
         ]
@@ -695,6 +730,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      alumno_tiene_asignacion_activa: {
+        Args: { p_programa_id: string }
+        Returns: boolean
+      }
+      delete_programa_asignado_notifications: {
+        Args: { p_alumno_ids: string[]; p_programa_id: string }
+        Returns: undefined
+      }
       get_admin_init_data: { Args: never; Returns: Json }
       get_admin_stats: { Args: never; Returns: Json }
       get_alumno_dashboard: { Args: { p_alumno_id: string }; Returns: Json }
@@ -707,14 +750,6 @@ export type Database = {
       get_notas_clase: { Args: { p_horario_id: string }; Returns: Json }
       get_profesor_dashboard: { Args: { p_profesor_id: string }; Returns: Json }
       get_server_time: { Args: never; Returns: string }
-      delete_programa_asignado_notifications: {
-        Args: { p_programa_id: string; p_alumno_ids: string[] }
-        Returns: void
-      }
-      alumno_tiene_asignacion_activa: {
-        Args: { p_programa_id: string }
-        Returns: boolean
-      }
       get_user_rol: {
         Args: never
         Returns: Database["public"]["Enums"]["user_rol"]
@@ -883,158 +918,3 @@ export const Constants = {
     },
   },
 } as const
-
-// ============================================================
-// Convenience type aliases for use throughout the application
-// ============================================================
-
-// Enum types
-export type UserRol = 'admin' | 'profesor' | 'alumno';
-export type EstadoAsistencia = 'pendiente' | 'confirmado' | 'cancelado' | 'cambiado' | 'no_asistio';
-export type TipoNotificacion = 'confirmacion' | 'cancelacion' | 'cambio_horario' | 'nueva_clase' | 'clase_modificada' | 'clase_cancelada' | 'programa_asignado';
-export type EstadoPrograma = 'activo' | 'eliminado';
-export type TipoClasePrograma = 'materia' | 'prueba';
-export type EstadoAsignacion = 'activo' | 'completado' | 'eliminado';
-export type EstadoPrueba = 'pendiente' | 'realizada' | 'calificada';
-
-// Table row types
-export type Profile = {
-  id: string;
-  rol: UserRol;
-  nombre: string;
-  apellido: string;
-  apellido_materno: string | null;
-  email: string;
-  telefono: string | null;
-  avatar_url: string | null;
-  activo: boolean;
-  idioma: string | null;
-  tema: string | null;
-  duracion_clase_default_min: number;
-  created_at: string;
-  updated_at: string;
-}
-
-export type AlumnoExtra = {
-  id: string;
-  alumno_id: string;
-  profesor_id: string | null;
-  universidad: string | null;
-  año_ingreso: string | null;
-  notas: string | null;
-  paso_prueba: boolean;
-  fecha_prueba: string | null;
-  ha_dado_examen: boolean;
-  intentos_prueba: number | null;
-  created_at: string;
-  updated_at: string;
-}
-
-export type Horario = {
-  id: string;
-  profesor_id: string;
-  alumno_id: string;
-  titulo: string;
-  descripcion: string | null;
-  fecha: string;
-  hora_inicio: string;
-  hora_fin: string;
-  es_recurrente: boolean;
-  activo: boolean;
-  from_programa?: boolean | null;
-  created_at: string;
-  updated_at: string;
-}
-
-export type NotaClase = {
-  id: string;
-  horario_id: string;
-  autor_id: string;
-  contenido: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export type NotaClaseConAutor = NotaClase & {
-  autor: {
-    id: string;
-    nombre: string;
-    apellido: string;
-    rol: UserRol;
-    avatar_url: string | null;
-  };
-}
-
-export type VisibilidadPrograma = 'todos' | 'especifico';
-
-export type ProgramaProfesor = {
-  id: string;
-  programa_id: string;
-  profesor_id: string;
-  created_at: string;
-}
-
-export type ProgramaClase = {
-  id: string;
-  nombre: string;
-  descripcion: string | null;
-  profesor_id: string | null;
-  visibilidad: VisibilidadPrograma;
-  estado: EstadoPrograma;
-  created_by: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export type ClasePrograma = {
-  id: string;
-  programa_id: string;
-  nombre: string;
-  descripcion: string | null;
-  tipo: TipoClasePrograma;
-  orden: number;
-  duracion_min: number | null;
-  created_at: string;
-  updated_at: string;
-}
-
-export type AsignacionPrograma = {
-  id: string;
-  programa_id: string;
-  alumno_id: string;
-  profesor_id: string | null;
-  estado: EstadoAsignacion;
-  created_at: string;
-  updated_at: string;
-}
-
-export type AsignacionConAlumno = AsignacionPrograma & {
-  alumno: { id: string; nombre: string; apellido: string; avatar_url: string | null; email: string };
-  programa: { id: string; nombre: string } | null;
-}
-
-export type Prueba = {
-  id: string;
-  alumno_id: string;
-  profesor_id: string | null;
-  horario_id: string | null;
-  clase_id: string | null;
-  nombre: string;
-  fecha: string;
-  nota: number | null;
-  observaciones: string | null;
-  estado: EstadoPrueba;
-  created_at: string;
-  updated_at: string;
-}
-
-export type ProgramaClaseConConteo = ProgramaClase & {
-  profesor: { id: string; nombre: string; apellido: string; avatar_url: string | null } | null;
-  creado_por: { id: string; nombre: string; apellido: string } | null;
-  profesores_asignados?: { id: string; nombre: string; apellido: string; avatar_url: string | null }[];
-  total_clases: number;
-  total_pruebas: number;
-  total_asignados: number;
-  clases?: ClasePrograma[];
-  asignaciones?: AsignacionConAlumno[];
-}

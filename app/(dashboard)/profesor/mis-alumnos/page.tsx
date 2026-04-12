@@ -51,6 +51,17 @@ function MisAlumnosContent() {
       <PageHeader
         title={t('mis_alumnos_tab')}
         subtitle={t('ficha_conteo', { count: filtered.length })}
+        actions={
+          user?.puede_crear_alumno && (
+            <button
+              onClick={() => router.push('/profesor/mis-alumnos/crear')}
+              className="flex items-center gap-2 rounded-[var(--radius-sm)] bg-[var(--color-brand-gold)] px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-opacity"
+            >
+              <Users className="h-4 w-4" />
+              {t('agregar_alumno')}
+            </button>
+          )
+        }
       />
 
       {/* Tabs */}
@@ -104,6 +115,7 @@ function MisAlumnosContent() {
               key={alumno.id}
               alumno={alumno}
               onViewFicha={(a) => router.push(`/profesor/alumnos/${a.id}`)}
+              onGestionarAcceso={tab === 'mis' ? (a) => router.push(`/profesor/mis-alumnos/${a.id}/editar`) : undefined}
               isOwn={tab === 'mis'}
             />
           ))}

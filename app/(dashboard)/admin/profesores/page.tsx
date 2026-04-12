@@ -11,6 +11,7 @@ import { Avatar } from '@/components/common/Avatar';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { Modal } from '@/components/common/Modal';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Tooltip } from '@/components/common/Tooltip';
 
@@ -24,9 +25,11 @@ type Profesor = {
   activo: boolean;
   rol: string;
   alumnos_count: number;
+  estado_cuenta?: 'Pendiente' | 'Activo';
 };
 
 export default function ProfesoresPage() {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const tp = useTranslations('profesores');
   const tc = useTranslations('common');
@@ -41,77 +44,7 @@ export default function ProfesoresPage() {
     staleTime: 60_000,
   });
 
-  const [formOpen, setFormOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState<{ id: string; nombre: string; activo: boolean } | null>(null);
-  const [createdPassword, setCreatedPassword] = useState<string | null>(null);
-  const [copiedPw, setCopiedPw] = useState(false);
-
-  // Create form state
-  const [nombre, setNombre] = useState('');
-  const [apellido, setApellido] = useState('');
-  const [email, setEmail] = useState('');
-  const [telefono, setTelefono] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-
-  // Edit modal state
-  const [editModal, setEditModal] = useState<Profesor | null>(null);
-  const [editNombre, setEditNombre] = useState('');
-  const [editApellido, setEditApellido] = useState('');
-  const [editTelefono, setEditTelefono] = useState('');
-  const [editSubmitting, setEditSubmitting] = useState(false);
-
-  const openEdit = (p: Profesor) => {
-    setEditModal(p);
-    setEditNombre(p.nombre);
-    setEditApellido(p.apellido);
-    setEditTelefono(p.telefono ?? '');
-  };
-
-  const handleEdit = async () => {
-    if (!editModal) return;
-    setEditSubmitting(true);
-    try {
-      const res = await fetch(`/api/admin/profesores/${editModal.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nombre: editNombre, apellido: editApellido, telefono: editTelefono }),
-      });
-      if (!res.ok) throw new Error();
-      toast.success(tp('exito_actualizado'));
-      setEditModal(null);
-      queryClient.invalidateQueries({ queryKey: ['admin-profesores'] });
-    } catch {
-      toast.error(tp('error_actualizar'));
-    } finally {
-      setEditSubmitting(false);
-    }
-  };
-
-  const handleCreate = async () => {
-    if (!nombre || !apellido || !email) {
-      toast.error(tp('error_crear'));
-      return;
-    }
-    setSubmitting(true);
-    try {
-      const res = await fetch('/api/admin/profesores', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nombre, apellido, email, telefono }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      toast.success(tp('exito_creado'));
-      setCreatedPassword(data.temp_password);
-      setFormOpen(false);
-      setNombre(''); setApellido(''); setEmail(''); setTelefono('');
-      queryClient.invalidateQueries({ queryKey: ['admin-profesores'] });
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : tp('error_crear'));
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   const handleToggle = async () => {
     if (!confirmAction) return;
@@ -139,13 +72,6 @@ export default function ProfesoresPage() {
     [profesores]
   );
 
-  const copyPassword = () => {
-    if (createdPassword) {
-      navigator.clipboard.writeText(createdPassword);
-      setCopiedPw(true);
-      setTimeout(() => setCopiedPw(false), 2000);
-    }
-  };
 
   return (
     <div>
@@ -153,7 +79,7 @@ export default function ProfesoresPage() {
         title={tp('titulo')}
         subtitle={tp('subtitulo')}
         actions={
-          <Button onClick={() => setFormOpen(true)}>
+          <Button onClick={() => router.push('/admin/profesores/crear')}>
             <Plus className="mr-1.5 h-4 w-4" />
             {tp('nuevo_profesor')}
           </Button>
@@ -180,7 +106,7 @@ export default function ProfesoresPage() {
                     {p.rol === 'admin' ? (
                       <span className="rounded-full bg-[var(--color-brand-gold-muted)] px-2 py-0.5 text-xs font-medium text-[var(--color-brand-gold)]">Admin</span>
                     ) : (
-                      <StatusBadge status={p.activo ? 'activo' : 'inactivo'} />
+                      <StatusBadge status={p.estado_cuenta === 'Pendiente' ? 'pendiente' : (p.activo ? 'activo' : 'inactivo')} />
                     )}
                   </div>
                   <p className="text-sm text-[var(--color-text-muted)]">{p.email}</p>
@@ -190,7 +116,7 @@ export default function ProfesoresPage() {
               <div className="flex items-center gap-2 ml-auto sm:ml-0">
                 <Tooltip content={tc('editar')}>
                   <button
-                    onClick={() => openEdit(p)}
+                    onClick={() => router.push(`/admin/profesores/${p.id}/editar`)}
                     className="rounded p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)]"
                   >
                     <Pencil className="h-4 w-4" />
@@ -235,68 +161,6 @@ export default function ProfesoresPage() {
         )}
       </div>
 
-      {/* Edit profesor modal */}
-      <Modal
-        open={!!editModal}
-        onClose={() => setEditModal(null)}
-        title={tp('editar_titulo')}
-        footer={
-          <div className="flex gap-2">
-            <Button variant="ghost" onClick={() => setEditModal(null)}>{tc('cancelar')}</Button>
-            <Button onClick={handleEdit} loading={editSubmitting}>{tc('guardar')}</Button>
-          </div>
-        }
-      >
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">{ta('nombre')}</label>
-              <input value={editNombre} onChange={(e) => setEditNombre(e.target.value)} className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">{ta('apellido')}</label>
-              <input value={editApellido} onChange={(e) => setEditApellido(e.target.value)} className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm" />
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">{ta('telefono')}</label>
-            <input value={editTelefono} onChange={(e) => setEditTelefono(e.target.value)} className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm" />
-          </div>
-        </div>
-      </Modal>
-
-      {/* Create profesor modal */}
-      <Modal
-        open={formOpen}
-        onClose={() => setFormOpen(false)}
-        title={tp('nuevo_titulo')}
-        footer={
-          <div className="flex gap-2">
-            <Button variant="ghost" onClick={() => setFormOpen(false)}>{tc('cancelar')}</Button>
-            <Button onClick={handleCreate} loading={submitting}>{tp('crear_btn')}</Button>
-          </div>
-        }
-      >
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">{ta('nombre')}</label>
-            <input value={nombre} onChange={(e) => setNombre(e.target.value)} className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">{ta('apellido')}</label>
-            <input value={apellido} onChange={(e) => setApellido(e.target.value)} className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">{ta('email')}</label>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">{ta('telefono')}</label>
-            <input value={telefono} onChange={(e) => setTelefono(e.target.value)} className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm" />
-          </div>
-        </div>
-      </Modal>
-
       {/* Confirm enable/disable */}
       <Modal
         open={!!confirmAction}
@@ -316,31 +180,6 @@ export default function ProfesoresPage() {
             ? tp('confirm_deshabilitar', { nombre: confirmAction.nombre })
             : tp('confirm_habilitar', { nombre: confirmAction?.nombre ?? '' })}
         </p>
-      </Modal>
-
-      {/* Password reveal modal */}
-      <Modal
-        open={!!createdPassword}
-        onClose={() => { setCreatedPassword(null); setCopiedPw(false); }}
-        title={tp('creado_titulo')}
-        footer={
-          <Button onClick={() => { setCreatedPassword(null); setCopiedPw(false); }}>{tc('entendido')}</Button>
-        }
-      >
-        <div className="space-y-3">
-          <p className="text-sm text-[var(--color-text-primary)]">
-            {tp('creado_texto')}
-          </p>
-          <div className="flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-bg-secondary)] p-3 font-mono text-sm">
-            <span className="flex-1 break-all">{createdPassword}</span>
-            <button onClick={copyPassword} className="shrink-0 rounded p-1 hover:bg-[var(--color-border)]">
-              {copiedPw ? <Check className="h-4 w-4 text-[var(--color-success)]" /> : <Copy className="h-4 w-4" />}
-            </button>
-          </div>
-          <p className="text-xs text-[var(--color-text-muted)]">
-            {tp('creado_nota')}
-          </p>
-        </div>
       </Modal>
     </div>
   );

@@ -38,5 +38,19 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json(data);
+  const alumnoIdsResult = data?.map(d => d.id) || [];
+  const { data: invs } = await supabase
+    .from('invitations')
+    .select('user_id')
+    .in('user_id', alumnoIdsResult.length > 0 ? alumnoIdsResult : ['none'])
+    .eq('used', false);
+    
+  const pendingSet = new Set((invs ?? []).map(i => i.user_id));
+
+  const result = (data ?? []).map((a) => ({
+    ...a,
+    estado_cuenta: pendingSet.has(a.id) ? 'Pendiente' : 'Activo'
+  }));
+
+  return NextResponse.json(result);
 }

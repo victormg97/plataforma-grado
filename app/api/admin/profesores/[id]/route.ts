@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -21,7 +22,18 @@ export async function GET(
     .single();
 
   if (error || !data) return NextResponse.json({ error: 'No encontrado' }, { status: 404 });
-  return NextResponse.json(data);
+
+  // Get active invitation if pending
+  const { data: current_invitation } = await supabase
+    .from('invitations')
+    .select('code, temp_password, invitation_type, expires_at')
+    .eq('user_id', id)
+    .eq('used', false)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single();
+
+  return NextResponse.json({ ...data, current_invitation: current_invitation || null });
 }
 
 export async function PATCH(
@@ -47,12 +59,79 @@ export async function PATCH(
   }
 
   const body = await request.json();
+
+  if (body.action === 'regenerate_access') {
+    const { modo_creacion } = body;
+    const modo = modo_creacion === 'default' ? 'default' : 'link';
+
+    const { data: targetProfile } = await supabase
+      .from('profiles')
+      .select('email')
+      .eq('id', id)
+      .single();
+
+    if (!targetProfile?.email) {
+      return NextResponse.json({ error: 'Usuario inválido' }, { status: 400 });
+    }
+
+    const { generateDefaultPassword } = await import('@/lib/utils/account-generator');
+    const { generateShortCode } = await import('@/lib/utils/invitations');
+
+    // Check for existing pending invitation (may or may not exist)
+    const { data: oldInv } = await supabase
+      .from('invitations')
+      .select('temp_password')
+      .eq('user_id', id)
+      .eq('used', false)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    // Use existing temp_password if available, otherwise generate a new one
+    const tempPassword = (oldInv as any)?.temp_password ?? generateDefaultPassword('profesor');
+
+    // If user is already activated (no pending invitation), reset their Supabase auth password
+    if (!oldInv) {
+      const { createAdminClient } = await import('@/lib/supabase/admin');
+      const adminClient = createAdminClient();
+      const { error: resetError } = await adminClient.auth.admin.updateUserById(id, {
+        password: tempPassword,
+      });
+      if (resetError) {
+        return NextResponse.json({ error: 'No se pudo preparar el acceso temporal' }, { status: 500 });
+      }
+    }
+
+    const code = generateShortCode(8);
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + (modo === 'link' ? 24 : 24 * 365 * 10));
+
+    // Delete old pending invitations and create a new one
+    await supabase.from('invitations').delete().eq('user_id', id).eq('used', false);
+    await supabase.from('invitations').insert({
+      code,
+      user_id: id,
+      email: targetProfile.email,
+      temp_password: tempPassword,
+      expires_at: expiresAt.toISOString(),
+      used: false,
+      invitation_type: modo,
+    });
+
+    return NextResponse.json({
+      setup_code: modo === 'link' ? code : null,
+      password: modo === 'link' ? null : tempPassword,
+    });
+  }
+
+
   const updates: Record<string, unknown> = {};
 
   if (typeof body.activo === 'boolean') updates.activo = body.activo;
   if (body.nombre !== undefined) updates.nombre = body.nombre;
   if (body.apellido !== undefined) updates.apellido = body.apellido;
   if (body.telefono !== undefined) updates.telefono = body.telefono;
+  if (typeof body.puede_crear_alumno === 'boolean') updates.puede_crear_alumno = body.puede_crear_alumno;
 
   if (Object.keys(updates).length === 0) {
     return NextResponse.json({ error: 'Sin cambios' }, { status: 400 });
@@ -94,7 +173,7 @@ export async function DELETE(
     return NextResponse.json({ error: 'Solo admin' }, { status: 403 });
   }
 
-  // Check if professor has assigned students
+  // Check if professor has assigned students - warn but don't block
   const { count } = await supabase
     .from('alumnos_extra')
     .select('*', { count: 'exact', head: true })
@@ -102,14 +181,18 @@ export async function DELETE(
 
   if (count && count > 0) {
     return NextResponse.json(
-      { error: 'No se puede eliminar: tiene alumnos asignados' },
+      { error: `No se puede eliminar: este profesor tiene ${count} alumno(s) asignado(s). Reasígnalos primero.` },
       { status: 409 }
     );
   }
 
+  // Delete associated data first
+  await supabase.from('invitations').delete().eq('user_id', id);
+
+  // Hard delete the profile
   const { error } = await supabase
     .from('profiles')
-    .update({ activo: false })
+    .delete()
     .eq('id', id);
 
   if (error) {

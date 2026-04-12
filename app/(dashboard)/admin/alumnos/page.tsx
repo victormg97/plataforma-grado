@@ -37,6 +37,7 @@ type AlumnoAdmin = {
   notas: string | null;
   paso_prueba: boolean;
   fecha_prueba: string | null;
+  estado_cuenta?: 'Pendiente' | 'Activo';
 };
 
 type ProfesorOption = {
@@ -111,29 +112,6 @@ function AdminAlumnosContent() {
 
   const activeProfesores = useMemo(() => profesores.filter((p) => p.activo), [profesores]);
 
-  // Create form
-  const [formOpen, setFormOpen] = useState(false);
-  const [nombre, setNombre] = useState('');
-  const [apellido, setApellido] = useState('');
-  const [email, setEmail] = useState('');
-  const [telefono, setTelefono] = useState('');
-  const [profesorId, setProfesorId] = useState('');
-  const [universidad, setUniversidad] = useState('');
-  const [anioIngreso, setAnioIngreso] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [createdPassword, setCreatedPassword] = useState<string | null>(null);
-  const [copiedPw, setCopiedPw] = useState(false);
-
-  // Edit modal
-  const [editModal, setEditModal] = useState<AlumnoAdmin | null>(null);
-  const [editNombre, setEditNombre] = useState('');
-  const [editApellido, setEditApellido] = useState('');
-  const [editTelefono, setEditTelefono] = useState('');
-  const [editUniversidad, setEditUniversidad] = useState('');
-  const [editAno, setEditAno] = useState('');
-  const [editNotas, setEditNotas] = useState('');
-  const [editSubmitting, setEditSubmitting] = useState(false);
-
   // Action modals
   const [confirmBlock, setConfirmBlock] = useState<AlumnoAdmin | null>(null);
   const [reassign, setReassign] = useState<AlumnoAdmin | null>(null);
@@ -141,32 +119,6 @@ function AdminAlumnosContent() {
   const [graduateModal, setGraduateModal] = useState<AlumnoAdmin | null>(null);
   const [fechaPrueba, setFechaPrueba] = useState(new Date().toISOString().split('T')[0]);
 
-  const handleCreate = async () => {
-    if (!nombre || !apellido || !email) {
-      toast.error(ta('requeridos'));
-      return;
-    }
-    setSubmitting(true);
-    try {
-      const res = await fetch('/api/admin/alumnos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nombre, apellido, email, telefono, profesor_id: profesorId || null, universidad, año_ingreso: anioIngreso }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      toast.success(ta('exito_creado'));
-      setCreatedPassword(data.temp_password);
-      setFormOpen(false);
-      setNombre(''); setApellido(''); setEmail(''); setTelefono('');
-      setProfesorId(''); setUniversidad(''); setAnioIngreso('');
-      queryClient.invalidateQueries({ queryKey: ['admin-alumnos'] });
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : ta('error_crear'));
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   const handleToggleBlock = async () => {
     if (!confirmBlock) return;
@@ -220,52 +172,10 @@ function AdminAlumnosContent() {
     }
   };
 
-  const copyPassword = () => {
-    if (createdPassword) {
-      navigator.clipboard.writeText(createdPassword);
-      setCopiedPw(true);
-      setTimeout(() => setCopiedPw(false), 2000);
-    }
-  };
 
-  const openEdit = (a: AlumnoAdmin) => {
-    setEditModal(a);
-    setEditNombre(a.nombre);
-    setEditApellido(a.apellido);
-    setEditTelefono(a.telefono || '');
-    setEditUniversidad(a.universidad || '');
-    setEditAno(a.año_ingreso || '');
-    setEditNotas(a.notas || '');
-  };
-
-  const handleEdit = async () => {
-    if (!editModal) return;
-    setEditSubmitting(true);
-    try {
-      const res = await fetch(`/api/admin/alumnos/${editModal.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          nombre: editNombre,
-          apellido: editApellido,
-          telefono: editTelefono || null,
-          universidad: editUniversidad || null,
-          año_ingreso: editAno || null,
-          notas: editNotas || null,
-        }),
-      });
-      if (!res.ok) throw new Error();
-      toast.success(ta('exito_actualizado'));
-      setEditModal(null);
-      queryClient.invalidateQueries({ queryKey: ['admin-alumnos'] });
-    } catch {
-      toast.error(ta('error_actualizar'));
-    } finally {
-      setEditSubmitting(false);
-    }
-  };
 
   const getAlumnoStatus = (a: AlumnoAdmin) => {
+    if (a.estado_cuenta === 'Pendiente') return 'pendiente' as const;
     if (!a.activo) return 'bloqueado' as const;
     if (a.paso_prueba) return 'graduado' as const;
     return 'activo' as const;
@@ -277,7 +187,7 @@ function AdminAlumnosContent() {
         title={ta('titulo')}
         subtitle={ta('subtitulo')}
         actions={
-          <Button onClick={() => setFormOpen(true)}>
+          <Button onClick={() => router.push('/admin/alumnos/crear')}>
             <Plus className="mr-1.5 h-4 w-4" />
             {ta('nuevo_alumno')}
           </Button>
@@ -378,7 +288,7 @@ function AdminAlumnosContent() {
                   >
                     <Tooltip content={tc('editar')}>
                       <button
-                        onClick={() => openEdit(a)}
+                        onClick={() => router.push(`/admin/alumnos/${a.id}/editar`)}
                         className="cursor-pointer rounded p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)]"
                       >
                         <Pencil className="h-4 w-4" />
@@ -461,7 +371,7 @@ function AdminAlumnosContent() {
                           <div className="flex items-center justify-end gap-1">
                             <Tooltip content={tc('editar')}>
                               <button
-                                onClick={() => openEdit(a)}
+                                onClick={() => router.push(`/admin/alumnos/${a.id}/editar`)}
                                 className="cursor-pointer rounded p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)]"
                               >
                                 <Pencil className="h-4 w-4" />
@@ -504,114 +414,6 @@ function AdminAlumnosContent() {
           </>
         )}
       </div>
-
-      {/* Edit alumno modal */}
-      <Modal
-        open={!!editModal}
-        onClose={() => setEditModal(null)}
-        title={ta('editar_titulo')}
-        footer={
-          <div className="flex gap-2">
-            <Button variant="ghost" onClick={() => setEditModal(null)}>{tc('cancelar')}</Button>
-            <Button onClick={handleEdit} loading={editSubmitting}>{tc('guardar_cambios')}</Button>
-          </div>
-        }
-      >
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">{ta('nombre')}</label>
-              <input value={editNombre} onChange={(e) => setEditNombre(e.target.value)} className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">{ta('apellido')}</label>
-              <input value={editApellido} onChange={(e) => setEditApellido(e.target.value)} className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm" />
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">{ta('telefono')}</label>
-            <input value={editTelefono} onChange={(e) => setEditTelefono(e.target.value)} className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm" />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">{ta('universidad')}</label>
-              <input value={editUniversidad} onChange={(e) => setEditUniversidad(e.target.value)} className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">{ta('año_ingreso')}</label>
-              <input type="number" value={editAno} onChange={(e) => setEditAno(e.target.value)} className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm" />
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">{ta('notas_alumno')}</label>
-            <textarea rows={3} value={editNotas} onChange={(e) => setEditNotas(e.target.value)} className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm resize-none" />
-          </div>
-        </div>
-      </Modal>
-
-      {/* Create alumno modal */}
-      <Modal
-        open={formOpen}
-        onClose={() => setFormOpen(false)}
-        title={ta('nuevo_titulo')}
-        footer={
-          <div className="flex gap-2">
-            <Button variant="ghost" onClick={() => setFormOpen(false)}>{tc('cancelar')}</Button>
-            <Button onClick={handleCreate} loading={submitting}>{ta('crear_btn')}</Button>
-          </div>
-        }
-      >
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">{ta('nombre')}</label>
-              <input value={nombre} onChange={(e) => setNombre(e.target.value)} className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">{ta('apellido')}</label>
-              <input value={apellido} onChange={(e) => setApellido(e.target.value)} className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm" />
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">{ta('email')}</label>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">{ta('telefono')}</label>
-            <input value={telefono} onChange={(e) => setTelefono(e.target.value)} className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">{ta('asignar_profesor')}</label>
-            <DropdownMenu>
-              <DropdownMenuTrigger className="w-full flex items-center justify-between gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm">
-                <span className="truncate">
-                  {(() => {
-                    const p = profesores.find((p) => p.id === profesorId);
-                    return p ? `${p.nombre} ${p.apellido}` : ta('sin_asignar');
-                  })()}
-                </span>
-                <ChevronDown className="h-4 w-4 shrink-0 text-[var(--color-text-muted)]" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => setProfesorId('')}>{ta('sin_asignar')}</DropdownMenuItem>
-                {profesores.map((p) => (
-                  <DropdownMenuItem key={p.id} onClick={() => setProfesorId(p.id)}>{p.nombre} {p.apellido}</DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">{ta('universidad')}</label>
-              <input value={universidad} onChange={(e) => setUniversidad(e.target.value)} className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1">{ta('año_ingreso')}</label>
-              <input type="number" value={anioIngreso} onChange={(e) => setAnioIngreso(e.target.value)} className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm" />
-            </div>
-          </div>
-        </div>
-      </Modal>
 
       {/* Block/Unblock confirm */}
       <Modal
@@ -698,25 +500,7 @@ function AdminAlumnosContent() {
         </div>
       </Modal>
 
-      {/* Password reveal modal */}
-      <Modal
-        open={!!createdPassword}
-        onClose={() => { setCreatedPassword(null); setCopiedPw(false); }}
-        title={ta('creado_titulo')}
-        footer={<Button onClick={() => { setCreatedPassword(null); setCopiedPw(false); }}>{tc('entendido')}</Button>}
-      >
-        <div className="space-y-3">
-          <p className="text-sm text-[var(--color-text-primary)]">
-            {ta('creado_texto')}
-          </p>
-          <div className="flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-bg-secondary)] p-3 font-mono text-sm">
-            <span className="flex-1 break-all">{createdPassword}</span>
-            <button onClick={copyPassword} className="shrink-0 rounded p-1 hover:bg-[var(--color-border)]">
-              {copiedPw ? <Check className="h-4 w-4 text-[var(--color-success)]" /> : <Copy className="h-4 w-4" />}
-            </button>
-          </div>
-        </div>
-      </Modal>
+
     </div>
   );
 }

@@ -3,30 +3,44 @@
 import { format } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
 import { useLocale, useTranslations } from 'next-intl';
-import { GraduationCap } from 'lucide-react';
+import { GraduationCap, KeyRound } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Avatar } from '@/components/common/Avatar';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { Button } from '@/components/common/Button';
-import type { Profile, AlumnoExtra, EstadoAsistencia } from '@/lib/supabase/types';
+import { Tooltip } from '@/components/common/Tooltip';
 
-export type AlumnoConExtra = Profile & {
-  alumnos_extra: AlumnoExtra[] | AlumnoExtra | null;
+export type AlumnoConExtra = {
+  id: string;
+  nombre: string;
+  apellido: string;
+  email: string;
+  telefono?: string | null;
+  avatar_url?: string | null;
+  activo?: boolean;
+  rol?: string;
+  alumnos_extra: {
+    paso_prueba?: boolean;
+    profesor_id?: string | null;
+    [key: string]: unknown;
+  }[] | { paso_prueba?: boolean; profesor_id?: string | null; [key: string]: unknown; } | null;
   proxima_clase?: {
     fecha: string;
     hora_inicio: string;
-    estado: EstadoAsistencia;
+    estado: string;
   } | null;
   profesor_nombre?: string;
+  estado_cuenta?: 'Pendiente' | 'Activo';
 };
 
 interface AlumnoCardProps {
   alumno: AlumnoConExtra;
   onViewFicha: (alumno: AlumnoConExtra) => void;
+  onGestionarAcceso?: (alumno: AlumnoConExtra) => void;
   isOwn?: boolean;
 }
 
-export function AlumnoCard({ alumno, onViewFicha, isOwn = true }: AlumnoCardProps) {
+export function AlumnoCard({ alumno, onViewFicha, onGestionarAcceso, isOwn = true }: AlumnoCardProps) {
   const t = useTranslations('alumnos');
   const locale = useLocale();
   const dateFnsLocale = locale === 'en' ? enUS : es;
@@ -83,11 +97,27 @@ export function AlumnoCard({ alumno, onViewFicha, isOwn = true }: AlumnoCardProp
       {isGraduado && (
         <StatusBadge status="graduado" className="mt-2" />
       )}
+      {!isGraduado && alumno.estado_cuenta === 'Pendiente' && (
+        <StatusBadge status="pendiente" className="mt-2" />
+      )}
+      {!isGraduado && alumno.estado_cuenta === 'Activo' && (
+        <StatusBadge status="confirmado" className="mt-2" />
+      )}
+      {alumno.activo === false && (
+        <StatusBadge status="cancelado" className="mt-2" />
+      )}
 
-      <div className="mt-3">
-        <Button variant="secondary" size="sm" className="w-full" onClick={(e) => { e.stopPropagation(); onViewFicha(alumno); }}>
+      <div className="mt-3 flex gap-2">
+        <Button variant="secondary" size="sm" className="flex-1" onClick={(e) => { e.stopPropagation(); onViewFicha(alumno); }}>
           {t('ficha_ver_ficha')}
         </Button>
+        {onGestionarAcceso && isOwn && (
+          <Tooltip content={t('gestionar_acceso')} position="top">
+            <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onGestionarAcceso(alumno); }}>
+              <KeyRound className="w-4 h-4" />
+            </Button>
+          </Tooltip>
+        )}
       </div>
     </Card>
   );

@@ -28,7 +28,8 @@ import { useDebounce } from '@/lib/hooks/useDebounce';
 import { usePruebas } from '@/lib/hooks/usePruebas';
 import { buildClaseDetailHref } from '@/lib/utils/horarioNavigation';
 import type { HorarioConAsistencia } from '@/lib/hooks/useHorarios';
-import type { EstadoAsistencia } from '@/lib/supabase/types';
+
+type EstadoAsistencia = 'pendiente' | 'confirmado' | 'no_asistio';
 
 type ActiveTab = 'proximas' | 'historial';
 type EstadoFilter = EstadoAsistencia | 'todos';
