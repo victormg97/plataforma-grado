@@ -931,6 +931,8 @@ export type EstadoPrograma = 'activo' | 'eliminado';
 export type EstadoPrueba = 'pendiente' | 'realizada' | 'calificada';
 
 // ─── Simple table row aliases ─────────────────────────────────────────────────
+export type AlumnoExtra = Tables<'alumnos_extra'>;
+export type Horario = Tables<'horarios'>;
 export type ClasePrograma = Omit<Tables<'clases_programa'>, 'tipo'> & {
   tipo: 'materia' | 'prueba';
 };

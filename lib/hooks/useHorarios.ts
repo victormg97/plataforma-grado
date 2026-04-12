@@ -19,6 +19,7 @@ export type HorarioConAsistencia = {
   hora_inicio: string;
   hora_fin: string;
   es_recurrente: boolean;
+  from_programa: boolean | null;
   activo: boolean;
   created_at: string;
   updated_at: string;

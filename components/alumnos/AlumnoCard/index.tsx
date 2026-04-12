@@ -9,6 +9,7 @@ import { Avatar } from '@/components/common/Avatar';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { Button } from '@/components/common/Button';
 import { Tooltip } from '@/components/common/Tooltip';
+import type { EstadoAsistencia } from '@/lib/supabase/types';
 
 export type AlumnoConExtra = {
   id: string;
@@ -27,7 +28,7 @@ export type AlumnoConExtra = {
   proxima_clase?: {
     fecha: string;
     hora_inicio: string;
-    estado: string;
+    estado: EstadoAsistencia;
   } | null;
   profesor_nombre?: string;
   estado_cuenta?: 'Pendiente' | 'Activo';
