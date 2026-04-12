@@ -920,3 +920,49 @@ export const Constants = {
 } as const
 
 export type Profile = Tables<'profiles'>
+
+// ─── Enum aliases ─────────────────────────────────────────────────────────────
+export type EstadoAsistencia = Enums<'estado_asistencia'>;
+export type TipoNotificacion = Enums<'tipo_notificacion'>;
+export type UserRol = Enums<'user_rol'>;
+
+// ─── String-based state types ─────────────────────────────────────────────────
+export type EstadoPrograma = 'activo' | 'eliminado';
+export type EstadoPrueba = 'pendiente' | 'realizada' | 'calificada';
+
+// ─── Simple table row aliases ─────────────────────────────────────────────────
+export type ClasePrograma = Tables<'clases_programa'>;
+export type Prueba = Tables<'pruebas'>;
+
+// ─── Helper narrow types (internal) ──────────────────────────────────────────
+type ProfesorBasico = { id: string; nombre: string; apellido: string; avatar_url: string | null };
+type CreadoPorBasico = { id: string; nombre: string; apellido: string };
+
+// ─── Joined / enriched types ─────────────────────────────────────────────────
+export type AsignacionConAlumno = Tables<'asignaciones_programa'> & {
+  alumno: { id: string; nombre: string; apellido: string; avatar_url: string | null; email: string };
+};
+
+export type NotaClaseConAutor = Tables<'notas_clase'> & {
+  autor: { id: string; nombre: string; apellido: string; avatar_url: string | null; rol: UserRol };
+};
+
+export type ProgramaClaseConConteo = Tables<'programas_clases'> & {
+  profesor: ProfesorBasico | null;
+  creado_por: CreadoPorBasico | null;
+  profesores_asignados: ProfesorBasico[];
+  total_clases: number;
+  total_pruebas: number;
+  total_asignados: number;
+};
+
+export type ProgramaClase = Tables<'programas_clases'> & {
+  profesor: ProfesorBasico | null;
+  creado_por: CreadoPorBasico | null;
+  profesores_asignados: ProfesorBasico[];
+  clases_programa: ClasePrograma[];
+  total_clases: number;
+  total_pruebas: number;
+  total_asignados: number;
+  asignaciones?: AsignacionConAlumno[];
+};
