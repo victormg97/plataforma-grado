@@ -26,7 +26,8 @@ import { useUser } from '@/lib/hooks/useUser';
 import { useQuery } from '@tanstack/react-query';
 import type { AsignacionConAlumno, ClasePrograma, Prueba } from '@/lib/supabase/types';
 
-type ClaseItem = Pick<ClasePrograma, 'id' | 'nombre' | 'tipo' | 'orden'> & {
+type ClaseItem = Omit<Pick<ClasePrograma, 'id' | 'nombre' | 'tipo' | 'orden'>, 'tipo'> & {
+  tipo: 'materia' | 'prueba';
   descripcion?: string | null;
   duracion_min?: number | null;
   tempId?: string;

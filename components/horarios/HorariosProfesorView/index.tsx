@@ -29,7 +29,7 @@ import { usePruebas } from '@/lib/hooks/usePruebas';
 import { buildClaseDetailHref } from '@/lib/utils/horarioNavigation';
 import type { HorarioConAsistencia } from '@/lib/hooks/useHorarios';
 
-type EstadoAsistencia = 'pendiente' | 'confirmado' | 'no_asistio';
+type EstadoAsistencia = 'pendiente' | 'confirmado' | 'no_asistio' | 'cancelado' | 'cambiado';
 
 type ActiveTab = 'proximas' | 'historial';
 type EstadoFilter = EstadoAsistencia | 'todos';
