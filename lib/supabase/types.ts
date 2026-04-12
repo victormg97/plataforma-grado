@@ -918,3 +918,5 @@ export const Constants = {
     },
   },
 } as const
+
+export type Profile = Tables<'profiles'>
