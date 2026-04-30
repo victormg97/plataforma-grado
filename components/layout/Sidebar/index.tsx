@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { useUIStore } from '@/stores/useUIStore';
 import { useUserStore } from '@/stores/useUserStore';
 import { AppLogo } from '@/components/common/AppLogo';
+import { AppInfoPopover } from '@/components/common/AppInfoPopover';
 import { useTranslations } from 'next-intl';
 import {
   LayoutDashboard,
@@ -15,7 +16,9 @@ import {
   BookOpen,
   ClipboardList,
   User,
+  FolderOpen,
   X,
+  CreditCard,
 } from 'lucide-react';
 import type { UserRol } from '@/lib/supabase/types';
 
@@ -32,6 +35,7 @@ const navItems: Record<UserRol, NavItem[]> = {
     { key: 'profesores', href: '/admin/profesores', icon: <BookOpen className="h-4 w-4" /> },
     { key: 'alumnos', href: '/admin/alumnos', icon: <GraduationCap className="h-4 w-4" /> },
     { key: 'programas', href: '/admin/programas', icon: <ClipboardList className="h-4 w-4" /> },
+    { key: 'pagos', href: '/admin/pagos', icon: <CreditCard className="h-4 w-4" /> },
   ],
   profesor: [
     { key: 'dashboard', href: '/profesor', icon: <LayoutDashboard className="h-4 w-4" /> },
@@ -56,6 +60,15 @@ export function Sidebar() {
 
   const items = user ? navItems[user.rol] : [];
 
+  const sharedFilesHref =
+    user?.rol === 'admin'
+      ? '/admin/recursos'
+      : user?.rol === 'profesor'
+      ? '/profesor/recursos'
+      : '/alumno/recursos';
+
+  const isSharedFilesActive = pathname.startsWith(sharedFilesHref);
+
   return (
     <>
       {/* Overlay for mobile */}
@@ -69,7 +82,7 @@ export function Sidebar() {
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 flex w-60 flex-col border-r border-[var(--color-border)] bg-[var(--color-bg)] transition-transform lg:static lg:translate-x-0',
+          'fixed inset-y-0 left-0 z-50 flex w-60 flex-col border-r border-[var(--color-border)] bg-[var(--color-bg)] transition-transform lg:relative lg:translate-x-0',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
@@ -87,7 +100,7 @@ export function Sidebar() {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 space-y-1 p-3">
+        <nav className="flex-1 overflow-y-auto space-y-1 p-3">
           {items.map((item) => {
             const isActive = pathname === item.href;
             return (
@@ -109,11 +122,29 @@ export function Sidebar() {
           })}
         </nav>
 
-        {/* Footer */}
+        {/* Shared Files */}
         <div className="border-t border-[var(--color-border)] p-3">
-          <p className="text-xs text-[var(--color-text-muted)] text-center">
-            CTA Graduados v1.0
-          </p>
+          <Link
+            href={sharedFilesHref}
+            onClick={() => setSidebarOpen(false)}
+            className={cn(
+              'flex items-center gap-3 rounded-[var(--radius-md)] px-3 py-2.5 text-sm font-medium transition-colors',
+              isSharedFilesActive
+                ? 'bg-[var(--color-brand-gold-muted)] text-[var(--color-brand-gold)]'
+                : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]'
+            )}
+          >
+            <FolderOpen className="h-4 w-4" />
+            {t('recursos')}
+          </Link>
+        </div>
+
+        {/* Footer */}
+        <div className="border-t border-[var(--color-border)] px-3 py-2.5">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-[var(--color-text-muted)]">CTA Graduados</span>
+            <AppInfoPopover />
+          </div>
         </div>
       </aside>
     </>

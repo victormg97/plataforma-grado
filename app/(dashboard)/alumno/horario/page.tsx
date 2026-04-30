@@ -551,13 +551,14 @@ function HorarioListView({ clases, loading }: { clases: ClaseAlumno[]; loading: 
 }
 
 /* ── Detail view (?id= present) ── */
-function HorarioDetailView({ clase, user, confirmar, cancelar, pedirCambio, isExamen }: {
+function HorarioDetailView({ clase, user, confirmar, cancelar, pedirCambio, isExamen, pruebaData }: {
   clase: ClaseAlumno;
   user: { id: string } | null;
   confirmar: (id: string) => Promise<void>;
   cancelar: (id: string, nota?: string) => Promise<void>;
   pedirCambio: (id: string, nuevoId: string, nota?: string) => Promise<void>;
   isExamen?: boolean;
+  pruebaData?: any;
 }) {
   const [modal, setModal] = useState<{ type: 'confirmar' | 'cancelar' | 'cambio'; clase: ClaseAlumno } | null>(null);
   const t = useTranslations('horarios');
@@ -646,6 +647,32 @@ function HorarioDetailView({ clase, user, confirmar, cancelar, pedirCambio, isEx
               <div className="rounded-[var(--radius-md)] bg-[var(--color-bg-secondary)] p-3">
                 <p className="text-xs font-medium text-[var(--color-text-muted)] uppercase mb-1">{t('tu_mensaje')}</p>
                 <p className="text-sm text-[var(--color-text-primary)]">{clase.nota_alumno}</p>
+              </div>
+            )}
+
+            {pruebaData?.estado === 'calificada' && pruebaData.nota !== null && (
+              <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-[var(--color-text-primary)]">
+                    {t('nota_prueba')}
+                  </p>
+                  <p className="text-sm text-[var(--color-text-muted)] mt-0.5">
+                    {t(pruebaData.nota >= 4.0 ? 'aprobado' : 'reprobado')}
+                  </p>
+                </div>
+                {pruebaData.nota >= 4.0 ? (
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-success)]/10">
+                    <span className="text-lg font-bold text-[var(--color-success)]">
+                      {pruebaData.nota.toFixed(1)}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center rounded-full bg-[var(--color-error)]/10 px-3 py-1">
+                    <span className="text-sm font-bold text-[var(--color-error)]">
+                      {t('reprobado')}
+                    </span>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -748,10 +775,11 @@ function AlumnoHorarioContent() {
     [clases, horarioId]
   );
 
-  const isExamen = useMemo(
-    () => !!horarioId && pruebas.some((p) => p.horario_id === horarioId),
+  const pruebaData = useMemo(
+    () => horarioId ? pruebas.find((p) => p.horario_id === horarioId) : undefined,
     [pruebas, horarioId]
   );
+  const isExamen = !!pruebaData;
 
   // Loading state
   if (loading) {
@@ -804,7 +832,15 @@ function AlumnoHorarioContent() {
           </Link>
         }
       />
-      <HorarioDetailView clase={clase} user={user} confirmar={confirmar} cancelar={cancelar} pedirCambio={pedirCambio} isExamen={isExamen} />
+      <HorarioDetailView 
+        clase={clase} 
+        user={user} 
+        confirmar={confirmar} 
+        cancelar={cancelar} 
+        pedirCambio={pedirCambio} 
+        isExamen={isExamen} 
+        pruebaData={pruebaData} 
+      />
     </div>
   );
 }

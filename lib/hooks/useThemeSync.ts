@@ -5,11 +5,17 @@ import { useTheme } from 'next-themes';
 
 const DEBOUNCE_MS = 1500;
 
+// Module-level flag: true once the DB preference has been applied for this
+// browser session. Persists across dashboard remounts (e.g. navigating to
+// /terminos and back), so we never overwrite the user's in-session theme choice.
+let dbThemeApplied = false;
+
 /**
  * Syncs the active next-themes theme to `profiles.tema` in the DB (debounced).
  *
  * - `initialTema`: the value from DB when the dashboard first loaded.
- *   If non-null it is applied immediately so the user's saved preference wins.
+ *   Applied only once per session so it doesn't override the user's theme
+ *   when the dashboard layout remounts (e.g. after visiting a non-dashboard page).
  * - After the initial sync, any user-driven theme change is saved to DB
  *   after DEBOUNCE_MS of inactivity.
  */
@@ -19,10 +25,15 @@ export function useThemeSync(initialTema: string | null) {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mounted = useRef(false);
 
-  // Apply the DB preference once on mount (overrides localStorage)
+  // Apply the DB preference only on the first mount of this session.
+  // Re-mounts caused by navigating away and back do NOT reset the theme.
   useEffect(() => {
-    if (initialTema && (initialTema === 'light' || initialTema === 'dark')) {
+    if (!dbThemeApplied && initialTema && (initialTema === 'light' || initialTema === 'dark')) {
       setTheme(initialTema);
+      dbThemeApplied = true;
+    } else {
+      // Already applied — skip the next effect tick so we don't save a stale value
+      skipNext.current = false;
     }
     mounted.current = true;
     // Give the programmatic setTheme above a tick before we start watching changes

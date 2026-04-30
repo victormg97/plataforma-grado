@@ -15,14 +15,13 @@ export async function GET(
 
   const { data, error } = await supabase
     .from('horarios')
-    .select('*, asistencia:asistencia!asistencia_horario_id_fkey(*), alumno:profiles!horarios_alumno_id_fkey(*), profesor:profiles!horarios_profesor_id_fkey(*), pruebas:pruebas!pruebas_horario_id_fkey(id, nombre, estado)')
+    .select('*, asistencia:asistencia!asistencia_horario_id_fkey(*), alumno:profiles!horarios_alumno_id_fkey(*), profesor:profiles!horarios_profesor_id_fkey(*), pruebas:pruebas!pruebas_horario_id_fkey(id, nombre, estado, nota, observaciones, clase_id, alumno_id)')
     .eq('id', id)
     .single();
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 404 });
   }
-
   return NextResponse.json(data);
 }
 

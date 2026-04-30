@@ -52,7 +52,7 @@ export function useCalificarPrueba() {
         body: JSON.stringify({ nota, observaciones }),
       });
       if (!res.ok) throw new Error((await res.json()).error ?? 'Error calificando prueba');
-      return res.json() as Promise<Prueba>;
+      return res.json() as Promise<Prueba & { needs_scheduling?: boolean }>;
     },
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ['pruebas'] });

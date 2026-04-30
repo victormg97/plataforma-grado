@@ -23,6 +23,15 @@ export function Tooltip({
   variant = 'default',
 }: TooltipProps) {
   const [visible, setVisible] = useState(false);
+  /**
+   * `blocked` is set true when the user clicks while the tooltip is open.
+   * It prevents re-showing the tooltip due to synthetic `mouseenter` events
+   * that browsers fire when an overlay (like a modal backdrop) unmounts and
+   * the pointer is still physically over the trigger element.
+   * It is cleared only when pointermove confirms the pointer has moved
+   * at least 20px away from the trigger bounding rect.
+   */
+  const [blocked, setBlocked] = useState(false);
   const [coords, setCoords] = useState({ top: 0, left: 0 });
   const triggerRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
@@ -33,9 +42,46 @@ export function Tooltip({
     setIsHoverDevice(window.matchMedia('(hover: hover)').matches);
   }, []);
 
+  // While visible: hide + block on any mousedown (capture phase fires
+  // before any React handler, so this catches all clicks including those
+  // that open modals).
+  useEffect(() => {
+    if (!visible) return;
+    const hide = () => {
+      setVisible(false);
+      setBlocked(true);
+    };
+    document.addEventListener('mousedown', hide, { capture: true });
+    return () => document.removeEventListener('mousedown', hide, { capture: true });
+  }, [visible]);
+
+  // While blocked: listen to pointermove on the document.
+  // Unblock only when the pointer has moved clearly outside the trigger area.
+  // This prevents the tooltip from reappearing when a modal closes and the
+  // browser fires a synthetic mouseenter on the now-exposed trigger.
+  useEffect(() => {
+    if (!blocked) return;
+    const checkIfAway = (e: PointerEvent) => {
+      if (!triggerRef.current) return;
+      const rect = triggerRef.current.getBoundingClientRect();
+      const margin = 20; // px clearance before we consider "away"
+      if (
+        e.clientX < rect.left - margin ||
+        e.clientX > rect.right + margin ||
+        e.clientY < rect.top - margin ||
+        e.clientY > rect.bottom + margin
+      ) {
+        setBlocked(false);
+      }
+    };
+    document.addEventListener('pointermove', checkIfAway);
+    return () => document.removeEventListener('pointermove', checkIfAway);
+  }, [blocked]);
+
   if (!isHoverDevice) return <>{children}</>;
 
   const showTooltip = () => {
+    if (blocked) return; // suppress synthetic re-enter after click/modal
     if (triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
       let top = 0;

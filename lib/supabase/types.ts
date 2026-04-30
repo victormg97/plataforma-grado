@@ -510,6 +510,53 @@ export type Database = {
           },
         ]
       }
+      pagos: {
+        Row: {
+          alumno_id: string
+          anio: number
+          created_at: string
+          estado: string
+          fecha_pago: string
+          id: string
+          mes: number
+          monto_pagado: number | null
+          notas: string | null
+          updated_at: string
+        }
+        Insert: {
+          alumno_id: string
+          anio: number
+          created_at?: string
+          estado?: string
+          fecha_pago?: string
+          id?: string
+          mes: number
+          monto_pagado?: number | null
+          notas?: string | null
+          updated_at?: string
+        }
+        Update: {
+          alumno_id?: string
+          anio?: number
+          created_at?: string
+          estado?: string
+          fecha_pago?: string
+          id?: string
+          mes?: number
+          monto_pagado?: number | null
+          notas?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pagos_alumno_id_fkey"
+            columns: ["alumno_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           activo: boolean
@@ -725,11 +772,98 @@ export type Database = {
           },
         ]
       }
+      recursos_compartidos: {
+        Row: {
+          id: string
+          titulo: string
+          descripcion: string | null
+          tipo: string
+          url: string | null
+          storage_path: string | null
+          subido_por: string
+          para_todos: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          titulo: string
+          descripcion?: string | null
+          tipo: string
+          url?: string | null
+          storage_path?: string | null
+          subido_por: string
+          para_todos?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          titulo?: string
+          descripcion?: string | null
+          tipo?: string
+          url?: string | null
+          storage_path?: string | null
+          subido_por?: string
+          para_todos?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recursos_compartidos_subido_por_fkey"
+            columns: ["subido_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recursos_acceso: {
+        Row: {
+          id: string
+          recurso_id: string
+          alumno_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          recurso_id: string
+          alumno_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          recurso_id?: string
+          alumno_id?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recursos_acceso_recurso_id_fkey"
+            columns: ["recurso_id"]
+            isOneToOne: false
+            referencedRelation: "recursos_compartidos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recursos_acceso_alumno_id_fkey"
+            columns: ["alumno_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      admin_pagar_mes_columna: {
+        Args: { p_anio: number; p_mes: number; p_estado: string; p_monto?: number | null }
+        Returns: undefined
+      }
       alumno_tiene_asignacion_activa: {
         Args: { p_programa_id: string }
         Returns: boolean
@@ -742,13 +876,14 @@ export type Database = {
       get_admin_stats: { Args: never; Returns: Json }
       get_alumno_dashboard: { Args: { p_alumno_id: string }; Returns: Json }
       get_alumno_ficha:
-        | { Args: { p_alumno_id: string; p_limit?: number }; Returns: Json }
-        | {
-            Args: { p_alumno_id: string; p_autor_id?: string; p_limit?: number }
-            Returns: Json
-          }
+      | { Args: { p_alumno_id: string; p_limit?: number }; Returns: Json }
+      | {
+        Args: { p_alumno_id: string; p_autor_id?: string; p_limit?: number }
+        Returns: Json
+      }
       get_notas_clase: { Args: { p_horario_id: string }; Returns: Json }
       get_profesor_dashboard: { Args: { p_profesor_id: string }; Returns: Json }
+      get_recursos_for_user: { Args: Record<PropertyKey, never>; Returns: Json }
       get_server_time: { Args: never; Returns: string }
       get_user_rol: {
         Args: never
@@ -757,19 +892,19 @@ export type Database = {
     }
     Enums: {
       estado_asistencia:
-        | "pendiente"
-        | "confirmado"
-        | "cancelado"
-        | "cambiado"
-        | "no_asistio"
+      | "pendiente"
+      | "confirmado"
+      | "cancelado"
+      | "cambiado"
+      | "no_asistio"
       tipo_notificacion:
-        | "confirmacion"
-        | "cancelacion"
-        | "cambio_horario"
-        | "nueva_clase"
-        | "clase_modificada"
-        | "clase_cancelada"
-        | "programa_asignado"
+      | "confirmacion"
+      | "cancelacion"
+      | "cambio_horario"
+      | "nueva_clase"
+      | "clase_modificada"
+      | "clase_cancelada"
+      | "programa_asignado"
       user_rol: "admin" | "profesor" | "alumno"
     }
     CompositeTypes: {
@@ -784,116 +919,116 @@ type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof DatabaseWithoutInternals },
+  | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+  | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+  ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+    DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+  : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+    DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
-    ? R
-    : never
+  ? R
+  : never
   : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-        Row: infer R
-      }
-      ? R
-      : never
-    : never
+    DefaultSchema["Views"])
+  ? (DefaultSchema["Tables"] &
+    DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+      Row: infer R
+    }
+  ? R
+  : never
+  : never
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
+  | keyof DefaultSchema["Tables"]
+  | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+  ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+  : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I
-    }
-    ? I
-    : never
+    Insert: infer I
+  }
+  ? I
+  : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Insert: infer I
-      }
-      ? I
-      : never
-    : never
+  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+    Insert: infer I
+  }
+  ? I
+  : never
+  : never
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
+  | keyof DefaultSchema["Tables"]
+  | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+  ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+  : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U
-    }
-    ? U
-    : never
+    Update: infer U
+  }
+  ? U
+  : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Update: infer U
-      }
-      ? U
-      : never
-    : never
+  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+    Update: infer U
+  }
+  ? U
+  : never
+  : never
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
-    | { schema: keyof DatabaseWithoutInternals },
+  | keyof DefaultSchema["Enums"]
+  | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+  ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+  : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-    : never
+  ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+  : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof DatabaseWithoutInternals },
+  | keyof DefaultSchema["CompositeTypes"]
+  | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+  ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+  : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never
+  ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+  : never
 
 export const Constants = {
   public: {

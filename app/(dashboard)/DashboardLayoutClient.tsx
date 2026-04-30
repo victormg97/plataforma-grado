@@ -35,11 +35,11 @@ export function DashboardLayoutClient({
 
   return (
     <HydrationBoundary state={dehydratedState}>
-      <div className="flex min-h-screen">
+      <div className="flex h-dvh overflow-hidden">
         <Sidebar />
-        <div className="flex flex-1 flex-col overflow-hidden">
+        <div className="flex min-w-0 flex-1 flex-col">
           <Navbar />
-          <main className="flex-1 overflow-y-auto py-[var(--container-padding)]">
+          <main className="flex-1 overflow-y-auto pt-4 pb-[var(--container-padding)]">
             <div className="container-app">{children}</div>
           </main>
         </div>

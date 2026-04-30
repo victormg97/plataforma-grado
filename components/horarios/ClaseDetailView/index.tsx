@@ -16,6 +16,170 @@ import { useNotasCount } from '@/lib/hooks/useNotasCount';
 import { useQueryParam } from '@/lib/hooks/useQueryParam';
 import { getClaseDetailBackHref } from '@/lib/utils/horarioNavigation';
 import type { HorarioConAsistencia } from '@/lib/hooks/useHorarios';
+import { Button } from '@/components/common/Button';
+import { cn } from '@/lib/utils';
+import { useCalificarPrueba } from '@/lib/hooks/usePruebas';
+import { toast } from 'sonner';
+
+const inputCls = cn(
+  'w-full rounded-[var(--radius-md)] border border-[var(--color-border)]',
+  'bg-[var(--color-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)]',
+  'placeholder:text-[var(--color-text-muted)]',
+  'focus:border-[var(--color-brand-gold)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-gold)]',
+  'transition-colors'
+);
+
+function GradeInlineForm({ 
+  horario, 
+  tc, 
+  th 
+}: { 
+  horario: any; 
+  tc: any; 
+  th: any; 
+}) {
+  const prueba = horario.pruebas?.[0];
+  const [nota, setNota] = useState<string>(prueba?.nota != null ? prueba.nota.toFixed(1) : '');
+  const { mutateAsync: calificar, isPending } = useCalificarPrueba();
+
+  if (!prueba) return null;
+
+  async function handleSave() {
+    let finalStr = nota.trim().replace(',', '.');
+    if (finalStr === '') {
+      try {
+        await calificar({ id: prueba.id, nota: null, observaciones: prueba.observaciones });
+        toast.success(tc('exito'));
+      } catch(e: any) {
+        toast.error(e.message || tc('error'));
+      }
+      return;
+    }
+
+    const notaNum = parseFloat(finalStr);
+    if (isNaN(notaNum) || notaNum < 1.0 || notaNum > 7.0) {
+      toast.error('La nota debe estar entre 1.0 y 7.0');
+      return;
+    }
+    
+    setNota(notaNum.toFixed(1));
+
+    try {
+      const res = await calificar({ id: prueba.id, nota: notaNum, observaciones: prueba.observaciones });
+      toast.success(tc('exito'));
+      if (res.needs_scheduling) {
+        toast.warning(th('agendar_reintento'), { duration: 8000 });
+      }
+    } catch(e: any) {
+      toast.error(e.message || tc('error'));
+    }
+  }
+
+  return (
+    <div className="mt-4 pt-4 border-t border-[var(--color-border)]">
+      <div className="flex flex-col sm:flex-row sm:items-end gap-4 w-full">
+        <div className="flex items-end gap-3">
+          <div className="space-y-1.5 w-[90px]">
+            <label className="block text-[13px] font-semibold text-[var(--color-text-secondary)]">
+              {th('nota_prueba')}
+            </label>
+            <input
+              type="text"
+          value={nota}
+          onChange={(e) => {
+            let val = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.');
+            
+            // Allow empty string to delete
+            if (val === '') {
+              setNota('');
+              return;
+            }
+
+            // Strip leading zeros unless it's strictly "0."
+            if (val.startsWith('0') && !val.startsWith('0.')) {
+              val = val.substring(1);
+            }
+
+            // Prevent starting with .
+            if (val.startsWith('.')) {
+              val = '';
+            }
+
+            // Limit decimals to exactly 1 position
+            if (val.includes('.')) {
+               const parts = val.split('.');
+               val = `${parts[0]}.${parts[1].substring(0, 1)}`;
+            }
+
+            // If length is 2 and no decimal, auto convert
+            if (val.length === 2 && !val.includes('.')) {
+               const num = parseInt(val);
+               if (num >= 10 && num <= 70) {
+                 val = `${val[0]}.${val[1]}`;
+               } else if (num > 70) {
+                 val = '7.0';
+               } else if (num < 10) {
+                 // user typed something weird like "09" which became "9"
+                 val = `${val[0]}.0`; 
+               }
+            }
+
+            // Over limits hard caps
+            const f = parseFloat(val);
+            if (!isNaN(f)) {
+               if (f > 7.0) val = '7.0';
+               // If it's something complete like "0.5", convert to 1.0
+               if (val.length >= 3 && f < 1.0) val = '1.0';
+            }
+
+            if (val.length > 3) {
+               val = val.substring(0, 3);
+            }
+
+            // Remove trailing dot if exists (e.g., from deleting the decimal)
+            if (val.endsWith('.')) {
+               val = val.substring(0, val.length - 1);
+            }
+
+            setNota(val);
+          }}
+          placeholder="Ej: 5.5"
+          className={`${inputCls} text-center font-bold text-lg px-2 shadow-inner`}
+        />
+      </div>
+
+      <Button variant="primary" loading={isPending} onClick={handleSave} disabled={isPending} className="h-10 font-semibold px-5 shadow-sm">
+         {prueba?.nota != null ? th('actualizar_nota') : th('guardar_nota')}
+      </Button>
+    </div>
+      
+    <div className="hidden sm:block flex-1"></div>
+
+    {(() => {
+      // Evaluate visual UI badge using local unsaved `nota` state instead of DB state
+      // If empty string and was never originally saved, don't show badge
+      if (nota === '' && !prueba.nota) return null;
+      
+      const localNum = parseFloat(nota);
+      if (isNaN(localNum)) return null;
+
+      const isAprobado = localNum >= 4.0;
+      return (
+        <div className="flex h-10 items-center justify-center rounded-full px-5 font-bold text-[13px] shadow-sm ml-auto sm:ml-0"
+             style={{ 
+               backgroundColor: isAprobado ? 'color-mix(in srgb, var(--color-success) 15%, transparent)' : 'color-mix(in srgb, var(--color-error) 15%, transparent)',
+               color: isAprobado ? 'var(--color-success)' : 'var(--color-error)',
+               border: `1px solid color-mix(in srgb, ${isAprobado ? 'var(--color-success)' : 'var(--color-error)'} 30%, transparent)`
+             }}>
+          {th(isAprobado ? 'aprobado' : 'reprobado')}
+        </div>
+      );
+    })()}
+
+    </div>
+  </div>
+  );
+}
 
 type ClaseDetailViewProps = {
   rol: 'profesor' | 'admin';
@@ -186,6 +350,11 @@ export function ClaseDetailView({ rol }: ClaseDetailViewProps) {
                   {horario.asistencia[0].nota_alumno}
                 </p>
               </div>
+            )}
+
+            {/* Prueba Grading */}
+            {(horario.pruebas?.length ?? 0) > 0 && (
+              <GradeInlineForm horario={horario} tc={tc} th={t} />
             )}
           </div>
         </Card>
