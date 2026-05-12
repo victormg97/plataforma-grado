@@ -80,6 +80,44 @@ export async function prefetchDashboardData(userId: string, rol: UserRol) {
         },
         staleTime: 60_000,
       }),
+
+      // Programas (active) — for /admin/programas page
+      queryClient.prefetchQuery({
+        queryKey: ['programas', 'activo'],
+        queryFn: async () => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { data } = await (supabase as any)
+            .from('programas')
+            .select('*, clases:clases_programa(*)')
+            .eq('estado', 'activo')
+            .order('created_at', { ascending: false });
+          return data ?? [];
+        },
+        staleTime: STALE_ADMIN_LISTS,
+      }),
+
+      // Pagos annual summary (current year) — for /admin/pagos page
+      queryClient.prefetchQuery({
+        queryKey: ['admin-pagos-anual', new Date().getFullYear()],
+        queryFn: async () => {
+          const año = new Date().getFullYear();
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { data } = await (supabase as any).rpc('get_pagos_resumen_anual', { p_año: año });
+          return data ?? [];
+        },
+        staleTime: 60_000,
+      }),
+
+      // Recursos — for /admin/recursos page
+      queryClient.prefetchQuery({
+        queryKey: ['recursos', userId],
+        queryFn: async () => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { data } = await (supabase as any).rpc('get_recursos_compartidos', { p_user_id: userId });
+          return data ?? [];
+        },
+        staleTime: 30_000,
+      }),
     ]);
 
     // Seed individual list keys from the batched SP result so those pages
@@ -127,6 +165,32 @@ export async function prefetchDashboardData(userId: string, rol: UserRol) {
             staleTime: STALE_ADMIN_LISTS,
           })
         : Promise.resolve(queryClient.setQueryData(['alumnos', 'mis'], [])),
+
+      // Programas (active) — for /profesor/programas page
+      queryClient.prefetchQuery({
+        queryKey: ['programas', 'activo'],
+        queryFn: async () => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { data } = await (supabase as any)
+            .from('programas')
+            .select('*, clases:clases_programa(*)')
+            .eq('estado', 'activo')
+            .order('created_at', { ascending: false });
+          return data ?? [];
+        },
+        staleTime: STALE_ADMIN_LISTS,
+      }),
+
+      // Recursos — for /profesor/recursos page
+      queryClient.prefetchQuery({
+        queryKey: ['recursos', userId],
+        queryFn: async () => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { data } = await (supabase as any).rpc('get_recursos_compartidos', { p_user_id: userId });
+          return data ?? [];
+        },
+        staleTime: 30_000,
+      }),
     ]);
   }
 
@@ -140,6 +204,17 @@ export async function prefetchDashboardData(userId: string, rol: UserRol) {
           return data;
         },
         staleTime: STALE_HORARIOS,
+      }),
+
+      // Recursos — for /alumno/recursos page
+      queryClient.prefetchQuery({
+        queryKey: ['recursos', userId],
+        queryFn: async () => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { data } = await (supabase as any).rpc('get_recursos_compartidos', { p_user_id: userId });
+          return data ?? [];
+        },
+        staleTime: 30_000,
       }),
     ]);
   }

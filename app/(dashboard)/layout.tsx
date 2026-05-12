@@ -24,12 +24,23 @@ export default async function DashboardLayout({
 
   if (!profile) redirect('/login');
 
+  // For alumnos, check graduation status (used for easter-egg theme)
+  let esGraduado = false;
+  if (profile.rol === 'alumno') {
+    const { data: extra } = await supabase
+      .from('alumnos_extra')
+      .select('paso_prueba')
+      .eq('alumno_id', user.id)
+      .single();
+    esGraduado = extra?.paso_prueba === true;
+  }
+
   // Prefetch role-specific data server-side so the first page renders
   // with data already in the React Query cache (zero loading spinners).
   const dehydratedState = await prefetchDashboardData(user.id, profile.rol);
 
   return (
-    <DashboardLayoutClient profile={profile} dehydratedState={dehydratedState}>
+    <DashboardLayoutClient profile={profile} esGraduado={esGraduado} dehydratedState={dehydratedState}>
       {children}
     </DashboardLayoutClient>
   );

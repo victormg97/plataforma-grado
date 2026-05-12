@@ -1,0 +1,68 @@
+{
+  "form": {
+    "titulo": "Solicitar cambio de horario",
+    "fecha_label": "Fecha propuesta",
+    "hora_inicio_label": "Hora de inicio",
+    "hora_fin_label": "Hora de fin",
+    "nota_label": "Nota o comentario (opcional)",
+    "nota_placeholder": "Agrega un mensaje para tu profesor...",
+    "enviar": "Enviar solicitud",
+    "enviando": "Enviando solicitud...",
+    "cancelar": "Cancelar",
+    "exito": "Solicitud enviada correctamente. Tu profesor fue notificado.",
+    "error_no_disponible": "El horario seleccionado no está disponible. Por favor elige otro.",
+    "error_duplicado": "Ya existe una solicitud pendiente para esta clase.",
+    "error_generico": "Ocurrió un error al enviar la solicitud. Intenta de nuevo.",
+    "campo_requerido": "Este campo es requerido",
+    "fecha_futura": "La fecha debe ser posterior a hoy",
+    "disponible": "Horario disponible",
+    "no_disponible": "Horario no disponible",
+    "verificando": "Verificando disponibilidad..."
+  },
+  "modal": {
+    "titulo_respuesta": "Responder solicitud de cambio",
+    "titulo_rechazo_detalle": "Detalle de rechazo",
+    "clase_original": "Clase original",
+    "horario_propuesto": "Horario propuesto",
+    "alumno": "Alumno",
+    "aceptar": "Aceptar",
+    "rechazar": "Rechazar",
+    "motivo_rechazo_label": "Motivo de rechazo",
+    "motivo_rechazo_placeholder": "Indica el motivo del rechazo (opcional)...",
+    "confirmar_rechazo": "Confirmar rechazo",
+    "cancelar": "Cancelar",
+    "aceptando": "Aceptando...",
+    "rechazando": "Rechazando...",
+    "exito_aceptada": "Solicitud aceptada. Se creó la nueva clase.",
+    "exito_rechazada": "Solicitud rechazada. El alumno fue notificado.",
+    "error_aceptar": "Error al aceptar la solicitud",
+    "error_rechazar": "Error al rechazar la solicitud"
+  },
+  "estado": {
+    "pendiente": "Pendiente",
+    "solicitud_pendiente": "Solicitud pendiente",
+    "aceptada": "Aceptada",
+    "rechazada": "Rechazada"
+  },
+  "notificacion": {
+    "solicitud_cambio_horario": "{alumno} solicitó un cambio de horario",
+    "cambio_horario_aceptado": "Tu solicitud de cambio de horario fue aceptada",
+    "cambio_horario_rechazado": "Tu solicitud de cambio de horario fue rechazada"
+  },
+  "vista": {
+    "titulo": "Notificaciones",
+    "filtro_tipo": "Tipo de notificación",
+    "filtro_tipo_todas": "Todas",
+    "filtro_fecha_desde": "Desde",
+    "filtro_fecha_hasta": "Hasta",
+    "filtro_alumno": "Buscar alumno",
+    "sin_resultados": "No hay notificaciones que mostrar",
+    "ver_todo": "Ver todo",
+    "pagina_info": "Página {page} de {total}",
+    "anterior": "Anterior",
+    "siguiente": "Siguiente",
+    "seleccionar_todo": "Seleccionar todo",
+    "deseleccionar_todo": "Deseleccionar todo",
+    "eliminar_seleccionados": "Eliminar ({count})"
+  }
+}

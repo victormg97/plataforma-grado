@@ -14,6 +14,9 @@ import { es, enUS } from 'date-fns/locale';
 import { buildAlumnoHorarioDetailHref } from '@/lib/utils/horarioNavigation';
 import { useUIStore } from '@/stores/useUIStore';
 import { useUserStore } from '@/stores/useUserStore';
+import { ModalRespuestaSolicitud } from '@/components/notificaciones/ModalRespuestaSolicitud';
+import { ModalRechazoDetalle } from '@/components/notificaciones/ModalRechazoDetalle';
+import type { SolicitudCambio } from '@/lib/hooks/useSolicitudesCambio';
 import type { TipoNotificacion } from '@/lib/supabase/types';
 
 type Notificacion = {
@@ -25,8 +28,24 @@ type Notificacion = {
   horario_id: string | null;
   alumno_id: string | null;
   programa_id: string | null;
+  solicitud_id: string | null;
   alumno: { id: string; nombre: string; apellido: string } | null;
   horario: { id: string; fecha: string; hora_inicio: string; hora_fin: string; titulo: string | null; descripcion: string | null } | null;
+  solicitud: {
+    id: string;
+    alumno_id: string;
+    profesor_id: string;
+    horario_original_id: string;
+    fecha_propuesta: string;
+    hora_inicio_propuesta: string;
+    hora_fin_propuesta: string;
+    estado: string;
+    motivo_rechazo: string | null;
+    nuevo_horario_id: string | null;
+    nota_alumno: string | null;
+    created_at: string;
+    updated_at: string;
+  } | null;
   created_at: string;
 };
 
@@ -38,6 +57,9 @@ const TIPO_ICON: Record<TipoNotificacion, { icon: React.ElementType; color: stri
   clase_modificada:   { icon: CalendarClock,  color: 'var(--color-info)' },
   clase_cancelada:    { icon: CalendarOff,    color: 'var(--color-error)' },
   programa_asignado:  { icon: ClipboardList,  color: 'var(--color-brand-gold)' },
+  solicitud_cambio_horario: { icon: CalendarClock, color: 'var(--color-info)' },
+  cambio_horario_aceptado:  { icon: CheckCircle2,  color: 'var(--color-success)' },
+  cambio_horario_rechazado: { icon: XCircle,       color: 'var(--color-error)' },
 };
 
 type TranslateFn = (key: string, values?: Record<string, string | number>) => string;
@@ -55,10 +77,10 @@ function timeAgo(dateStr: string, t: TranslateFn): string {
 }
 
 async function fetchNotificacionesQuery(): Promise<Notificacion[]> {
-  const res = await fetch('/api/notificaciones?limit=30');
+  const res = await fetch('/api/notificaciones?page_size=30');
   if (!res.ok) throw new Error('Failed to fetch notificaciones');
-  const data = await res.json();
-  return Array.isArray(data) ? data : [];
+  const json = await res.json();
+  return Array.isArray(json) ? json : (json.data ?? []);
 }
 
 export function NotificacionesPanel() {
@@ -68,10 +90,13 @@ export function NotificacionesPanel() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const tn = useTranslations('notificaciones');
+  const tv = useTranslations('cambioHorario.vista');
   const locale = useLocale();
   const dateFnsLocale = locale === 'en' ? enUS : es;
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [selectedSolicitud, setSelectedSolicitud] = useState<SolicitudCambio | null>(null);
+  const [selectedRechazo, setSelectedRechazo] = useState<SolicitudCambio | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const currentPath = useMemo(() => {
     const qs = searchParams.toString();
@@ -129,6 +154,78 @@ export function NotificacionesPanel() {
       });
       invalidate();
     }
+
+    // Handle solicitud_cambio_horario notification — open modal for profesor
+    if (n.tipo === 'solicitud_cambio_horario' && n.solicitud_id && user?.rol === 'profesor') {
+      if (n.solicitud) {
+        // Build the SolicitudCambio object from the joined data
+        const solicitudData: SolicitudCambio = {
+          ...n.solicitud,
+          estado: n.solicitud.estado as SolicitudCambio['estado'],
+          alumno: n.alumno ? { id: n.alumno.id, nombre: n.alumno.nombre, apellido: n.alumno.apellido } : null,
+          horario_original: n.horario ? {
+            id: n.horario.id,
+            titulo: n.horario.titulo || '',
+            fecha: n.horario.fecha,
+            hora_inicio: n.horario.hora_inicio,
+            hora_fin: n.horario.hora_fin,
+          } : null,
+        };
+        setSelectedSolicitud(solicitudData);
+        setOpen(false);
+        return;
+      }
+      // Fallback: fetch the solicitud data if not joined
+      try {
+        const res = await fetch(`/api/solicitudes-cambio?id=${n.solicitud_id}`);
+        if (res.ok) {
+          const json = await res.json();
+          const solicitudes = Array.isArray(json) ? json : (json.data ?? json);
+          const solicitud = Array.isArray(solicitudes) ? solicitudes[0] : solicitudes;
+          if (solicitud) {
+            setSelectedSolicitud(solicitud);
+            setOpen(false);
+            return;
+          }
+        }
+      } catch { /* fallthrough to default behavior */ }
+    }
+
+    // Handle cambio_horario_rechazado notification — open rejection details modal for alumno
+    if (n.tipo === 'cambio_horario_rechazado' && n.solicitud_id && user?.rol === 'alumno') {
+      if (n.solicitud) {
+        const solicitudData: SolicitudCambio = {
+          ...n.solicitud,
+          estado: n.solicitud.estado as SolicitudCambio['estado'],
+          alumno: n.alumno ? { id: n.alumno.id, nombre: n.alumno.nombre, apellido: n.alumno.apellido } : null,
+          horario_original: n.horario ? {
+            id: n.horario.id,
+            titulo: n.horario.titulo || '',
+            fecha: n.horario.fecha,
+            hora_inicio: n.horario.hora_inicio,
+            hora_fin: n.horario.hora_fin,
+          } : null,
+        };
+        setSelectedRechazo(solicitudData);
+        setOpen(false);
+        return;
+      }
+      // Fallback: fetch the solicitud data if not joined
+      try {
+        const res = await fetch(`/api/solicitudes-cambio?id=${n.solicitud_id}`);
+        if (res.ok) {
+          const json = await res.json();
+          const solicitudes = Array.isArray(json) ? json : (json.data ?? json);
+          const solicitud = Array.isArray(solicitudes) ? solicitudes[0] : solicitudes;
+          if (solicitud) {
+            setSelectedRechazo(solicitud);
+            setOpen(false);
+            return;
+          }
+        }
+      } catch { /* fallthrough to default behavior */ }
+    }
+
     setOpen(false);
 
     if (n.horario_id) {
@@ -145,7 +242,7 @@ export function NotificacionesPanel() {
   };
 
   const getNotificationMessage = useCallback((n: Notificacion): string => {
-    if (n.tipo === 'confirmacion' || n.tipo === 'cancelacion' || n.tipo === 'cambio_horario') {
+    if (n.tipo === 'confirmacion' || n.tipo === 'cancelacion' || n.tipo === 'cambio_horario' || n.tipo === 'solicitud_cambio_horario') {
       const alumnoNombre = n.alumno
         ? `${n.alumno.nombre} ${n.alumno.apellido}`
         : tn('mensajes.alumno_generico');
@@ -174,12 +271,12 @@ export function NotificacionesPanel() {
     <div ref={panelRef} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="relative inline-flex h-9 w-9 items-center justify-center rounded-[var(--radius-md)] text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-bg-secondary)]"
+        className="relative inline-flex size-9 items-center justify-center rounded-[var(--radius-md)] text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-bg-secondary)]"
         aria-label={tn('titulo')}
       >
-        <Bell className="h-4 w-4" />
+        <Bell className="size-4" />
         {sinLeer > 0 && (
-          <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--color-error)] px-1 text-[10px] font-bold text-white">
+          <span className="absolute -right-0.5 -top-0.5 flex min-size-4 items-center justify-center rounded-full bg-[var(--color-error)] px-1 text-[10px] font-bold text-white">
             {sinLeer > 9 ? '9+' : sinLeer}
           </span>
         )}
@@ -197,7 +294,7 @@ export function NotificacionesPanel() {
                 onClick={marcarTodo}
                 className="flex items-center gap-1 text-xs text-[var(--color-brand-gold)] hover:underline"
               >
-                <CheckCheck className="h-3 w-3" />
+                <CheckCheck className="size-3" />
                 {tn('marcar_todo')}
               </button>
             )}
@@ -220,7 +317,7 @@ export function NotificacionesPanel() {
                   >
                     {/* Type icon */}
                     <div className="mt-0.5 shrink-0">
-                      <IconComponent className="h-4 w-4" style={{ color: tipoConfig.color }} />
+                      <IconComponent className="size-4" style={{ color: tipoConfig.color }} />
                     </div>
 
                     {/* Content — clickable */}
@@ -233,7 +330,7 @@ export function NotificacionesPanel() {
                       {n.horario && (
                         <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                           <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-bg-secondary)] px-2 py-0.5 text-xs text-[var(--color-text-muted)]">
-                            <Calendar className="h-3 w-3" style={{ color: 'var(--color-brand-gold)' }} />
+                            <Calendar className="size-3" style={{ color: 'var(--color-brand-gold)' }} />
                             <span className="capitalize">
                               {format(
                                 new Date(n.horario.fecha + 'T12:00:00'),
@@ -257,14 +354,14 @@ export function NotificacionesPanel() {
                     {/* Right: unread dot + delete */}
                     <div className="flex shrink-0 flex-col items-center gap-2 pt-0.5">
                       {!n.leida && (
-                        <span className="h-2 w-2 rounded-full bg-[var(--color-brand-gold)]" />
+                        <span className="size-2 rounded-full bg-[var(--color-brand-gold)]" />
                       )}
                       <button
                         onClick={(e) => handleDelete(e, n.id)}
-                        className="inline-flex h-5 w-5 items-center justify-center rounded text-[var(--color-text-muted)] opacity-0 transition-opacity hover:text-[var(--color-error)] group-hover:opacity-100"
+                        className="inline-flex size-5 items-center justify-center rounded text-[var(--color-text-muted)] opacity-100 sm:opacity-0 transition-opacity hover:text-[var(--color-error)] sm:group-hover:opacity-100"
                         aria-label={tn('eliminar')}
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <Trash2 className="size-3.5" />
                       </button>
                     </div>
                   </div>
@@ -272,7 +369,40 @@ export function NotificacionesPanel() {
               })
             )}
           </div>
+
+          {/* Footer — Ver Todo */}
+          <div className="border-t border-[var(--color-border)] px-4 py-2">
+            <button
+              onClick={() => {
+                setOpen(false);
+                const role = user?.rol ?? 'alumno';
+                router.push(`/${role}/notificaciones`);
+              }}
+              className="w-full py-1.5 text-center text-sm text-[var(--color-text-secondary)] transition-colors hover:text-[var(--color-brand-gold)]"
+            >
+              {tv('ver_todo')}
+            </button>
+          </div>
         </div>
+      )}
+
+      {/* Modal for profesor to respond to solicitud_cambio_horario */}
+      {selectedSolicitud && (
+        <ModalRespuestaSolicitud
+          solicitud={selectedSolicitud}
+          onClose={() => {
+            setSelectedSolicitud(null);
+            invalidate();
+          }}
+        />
+      )}
+
+      {/* Modal for alumno to view rejection details */}
+      {selectedRechazo && (
+        <ModalRechazoDetalle
+          solicitud={selectedRechazo}
+          onClose={() => setSelectedRechazo(null)}
+        />
       )}
     </div>
   );

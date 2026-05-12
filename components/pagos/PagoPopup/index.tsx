@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import { Check, X, DollarSign } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -131,7 +131,7 @@ export function PagoPopup({
     : 'top-full left-1/2 -translate-x-1/2 border-t-[var(--color-bg-elevated)] border-b-transparent border-l-transparent border-r-transparent';
 
   return (
-    <motion.div
+    <m.div
       ref={popupRef}
       role="dialog"
       aria-modal="false"
@@ -146,7 +146,7 @@ export function PagoPopup({
       {/* Arrow */}
       <div
         className={cn(
-          'pointer-events-none absolute h-0 w-0 border-8',
+          'pointer-events-none absolute size-0 border-8',
           arrowClass,
           'hidden sm:block'
         )}
@@ -171,10 +171,10 @@ export function PagoPopup({
           </div>
           <button
             onClick={onClose}
-            className="ml-2 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] transition-colors"
+            className="ml-2 flex size-6 shrink-0 items-center justify-center rounded-full text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] transition-colors"
             aria-label="Cerrar"
           >
-            <X className="h-3.5 w-3.5" />
+            <X className="size-3.5" />
           </button>
         </div>
 
@@ -185,7 +185,7 @@ export function PagoPopup({
             <span className="ml-1 text-[10px] opacity-70">(opcional)</span>
           </label>
           <div className="relative">
-            <DollarSign className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--color-text-muted)]" />
+            <DollarSign className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-[var(--color-text-muted)]" />
             <input
               ref={inputRef}
               type="text"
@@ -214,7 +214,7 @@ export function PagoPopup({
                 'bg-[var(--color-success)] text-white hover:opacity-90 active:scale-95'
               )}
             >
-              <Check className="h-4 w-4" />
+              <Check className="size-4" />
               {t('marcar_todo')}
             </button>
             <button
@@ -224,7 +224,7 @@ export function PagoPopup({
                 'border border-[var(--color-error)] text-[var(--color-error)] hover:bg-[var(--color-error)] hover:text-white active:scale-95'
               )}
             >
-              <X className="h-4 w-4" />
+              <X className="size-4" />
               {t('desmarcar_todo')}
             </button>
           </div>
@@ -238,7 +238,7 @@ export function PagoPopup({
                   'bg-[var(--color-success)] text-white hover:opacity-90 active:scale-95'
                 )}
               >
-                <Check className="h-4 w-4" />
+                <Check className="size-4" />
                 {t('marcar_pagado')}
               </button>
             ) : (
@@ -249,7 +249,7 @@ export function PagoPopup({
                   'border border-[var(--color-error)] text-[var(--color-error)] hover:bg-[var(--color-error)] hover:text-white active:scale-95'
                 )}
               >
-                <X className="h-4 w-4" />
+                <X className="size-4" />
                 {t('desmarcar')}
               </button>
             )}
@@ -264,6 +264,6 @@ export function PagoPopup({
           </p>
         )}
       </div>
-    </motion.div>
+    </m.div>
   );
 }

@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     p_anio: año,
     p_mes: mes,
     p_estado: estado,
-    p_monto: monto_pagado ?? null,
+    p_monto: monto_pagado ?? undefined,
   });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

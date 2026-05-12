@@ -41,7 +41,7 @@ function ProfesorHorariosContent({ profesorId }: { profesorId: string }) {
           href="/admin/profesores"
           className="inline-flex items-center gap-1.5 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
         >
-          <ArrowLeft className="h-3.5 w-3.5" />
+          <ArrowLeft className="size-3.5" />
           {tp('titulo')}
         </Link>
       </div>

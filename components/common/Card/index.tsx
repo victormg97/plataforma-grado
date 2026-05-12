@@ -3,11 +3,12 @@ import type { HTMLAttributes, ReactNode } from 'react';
 
 interface CardProps extends HTMLAttributes<HTMLDivElement> {
   hover?: boolean;
-  padding?: 'sm' | 'md' | 'lg';
+  padding?: 'none' | 'sm' | 'md' | 'lg';
   children: ReactNode;
 }
 
 const paddingStyles = {
+  none: '',
   sm: 'p-[var(--space-sm)]',
   md: 'p-[var(--space-md)]',
   lg: 'p-[var(--space-lg)]',

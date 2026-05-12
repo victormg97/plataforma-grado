@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, Loader2, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -53,7 +53,7 @@ export function ConfirmDeleteModal({
       {open && (
         <>
           {/* Backdrop */}
-          <motion.div
+          <m.div
             key="backdrop"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -64,24 +64,27 @@ export function ConfirmDeleteModal({
           />
 
           {/* Modal */}
-          <motion.div
+          <m.div
             key="modal"
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            role="presentation"
             onClick={handleClose}
           >
             <div
               onClick={(e) => e.stopPropagation()}
+              role="dialog"
+              aria-modal="true"
               className="w-full max-w-md rounded-2xl border border-red-100 bg-[var(--color-bg)] shadow-2xl overflow-hidden"
             >
               {/* Header */}
               <div className="bg-red-50 dark:bg-red-950/30 p-6 border-b border-red-100 dark:border-red-900/30">
                 <div className="flex items-start gap-4">
-                  <div className="bg-red-100 dark:bg-red-900/50 w-12 h-12 rounded-full flex items-center justify-center shrink-0">
-                    <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400" />
+                  <div className="bg-red-100 dark:bg-red-900/50 size-12 rounded-full flex items-center justify-center shrink-0">
+                    <AlertTriangle className="size-6 text-red-600 dark:text-red-400" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
@@ -96,7 +99,7 @@ export function ConfirmDeleteModal({
                     disabled={loading}
                     className="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors shrink-0 disabled:opacity-50"
                   >
-                    <X className="w-5 h-5" />
+                    <X className="size-5" />
                   </button>
                 </div>
               </div>
@@ -155,7 +158,7 @@ export function ConfirmDeleteModal({
                   >
                     {loading ? (
                       <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <Loader2 className="size-4 animate-spin" />
                         {t('eliminando')}
                       </>
                     ) : (
@@ -165,7 +168,7 @@ export function ConfirmDeleteModal({
                 </div>
               </div>
             </div>
-          </motion.div>
+          </m.div>
         </>
       )}
     </AnimatePresence>

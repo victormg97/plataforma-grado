@@ -111,7 +111,7 @@ export default function ProfesorProgramasPage() {
         subtitle={t('subtitulo')}
         actions={
           <Button onClick={() => { setEditingPrograma(null); setFormOpen(true); }}>
-            <Plus className="mr-1.5 h-4 w-4" />
+            <Plus className="mr-1.5 size-4" />
             {t('crear')}
           </Button>
         }
@@ -119,14 +119,14 @@ export default function ProfesorProgramasPage() {
 
       {isLoading ? (
         <div className="mt-8 flex items-center justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--color-brand-gold)] border-t-transparent" />
+          <div className="size-8 animate-spin rounded-full border-2 border-[var(--color-brand-gold)] border-t-transparent" />
         </div>
       ) : (
         <div className="mt-[var(--space-lg)] flex flex-col gap-8">
           {/* Mis programas */}
           <section>
             <div className="mb-3 flex items-center gap-2">
-              <BookOpen className="h-4 w-4 text-[var(--color-brand-gold)]" />
+              <BookOpen className="size-4 text-[var(--color-brand-gold)]" />
               <h2 className="font-semibold text-[var(--color-text-primary)]">{t('mis_programas')}</h2>
               <span className="rounded-full bg-[var(--color-bg-secondary)] px-2 py-0.5 text-xs text-[var(--color-text-muted)]">
                 {misActivos.length}
@@ -154,7 +154,7 @@ export default function ProfesorProgramasPage() {
           {otrosActivos.length > 0 && (
             <section>
               <div className="mb-3 flex items-center gap-2">
-                <ClipboardList className="h-4 w-4 text-[var(--color-text-muted)]" />
+                <ClipboardList className="size-4 text-[var(--color-text-muted)]" />
                 <h2 className="font-semibold text-[var(--color-text-primary)]">{t('otros_profesores')}</h2>
               </div>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -178,7 +178,7 @@ export default function ProfesorProgramasPage() {
                 onClick={() => setShowDeleted((v) => !v)}
                 className="mb-3 flex items-center gap-2 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
               >
-                <Archive className="h-4 w-4" />
+                <Archive className="size-4" />
                 {t('papelera')} ({eliminados.length})
                 <span className="text-xs">{showDeleted ? '▲' : '▼'}</span>
               </button>
@@ -227,7 +227,7 @@ export default function ProfesorProgramasPage() {
             <div className="flex flex-col gap-2">
               {hasClases && (
                 <div className="flex items-start gap-2 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2">
-                  <BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-brand-gold)]" />
+                  <BookOpen className="mt-0.5 size-4 shrink-0 text-[var(--color-brand-gold)]" />
                   <p className="text-xs text-[var(--color-text-secondary)]">
                     {t('confirmar_eliminar_impacto_clases', { clases: t('n_clases', { count: p?.total_clases ?? 0 }) })}
                   </p>
@@ -235,7 +235,7 @@ export default function ProfesorProgramasPage() {
               )}
               {hasAlumnos && (
                 <div className="flex items-start gap-2 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2">
-                  <ClipboardList className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-brand-gold)]" />
+                  <ClipboardList className="mt-0.5 size-4 shrink-0 text-[var(--color-brand-gold)]" />
                   <p className="text-xs text-[var(--color-text-secondary)]">
                     {t('confirmar_eliminar_impacto_alumnos', { alumnos: t('n_asignados', { count: p?.total_asignados ?? 0 }) })}
                   </p>

@@ -121,11 +121,11 @@ export function NotaCard({ nota, isOwn, onUpdate, onDelete, updating, deleting }
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2 bg-[var(--color-bg-secondary)]">
         <div className="flex items-center gap-2 min-w-0">
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--color-brand-gold-muted)]">
+          <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[var(--color-brand-gold-muted)]">
             {nota.autor.avatar_url ? (
-              <Image src={nota.autor.avatar_url} alt="" width={28} height={28} className="h-7 w-7 rounded-full object-cover" />
+              <Image src={nota.autor.avatar_url} alt="" width={28} height={28} className="size-7 rounded-full object-cover" />
             ) : (
-              <User className="h-3.5 w-3.5 text-[var(--color-brand-gold)]" />
+              <User className="size-3.5 text-[var(--color-brand-gold)]" />
             )}
           </div>
           <div className="min-w-0">
@@ -144,18 +144,18 @@ export function NotaCard({ nota, isOwn, onUpdate, onDelete, updating, deleting }
             <button
               type="button"
               onClick={() => setEditing(true)}
-              className="flex items-center justify-center h-7 w-7 rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-primary)] hover:text-[var(--color-text-primary)]"
+              className="flex items-center justify-center size-7 rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-primary)] hover:text-[var(--color-text-primary)]"
               title={t('editar')}
             >
-              <Pencil className="h-3.5 w-3.5" />
+              <Pencil className="size-3.5" />
             </button>
             <button
               type="button"
               onClick={() => setConfirmDelete(true)}
-              className="flex items-center justify-center h-7 w-7 rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:bg-red-50 hover:text-[var(--color-error)] dark:hover:bg-red-950/20"
+              className="flex items-center justify-center size-7 rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:bg-red-50 hover:text-[var(--color-error)] dark:hover:bg-red-950/20"
               title={t('eliminar')}
             >
-              <Trash2 className="h-3.5 w-3.5" />
+              <Trash2 className="size-3.5" />
             </button>
           </div>
         )}
@@ -176,6 +176,7 @@ export function NotaCard({ nota, isOwn, onUpdate, onDelete, updating, deleting }
         <div
           className="tiptap-content max-w-none px-3 py-2 text-sm text-[var(--color-text-primary)]"
           dangerouslySetInnerHTML={{ __html: nota.contenido }}
+          role="article"
           onClick={handleContentClick}
         />
       )}
@@ -199,7 +200,7 @@ export function NotaCard({ nota, isOwn, onUpdate, onDelete, updating, deleting }
               className="flex items-center gap-1 rounded-[var(--radius-sm)] bg-[var(--color-error)] px-3 py-1 text-sm text-white hover:opacity-90 disabled:opacity-50"
             >
               {deleting ? (
-                <div className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                <div className="size-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
               ) : null}
               {t('eliminar')}
             </button>

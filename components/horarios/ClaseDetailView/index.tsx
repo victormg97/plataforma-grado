@@ -1,17 +1,20 @@
 'use client';
 
-import { useState, useEffect, startTransition } from 'react';
+import { useState, startTransition } from 'react';
 import { format } from 'date-fns';
 import { es as esDateFns, enUS } from 'date-fns/locale';
 import { Calendar, Clock, FileText, MessageSquare, ArrowLeft, GraduationCap } from 'lucide-react';
 import Link from 'next/link';
 import { useTranslations, useLocale } from 'next-intl';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card } from '@/components/common/Card';
 import { Avatar } from '@/components/common/Avatar';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { NotasIndicator } from '@/components/notas/NotasIndicator';
 import { NotasSection } from '@/components/notas/NotasSection';
+import { AppSelect } from '@/components/common/AppSelect';
 import { useNotasCount } from '@/lib/hooks/useNotasCount';
 import { useQueryParam } from '@/lib/hooks/useQueryParam';
 import { getClaseDetailBackHref } from '@/lib/utils/horarioNavigation';
@@ -19,7 +22,7 @@ import type { HorarioConAsistencia } from '@/lib/hooks/useHorarios';
 import { Button } from '@/components/common/Button';
 import { cn } from '@/lib/utils';
 import { useCalificarPrueba } from '@/lib/hooks/usePruebas';
-import { toast } from 'sonner';
+import type { EstadoAsistencia } from '@/lib/supabase/types';
 
 const inputCls = cn(
   'w-full rounded-[var(--radius-md)] border border-[var(--color-border)]',
@@ -194,32 +197,58 @@ export function ClaseDetailView({ rol }: ClaseDetailViewProps) {
   const locale = useLocale();
   const dateFnsLocale = locale === 'en' ? enUS : esDateFns;
   const backHref = getClaseDetailBackHref(from, rol);
+  const queryClient = useQueryClient();
+  const [changingEstado, setChangingEstado] = useState(false);
 
-  const [horario, setHorario] = useState<HorarioConAsistencia | null>(null);
-  const [loading, setLoading] = useState(!!horarioId);
-  const [error, setError] = useState(false);
+  const { data: horario = null, isLoading: loading, isError: error } = useQuery<HorarioConAsistencia | null>({
+    queryKey: ['horario-detail', horarioId],
+    queryFn: async () => {
+      const r = await fetch(`/api/horarios/${horarioId}`);
+      if (!r.ok) throw new Error('Not found');
+      return r.json();
+    },
+    enabled: !!horarioId,
+    staleTime: 30_000,
+  });
 
   const notasCounts = useNotasCount(horarioId ? [horarioId] : []);
 
-  useEffect(() => {
-    if (!horarioId) return;
-    let cancelled = false;
-    startTransition(() => setLoading(true));
-    fetch(`/api/horarios/${horarioId}`)
-      .then((r) => {
-        if (!r.ok) throw new Error();
-        return r.json();
-      })
-      .then((data) => { if (!cancelled) setHorario(data); })
-      .catch(() => { if (!cancelled) setError(true); })
-      .finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
-  }, [horarioId]);
-
   const estado = horario?.asistencia?.[0]?.estado || 'pendiente';
+  const asistenciaId = horario?.asistencia?.[0]?.id;
   const today = new Date().toISOString().split('T')[0];
   const isPast = horario ? horario.fecha < today : false;
   const showNotas = horario && (estado === 'confirmado' || estado === 'no_asistio') && isPast;
+
+  // Status change options for profesor/admin
+  const estadoOptions = [
+    { value: 'pendiente', label: ta('estados.pendiente') },
+    { value: 'confirmado', label: ta('estados.confirmado') },
+    { value: 'cancelado', label: ta('estados.cancelado') },
+    { value: 'no_asistio', label: ta('estados.no_asistio') },
+  ];
+
+  const handleEstadoChange = async (newEstado: string) => {
+    if (!asistenciaId || newEstado === estado) return;
+    setChangingEstado(true);
+    try {
+      const res = await fetch(`/api/asistencia/${asistenciaId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estado: newEstado }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error || 'Error al cambiar estado');
+      }
+      toast.success(ta('estado_actualizado'));
+      queryClient.invalidateQueries({ queryKey: ['horario-detail', horarioId] });
+      queryClient.invalidateQueries({ queryKey: ['horarios'] });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Error al cambiar estado');
+    } finally {
+      setChangingEstado(false);
+    }
+  };
 
   const borderColor = () => {
     switch (estado) {
@@ -237,7 +266,7 @@ export function ClaseDetailView({ rol }: ClaseDetailViewProps) {
       <div>
         <PageHeader title={t('detalle_clase')} subtitle="" />
         <div className="mt-[var(--space-lg)] flex items-center justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-brand-gold)] border-t-transparent" />
+          <div className="size-8 animate-spin rounded-full border-4 border-[var(--color-brand-gold)] border-t-transparent" />
         </div>
       </div>
     );
@@ -252,7 +281,7 @@ export function ClaseDetailView({ rol }: ClaseDetailViewProps) {
           <Card className="flex flex-col items-center justify-center py-12 text-center">
             <p className="text-[var(--color-text-primary)] font-medium">{t('clase_no_encontrada')}</p>
             <Link href={backHref} className="mt-3 text-sm text-[var(--color-brand-gold)] hover:underline flex items-center gap-1">
-              <ArrowLeft className="h-4 w-4" /> {tc('volver')}
+              <ArrowLeft className="size-4" /> {tc('volver')}
             </Link>
           </Card>
         </div>
@@ -267,7 +296,7 @@ export function ClaseDetailView({ rol }: ClaseDetailViewProps) {
         subtitle={t('detalle_clase')}
         actions={
           <Link href={backHref} className="flex items-center gap-1 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]">
-            <ArrowLeft className="h-4 w-4" /> {tc('volver')}
+            <ArrowLeft className="size-4" /> {tc('volver')}
           </Link>
         }
       />
@@ -279,7 +308,7 @@ export function ClaseDetailView({ rol }: ClaseDetailViewProps) {
             {(horario.pruebas?.length ?? 0) > 0 && (
               <div className="flex items-center gap-2 rounded-[var(--radius-md)] px-3 py-2.5"
                 style={{ backgroundColor: 'var(--color-brand-gold-muted)', border: '1px solid color-mix(in srgb, var(--color-brand-gold) 40%, transparent)' }}>
-                <GraduationCap className="h-4 w-4 shrink-0" style={{ color: 'var(--color-brand-gold)' }} />
+                <GraduationCap className="size-4 shrink-0" style={{ color: 'var(--color-brand-gold)' }} />
                 <span className="text-sm font-medium" style={{ color: 'var(--color-brand-gold)' }}>{t('es_examen')}</span>
               </div>
             )}
@@ -303,24 +332,38 @@ export function ClaseDetailView({ rol }: ClaseDetailViewProps) {
               </div>
             )}
 
-            {/* Status + notes indicator */}
-            <div className="flex items-center gap-2">
+            {/* Status + notes indicator + change control */}
+            <div className="flex flex-wrap items-center gap-2">
               <span className="text-sm text-[var(--color-text-muted)]">{ta('estado_label')}:</span>
               <StatusBadge status={estado} />
               <NotasIndicator count={notasCounts[horario.id] ?? 0} />
               {(horario.pruebas?.length ?? 0) > 0 && (
                 <span className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium"
                   style={{ backgroundColor: 'var(--color-brand-gold-muted)', borderColor: 'color-mix(in srgb, var(--color-brand-gold) 40%, transparent)', color: 'var(--color-brand-gold)' }}>
-                  <GraduationCap className="h-3 w-3" />
+                  <GraduationCap className="size-3" />
                   {t('badge_examen')}
                 </span>
               )}
             </div>
 
+            {/* Profesor/Admin: change attendance status */}
+            {asistenciaId && (
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="text-sm text-[var(--color-text-muted)]">{ta('cambiar_estado')}:</span>
+                <AppSelect
+                  value={estado}
+                  onChange={handleEstadoChange}
+                  options={estadoOptions}
+                  disabled={changingEstado}
+                  className="min-w-[160px]"
+                />
+              </div>
+            )}
+
             {/* Date / time */}
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="flex items-center gap-2 text-sm text-[var(--color-text-primary)]">
-                <Calendar className="h-4 w-4 text-[var(--color-brand-gold)]" />
+                <Calendar className="size-4 text-[var(--color-brand-gold)]" />
                 <span className="capitalize">
                   {format(new Date(horario.fecha + 'T12:00:00'), locale === 'en' ? "EEEE, MMMM d yyyy" : "EEEE d 'de' MMMM yyyy", { locale: dateFnsLocale })}
                 </span>

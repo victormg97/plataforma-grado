@@ -82,7 +82,7 @@ export function PruebaCalificacion({
             loading={loading}
             onClick={handleSubmit(handleFormSubmit)}
           >
-            <Star className="mr-1.5 h-4 w-4" />
+            <Star className="mr-1.5 size-4" />
             {t('calificacion.guardar')}
           </Button>
         </div>

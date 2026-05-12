@@ -211,7 +211,7 @@ export default function ProfesorProgramaDetailPage({ params }: Props) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--color-brand-gold)] border-t-transparent" />
+        <div className="size-8 animate-spin rounded-full border-2 border-[var(--color-brand-gold)] border-t-transparent" />
       </div>
     );
   }
@@ -220,12 +220,12 @@ export default function ProfesorProgramaDetailPage({ params }: Props) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <div className="mb-4 rounded-full bg-red-50 p-3 dark:bg-red-900/20">
-          <BookOpen className="h-8 w-8 text-red-500" />
+          <BookOpen className="size-8 text-red-500" />
         </div>
         <h2 className="mb-2 text-xl font-bold text-[var(--color-text-primary)]">{t('mensajes.error_no_encontrado_titulo')}</h2>
         <p className="mb-6 text-[var(--color-text-muted)]">{t('mensajes.error_no_encontrado_desc')}</p>
         <Button onClick={() => router.push('/profesor/programas')}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
+          <ArrowLeft className="mr-2 size-4" />
           {t('volver')}
         </Button>
       </div>
@@ -243,7 +243,7 @@ export default function ProfesorProgramaDetailPage({ params }: Props) {
           onClick={() => router.back()}
           className="flex items-center gap-1 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="size-4" />
           {t('volver')}
         </button>
       </div>
@@ -257,7 +257,7 @@ export default function ProfesorProgramaDetailPage({ params }: Props) {
               <Tooltip content={t('editar_tooltip')} position="bottom">
                 <span>
                   <Button variant="secondary" size="sm" onClick={() => setEditFormOpen(true)}>
-                    <Pencil className="mr-1.5 h-4 w-4" />
+                    <Pencil className="mr-1.5 size-4" />
                     {t('editar')}
                   </Button>
                 </span>
@@ -266,7 +266,7 @@ export default function ProfesorProgramaDetailPage({ params }: Props) {
             <Tooltip content={savedClases.length === 0 ? t('asignar_sin_clases') : t('asignar')} position="bottom">
               <span>
                 <Button variant="primary" size="sm" onClick={() => setWizardOpen(true)} disabled={hasChanges || savedClases.length === 0}>
-                  <Users className="mr-1.5 h-4 w-4" />
+                  <Users className="mr-1.5 size-4" />
                   {t('asignar')}
                 </Button>
               </span>
@@ -279,7 +279,7 @@ export default function ProfesorProgramaDetailPage({ params }: Props) {
         {/* Clases editor */}
         <Card>
           <div className="mb-4 flex items-center gap-2">
-            <BookOpen className="h-4 w-4 text-[var(--color-brand-gold)]" />
+            <BookOpen className="size-4 text-[var(--color-brand-gold)]" />
             <h2 className="font-semibold text-[var(--color-text-primary)]">{t('clases_del_programa')}</h2>
           </div>
           <ClasesEditor
@@ -295,7 +295,7 @@ export default function ProfesorProgramaDetailPage({ params }: Props) {
         {/* Alumnos asignados */}
         <Card>
           <div className="mb-4 flex items-center gap-2">
-            <Users className="h-4 w-4 text-[var(--color-brand-gold)]" />
+            <Users className="size-4 text-[var(--color-brand-gold)]" />
             <h2 className="font-semibold text-[var(--color-text-primary)]">
               {t('n_asignados', { count: asignaciones.length })}
             </h2>
@@ -309,7 +309,7 @@ export default function ProfesorProgramaDetailPage({ params }: Props) {
               {asignaciones.map((asig) => (
                 <div key={asig.id} className="rounded-[var(--radius-md)] border border-[var(--color-border)] p-3">
                   <div className="flex items-center gap-2">
-                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--color-brand-gold)]/10 text-xs font-bold text-[var(--color-brand-gold)]">
+                    <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[var(--color-brand-gold)]/10 text-xs font-bold text-[var(--color-brand-gold)]">
                       {asig.alumno?.nombre?.[0]?.toUpperCase() ?? '?'}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -323,9 +323,9 @@ export default function ProfesorProgramaDetailPage({ params }: Props) {
                         <button
                           type="button"
                           onClick={() => setDesvinculandoAlumno(asig)}
-                          className="flex h-7 w-7 shrink-0 items-center justify-center rounded text-[var(--color-text-muted)] hover:bg-red-50 hover:text-[var(--color-error)] dark:hover:bg-red-950/20 transition-colors"
+                          className="flex size-7 shrink-0 items-center justify-center rounded text-[var(--color-text-muted)] hover:bg-red-50 hover:text-[var(--color-error)] dark:hover:bg-red-950/20 transition-colors"
                         >
-                          <UserMinus className="h-3.5 w-3.5" />
+                          <UserMinus className="size-3.5" />
                         </button>
                       </Tooltip>
                     )}
@@ -375,7 +375,7 @@ export default function ProfesorProgramaDetailPage({ params }: Props) {
           <ul className="flex flex-col gap-1.5">
             {asignaciones.map((asig) => (
               <li key={asig.id} className="flex items-center gap-2 text-sm">
-                <div className="h-1.5 w-1.5 rounded-full bg-[var(--color-brand-gold)]" />
+                <div className="size-1.5 rounded-full bg-[var(--color-brand-gold)]" />
                 <span className="font-medium text-[var(--color-text-primary)]">
                   {asig.alumno?.nombre} {asig.alumno?.apellido}
                 </span>

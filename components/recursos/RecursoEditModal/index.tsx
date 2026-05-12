@@ -119,8 +119,8 @@ export function RecursoEditModal({
             className="flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-brand-gold)] px-5 py-2.5 text-sm font-semibold text-white shadow-[var(--shadow-gold)] transition-all hover:opacity-90 disabled:opacity-50 min-h-[44px]"
           >
             {saving
-              ? <><Loader2 className="h-4 w-4 animate-spin" />{t('guardando')}</>
-              : <><Save className="h-4 w-4" />{t('guardar_cambios')}</>}
+              ? <><Loader2 className="size-4 animate-spin" />{t('guardando')}</>
+              : <><Save className="size-4" />{t('guardar_cambios')}</>}
           </button>
         </div>
       }
@@ -196,7 +196,7 @@ export function RecursoEditModal({
                 />
                 {loadingAcceso ? (
                   <div className="flex justify-center py-3">
-                    <Loader2 className="h-5 w-5 animate-spin text-[var(--color-brand-gold)]" />
+                    <Loader2 className="size-5 animate-spin text-[var(--color-brand-gold)]" />
                   </div>
                 ) : filteredAlumnos.length === 0 ? (
                   <p className="py-3 text-center text-xs text-[var(--color-text-muted)]">
@@ -216,12 +216,12 @@ export function RecursoEditModal({
                       )}
                     >
                       <span className={cn(
-                        'h-4 w-4 rounded border flex items-center justify-center flex-shrink-0',
+                        'size-4 rounded border flex items-center justify-center flex-shrink-0',
                         selectedIds.includes(a.id)
                           ? 'border-[var(--color-brand-gold)] bg-[var(--color-brand-gold)]'
                           : 'border-[var(--color-border)]',
                       )}>
-                        {selectedIds.includes(a.id) && <Check className="h-2.5 w-2.5 text-white" />}
+                        {selectedIds.includes(a.id) && <Check className="size-2.5 text-white" />}
                       </span>
                       {a.nombre} {a.apellido}
                     </button>

@@ -58,8 +58,8 @@ export function AlumnoCard({ alumno, onViewFicha, onGestionarAcceso, isOwn = tru
     >
       {isGraduado && (
         <div className="absolute -right-1 -top-1 animate-pulse">
-          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--color-brand-gold)] text-sm shadow-lg">
-            <GraduationCap className="h-4 w-4 text-white" />
+          <div className="flex size-7 items-center justify-center rounded-full bg-[var(--color-brand-gold)] text-sm shadow-lg">
+            <GraduationCap className="size-4 text-white" />
           </div>
         </div>
       )}
@@ -115,7 +115,7 @@ export function AlumnoCard({ alumno, onViewFicha, onGestionarAcceso, isOwn = tru
         {onGestionarAcceso && isOwn && (
           <Tooltip content={t('gestionar_acceso')} position="top">
             <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onGestionarAcceso(alumno); }}>
-              <KeyRound className="w-4 h-4" />
+              <KeyRound className="size-4" />
             </Button>
           </Tooltip>
         )}

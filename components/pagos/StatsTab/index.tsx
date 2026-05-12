@@ -102,7 +102,7 @@ export function StatsTab({ año, mes }: StatsTabProps) {
   // Pie chart data
   const pieData = useMemo(() => [
     { name: t('estado_pagado'), value: stats.pagados, color: 'var(--color-success)' },
-    { name: t('estado_parcial'), value: stats.parciales, color: '#e8a020' },
+    { name: t('estado_parcial'), value: stats.parciales, color: 'var(--color-partial)' },
     { name: t('estado_pendiente'), value: stats.pendientes, color: 'var(--color-text-muted)' },
   ].filter((d) => d.value > 0), [stats, t]);
 
@@ -174,7 +174,7 @@ export function StatsTab({ año, mes }: StatsTabProps) {
                   }}
                 />
                 <Bar dataKey="pagados" stackId="a" fill="var(--color-success)" radius={[0, 0, 0, 0]} name={t('estado_pagado')} />
-                <Bar dataKey="parciales" stackId="a" fill="#e8a020" radius={[0, 0, 0, 0]} name={t('estado_parcial')} />
+                <Bar dataKey="parciales" stackId="a" fill="var(--color-partial)" radius={[0, 0, 0, 0]} name={t('estado_parcial')} />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -221,7 +221,7 @@ export function StatsTab({ año, mes }: StatsTabProps) {
                 {pieData.map((d, i) => (
                   <div key={i} className="flex items-center justify-between text-xs">
                     <div className="flex items-center gap-1.5">
-                      <div className="h-2.5 w-2.5 rounded-full" style={{ background: d.color }} />
+                      <div className="size-2.5 rounded-full" style={{ background: d.color }} />
                       <span className="text-[var(--color-text-secondary)]">{d.name}</span>
                     </div>
                     <span className="font-medium text-[var(--color-text-primary)]">{d.value}</span>
@@ -254,7 +254,7 @@ function StatCard({
     : color === 'success'
     ? 'text-[var(--color-success)]'
     : color === 'partial'
-    ? 'text-orange-600 dark:text-orange-400'
+    ? 'text-[var(--color-partial)]'
     : 'text-[var(--color-text-primary)]';
 
   return (

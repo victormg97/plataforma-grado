@@ -42,7 +42,7 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col" style={{ fontFamily: "var(--font-body)" }} suppressHydrationWarning>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} themes={['light', 'dark', 'graduado']}>
           <QueryProvider>
             <NextIntlClientProvider messages={messages}>
               {children}

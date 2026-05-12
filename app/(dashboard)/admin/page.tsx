@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
 import { Users, GraduationCap, CalendarDays, Clock, Bell } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card } from '@/components/common/Card';
 import { StatusBadge } from '@/components/common/StatusBadge';
@@ -47,6 +48,7 @@ export default function AdminDashboardPage() {
   const t = useTranslations('dashboard.admin');
   const locale = useLocale();
   const dateFnsLocale = locale === 'en' ? enUS : es;
+  const router = useRouter();
 
   const { data: stats } = useQuery<Stats>({
     queryKey: ['admin-stats'],
@@ -57,9 +59,9 @@ export default function AdminDashboardPage() {
   const { data: notificaciones = [] } = useQuery<Notificacion[]>({
     queryKey: ['admin-notificaciones-dash'],
     queryFn: async () => {
-      const r = await fetch('/api/notificaciones?limit=10');
+      const r = await fetch('/api/notificaciones?page_size=10');
       const d = await r.json();
-      return Array.isArray(d) ? d : [];
+      return Array.isArray(d) ? d : (d.data ?? []);
     },
     staleTime: 30_000,
   });
@@ -71,7 +73,8 @@ export default function AdminDashboardPage() {
       const d = await r.json();
       return Array.isArray(d) ? d : [];
     },
-    staleTime: 60_000,
+    staleTime: 30_000,
+    refetchOnWindowFocus: true,
   });
 
   const statCards = useMemo(() => {
@@ -83,6 +86,12 @@ export default function AdminDashboardPage() {
       { label: t('pendientes'), value: stats.pendientes, icon: Clock, color: 'var(--color-error)' },
     ];
   }, [stats, t]);
+
+  // Sort classes by hora_inicio for consistent display
+  const clasesHoySorted = useMemo(
+    () => [...clasesHoy].sort((a, b) => a.hora_inicio.localeCompare(b.hora_inicio)),
+    [clasesHoy]
+  );
 
   return (
     <div>
@@ -97,10 +106,10 @@ export default function AdminDashboardPage() {
           <Card key={stat.label} padding="md">
             <div className="flex items-center gap-3">
               <div
-                className="flex h-10 w-10 items-center justify-center rounded-full"
+                className="flex size-10 items-center justify-center rounded-full"
                 style={{ backgroundColor: `color-mix(in srgb, ${stat.color} 12%, transparent)` }}
               >
-                <stat.icon className="h-5 w-5" style={{ color: stat.color }} />
+                <stat.icon className="size-5" style={{ color: stat.color }} />
               </div>
               <div>
                 <p className="text-2xl font-bold text-[var(--color-text-primary)]">{stat.value}</p>
@@ -112,18 +121,20 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Two-column: Actividad reciente + Clases hoy */}
-      <div className="mt-[var(--space-lg)] grid grid-cols-1 gap-[var(--space-md)] lg:grid-cols-2">
+      <div className="mt-[var(--space-md)] grid grid-cols-1 gap-[var(--space-md)] lg:grid-cols-2">
         {/* Actividad reciente */}
-        <Card padding="lg">
-          <h2 className="text-sm font-semibold uppercase text-[var(--color-text-muted)] mb-3 flex items-center gap-2">
-            <Bell className="h-4 w-4" /> {t('actividad_reciente')}
-          </h2>
+        <Card padding="none">
+          <div className="px-4 pt-3 pb-2">
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)] flex items-center gap-2">
+              <Bell className="size-3.5" /> {t('actividad_reciente')}
+            </h2>
+          </div>
           {notificaciones.length === 0 ? (
-            <p className="text-sm text-[var(--color-text-muted)] py-4 text-center">{t('sin_actividad')}</p>
+            <p className="text-sm text-[var(--color-text-muted)] py-6 text-center">{t('sin_actividad')}</p>
           ) : (
-            <div className="divide-y divide-[var(--color-border)] max-h-72 overflow-y-auto">
+            <div className="border-t border-[var(--color-border)] divide-y divide-[var(--color-border)] max-h-64 overflow-y-auto">
               {notificaciones.map((n) => (
-                <div key={n.id} className={`flex items-start gap-3 p-3 ${!n.leida ? 'bg-[var(--color-brand-gold-muted)]' : ''}`}>
+                <div key={n.id} className={`flex items-start gap-2.5 px-4 py-2.5 ${!n.leida ? 'bg-[var(--color-brand-gold-muted)]' : ''}`}>
                   <div className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${!n.leida ? 'bg-[var(--color-brand-gold)]' : 'bg-[var(--color-border-strong)]'}`} />
                   <div className="min-w-0 flex-1">
                     <p className="text-sm text-[var(--color-text-primary)] leading-snug">{n.mensaje}</p>
@@ -139,11 +150,11 @@ export default function AdminDashboardPage() {
                         </span>
                       </p>
                     )}
-                    <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                    <div className="mt-1 flex flex-wrap items-center gap-1.5">
                       {n.horario && (
                         <>
                           <span className="inline-flex items-center gap-1 rounded-full border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-2 py-0.5 text-[10px] text-[var(--color-text-muted)]">
-                            <CalendarDays className="h-2.5 w-2.5" />
+                            <CalendarDays className="size-2.5" />
                             {format(new Date(n.horario.fecha + 'T12:00:00'), "d 'de' MMM", { locale: dateFnsLocale })}
                           </span>
                           <span className="inline-flex items-center gap-1 rounded-full border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-2 py-0.5 text-[10px] text-[var(--color-text-muted)]">
@@ -164,22 +175,29 @@ export default function AdminDashboardPage() {
         </Card>
 
         {/* Clases hoy */}
-        <Card padding="lg">
-          <h2 className="text-sm font-semibold uppercase text-[var(--color-text-muted)] mb-3 flex items-center gap-2">
-            <CalendarDays className="h-4 w-4" /> {t('clases_hoy')}
-          </h2>
-          {clasesHoy.length === 0 ? (
-            <p className="text-sm text-[var(--color-text-muted)] py-4 text-center">{t('sin_clases_hoy')}</p>
+        <Card padding="none">
+          <div className="px-4 pt-3 pb-2">
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)] flex items-center gap-2">
+              <CalendarDays className="size-3.5" /> {t('clases_hoy')}
+            </h2>
+          </div>
+          {clasesHoySorted.length === 0 ? (
+            <p className="text-sm text-[var(--color-text-muted)] py-6 text-center">{t('sin_clases_hoy')}</p>
           ) : (
-            <div className="divide-y divide-[var(--color-border)] max-h-72 overflow-y-auto">
-              {clasesHoy.map((c) => (
-                <div key={c.id} className="flex items-center justify-between gap-3 p-3">
+            <div className="border-t border-[var(--color-border)] divide-y divide-[var(--color-border)] max-h-64 overflow-y-auto">
+              {clasesHoySorted.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => router.push(`/admin/horarios?clase=${c.id}`)}
+                  className="flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left transition-colors hover:bg-[var(--color-bg-secondary)]"
+                >
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium text-[var(--color-text-primary)] truncate">{c.titulo}</p>
-                    <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                    <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
                       <span className="inline-flex items-center gap-1 rounded-full border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-2 py-0.5 text-[10px] text-[var(--color-text-muted)]">
-                        <Clock className="h-2.5 w-2.5" />
-                        {c.hora_inicio} – {c.hora_fin}
+                        <Clock className="size-2.5" />
+                        {c.hora_inicio.slice(0, 5)} – {c.hora_fin.slice(0, 5)}
                       </span>
                       {c.alumno && (
                         <span className="text-xs text-[var(--color-text-muted)] truncate">
@@ -194,7 +212,7 @@ export default function AdminDashboardPage() {
                     )}
                   </div>
                   <StatusBadge status={(c.asistencia?.[0]?.estado as 'pendiente') || 'pendiente'} />
-                </div>
+                </button>
               ))}
             </div>
           )}

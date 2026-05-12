@@ -42,10 +42,10 @@ export function Navbar() {
       <div className="flex items-center gap-3">
         <button
           onClick={toggleSidebar}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-[var(--radius-md)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] lg:hidden"
+          className="inline-flex size-9 items-center justify-center rounded-[var(--radius-md)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] lg:hidden"
           aria-label="Toggle sidebar"
         >
-          <Menu className="h-5 w-5" />
+          <Menu className="size-5" />
         </button>
         <span
           className="hidden text-lg font-bold text-[var(--color-text-primary)] sm:block"
@@ -83,12 +83,12 @@ export function Navbar() {
               </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => setPerfilOpen(true)}>
-                <UserCog className="mr-2 h-4 w-4" />
+                <UserCog className="mr-2 size-4" />
                 {t('editar_perfil')}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout} className="text-[var(--color-error)]">
-                <LogOut className="mr-2 h-4 w-4" />
+                <LogOut className="mr-2 size-4" />
                 {ta('logout')}
               </DropdownMenuItem>
             </DropdownMenuContent>

@@ -19,7 +19,7 @@ export default async function ProfesorAlumnoFichaPage({ params, searchParams }: 
     <Suspense
       fallback={
         <div className="flex min-h-[60vh] items-center justify-center">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-[var(--color-brand-gold)] border-t-transparent" />
+          <div className="size-10 animate-spin rounded-full border-4 border-[var(--color-brand-gold)] border-t-transparent" />
         </div>
       }
     >

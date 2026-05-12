@@ -225,6 +225,7 @@ export type Database = {
           },
         ]
       }
+
       horarios: {
         Row: {
           activo: boolean
@@ -338,24 +339,33 @@ export type Database = {
         Row: {
           code: string
           created_at: string | null
+          email: string | null
           expires_at: string
           id: string
+          invitation_type: string | null
+          temp_password: string | null
           used: boolean | null
           user_id: string | null
         }
         Insert: {
           code: string
           created_at?: string | null
+          email?: string | null
           expires_at: string
           id?: string
+          invitation_type?: string | null
+          temp_password?: string | null
           used?: boolean | null
           user_id?: string | null
         }
         Update: {
           code?: string
           created_at?: string | null
+          email?: string | null
           expires_at?: string
           id?: string
+          invitation_type?: string | null
+          temp_password?: string | null
           used?: boolean | null
           user_id?: string | null
         }
@@ -455,6 +465,7 @@ export type Database = {
           leida: boolean
           mensaje: string
           programa_id: string | null
+          solicitud_id: string | null
           tipo: Database["public"]["Enums"]["tipo_notificacion"]
         }
         Insert: {
@@ -466,6 +477,7 @@ export type Database = {
           leida?: boolean
           mensaje: string
           programa_id?: string | null
+          solicitud_id?: string | null
           tipo: Database["public"]["Enums"]["tipo_notificacion"]
         }
         Update: {
@@ -477,6 +489,7 @@ export type Database = {
           leida?: boolean
           mensaje?: string
           programa_id?: string | null
+          solicitud_id?: string | null
           tipo?: Database["public"]["Enums"]["tipo_notificacion"]
         }
         Relationships: [
@@ -508,8 +521,16 @@ export type Database = {
             referencedRelation: "programas_clases"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "notificaciones_solicitud_id_fkey"
+            columns: ["solicitud_id"]
+            isOneToOne: false
+            referencedRelation: "solicitudes_cambio_horario"
+            referencedColumns: ["id"]
+          },
         ]
       }
+
       pagos: {
         Row: {
           alumno_id: string
@@ -772,42 +793,78 @@ export type Database = {
           },
         ]
       }
-      recursos_compartidos: {
+      recursos_acceso: {
         Row: {
-          id: string
-          titulo: string
-          descripcion: string | null
-          tipo: string
-          url: string | null
-          storage_path: string | null
-          subido_por: string
-          para_todos: boolean
+          alumno_id: string
           created_at: string
-          updated_at: string
+          id: string
+          recurso_id: string
         }
         Insert: {
-          id?: string
-          titulo: string
-          descripcion?: string | null
-          tipo: string
-          url?: string | null
-          storage_path?: string | null
-          subido_por: string
-          para_todos?: boolean
+          alumno_id: string
           created_at?: string
-          updated_at?: string
+          id?: string
+          recurso_id: string
         }
         Update: {
+          alumno_id?: string
+          created_at?: string
           id?: string
-          titulo?: string
+          recurso_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recursos_acceso_alumno_id_fkey"
+            columns: ["alumno_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recursos_acceso_recurso_id_fkey"
+            columns: ["recurso_id"]
+            isOneToOne: false
+            referencedRelation: "recursos_compartidos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recursos_compartidos: {
+        Row: {
+          created_at: string
+          descripcion: string | null
+          id: string
+          para_todos: boolean
+          storage_path: string | null
+          subido_por: string
+          tipo: string
+          titulo: string
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          created_at?: string
           descripcion?: string | null
-          tipo?: string
+          id?: string
+          para_todos?: boolean
+          storage_path?: string | null
+          subido_por: string
+          tipo: string
+          titulo: string
+          updated_at?: string
           url?: string | null
+        }
+        Update: {
+          created_at?: string
+          descripcion?: string | null
+          id?: string
+          para_todos?: boolean
           storage_path?: string | null
           subido_por?: string
-          para_todos?: boolean
-          created_at?: string
+          tipo?: string
+          titulo?: string
           updated_at?: string
+          url?: string | null
         }
         Relationships: [
           {
@@ -819,36 +876,77 @@ export type Database = {
           },
         ]
       }
-      recursos_acceso: {
+      solicitudes_cambio_horario: {
         Row: {
-          id: string
-          recurso_id: string
           alumno_id: string
           created_at: string
+          estado: string
+          fecha_propuesta: string
+          hora_fin_propuesta: string
+          hora_inicio_propuesta: string
+          horario_original_id: string
+          id: string
+          motivo_rechazo: string | null
+          nota_alumno: string | null
+          nuevo_horario_id: string | null
+          profesor_id: string
+          updated_at: string
         }
         Insert: {
-          id?: string
-          recurso_id: string
           alumno_id: string
           created_at?: string
+          estado?: string
+          fecha_propuesta: string
+          hora_fin_propuesta: string
+          hora_inicio_propuesta: string
+          horario_original_id: string
+          id?: string
+          motivo_rechazo?: string | null
+          nota_alumno?: string | null
+          nuevo_horario_id?: string | null
+          profesor_id: string
+          updated_at?: string
         }
         Update: {
-          id?: string
-          recurso_id?: string
           alumno_id?: string
           created_at?: string
+          estado?: string
+          fecha_propuesta?: string
+          hora_fin_propuesta?: string
+          hora_inicio_propuesta?: string
+          horario_original_id?: string
+          id?: string
+          motivo_rechazo?: string | null
+          nota_alumno?: string | null
+          nuevo_horario_id?: string | null
+          profesor_id?: string
+          updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "recursos_acceso_recurso_id_fkey"
-            columns: ["recurso_id"]
+            foreignKeyName: "solicitudes_cambio_horario_alumno_id_fkey"
+            columns: ["alumno_id"]
             isOneToOne: false
-            referencedRelation: "recursos_compartidos"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "recursos_acceso_alumno_id_fkey"
-            columns: ["alumno_id"]
+            foreignKeyName: "solicitudes_cambio_horario_horario_original_id_fkey"
+            columns: ["horario_original_id"]
+            isOneToOne: false
+            referencedRelation: "horarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "solicitudes_cambio_horario_nuevo_horario_id_fkey"
+            columns: ["nuevo_horario_id"]
+            isOneToOne: false
+            referencedRelation: "horarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "solicitudes_cambio_horario_profesor_id_fkey"
+            columns: ["profesor_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -861,7 +959,12 @@ export type Database = {
     }
     Functions: {
       admin_pagar_mes_columna: {
-        Args: { p_anio: number; p_mes: number; p_estado: string; p_monto?: number | null }
+        Args: {
+          p_anio: number
+          p_estado: string
+          p_mes: number
+          p_monto?: number
+        }
         Returns: undefined
       }
       alumno_tiene_asignacion_activa: {
@@ -876,35 +979,40 @@ export type Database = {
       get_admin_stats: { Args: never; Returns: Json }
       get_alumno_dashboard: { Args: { p_alumno_id: string }; Returns: Json }
       get_alumno_ficha:
-      | { Args: { p_alumno_id: string; p_limit?: number }; Returns: Json }
-      | {
-        Args: { p_alumno_id: string; p_autor_id?: string; p_limit?: number }
-        Returns: Json
-      }
+        | { Args: { p_alumno_id: string; p_limit?: number }; Returns: Json }
+        | {
+            Args: { p_alumno_id: string; p_autor_id?: string; p_limit?: number }
+            Returns: Json
+          }
+      get_is_prueba_locked: { Args: { p_prueba_id: string }; Returns: boolean }
       get_notas_clase: { Args: { p_horario_id: string }; Returns: Json }
       get_profesor_dashboard: { Args: { p_profesor_id: string }; Returns: Json }
-      get_recursos_for_user: { Args: Record<PropertyKey, never>; Returns: Json }
+      get_recursos_for_user: { Args: never; Returns: Json }
       get_server_time: { Args: never; Returns: string }
       get_user_rol: {
         Args: never
         Returns: Database["public"]["Enums"]["user_rol"]
       }
+      is_own_recurso: { Args: { p_recurso_id: string }; Returns: boolean }
     }
     Enums: {
       estado_asistencia:
-      | "pendiente"
-      | "confirmado"
-      | "cancelado"
-      | "cambiado"
-      | "no_asistio"
+        | "pendiente"
+        | "confirmado"
+        | "cancelado"
+        | "cambiado"
+        | "no_asistio"
       tipo_notificacion:
-      | "confirmacion"
-      | "cancelacion"
-      | "cambio_horario"
-      | "nueva_clase"
-      | "clase_modificada"
-      | "clase_cancelada"
-      | "programa_asignado"
+        | "confirmacion"
+        | "cancelacion"
+        | "cambio_horario"
+        | "nueva_clase"
+        | "clase_modificada"
+        | "clase_cancelada"
+        | "programa_asignado"
+        | "solicitud_cambio_horario"
+        | "cambio_horario_aceptado"
+        | "cambio_horario_rechazado"
       user_rol: "admin" | "profesor" | "alumno"
     }
     CompositeTypes: {
@@ -919,116 +1027,116 @@ type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-  | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-  ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-    DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-  : never = never,
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-    DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
-  ? R
-  : never
+    ? R
+    : never
   : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-    DefaultSchema["Views"])
-  ? (DefaultSchema["Tables"] &
-    DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-      Row: infer R
-    }
-  ? R
-  : never
-  : never
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-  | keyof DefaultSchema["Tables"]
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-  ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-  : never = never,
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-    Insert: infer I
-  }
-  ? I
-  : never
+      Insert: infer I
+    }
+    ? I
+    : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-    Insert: infer I
-  }
-  ? I
-  : never
-  : never
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-  | keyof DefaultSchema["Tables"]
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-  ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-  : never = never,
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-    Update: infer U
-  }
-  ? U
-  : never
+      Update: infer U
+    }
+    ? U
+    : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-    Update: infer U
-  }
-  ? U
-  : never
-  : never
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-  | keyof DefaultSchema["Enums"]
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-  ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-  : never = never,
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-  ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-  : never
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-  | keyof DefaultSchema["CompositeTypes"]
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-  ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-  : never = never,
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-  ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-  : never
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
 
 export const Constants = {
   public: {
@@ -1048,65 +1156,80 @@ export const Constants = {
         "clase_modificada",
         "clase_cancelada",
         "programa_asignado",
+        "solicitud_cambio_horario",
+        "cambio_horario_aceptado",
+        "cambio_horario_rechazado",
       ],
       user_rol: ["admin", "profesor", "alumno"],
     },
   },
 } as const
 
-export type Profile = Tables<'profiles'>
 
-// ─── Enum aliases ─────────────────────────────────────────────────────────────
-export type EstadoAsistencia = Enums<'estado_asistencia'>;
-export type TipoNotificacion = Enums<'tipo_notificacion'>;
-export type UserRol = Enums<'user_rol'>;
+// ─── Custom type aliases ──────────────────────────────────────────────────────
 
-// ─── String-based state types ─────────────────────────────────────────────────
-export type EstadoPrograma = 'activo' | 'eliminado';
-export type EstadoPrueba = 'pendiente' | 'realizada' | 'calificada';
+export type TipoNotificacion = Database['public']['Enums']['tipo_notificacion'];
+export type UserRol = Database['public']['Enums']['user_rol'];
+export type EstadoAsistencia = Database['public']['Enums']['estado_asistencia'];
 
-// ─── Simple table row aliases ─────────────────────────────────────────────────
+export type Profile = Tables<'profiles'>;
 export type AlumnoExtra = Tables<'alumnos_extra'>;
 export type Horario = Tables<'horarios'>;
-export type ClasePrograma = Omit<Tables<'clases_programa'>, 'tipo'> & {
-  tipo: 'materia' | 'prueba';
-};
 export type Prueba = Tables<'pruebas'>;
+export type ProgramaClase = Tables<'programas_clases'>;
 
-// ─── Shared component types ──────────────────────────────────────────────────
-export type ClaseItem = Pick<ClasePrograma, 'id' | 'nombre' | 'tipo' | 'orden' | 'descripcion' | 'duracion_min'> & {
+export type EstadoPrograma = 'activo' | 'eliminado';
+export type EstadoPrueba = 'pendiente' | 'calificada' | 'en_curso';
+
+export type ClaseItem = {
+  id: string;
   tempId?: string;
+  nombre: string;
+  tipo: 'materia' | 'prueba';
+  orden: number;
+  duracion_min?: number | null;
+  descripcion?: string | null;
 };
 
-// ─── Helper narrow types (internal) ──────────────────────────────────────────
-type ProfesorBasico = { id: string; nombre: string; apellido: string; avatar_url: string | null };
-type CreadoPorBasico = { id: string; nombre: string; apellido: string };
-
-// ─── Joined / enriched types ─────────────────────────────────────────────────
-export type AsignacionConAlumno = Tables<'asignaciones_programa'> & {
-  alumno: { id: string; nombre: string; apellido: string; avatar_url: string | null; email: string };
+export type AsignacionConAlumno = {
+  id: string;
+  alumno_id: string;
+  programa_id: string;
+  profesor_id: string | null;
+  estado: string;
+  created_at: string;
+  updated_at: string;
+  alumno?: {
+    id: string;
+    nombre: string;
+    apellido: string;
+    email: string;
+    avatar_url?: string | null;
+  } | null;
 };
 
-export type NotaClaseConAutor = Tables<'notas_clase'> & {
-  autor: { id: string; nombre: string; apellido: string; avatar_url: string | null; rol: UserRol };
-};
-
-export type ProgramaClaseConConteo = Tables<'programas_clases'> & {
-  profesor: ProfesorBasico | null;
-  creado_por: CreadoPorBasico | null;
-  profesores_asignados: ProfesorBasico[];
+export type ProgramaClaseConConteo = ProgramaClase & {
   total_clases: number;
   total_pruebas: number;
   total_asignados: number;
+  visibilidad: string;
+  profesores_asignados: Array<{ id: string; nombre: string; apellido: string; avatar_url?: string | null }>;
+  creado_por?: { id: string; nombre: string; apellido: string } | null;
+  profesor?: { id: string; nombre: string; apellido: string; avatar_url?: string | null } | null;
 };
 
-export type ProgramaClase = Tables<'programas_clases'> & {
-  profesor: ProfesorBasico | null;
-  creado_por: CreadoPorBasico | null;
-  profesores_asignados: ProfesorBasico[];
-  clases_programa: ClasePrograma[];
-  total_clases: number;
-  total_pruebas: number;
-  total_asignados: number;
-  asignaciones?: AsignacionConAlumno[];
+export type NotaClaseConAutor = {
+  id: string;
+  horario_id: string;
+  contenido: string;
+  autor_id: string;
+  created_at: string;
+  updated_at: string;
+  autor: {
+    id: string;
+    nombre: string;
+    apellido: string;
+    avatar_url: string | null;
+    rol: UserRol;
+  };
 };

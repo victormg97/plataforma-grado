@@ -98,7 +98,7 @@ export default function AlumnoProgramaDetailPage({ params }: { params: Promise<{
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--color-brand-gold)] border-t-transparent" />
+        <div className="size-8 animate-spin rounded-full border-2 border-[var(--color-brand-gold)] border-t-transparent" />
       </div>
     );
   }
@@ -106,7 +106,7 @@ export default function AlumnoProgramaDetailPage({ params }: { params: Promise<{
   if (error || !programa) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
-        <XCircle className="mb-4 h-12 w-12 text-[var(--color-error)]" />
+        <XCircle className="mb-4 size-12 text-[var(--color-error)]" />
         <h2 className="mb-2 text-xl font-semibold text-[var(--color-text-primary)]">
           {t('mensajes.error_cargar_titular')}
         </h2>
@@ -155,7 +155,7 @@ export default function AlumnoProgramaDetailPage({ params }: { params: Promise<{
           onClick={handleBack}
           className="flex items-center gap-1.5 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="size-4" />
           {t('volver')}
         </button>
       </div>
@@ -172,8 +172,8 @@ export default function AlumnoProgramaDetailPage({ params }: { params: Promise<{
         return (
           <div className="mb-6 rounded-[var(--radius-lg)] border border-green-500/20 bg-green-500/10 p-4 dark:border-green-400/20 dark:bg-green-400/10">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-500/20 text-green-600 dark:bg-green-400/20 dark:text-green-400">
-                <Award className="h-5 w-5" />
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-green-500/20 text-green-600 dark:bg-green-400/20 dark:text-green-400">
+                <Award className="size-5" />
               </div>
               <div>
                 <h3 className="text-sm font-semibold text-green-800 dark:text-green-300">
@@ -195,7 +195,7 @@ export default function AlumnoProgramaDetailPage({ params }: { params: Promise<{
               {t('alumno_vista.profesor_asignado')}
             </p>
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--color-brand-gold)] border border-[var(--color-brand-gold-muted)] text-[var(--color-brand-black)] font-bold shadow-sm">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[var(--color-brand-gold)] border border-[var(--color-brand-gold-muted)] text-[var(--color-brand-black)] font-bold shadow-sm">
                 {programa.profesor.nombre?.[0]?.toUpperCase() ?? '?'}
               </div>
               <p className="text-lg font-medium text-[var(--color-text-primary)]">
@@ -205,7 +205,7 @@ export default function AlumnoProgramaDetailPage({ params }: { params: Promise<{
           </div>
           <div className="mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-[var(--color-border)]">
             <p className="text-xs text-[var(--color-text-muted)] flex items-center gap-1.5 line-clamp-1">
-               <Calendar className="h-3.5 w-3.5" />
+               <Calendar className="size-3.5" />
                {t('alumno_vista.asignado_el', { fecha: format(new Date(programa.asignado_el), "d 'de' MMMM, yyyy", { locale: dateFnsLocale }) })}
             </p>
           </div>
@@ -239,24 +239,24 @@ export default function AlumnoProgramaDetailPage({ params }: { params: Promise<{
                     <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
                       {clase.tipo === 'prueba' ? (
                         <span className="inline-flex items-center gap-1 rounded bg-purple-100 px-1.5 py-0.5 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 font-medium">
-                          <FileSignature className="h-3 w-3" />
+                          <FileSignature className="size-3" />
                           {t('alumno_vista.examen')}
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 rounded bg-[var(--color-bg-secondary)] px-1.5 py-0.5 text-[var(--color-text-secondary)] font-medium">
-                          <BookOpen className="h-3 w-3" />
+                          <BookOpen className="size-3" />
                           {t('alumno_vista.materia')}
                         </span>
                       )}
                       {clase.duracion_min && (
                         <span className="inline-flex items-center gap-1 text-[var(--color-text-muted)]">
-                          <Clock className="h-3 w-3" />
+                          <Clock className="size-3" />
                           {clase.duracion_min} min
                         </span>
                       )}
                       {clase.horario?.asistencia_estado === 'pendiente' && (
                         <span className="inline-flex items-center gap-1 rounded border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-amber-600 font-medium dark:text-amber-400">
-                          <AlertCircle className="h-3 w-3" />
+                          <AlertCircle className="size-3" />
                           {t('alumno_vista.requiere_confirmacion')}
                         </span>
                       )}
@@ -269,7 +269,7 @@ export default function AlumnoProgramaDetailPage({ params }: { params: Promise<{
                     {clase.horario ? (
                       <div className="flex items-center gap-2">
                          <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${style.bg} ${style.text}`}>
-                            <StatusIcon className="h-3.5 w-3.5" />
+                            <StatusIcon className="size-3.5" />
                             {format(new Date(clase.horario.fecha + 'T12:00:00'), "E d MMM", { locale: dateFnsLocale })}
                             {' • '}
                             {clase.horario.hora_inicio.slice(0, 5)}

@@ -103,7 +103,15 @@ export function useAsistencia(alumnoId?: string) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ estado: 'confirmado' }),
     });
-    if (!res.ok) throw new Error('Error al confirmar');
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      const message = body?.error || 'Error al confirmar';
+      // Invalidate on 403 to refresh UI state (class may have ended while page was open)
+      if (res.status === 403) {
+        queryClient.invalidateQueries({ queryKey: ['asistencia', id] });
+      }
+      throw new Error(message);
+    }
     queryClient.invalidateQueries({ queryKey: ['asistencia', id] });
   }, [id, queryClient]);
 
@@ -113,7 +121,14 @@ export function useAsistencia(alumnoId?: string) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ estado: 'cancelado', nota_alumno: nota ?? null }),
     });
-    if (!res.ok) throw new Error('Error al cancelar');
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      const message = body?.error || 'Error al cancelar';
+      if (res.status === 403) {
+        queryClient.invalidateQueries({ queryKey: ['asistencia', id] });
+      }
+      throw new Error(message);
+    }
     queryClient.invalidateQueries({ queryKey: ['asistencia', id] });
   }, [id, queryClient]);
 
@@ -127,7 +142,14 @@ export function useAsistencia(alumnoId?: string) {
         nota_alumno: nota ?? null,
       }),
     });
-    if (!res.ok) throw new Error('Error al solicitar cambio');
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      const message = body?.error || 'Error al solicitar cambio';
+      if (res.status === 403) {
+        queryClient.invalidateQueries({ queryKey: ['asistencia', id] });
+      }
+      throw new Error(message);
+    }
     queryClient.invalidateQueries({ queryKey: ['asistencia', id] });
   }, [id, queryClient]);
 

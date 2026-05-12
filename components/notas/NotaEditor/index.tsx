@@ -8,16 +8,9 @@ import Placeholder from '@tiptap/extension-placeholder';
 import Link from '@tiptap/extension-link';
 import TextAlign from '@tiptap/extension-text-align';
 import { Table, TableRow, TableCell, TableHeader } from '@tiptap/extension-table';
-import {
-  Bold, Italic, Strikethrough, List, ListOrdered,
-  Link as LinkIcon, Undo, Redo, Code,
-  AlignLeft, AlignCenter, AlignRight, AlignJustify,
-  IndentIncrease, IndentDecrease,
-  Quote, Table as TableIcon,
-  ChevronDown,
-} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { LinkModal } from '@/components/notas/LinkModal';
+import { EditorToolbar } from './components/EditorToolbar';
 
 // ─── Extend Commands type for indent/outdent ─────────────────────────────────
 declare module '@tiptap/core' {
@@ -89,7 +82,8 @@ const IndentExtension = Extension.create({
     };
   },
 });
-// ─────────────────────────────────────────────────────────────────────────────
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 type NotaEditorProps = {
   contenido?: string;
@@ -100,41 +94,7 @@ type NotaEditorProps = {
   submitLabel?: string;
 };
 
-function ToolbarButton({
-  onClick,
-  active,
-  disabled,
-  children,
-  title,
-}: {
-  onClick: () => void;
-  active?: boolean;
-  disabled?: boolean;
-  children: React.ReactNode;
-  title: string;
-}) {
-  return (
-    <button
-      type="button"
-      onMouseDown={(e) => {
-        e.preventDefault();
-        onClick();
-      }}
-      disabled={disabled}
-      title={title}
-      className={`flex items-center justify-center h-8 w-8 rounded-[var(--radius-sm)] transition-colors
-        ${active
-          ? 'bg-[var(--color-brand-gold)] text-white'
-          : 'text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]'
-        }
-        disabled:opacity-40 disabled:cursor-not-allowed`}
-    >
-      {children}
-    </button>
-  );
-}
-
-const Divider = () => <div className="h-5 w-px bg-[var(--color-border)] mx-1 shrink-0" />;
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export function NotaEditor({ contenido, placeholder, onSubmit, onCancel, loading, submitLabel }: NotaEditorProps) {
   const t = useTranslations('notas');
@@ -221,200 +181,10 @@ export function NotaEditor({ contenido, placeholder, onSubmit, onCancel, loading
 
   if (!editor) return null;
 
-  // Heading dropdown value
-  const headingValue = editor.isActive('heading', { level: 1 })
-    ? '1'
-    : editor.isActive('heading', { level: 2 })
-    ? '2'
-    : editor.isActive('heading', { level: 3 })
-    ? '3'
-    : '0';
-
   return (
     <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-primary)] overflow-hidden">
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-0.5 border-b border-[var(--color-border)] px-2 py-1.5 bg-[var(--color-bg-secondary)]">
-
-        {/* ── Heading dropdown ── */}
-        <div className="relative flex items-center">
-          <select
-            value={headingValue}
-            onMouseDown={(e) => e.stopPropagation()}
-            onChange={(e) => {
-              editor.chain().focus();
-              const val = e.target.value;
-              if (val === '0') {
-                editor.chain().focus().setParagraph().run();
-              } else {
-                editor
-                  .chain()
-                  .focus()
-                  .toggleHeading({ level: parseInt(val) as 1 | 2 | 3 })
-                  .run();
-              }
-            }}
-            className="h-8 appearance-none rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-bg-primary)] pl-2 pr-6 text-xs text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-gold)]/30 cursor-pointer hover:bg-[var(--color-bg-secondary)] transition-colors"
-          >
-            <option value="0">{t('parrafo')}</option>
-            <option value="1">{t('titulo_1')}</option>
-            <option value="2">{t('titulo_2')}</option>
-            <option value="3">{t('titulo_3')}</option>
-          </select>
-          <ChevronDown className="pointer-events-none absolute right-1.5 h-3 w-3 text-[var(--color-text-muted)]" />
-        </div>
-
-        <Divider />
-
-        {/* ── Formatting ── */}
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleBold().run()}
-          active={editor.isActive('bold')}
-          title={t('negrita')}
-        >
-          <Bold className="h-4 w-4" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-          active={editor.isActive('italic')}
-          title={t('cursiva')}
-        >
-          <Italic className="h-4 w-4" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleStrike().run()}
-          active={editor.isActive('strike')}
-          title={t('tachado')}
-        >
-          <Strikethrough className="h-4 w-4" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleCode().run()}
-          active={editor.isActive('code')}
-          title={t('codigo')}
-        >
-          <Code className="h-4 w-4" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleBlockquote().run()}
-          active={editor.isActive('blockquote')}
-          title={t('cita')}
-        >
-          <Quote className="h-4 w-4" />
-        </ToolbarButton>
-
-        <Divider />
-
-        {/* ── Alignment ── */}
-        <ToolbarButton
-          onClick={() => editor.chain().focus().setTextAlign('left').run()}
-          active={editor.isActive({ textAlign: 'left' })}
-          title={t('alinear_izquierda')}
-        >
-          <AlignLeft className="h-4 w-4" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().setTextAlign('center').run()}
-          active={editor.isActive({ textAlign: 'center' })}
-          title={t('alinear_centro')}
-        >
-          <AlignCenter className="h-4 w-4" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().setTextAlign('right').run()}
-          active={editor.isActive({ textAlign: 'right' })}
-          title={t('alinear_derecha')}
-        >
-          <AlignRight className="h-4 w-4" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().setTextAlign('justify').run()}
-          active={editor.isActive({ textAlign: 'justify' })}
-          title={t('alinear_justificar')}
-        >
-          <AlignJustify className="h-4 w-4" />
-        </ToolbarButton>
-
-        <Divider />
-
-        {/* ── Indent ── */}
-        <ToolbarButton
-          onClick={() => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (editor!.chain().focus() as any).indent().run();
-          }}
-          title={t('sangria_aumentar')}
-        >
-          <IndentIncrease className="h-4 w-4" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (editor!.chain().focus() as any).outdent().run();
-          }}
-          title={t('sangria_reducir')}
-        >
-          <IndentDecrease className="h-4 w-4" />
-        </ToolbarButton>
-
-        <Divider />
-
-        {/* ── Lists ── */}
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
-          active={editor.isActive('bulletList')}
-          title={t('lista')}
-        >
-          <List className="h-4 w-4" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          active={editor.isActive('orderedList')}
-          title={t('lista_numerada')}
-        >
-          <ListOrdered className="h-4 w-4" />
-        </ToolbarButton>
-
-        <Divider />
-
-        {/* ── Insert ── */}
-        <ToolbarButton
-          onClick={openLinkModal}
-          active={editor.isActive('link')}
-          title={t('enlace')}
-        >
-          <LinkIcon className="h-4 w-4" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() =>
-            editor
-              .chain()
-              .focus()
-              .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
-              .run()
-          }
-          title={t('insertar_tabla')}
-        >
-          <TableIcon className="h-4 w-4" />
-        </ToolbarButton>
-
-        <Divider />
-
-        {/* ── History ── */}
-        <ToolbarButton
-          onClick={() => editor.chain().focus().undo().run()}
-          disabled={!editor.can().undo()}
-          title={t('deshacer')}
-        >
-          <Undo className="h-4 w-4" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().redo().run()}
-          disabled={!editor.can().redo()}
-          title={t('rehacer')}
-        >
-          <Redo className="h-4 w-4" />
-        </ToolbarButton>
-      </div>
+      <EditorToolbar editor={editor} onOpenLinkModal={openLinkModal} />
 
       {/* Editor */}
       <EditorContent editor={editor} />
@@ -437,7 +207,7 @@ export function NotaEditor({ contenido, placeholder, onSubmit, onCancel, loading
           className="flex items-center gap-1.5 rounded-[var(--radius-md)] bg-[var(--color-brand-gold)] px-4 py-1.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed min-h-[36px]"
         >
           {loading ? (
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+            <div className="size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
           ) : null}
           {submitLabel ?? t('guardar_nota')}
         </button>

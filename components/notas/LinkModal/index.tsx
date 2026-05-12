@@ -48,6 +48,7 @@ export function LinkModal({ onClose, onConfirm, initialUrl = '', initialText = '
       {/* Backdrop */}
       <div
         className="fixed inset-0 z-50 bg-black/20 backdrop-blur-[2px] animate-in fade-in-0 duration-100"
+        role="presentation"
         onClick={onClose}
       />
       {/* Modal */}
@@ -59,8 +60,8 @@ export function LinkModal({ onClose, onConfirm, initialUrl = '', initialText = '
           {/* Header */}
           <div className="flex items-center justify-between px-4 pt-4 pb-2">
             <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--color-brand-gold-muted)]">
-                <Link className="h-4 w-4 text-[var(--color-brand-gold)]" />
+              <div className="flex size-8 items-center justify-center rounded-lg bg-[var(--color-brand-gold-muted)]">
+                <Link className="size-4 text-[var(--color-brand-gold)]" />
               </div>
               <h3 className="text-base font-medium font-[family-name:var(--font-display)] text-[var(--color-text-primary)]">
                 {t('insertar_enlace')}
@@ -69,9 +70,9 @@ export function LinkModal({ onClose, onConfirm, initialUrl = '', initialText = '
             <button
               type="button"
               onClick={onClose}
-              className="flex h-7 w-7 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]"
+              className="flex size-7 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]"
             >
-              <X className="h-4 w-4" />
+              <X className="size-4" />
             </button>
           </div>
 

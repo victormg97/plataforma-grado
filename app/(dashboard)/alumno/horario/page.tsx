@@ -15,7 +15,7 @@ import { StatusBadge } from '@/components/common/StatusBadge';
 import { NotasIndicator } from '@/components/notas/NotasIndicator';
 import { ConfirmacionForm } from '@/components/horarios/ConfirmacionForm';
 import { CancelacionForm } from '@/components/horarios/CancelacionForm';
-import { CambioHorarioForm } from '@/components/horarios/CambioHorarioForm';
+import { SolicitudCambioForm } from '@/components/horarios/SolicitudCambioForm';
 import { NotasSection } from '@/components/notas/NotasSection';
 import { Tooltip } from '@/components/common/Tooltip';
 import {
@@ -28,11 +28,13 @@ import { useClaseTimeStatus } from '@/lib/hooks/useServerTime';
 import { useQueryParam } from '@/lib/hooks/useQueryParam';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { usePruebas } from '@/lib/hooks/usePruebas';
+import { useSolicitudesCambio } from '@/lib/hooks/useSolicitudesCambio';
 import { buildAlumnoHorarioDetailHref, getAlumnoHorarioBackHref } from '@/lib/utils/horarioNavigation';
 import { useUserStore } from '@/stores/useUserStore';
 import type { ClaseAlumno } from '@/lib/hooks/useAsistencia';
 import type { EstadoAsistencia } from '@/lib/supabase/types';
 import { useTranslations, useLocale } from 'next-intl';
+import { FilterChip } from '@/components/horarios/HorariosProfesorView/FilterChip';
 
 /* ── Search input ── */
 function SearchInput({
@@ -49,7 +51,7 @@ function SearchInput({
   const inputRef = useRef<HTMLInputElement>(null);
   return (
     <div className="relative">
-      <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-text-muted)]" />
+      <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-4 text-[var(--color-text-muted)]" />
       <input
         ref={inputRef}
         id={id}
@@ -66,7 +68,7 @@ function SearchInput({
           className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
           aria-label="Limpiar búsqueda"
         >
-          <X className="h-3.5 w-3.5" />
+          <X className="size-3.5" />
         </button>
       )}
     </div>
@@ -117,7 +119,7 @@ function UpcomingClaseCard({ clase, locale, dateFnsLocale, t, isFirst, isExamen 
               {isExamen && (
                 <span className="inline-flex items-center gap-0.5 rounded-full border px-1.5 py-0.5 text-[10px] font-semibold"
                   style={{ backgroundColor: 'var(--color-brand-gold-muted)', borderColor: 'color-mix(in srgb, var(--color-brand-gold) 40%, transparent)', color: 'var(--color-brand-gold)' }}>
-                  <GraduationCap className="h-2.5 w-2.5" />
+                  <GraduationCap className="size-2.5" />
                   {t('badge_examen')}
                 </span>
               )}
@@ -126,7 +128,7 @@ function UpcomingClaseCard({ clase, locale, dateFnsLocale, t, isFirst, isExamen 
           </div>
           <div className="flex flex-wrap gap-2 text-xs text-[var(--color-text-muted)]">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-bg-secondary)] px-3 py-1">
-              <Calendar className="h-3.5 w-3.5 text-[var(--color-brand-gold)] flex-shrink-0" />
+              <Calendar className="size-3.5 text-[var(--color-brand-gold)] flex-shrink-0" />
               <span className="capitalize">
                 {format(new Date(clase.horario.fecha + 'T12:00:00'), locale === 'en' ? "EEE, MMM d" : "EEE d 'de' MMM", { locale: dateFnsLocale })}
               </span>
@@ -170,7 +172,7 @@ function HistorialClaseCard({ clase, locale, dateFnsLocale, notasCount, isExamen
               {isExamen && (
                 <span className="inline-flex items-center gap-0.5 rounded-full border px-1.5 py-0.5 text-[10px] font-semibold shrink-0"
                   style={{ backgroundColor: 'var(--color-brand-gold-muted)', borderColor: 'color-mix(in srgb, var(--color-brand-gold) 40%, transparent)', color: 'var(--color-brand-gold)' }}>
-                  <GraduationCap className="h-2.5 w-2.5" />
+                  <GraduationCap className="size-2.5" />
                   {t('badge_examen')}
                 </span>
               )}
@@ -182,7 +184,7 @@ function HistorialClaseCard({ clase, locale, dateFnsLocale, notasCount, isExamen
           </div>
           <div className="mt-2 flex flex-wrap gap-1.5 text-xs text-[var(--color-text-muted)]">
             <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-bg-secondary)] px-2.5 py-0.5">
-              <Calendar className="h-3 w-3 text-[var(--color-brand-gold)] flex-shrink-0" />
+              <Calendar className="size-3 text-[var(--color-brand-gold)] flex-shrink-0" />
               <span className="capitalize">
                 {format(new Date(clase.horario.fecha + 'T12:00:00'), locale === 'en' ? "MMM d, yyyy" : "d 'de' MMM yyyy", { locale: dateFnsLocale })}
               </span>
@@ -363,7 +365,7 @@ function HorarioListView({ clases, loading }: { clases: ClaseAlumno[]; loading: 
             onClick={() => setActiveTab('proximas')}
             count={upcoming.length}
           >
-            <BookOpen className="h-4 w-4" />
+            <BookOpen className="size-4" />
             {t('tab_proximas')}
           </TabButton>
           <TabButton
@@ -371,7 +373,7 @@ function HorarioListView({ clases, loading }: { clases: ClaseAlumno[]; loading: 
             onClick={() => setActiveTab('historial')}
             count={past.length}
           >
-            <History className="h-4 w-4" />
+            <History className="size-4" />
             {t('tab_historial')}
           </TabButton>
         </div>
@@ -389,13 +391,13 @@ function HorarioListView({ clases, loading }: { clases: ClaseAlumno[]; loading: 
 
           {upcoming.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] bg-[var(--color-bg-secondary)] py-16 px-4 text-center">
-              <CalendarOff className="h-12 w-12 text-[var(--color-text-muted)] mb-4" />
+              <CalendarOff className="size-12 text-[var(--color-text-muted)] mb-4" />
               <p className="font-semibold text-[var(--color-text-primary)] mb-1">{t('sin_proximas')}</p>
               <p className="text-sm text-[var(--color-text-muted)]">{t('sin_proximas_subtitulo')}</p>
             </div>
           ) : filteredUpcoming.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] bg-[var(--color-bg-secondary)] py-12 px-4 text-center">
-              <Search className="h-8 w-8 text-[var(--color-text-muted)] mb-3" />
+              <Search className="size-8 text-[var(--color-text-muted)] mb-3" />
               <p className="text-sm text-[var(--color-text-muted)]">{t('sin_resultados_busqueda', { query: debouncedProximas })}</p>
             </div>
           ) : (
@@ -439,11 +441,11 @@ function HorarioListView({ clases, loading }: { clases: ClaseAlumno[]; loading: 
                         : 'border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text-secondary)] hover:border-[var(--color-border-strong)] hover:text-[var(--color-text-primary)]'
                     }`}
                   >
-                    <SlidersHorizontal className="h-3.5 w-3.5 shrink-0" />
+                    <SlidersHorizontal className="size-3.5 shrink-0" />
                     <span>
                       {historialFilter === 'todos' ? t('todos_estados_historial') : te(historialFilter)}
                     </span>
-                    <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-60" />
+                    <ChevronDown className="size-3.5 shrink-0 opacity-60" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start" side="bottom" className="min-w-[180px]">
                     <DropdownMenuRadioGroup
@@ -465,63 +467,33 @@ function HorarioListView({ clases, loading }: { clases: ClaseAlumno[]; loading: 
               )}
 
               {/* Notas filter chip */}
-              <Tooltip content={t('tooltip_filtro_notas')} position="top">
-                <button
-                  onClick={() => setSoloConNotas(!soloConNotas)}
-                  className={`inline-flex items-center gap-1.5 h-9 px-3 rounded-[var(--radius-md)] border text-sm font-medium transition-colors select-none ${
-                    soloConNotas
-                      ? 'bg-[var(--color-brand-gold-muted)] border-[var(--color-brand-gold)] text-[var(--color-brand-gold)]'
-                      : 'border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text-secondary)] hover:border-[var(--color-border-strong)] hover:text-[var(--color-text-primary)]'
-                  }`}
-                >
-                  <span className={`flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-sm border transition-colors ${
-                    soloConNotas
-                      ? 'bg-[var(--color-brand-gold)] border-[var(--color-brand-gold)]'
-                      : 'border-[var(--color-border-strong)]'
-                  }`}>
-                    {soloConNotas && (
-                      <svg viewBox="0 0 8 8" className="h-2.5 w-2.5 text-white fill-current"><path d="M1.5 4L3 5.5L6.5 2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" fill="none" /></svg>
-                    )}
-                  </span>
-                  <FileText className="h-3.5 w-3.5 shrink-0" />
-                  {t('filtro_con_notas')}
-                </button>
-              </Tooltip>
+              <FilterChip
+                active={soloConNotas}
+                onClick={() => setSoloConNotas(!soloConNotas)}
+                icon={<FileText className="size-3.5 shrink-0" />}
+                label={t('filtro_con_notas')}
+                tooltip={t('tooltip_filtro_notas')}
+              />
 
               {/* Prueba filter chip */}
-              <Tooltip content={t('tooltip_filtro_pruebas')} position="top">
-                <button
-                  onClick={() => setSoloPruebas(!soloPruebas)}
-                  className={`inline-flex items-center gap-1.5 h-9 px-3 rounded-[var(--radius-md)] border text-sm font-medium transition-colors select-none ${
-                    soloPruebas
-                      ? 'bg-[var(--color-brand-gold-muted)] border-[var(--color-brand-gold)] text-[var(--color-brand-gold)]'
-                      : 'border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text-secondary)] hover:border-[var(--color-border-strong)] hover:text-[var(--color-text-primary)]'
-                  }`}
-                >
-                  <span className={`flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-sm border transition-colors ${
-                    soloPruebas
-                      ? 'bg-[var(--color-brand-gold)] border-[var(--color-brand-gold)]'
-                      : 'border-[var(--color-border-strong)]'
-                  }`}>
-                    {soloPruebas && (
-                      <svg viewBox="0 0 8 8" className="h-2.5 w-2.5 text-white fill-current"><path d="M1.5 4L3 5.5L6.5 2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" fill="none" /></svg>
-                    )}
-                  </span>
-                  <GraduationCap className="h-3.5 w-3.5 shrink-0" />
-                  {t('filtro_pruebas')}
-                </button>
-              </Tooltip>
+              <FilterChip
+                active={soloPruebas}
+                onClick={() => setSoloPruebas(!soloPruebas)}
+                icon={<GraduationCap className="size-3.5 shrink-0" />}
+                label={t('filtro_pruebas')}
+                tooltip={t('tooltip_filtro_pruebas')}
+              />
             </div>
           </div>
 
           {past.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] bg-[var(--color-bg-secondary)] py-16 px-4 text-center">
-              <History className="h-12 w-12 text-[var(--color-text-muted)] mb-4" />
+              <History className="size-12 text-[var(--color-text-muted)] mb-4" />
               <p className="font-semibold text-[var(--color-text-primary)]">{t('sin_historial')}</p>
             </div>
           ) : filteredHistorial.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] bg-[var(--color-bg-secondary)] py-12 px-4 text-center">
-              <Search className="h-8 w-8 text-[var(--color-text-muted)] mb-3" />
+              <Search className="size-8 text-[var(--color-text-muted)] mb-3" />
               <p className="text-sm text-[var(--color-text-muted)]">
                 {debouncedHistorial.trim()
                   ? t('sin_resultados_busqueda', { query: debouncedHistorial })
@@ -562,8 +534,17 @@ function HorarioDetailView({ clase, user, confirmar, cancelar, pedirCambio, isEx
 }) {
   const [modal, setModal] = useState<{ type: 'confirmar' | 'cancelar' | 'cambio'; clase: ClaseAlumno } | null>(null);
   const t = useTranslations('horarios');
+  const tCambio = useTranslations('cambioHorario.estado');
   const locale = useLocale();
   const dateFnsLocale = locale === 'en' ? enUS : es;
+
+  // Check for pending solicitud on this horario
+  const { solicitudes: solicitudesPendientes } = useSolicitudesCambio({
+    horario_id: clase.horario.id,
+    estado: 'pendiente',
+    enabled: clase.estado === 'cancelado',
+  });
+  const hasPendingSolicitud = solicitudesPendientes.length > 0;
 
   const { enCurso, yaPaso } = useClaseTimeStatus(
     clase.horario.fecha,
@@ -577,8 +558,9 @@ function HorarioDetailView({ clase, user, confirmar, cancelar, pedirCambio, isEx
   // Notes are visible for confirmed/no_asistio classes that are in progress or past
   const showNotas = (clase.estado === 'confirmado' || clase.estado === 'no_asistio') && (enCurso || yaPaso);
 
-  // Cannot cancel if class is in progress or already happened
-  const canCancel = !enCurso && !yaPaso;
+  // Per design: alumno can change status as long as hora_fin hasn't passed
+  // (during the class is still allowed since Momento_Actual < Hora_Fin_Clase)
+  const canChangeStatus = !yaPaso && clase.estado !== 'cambiado';
 
   const borderColor = () => {
     if (enCurso && clase.estado === 'confirmado') return 'border-emerald-500';
@@ -600,13 +582,20 @@ function HorarioDetailView({ clase, user, confirmar, cancelar, pedirCambio, isEx
             {isExamen && (
               <div className="flex items-center gap-2 rounded-[var(--radius-md)] px-3 py-2.5"
                 style={{ backgroundColor: 'var(--color-brand-gold-muted)', border: '1px solid color-mix(in srgb, var(--color-brand-gold) 40%, transparent)' }}>
-                <GraduationCap className="h-4 w-4 shrink-0" style={{ color: 'var(--color-brand-gold)' }} />
+                <GraduationCap className="size-4 shrink-0" style={{ color: 'var(--color-brand-gold)' }} />
                 <span className="text-sm font-medium" style={{ color: 'var(--color-brand-gold)' }}>{t('es_examen')}</span>
               </div>
             )}
             <div className="flex items-start justify-between">
               <h2 className="text-xl font-semibold text-[var(--color-text-primary)]">{clase.horario.titulo}</h2>
-              <StatusBadge status={displayStatus} />
+              <div className="flex items-center gap-2">
+                {hasPendingSolicitud && (
+                  <span className="inline-flex items-center rounded-full bg-amber-100 dark:bg-amber-900/30 px-2.5 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-700/50">
+                    {tCambio('solicitud_pendiente')}
+                  </span>
+                )}
+                <StatusBadge status={displayStatus} />
+              </div>
             </div>
 
             {clase.horario.descripcion && (
@@ -615,7 +604,7 @@ function HorarioDetailView({ clase, user, confirmar, cancelar, pedirCambio, isEx
 
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="flex items-center gap-2 text-sm text-[var(--color-text-primary)]">
-                <Calendar className="h-4 w-4 text-[var(--color-brand-gold)]" />
+                <Calendar className="size-4 text-[var(--color-brand-gold)]" />
                 <span className="capitalize">
                   {format(new Date(clase.horario.fecha + 'T12:00:00'), locale === 'en' ? "EEEE, MMMM d yyyy" : "EEEE d 'de' MMMM yyyy", { locale: dateFnsLocale })}
                 </span>
@@ -661,7 +650,7 @@ function HorarioDetailView({ clase, user, confirmar, cancelar, pedirCambio, isEx
                   </p>
                 </div>
                 {pruebaData.nota >= 4.0 ? (
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-success)]/10">
+                  <div className="flex size-12 items-center justify-center rounded-full bg-[var(--color-success)]/10">
                     <span className="text-lg font-bold text-[var(--color-success)]">
                       {pruebaData.nota.toFixed(1)}
                     </span>
@@ -682,51 +671,81 @@ function HorarioDetailView({ clase, user, confirmar, cancelar, pedirCambio, isEx
         <Card padding="lg">
           <h3 className="text-sm font-semibold uppercase text-[var(--color-text-muted)] mb-3">{t('acciones')}</h3>
 
+          {/* Informative message when class has ended */}
+          {yaPaso && clase.estado !== 'cambiado' && (
+            <div className="mb-3 rounded-[var(--radius-md)] bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 px-4 py-3">
+              <p className="text-sm text-amber-700 dark:text-amber-400">
+                {t('clase_finalizo_solo_profesor')}
+              </p>
+            </div>
+          )}
+
           {clase.estado === 'pendiente' && (
             <div className="flex flex-col sm:flex-row gap-3">
               <button
                 onClick={() => setModal({ type: 'confirmar', clase })}
-                className="flex-1 flex items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-success)] px-4 py-3 text-sm font-medium text-white hover:opacity-90 min-h-[48px]"
+                disabled={!canChangeStatus}
+                className={`flex-1 flex items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-success)] px-4 py-3 text-sm font-medium text-white hover:opacity-90 min-h-[48px] ${!canChangeStatus ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
-                <CheckCircle className="h-5 w-5" />
+                <CheckCircle className="size-5" />
                 {t('confirmar_asistencia')}
               </button>
               <button
                 onClick={() => setModal({ type: 'cancelar', clase })}
-                className="flex-1 flex items-center justify-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-error)] px-4 py-3 text-sm font-medium text-[var(--color-error)] hover:bg-red-50 dark:hover:bg-red-950/20 min-h-[48px]"
+                disabled={!canChangeStatus}
+                className={`flex-1 flex items-center justify-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-error)] px-4 py-3 text-sm font-medium text-[var(--color-error)] hover:bg-red-50 dark:hover:bg-red-950/20 min-h-[48px] ${!canChangeStatus ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
-                <XCircle className="h-5 w-5" />
+                <XCircle className="size-5" />
                 {t('cancelar_asistencia')}
               </button>
             </div>
           )}
 
-          {clase.estado === 'confirmado' && canCancel && (
+          {clase.estado === 'confirmado' && canChangeStatus && (
             <button
               onClick={() => setModal({ type: 'cancelar', clase })}
               className="flex items-center justify-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-error)] px-4 py-3 text-sm font-medium text-[var(--color-error)] hover:bg-red-50 dark:hover:bg-red-950/20 min-h-[48px] w-full sm:w-auto"
             >
-              <XCircle className="h-4 w-4" />
+              <XCircle className="size-4" />
               {t('cancelar_confirmado')}
             </button>
           )}
 
-          {clase.estado === 'confirmado' && !canCancel && (
+          {clase.estado === 'confirmado' && !canChangeStatus && (
             <p className="text-sm text-[var(--color-text-muted)]">
-              {enCurso ? t('clase_en_curso') : t('clase_ya_paso')}
+              {t('clase_ya_paso')}
             </p>
           )}
 
           {clase.estado === 'cancelado' && (
             <div className="space-y-2">
               <p className="text-sm text-[var(--color-error)]">{t('cancelaste')}</p>
-              <button
-                onClick={() => setModal({ type: 'cambio', clase })}
-                className="flex items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-brand-gold)] px-4 py-3 text-sm font-medium text-white hover:opacity-90 min-h-[48px] w-full sm:w-auto"
-              >
-                <ArrowRight className="h-4 w-4" />
-                {t('pedir_otro_horario')}
-              </button>
+              {canChangeStatus && (
+                <button
+                  onClick={() => setModal({ type: 'confirmar', clase })}
+                  className="flex items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-success)] px-4 py-3 text-sm font-medium text-white hover:opacity-90 min-h-[48px] w-full sm:w-auto"
+                >
+                  <CheckCircle className="size-4" />
+                  {t('confirmar_asistencia')}
+                </button>
+              )}
+              {canChangeStatus && !hasPendingSolicitud && (
+                <button
+                  onClick={() => setModal({ type: 'cambio', clase })}
+                  className="flex items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-brand-gold)] px-4 py-3 text-sm font-medium text-white hover:opacity-90 min-h-[48px] w-full sm:w-auto"
+                >
+                  <ArrowRight className="size-4" />
+                  {t('pedir_otro_horario')}
+                </button>
+              )}
+              {canChangeStatus && hasPendingSolicitud && (
+                <div className="flex items-center gap-2 rounded-[var(--radius-md)] bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 px-4 py-3">
+                  <div className="size-2 rounded-full bg-amber-500 animate-pulse" />
+                  <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
+                    {tCambio('solicitud_pendiente')}
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
@@ -752,9 +771,21 @@ function HorarioDetailView({ clase, user, confirmar, cancelar, pedirCambio, isEx
       {modal?.type === 'cancelar' && (
         <CancelacionForm clase={modal.clase} onCancel={cancelar} onClose={() => setModal(null)} />
       )}
-      {modal?.type === 'cambio' && user && (
-        <CambioHorarioForm clase={modal.clase} alumnoId={user.id} onCambio={pedirCambio} onClose={() => setModal(null)} />
-      )}
+      {modal?.type === 'cambio' && user && (() => {
+        const claseModal = modal.clase;
+        const [h1, m1] = claseModal.horario.hora_inicio.split(':').map(Number);
+        const [h2, m2] = claseModal.horario.hora_fin.split(':').map(Number);
+        const duracionMin = (h2 * 60 + m2) - (h1 * 60 + m1);
+        return claseModal.horario.profesor ? (
+          <SolicitudCambioForm
+            horarioOriginalId={claseModal.horario.id}
+            profesorId={claseModal.horario.profesor.id}
+            duracionMin={duracionMin}
+            onSuccess={() => setModal(null)}
+            onCancel={() => setModal(null)}
+          />
+        ) : null;
+      })()}
     </>
   );
 }
@@ -787,7 +818,7 @@ function AlumnoHorarioContent() {
       <div>
         <PageHeader title={horarioId ? t('mi_clase') : t('mi_horario')} subtitle={horarioId ? t('detalle_clase') : t('todas_clases')} />
         <div className="mt-[var(--space-lg)] flex items-center justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-brand-gold)] border-t-transparent" />
+          <div className="size-8 animate-spin rounded-full border-4 border-[var(--color-brand-gold)] border-t-transparent" />
         </div>
       </div>
     );
@@ -812,7 +843,7 @@ function AlumnoHorarioContent() {
           <Card className="flex flex-col items-center justify-center py-12 text-center">
             <p className="text-[var(--color-text-primary)] font-medium">{t('clase_no_encontrada')}</p>
             <Link href={backHref} className="mt-3 text-sm text-[var(--color-brand-gold)] hover:underline flex items-center gap-1">
-              <ArrowLeft className="h-4 w-4" /> {t('volver_horario')}
+              <ArrowLeft className="size-4" /> {t('volver_horario')}
             </Link>
           </Card>
         </div>
@@ -828,7 +859,7 @@ function AlumnoHorarioContent() {
         subtitle={t('detalle_clase')}
         actions={
           <Link href={backHref} className="flex items-center gap-1 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]">
-            <ArrowLeft className="h-4 w-4" /> {tc('volver')}
+            <ArrowLeft className="size-4" /> {tc('volver')}
           </Link>
         }
       />
@@ -847,7 +878,7 @@ function AlumnoHorarioContent() {
 
 export default function AlumnoHorarioPage() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-brand-gold)] border-t-transparent" /></div>}>
+    <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="size-8 animate-spin rounded-full border-4 border-[var(--color-brand-gold)] border-t-transparent" /></div>}>
       <AlumnoHorarioContent />
     </Suspense>
   );

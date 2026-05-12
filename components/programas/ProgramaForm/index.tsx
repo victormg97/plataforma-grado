@@ -25,6 +25,8 @@ interface ProgramaFormProps {
 
 type VisMode = 'todos' | 'especifico';
 
+const EMPTY_PROFESORES: ProfesorOption[] = [];
+
 export function ProgramaForm({
   open,
   onClose,
@@ -32,7 +34,7 @@ export function ProgramaForm({
   programa,
   loading = false,
   isAdmin = false,
-  profesores = [],
+  profesores = EMPTY_PROFESORES,
 }: ProgramaFormProps) {
   const t = useTranslations('programas');
   const isEditing = !!programa;
@@ -178,7 +180,7 @@ export function ProgramaForm({
                     : 'border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[var(--color-brand-gold)]/50 hover:text-[var(--color-text-primary)]'
                 )}
               >
-                <Globe className="h-4 w-4 shrink-0" />
+                <Globe className="size-4 shrink-0" />
                 {t('form.vis_todos')}
               </button>
               <button
@@ -191,7 +193,7 @@ export function ProgramaForm({
                     : 'border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[var(--color-brand-gold)]/50 hover:text-[var(--color-text-primary)]'
                 )}
               >
-                <Users className="h-4 w-4 shrink-0" />
+                <Users className="size-4 shrink-0" />
                 {t('form.vis_especifico')}
               </button>
             </div>
@@ -207,14 +209,14 @@ export function ProgramaForm({
                         key={p.id}
                         className="flex items-center gap-1 rounded-full bg-[var(--color-brand-gold-muted)] px-2.5 py-0.5 text-xs font-medium text-[var(--color-text-primary)]"
                       >
-                        <User className="h-3 w-3" />
+                        <User className="size-3" />
                         {p.nombre} {p.apellido}
                         <button
                           type="button"
                           onClick={() => toggleProf(p.id)}
                           className="ml-0.5 rounded-full hover:text-[var(--color-error)] transition-colors"
                         >
-                          <X className="h-3 w-3" />
+                          <X className="size-3" />
                         </button>
                       </span>
                     ))}
@@ -249,7 +251,7 @@ export function ProgramaForm({
                             )}
                           >
                             <span>{p.nombre} {p.apellido}</span>
-                            {selected && <Check className="h-3.5 w-3.5 text-[var(--color-brand-gold)]" />}
+                            {selected && <Check className="size-3.5 text-[var(--color-brand-gold)]" />}
                           </button>
                         );
                       })

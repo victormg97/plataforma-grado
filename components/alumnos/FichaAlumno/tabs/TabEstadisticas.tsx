@@ -229,9 +229,9 @@ export function TabEstadisticas({ data }: TabEstadisticasProps) {
       <div className="flex items-center gap-2">
         <span className="text-xs text-[var(--color-text-muted)]">{t('tipo_grafico')}:</span>
         {([
-          { key: 'bar' as const, icon: <BarChart2 className="h-4 w-4" />, label: t('grafico_barras') },
-          { key: 'line' as const, icon: <TrendingUp className="h-4 w-4" />, label: t('grafico_lineas') },
-          { key: 'pie' as const, icon: <PieChart className="h-4 w-4" />, label: t('grafico_pie') },
+          { key: 'bar' as const, icon: <BarChart2 className="size-4" />, label: t('grafico_barras') },
+          { key: 'line' as const, icon: <TrendingUp className="size-4" />, label: t('grafico_lineas') },
+          { key: 'pie' as const, icon: <PieChart className="size-4" />, label: t('grafico_pie') },
         ] as const).map(({ key, icon, label }) => (
           <Tooltip key={key} content={label} position="top">
             <button
@@ -253,7 +253,7 @@ export function TabEstadisticas({ data }: TabEstadisticasProps) {
               onClick={downloadPNG}
               className="rounded-[var(--radius-sm)] bg-[var(--color-bg-secondary)] p-2 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-elevated)] transition-colors"
             >
-              <Download className="h-4 w-4" />
+              <Download className="size-4" />
             </button>
           </Tooltip>
           <Tooltip content={t('descargar_csv')} position="top">

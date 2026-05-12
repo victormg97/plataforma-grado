@@ -17,18 +17,21 @@ import { Avatar } from '@/components/common/Avatar';
 import { Button } from '@/components/common/Button';
 import { HorarioForm } from '@/components/horarios/HorarioForm';
 import { useTranslations, useLocale } from 'next-intl';
-import { Calendar, Clock, FileText, MessageSquare, Pencil, UserX, ExternalLink, GraduationCap } from 'lucide-react';
+import { Calendar, Clock, FileText, MessageSquare, Pencil, UserX, GraduationCap } from 'lucide-react';
 import { CalendarioDownloadButton, type CalendarioExportEvent } from '@/components/calendario/CalendarioDownloadButton';
+import { CalendarioStyles } from '@/components/calendario/CalendarioStyles';
 import { resolveCssVar } from '@/lib/utils/cssTokens';
-import Link from 'next/link';
 import { NotasIndicator } from '@/components/notas/NotasIndicator';
 import { useNotasCount } from '@/lib/hooks/useNotasCount';
 import { buildClaseDetailHref } from '@/lib/utils/horarioNavigation';
 import { useUserStore } from '@/stores/useUserStore';
+import { ViewDetailButton } from '@/components/horarios/ViewDetailButton';
 import { format } from 'date-fns';
 import { es as esDateFns, enUS } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { usePruebas } from '@/lib/hooks/usePruebas';
+import { CalendarEventPopover, useCalendarPopover, type PopoverEventData } from '@/components/calendario/CalendarEventPopover';
+import type { EstadoAsistencia } from '@/lib/supabase/types';
 
 interface CalendarioProfesorProps {
   profesorId: string;
@@ -63,6 +66,9 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
     () => new Set(pruebas.filter((p) => p.horario_id).map((p) => p.horario_id!)),
     [pruebas]
   );
+
+  // Popover on hover (desktop only)
+  const { popoverData, popoverAnchor, handleMouseEnter, handleMouseLeave, closePopover } = useCalendarPopover();
 
   // Estado colour map — resolved at render time from globals.css CSS vars
   const estadoHex: Record<string, string> = {
@@ -123,8 +129,10 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
   useEffect(() => {
     const api = calendarRef.current?.getApi();
     if (!api) return;
-    api.removeAllEvents();
-    (events as CalendarEvent[]).forEach((e) => api.addEvent(e));
+    queueMicrotask(() => {
+      api.removeAllEvents();
+      (events as CalendarEvent[]).forEach((e) => api.addEvent(e));
+    });
   }, [events]);
 
   // External trigger: open detail modal for a specific horario (e.g. from a direct URL link).
@@ -151,6 +159,7 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
 
   function handleEventClick(info: EventClickArg) {
     const horario = info.event.extendedProps.horario as HorarioConAsistencia;
+    closePopover();
     setSelectedHorario(horario);
     setDetailOpen(true);
   }
@@ -210,84 +219,7 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
       />
 
       <div className="calendario-profesor" style={{ overflow: 'hidden' }}>
-        <style>{`
-          .calendario-profesor .fc {
-            --fc-border-color: var(--color-border);
-            --fc-page-bg-color: var(--color-bg);
-            --fc-neutral-bg-color: var(--color-bg-secondary);
-            --fc-today-bg-color: color-mix(in srgb, var(--color-brand-gold) 8%, transparent);
-            --fc-event-border-color: transparent;
-            font-family: var(--font-body);
-          }
-          .calendario-profesor .fc .fc-toolbar-title {
-            font-family: var(--font-display);
-            font-size: 1.25rem;
-            color: var(--color-text-primary);
-            text-transform: capitalize;
-          }
-          .calendario-profesor .fc .fc-button {
-            background: var(--color-bg-secondary);
-            border-color: var(--color-border);
-            color: var(--color-text-primary);
-            font-size: 0.8rem;
-            padding: 0.25rem 0.75rem;
-            border-radius: var(--radius-md);
-            font-weight: 500;
-          }
-          .calendario-profesor .fc .fc-button:hover {
-            background: var(--color-brand-gold-muted);
-            border-color: var(--color-brand-gold);
-          }
-          .calendario-profesor .fc .fc-button-active,
-          .calendario-profesor .fc .fc-button.fc-button-active {
-            background: var(--color-brand-gold) !important;
-            border-color: var(--color-brand-gold) !important;
-            color: var(--color-brand-black) !important;
-          }
-          .calendario-profesor .fc .fc-col-header-cell {
-            padding: 0.5rem 0;
-            font-weight: 600;
-            text-transform: capitalize;
-            color: var(--color-text-secondary);
-            font-size: 0.8rem;
-          }
-          .calendario-profesor .fc .fc-daygrid-day-number {
-            color: var(--color-text-primary);
-            font-size: 0.85rem;
-            padding: 4px 8px;
-          }
-          .calendario-profesor .fc .fc-event {
-            border-radius: 6px;
-            padding: 2px 6px;
-            font-size: 0.75rem;
-            cursor: pointer;
-            border: none;
-          }
-          .calendario-profesor .fc .fc-list-event:hover td {
-            background: var(--color-bg-secondary);
-          }
-          .calendario-profesor .fc .fc-list-event-title {
-            overflow: hidden;
-          }
-          .calendario-profesor .fc .fc-scrollgrid {
-            border-color: var(--color-border);
-          }
-          .calendario-profesor .fc .fc-descargar-button {
-            padding: 0.25rem 0.5rem;
-          }
-          @media (max-width: 640px) {
-            .calendario-profesor .fc .fc-toolbar-title {
-              font-size: 0.95rem;
-            }
-            .calendario-profesor .fc .fc-button {
-              font-size: 0.7rem;
-              padding: 0.2rem 0.45rem;
-            }
-            .calendario-profesor .fc .fc-toolbar.fc-header-toolbar {
-              gap: 0.35rem;
-            }
-          }
-        `}</style>
+        <CalendarioStyles containerClass=".calendario-profesor" />
         <FullCalendar
           ref={calendarRef}
           plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
@@ -307,10 +239,41 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
           weekends={true}
           editable={false}
           eventClick={handleEventClick}
+          eventMouseEnter={(info) => {
+            const h = info.event.extendedProps.horario as HorarioConAsistencia;
+            const isPrueba = pruebaHorarioIds.has(h.id);
+            const prueba = isPrueba ? pruebas.find((p) => p.horario_id === h.id) : null;
+            const data: PopoverEventData = {
+              titulo: h.titulo,
+              hora_inicio: h.hora_inicio,
+              hora_fin: h.hora_fin,
+              estado: (h.asistencia?.[0]?.estado || 'pendiente') as EstadoAsistencia,
+              alumno: h.alumno,
+              esPrueba: isPrueba,
+              notaPrueba: prueba?.nota ?? null,
+              descripcion: h.descripcion,
+            };
+            handleMouseEnter(data, info.el);
+          }}
+          eventMouseLeave={() => handleMouseLeave()}
           dateClick={handleDateClick}
           datesSet={(arg) => setCurrentView(arg.view.type)}
           eventContent={(arg) => {
             const isExam = pruebaHorarioIds.has(arg.event.id);
+            // In list view, render title inline (FC handles time + dot separately)
+            if (arg.view.type === 'listWeek') {
+              return (
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', overflow: 'hidden' }}>
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{arg.event.title}</span>
+                  {isExam && (
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, opacity: 0.8 }}>
+                      <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                      <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+                    </svg>
+                  )}
+                </span>
+              );
+            }
             return (
               <div style={{ display: 'flex', alignItems: 'center', width: '100%', overflow: 'hidden', gap: '3px', padding: '0 4px' }}>
                 {arg.timeText && (
@@ -363,12 +326,12 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
                 onClick={handleNoAsistio}
                 loading={markingNoAsistio}
               >
-                <UserX className="mr-1.5 h-4 w-4" />
+                <UserX className="mr-1.5 size-4" />
                 {ta('estados.no_asistio')}
               </Button>
             )}
             <Button onClick={handleEditFromDetail}>
-              <Pencil className="mr-1.5 h-4 w-4" />
+              <Pencil className="mr-1.5 size-4" />
               {t('editar_horario')}
             </Button>
           </div>
@@ -402,7 +365,7 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
               {pruebaHorarioIds.has(selectedHorario.id) && (
                 <span className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium"
                   style={{ backgroundColor: 'var(--color-brand-gold-muted)', borderColor: 'color-mix(in srgb, var(--color-brand-gold) 40%, transparent)', color: 'var(--color-brand-gold)' }}>
-                  <GraduationCap className="h-3 w-3" />
+                  <GraduationCap className="size-3" />
                   {t('badge_examen')}
                 </span>
               )}
@@ -411,13 +374,13 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
             {/* Horario */}
             <div className="flex flex-wrap items-center gap-1.5">
               <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-bg-secondary)] px-2.5 py-1 text-xs text-[var(--color-text-secondary)]">
-                <Calendar className="h-3.5 w-3.5" style={{ color: 'var(--color-brand-gold)' }} />
+                <Calendar className="size-3.5" style={{ color: 'var(--color-brand-gold)' }} />
                 <span className="capitalize">
                   {format(new Date(selectedHorario.fecha + 'T12:00:00'), locale === 'en' ? "EEEE, MMMM d" : "EEEE d 'de' MMMM", { locale: locale === 'en' ? enUS : esDateFns })}
                 </span>
               </span>
               <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-bg-secondary)] px-2.5 py-1 text-xs text-[var(--color-text-secondary)]">
-                <Clock className="h-3.5 w-3.5" style={{ color: 'var(--color-brand-gold)' }} />
+                <Clock className="size-3.5" style={{ color: 'var(--color-brand-gold)' }} />
                 {selectedHorario.hora_inicio.slice(0, 5)} - {selectedHorario.hora_fin.slice(0, 5)}
               </span>
             </div>
@@ -425,7 +388,7 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
             {/* Descripcion */}
             {selectedHorario.descripcion && (
               <div className="flex items-start gap-2 text-sm text-[var(--color-text-secondary)]">
-                <FileText className="mt-0.5 h-4 w-4 shrink-0" />
+                <FileText className="mt-0.5 size-4 shrink-0" />
                 <p>{selectedHorario.descripcion}</p>
               </div>
             )}
@@ -434,7 +397,7 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
             {selectedHorario.asistencia?.[0]?.nota_alumno && (
               <div className="rounded-[var(--radius-md)] bg-[var(--color-bg-secondary)] p-3">
                 <div className="mb-1 flex items-center gap-1.5 text-sm font-medium text-[var(--color-text-secondary)]">
-                  <MessageSquare className="h-3.5 w-3.5" />
+                  <MessageSquare className="size-3.5" />
                   {ta('nota_alumno_title')}
                 </div>
                 <p className="text-sm text-[var(--color-text-primary)]">
@@ -444,14 +407,10 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
             )}
 
             {/* Link to detail page */}
-            <Link
+            <ViewDetailButton
               href={buildClaseDetailHref(selectedHorario.id, userRol, `/${userRol}`)}
-              className="flex items-center gap-1.5 text-sm text-[var(--color-brand-gold)] hover:underline"
               onClick={() => setDetailOpen(false)}
-            >
-              <ExternalLink className="h-3.5 w-3.5" />
-              {t('ver_detalle_completo')}
-            </Link>
+            />
           </div>
         )}
       </Modal>
@@ -466,6 +425,14 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
         defaultTime={defaultTime}
         onSuccess={refetch}
         cachedAlumnos={alumnos}
+      />
+
+      {/* Hover popover (desktop only) */}
+      <CalendarEventPopover
+        data={popoverData}
+        anchorEl={popoverAnchor}
+        rol={userRol}
+        onClose={closePopover}
       />
     </>
   );

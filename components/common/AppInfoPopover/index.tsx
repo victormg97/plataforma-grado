@@ -88,14 +88,14 @@ export function AppInfoPopover() {
         aria-label={t('title')}
         aria-expanded={open}
         className={cn(
-          'flex h-7 w-7 items-center justify-center rounded-[var(--radius-md)] transition-colors',
+          'flex size-7 items-center justify-center rounded-[var(--radius-md)] transition-colors',
           open
             ? 'bg-[var(--color-brand-gold-muted)] text-[var(--color-brand-gold)]'
             : 'text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]'
         )}
         {...triggerProps}
       >
-        <Info className="h-3.5 w-3.5" />
+        <Info className="size-3.5" />
       </button>
 
       {open && mounted && typeof document !== 'undefined'
@@ -126,7 +126,7 @@ export function AppInfoPopover() {
                     onClick={() => setOpen(false)}
                     className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]"
                   >
-                    <Icon className="h-3.5 w-3.5 flex-shrink-0 text-[var(--color-text-muted)]" />
+                    <Icon className="size-3.5 flex-shrink-0 text-[var(--color-text-muted)]" />
                     {t(key)}
                   </Link>
                 ))}

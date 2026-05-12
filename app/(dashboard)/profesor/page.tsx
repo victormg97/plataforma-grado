@@ -42,7 +42,7 @@ export default function ProfesorDashboardPage() {
         subtitle={t('subtitulo')}
         actions={
           <Button onClick={() => setNewClassTrigger((n) => n + 1)}>
-            <Plus className="mr-1.5 h-4 w-4" />
+            <Plus className="mr-1.5 size-4" />
             {th('nueva_clase')}
           </Button>
         }
@@ -54,10 +54,10 @@ export default function ProfesorDashboardPage() {
           <Card key={stat.label} padding="md">
             <div className="flex items-center gap-3">
               <div
-                className="flex h-10 w-10 items-center justify-center rounded-full"
+                className="flex size-10 items-center justify-center rounded-full"
                 style={{ backgroundColor: `color-mix(in srgb, ${stat.color} 12%, transparent)` }}
               >
-                <stat.icon className="h-5 w-5" style={{ color: stat.color }} />
+                <stat.icon className="size-5" style={{ color: stat.color }} />
               </div>
               <div>
                 <p className="text-2xl font-bold text-[var(--color-text-primary)]">{stat.value}</p>

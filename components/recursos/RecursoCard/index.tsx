@@ -57,10 +57,10 @@ export function RecursoCard({
   const ext       = recurso.storage_path ? getExtension(recurso.storage_path) : '';
 
   const iconEl = fileInfo
-    ? <fileInfo.Icon className={cn('h-5 w-5', fileInfo.iconColor)} />
+    ? <fileInfo.Icon className={cn('size-5', fileInfo.iconColor)} />
     : (() => {
         const { Icon, color } = TIPO_FALLBACK[recurso.tipo as keyof typeof TIPO_FALLBACK] ?? TIPO_FALLBACK.enlace;
-        return <Icon className={cn('h-5 w-5', color)} />;
+        return <Icon className={cn('size-5', color)} />;
       })();
 
   const iconBg = fileInfo?.iconBg
@@ -83,7 +83,7 @@ export function RecursoCard({
   // mobile  → always visible
   // desktop → hidden until card hover (lg:opacity-0 / lg:group-hover:opacity-100)
   const actionBtnCls = cn(
-    'flex h-9 w-9 items-center justify-center rounded-[var(--radius-sm)]',
+    'flex size-9 items-center justify-center rounded-[var(--radius-sm)]',
     'text-[var(--color-text-muted)] transition-colors',
     'lg:opacity-0 lg:group-hover:opacity-100 lg:transition-opacity',
   );
@@ -100,7 +100,7 @@ export function RecursoCard({
           onClick={handlePrimaryAction}
           aria-label={t(canPreview ? 'ver' : 'descargar')}
           className={cn(
-            'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-[var(--radius-md)] transition-opacity hover:opacity-75',
+            'flex size-10 flex-shrink-0 items-center justify-center rounded-[var(--radius-md)] transition-opacity hover:opacity-75',
             iconBg,
           )}
         >
@@ -150,8 +150,8 @@ export function RecursoCard({
                   : 'bg-[var(--color-bg-elevated)] text-[var(--color-text-muted)]',
               )}>
                 {recurso.para_todos
-                  ? <><Globe className="h-2.5 w-2.5" />{t('para_todos')}</>
-                  : <><Users className="h-2.5 w-2.5" />{t('solo_asignados', { count: recurso.acceso_count ?? 0 })}</>}
+                  ? <><Globe className="size-2.5" />{t('para_todos')}</>
+                  : <><Users className="size-2.5" />{t('solo_asignados', { count: recurso.acceso_count ?? 0 })}</>}
               </span>
             )}
           </div>
@@ -175,8 +175,8 @@ export function RecursoCard({
               className={cn(actionBtnCls, 'hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]')}
             >
               {recurso.tipo === 'archivo'
-                ? canPreview ? <Eye className="h-4 w-4" /> : <Download className="h-4 w-4" />
-                : recurso.tipo === 'video' ? <Play className="h-4 w-4" /> : <ExternalLink className="h-4 w-4" />}
+                ? canPreview ? <Eye className="size-4" /> : <Download className="size-4" />
+                : recurso.tipo === 'video' ? <Play className="size-4" /> : <ExternalLink className="size-4" />}
             </button>
           </Tooltip>
 
@@ -189,7 +189,7 @@ export function RecursoCard({
                 aria-label={t('descargar')}
                 className={cn(actionBtnCls, 'hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]')}
               >
-                <Download className="h-4 w-4" />
+                <Download className="size-4" />
               </button>
             </Tooltip>
           )}
@@ -203,7 +203,7 @@ export function RecursoCard({
                 aria-label={t('editar')}
                 className={cn(actionBtnCls, 'hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]')}
               >
-                <Pencil className="h-4 w-4" />
+                <Pencil className="size-4" />
               </button>
             </Tooltip>
           )}
@@ -217,7 +217,7 @@ export function RecursoCard({
                 aria-label={t('eliminar')}
                 className={cn(actionBtnCls, 'hover:bg-[rgba(192,57,43,0.1)] hover:text-[var(--color-error)]')}
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="size-4" />
               </button>
             </Tooltip>
           )}

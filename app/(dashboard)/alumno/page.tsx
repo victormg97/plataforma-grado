@@ -11,10 +11,11 @@ import { StatusBadge } from '@/components/common/StatusBadge';
 import { NotasIndicator } from '@/components/notas/NotasIndicator';
 import { ConfirmacionForm } from '@/components/horarios/ConfirmacionForm';
 import { CancelacionForm } from '@/components/horarios/CancelacionForm';
-import { CambioHorarioForm } from '@/components/horarios/CambioHorarioForm';
+import { SolicitudCambioForm } from '@/components/horarios/SolicitudCambioForm';
 import { useAsistencia } from '@/lib/hooks/useAsistencia';
 import { useNotasCount } from '@/lib/hooks/useNotasCount';
 import { usePruebas } from '@/lib/hooks/usePruebas';
+import { useSolicitudesCambio } from '@/lib/hooks/useSolicitudesCambio';
 import { buildAlumnoHorarioDetailHref } from '@/lib/utils/horarioNavigation';
 import { useUserStore } from '@/stores/useUserStore';
 import type { ClaseAlumno } from '@/lib/hooks/useAsistencia';
@@ -26,6 +27,7 @@ function AlumnoDashboardContent() {
   const { proximas, historial, proximaClase, loading, confirmar, cancelar, pedirCambio } = useAsistencia();
   const { data: pruebas = [] } = usePruebas(user?.id);
   const t = useTranslations('horarios');
+  const tCambio = useTranslations('cambioHorario.estado');
   const td = useTranslations('dashboard.alumno');
   const locale = useLocale();
   const pathname = usePathname();
@@ -52,6 +54,14 @@ function AlumnoDashboardContent() {
   );
   const notasCounts = useNotasCount(notableIds);
 
+  // Check for pending solicitud on the próxima clase (if cancelled)
+  const { solicitudes: solicitudesPendientesProxima } = useSolicitudesCambio({
+    horario_id: proximaClase?.horario.id,
+    estado: 'pendiente',
+    enabled: proximaClase?.estado === 'cancelado',
+  });
+  const hasPendingSolicitud = solicitudesPendientesProxima.length > 0;
+
   const borderColor = (estado: string) => {
     switch (estado) {
       case 'pendiente': return 'border-[var(--color-brand-gold)]';
@@ -67,7 +77,7 @@ function AlumnoDashboardContent() {
       <div>
         <PageHeader title={td('titulo')} subtitle={td('subtitulo')} />
         <div className="mt-[var(--space-lg)] flex items-center justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-brand-gold)] border-t-transparent" />
+          <div className="size-8 animate-spin rounded-full border-4 border-[var(--color-brand-gold)] border-t-transparent" />
         </div>
       </div>
     );
@@ -96,7 +106,7 @@ function AlumnoDashboardContent() {
                       {pruebaHorarioIds.has(proximaClase.horario.id) && (
                         <span className="inline-flex items-center gap-0.5 rounded-full border px-1.5 py-0.5 text-[10px] font-semibold"
                           style={{ backgroundColor: 'var(--color-brand-gold-muted)', borderColor: 'color-mix(in srgb, var(--color-brand-gold) 40%, transparent)', color: 'var(--color-brand-gold)' }}>
-                          <GraduationCap className="h-2.5 w-2.5" />
+                          <GraduationCap className="size-2.5" />
                           {t('badge_examen')}
                         </span>
                       )}
@@ -115,7 +125,7 @@ function AlumnoDashboardContent() {
 
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-bg-secondary)] px-2.5 py-1 text-sm font-medium text-[var(--color-text-primary)]">
-                    <Calendar className="h-3.5 w-3.5 text-[var(--color-brand-gold)]" />
+                    <Calendar className="size-3.5 text-[var(--color-brand-gold)]" />
                     <span className="capitalize">{format(new Date(proximaClase.horario.fecha + 'T12:00:00'), locale === 'en' ? "EEEE, MMMM d" : "EEEE d 'de' MMMM", { locale: dateFnsLocale })}</span>
                   </span>
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-bg-secondary)] px-2.5 py-1 text-sm font-medium text-[var(--color-text-primary)]">
@@ -131,14 +141,14 @@ function AlumnoDashboardContent() {
                       onClick={() => setModal({ type: 'confirmar', clase: proximaClase })}
                       className="flex-1 flex items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-success)] px-4 py-3 text-sm font-medium text-white hover:opacity-90 min-h-[48px]"
                     >
-                      <CheckCircle className="h-5 w-5" />
+                      <CheckCircle className="size-5" />
                       {t('confirmar_asistencia')}
                     </button>
                     <button
                       onClick={() => setModal({ type: 'cancelar', clase: proximaClase })}
                       className="flex-1 flex items-center justify-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-error)] px-4 py-3 text-sm font-medium text-[var(--color-error)] hover:bg-red-50 dark:hover:bg-red-950/20 min-h-[48px]"
                     >
-                      <XCircle className="h-5 w-5" />
+                      <XCircle className="size-5" />
                       {t('cancelar_asistencia')}
                     </button>
                   </div>
@@ -150,7 +160,7 @@ function AlumnoDashboardContent() {
                       onClick={() => setModal({ type: 'cancelar', clase: proximaClase })}
                       className="flex items-center justify-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-error)] px-4 py-3 text-sm font-medium text-[var(--color-error)] hover:bg-red-50 dark:hover:bg-red-950/20 min-h-[48px] w-full sm:w-auto"
                     >
-                      <XCircle className="h-4 w-4" />
+                      <XCircle className="size-4" />
                       {t('cancelar_confirmado')}
                     </button>
                   </div>
@@ -160,12 +170,28 @@ function AlumnoDashboardContent() {
                   <div className="mt-2 space-y-2">
                     <p className="text-sm text-[var(--color-error)]">{t('cancelaste')}</p>
                     <button
-                      onClick={() => setModal({ type: 'cambio', clase: proximaClase })}
-                      className="flex items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-brand-gold)] px-4 py-3 text-sm font-medium text-white hover:opacity-90 min-h-[48px] w-full sm:w-auto"
+                      onClick={() => setModal({ type: 'confirmar', clase: proximaClase })}
+                      className="flex items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-success)] px-4 py-3 text-sm font-medium text-white hover:opacity-90 min-h-[48px] w-full sm:w-auto"
                     >
-                      <ArrowRight className="h-4 w-4" />
-                      {t('pedir_otro_horario')}
+                      <CheckCircle className="size-4" />
+                      {t('confirmar_asistencia')}
                     </button>
+                    {hasPendingSolicitud ? (
+                      <div className="flex items-center gap-2 rounded-[var(--radius-md)] bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 px-4 py-3">
+                        <div className="size-2 rounded-full bg-amber-500 animate-pulse" />
+                        <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
+                          {tCambio('solicitud_pendiente')}
+                        </p>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setModal({ type: 'cambio', clase: proximaClase })}
+                        className="flex items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-brand-gold)] px-4 py-3 text-sm font-medium text-white hover:opacity-90 min-h-[48px] w-full sm:w-auto"
+                      >
+                        <ArrowRight className="size-4" />
+                        {t('pedir_otro_horario')}
+                      </button>
+                    )}
                   </div>
                 )}
 
@@ -174,11 +200,22 @@ function AlumnoDashboardContent() {
                     {t('esperando_cambio')}
                   </p>
                 )}
+
+                {/* Ver detalles link */}
+                <div className="mt-2 pt-2 border-t border-[var(--color-border)]">
+                  <Link
+                    href={buildAlumnoHorarioDetailHref(proximaClase.horario.id, currentPath)}
+                    className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--color-brand-gold)] hover:underline"
+                  >
+                    {t('ver_detalles')}
+                    <ArrowRight className="size-3.5" />
+                  </Link>
+                </div>
               </div>
             </Card>
           ) : (
             <Card className="flex flex-col items-center justify-center py-12 text-center">
-              <CalendarOff className="h-12 w-12 text-[var(--color-text-muted)] mb-3" />
+              <CalendarOff className="size-12 text-[var(--color-text-muted)] mb-3" />
               <p className="text-[var(--color-text-primary)] font-medium">{t('sin_proximas')}</p>
               <p className="text-sm text-[var(--color-text-muted)] mt-1">{t('sin_proximas_subtitulo')}</p>
             </Card>
@@ -199,7 +236,7 @@ function AlumnoDashboardContent() {
                         {pruebaHorarioIds.has(clase.horario.id) && (
                           <span className="inline-flex items-center gap-0.5 rounded-full border px-1.5 py-0.5 text-[10px] font-semibold shrink-0"
                             style={{ backgroundColor: 'var(--color-brand-gold-muted)', borderColor: 'color-mix(in srgb, var(--color-brand-gold) 40%, transparent)', color: 'var(--color-brand-gold)' }}>
-                            <GraduationCap className="h-2.5 w-2.5" />
+                            <GraduationCap className="size-2.5" />
                             {t('badge_examen')}
                           </span>
                         )}
@@ -208,7 +245,7 @@ function AlumnoDashboardContent() {
                     </div>
                     <div className="flex flex-wrap items-center gap-1.5">
                       <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-bg-secondary)] px-2 py-0.5 text-xs text-[var(--color-text-muted)]">
-                        <Calendar className="h-3 w-3 text-[var(--color-brand-gold)]" />
+                        <Calendar className="size-3 text-[var(--color-brand-gold)]" />
                         <span className="capitalize">{format(new Date(clase.horario.fecha + 'T12:00:00'), locale === 'en' ? "EEE, MMMM d" : "EEE d 'de' MMMM", { locale: dateFnsLocale })}</span>
                       </span>
                       <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-bg-secondary)] px-2 py-0.5 text-xs text-[var(--color-text-muted)]">
@@ -232,35 +269,59 @@ function AlumnoDashboardContent() {
         {historial.length > 0 && (
           <section>
             <h2 className="text-sm font-semibold uppercase text-[var(--color-text-muted)] mb-3">{t('historial_reciente')}</h2>
-            <div className="space-y-2">
-              {historial.slice(0, 5).map((clase) => (
-                <Link key={clase.id} href={buildAlumnoHorarioDetailHref(clase.horario.id, currentPath)}>
-                  <Card hover className="py-3">
-                    <div className="flex items-start justify-between mb-1.5">
-                      <div className="flex items-center gap-1.5 flex-wrap min-w-0">
-                        <p className="text-sm font-medium text-[var(--color-text-primary)]">{clase.horario.titulo}</p>
-                        {pruebaHorarioIds.has(clase.horario.id) && (
-                          <span className="inline-flex items-center gap-0.5 rounded-full border px-1.5 py-0.5 text-[10px] font-semibold shrink-0"
-                            style={{ backgroundColor: 'var(--color-brand-gold-muted)', borderColor: 'color-mix(in srgb, var(--color-brand-gold) 40%, transparent)', color: 'var(--color-brand-gold)' }}>
-                            <GraduationCap className="h-2.5 w-2.5" />
-                            {t('badge_examen')}
+            <div className="grid gap-3 sm:grid-cols-2">
+              {historial.slice(0, 6).map((clase) => (
+                <Link
+                  key={clase.id}
+                  href={buildAlumnoHorarioDetailHref(clase.horario.id, currentPath)}
+                  className="group"
+                >
+                  <Card hover className="h-full">
+                    <div className="flex items-start gap-3">
+                      {/* Status dot */}
+                      <div className="shrink-0 mt-1.5">
+                        <div className={`size-2.5 rounded-full ${
+                          clase.estado === 'confirmado' ? 'bg-[var(--color-success)]'
+                          : clase.estado === 'cancelado' || clase.estado === 'no_asistio' ? 'bg-[var(--color-error)]'
+                          : clase.estado === 'pendiente' ? 'bg-[var(--color-brand-gold)]'
+                          : clase.estado === 'cambiado' ? 'bg-[var(--color-info)]'
+                          : 'bg-[var(--color-text-muted)]'
+                        }`} />
+                      </div>
+
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <p className="text-sm font-medium text-[var(--color-text-primary)] truncate">
+                              {clase.horario.titulo}
+                            </p>
+                            {pruebaHorarioIds.has(clase.horario.id) && (
+                              <span className="inline-flex items-center gap-0.5 rounded-full border px-1.5 py-0.5 text-[10px] font-semibold shrink-0"
+                                style={{ backgroundColor: 'var(--color-brand-gold-muted)', borderColor: 'color-mix(in srgb, var(--color-brand-gold) 40%, transparent)', color: 'var(--color-brand-gold)' }}>
+                                <GraduationCap className="size-2.5" />
+                              </span>
+                            )}
+                            <NotasIndicator count={notasCounts[clase.horario.id] ?? 0} />
+                          </div>
+                          <StatusBadge status={clase.estado} />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex items-center gap-1 text-xs text-[var(--color-text-muted)]">
+                            <Calendar className="size-3 text-[var(--color-brand-gold)]" />
+                            <span className="capitalize">{format(new Date(clase.horario.fecha + 'T12:00:00'), locale === 'en' ? "MMM d" : "d MMM", { locale: dateFnsLocale })}</span>
                           </span>
+                          <span className="inline-flex items-center gap-1 text-xs text-[var(--color-text-muted)]">
+                            <Clock className="size-3 text-[var(--color-brand-gold)]" />
+                            {clase.horario.hora_inicio}
+                          </span>
+                        </div>
+                        {clase.horario.profesor && (
+                          <p className="text-xs text-[var(--color-text-muted)] mt-1 truncate">
+                            Prof. {clase.horario.profesor.nombre} {clase.horario.profesor.apellido}
+                          </p>
                         )}
                       </div>
-                      <div className="flex items-center gap-1.5">
-                        <NotasIndicator count={notasCounts[clase.horario.id] ?? 0} />
-                        <StatusBadge status={clase.estado} />
-                      </div>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-bg-secondary)] px-2 py-0.5 text-xs text-[var(--color-text-muted)]">
-                        <Calendar className="h-3 w-3 text-[var(--color-brand-gold)]" />
-                        <span className="capitalize">{format(new Date(clase.horario.fecha + 'T12:00:00'), locale === 'en' ? "MMMM d" : "d 'de' MMMM", { locale: dateFnsLocale })}</span>
-                      </span>
-                      <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-bg-secondary)] px-2 py-0.5 text-xs text-[var(--color-text-muted)]">
-                        <Clock className="h-3 w-3 text-[var(--color-brand-gold)]" />
-                        {clase.horario.hora_inicio}
-                      </span>
                     </div>
                   </Card>
                 </Link>
@@ -277,16 +338,28 @@ function AlumnoDashboardContent() {
       {modal?.type === 'cancelar' && (
         <CancelacionForm clase={modal.clase} onCancel={cancelar} onClose={() => setModal(null)} />
       )}
-      {modal?.type === 'cambio' && user && (
-        <CambioHorarioForm clase={modal.clase} alumnoId={user.id} onCambio={pedirCambio} onClose={() => setModal(null)} />
-      )}
+      {modal?.type === 'cambio' && user && (() => {
+        const clase = modal.clase;
+        const [h1, m1] = clase.horario.hora_inicio.split(':').map(Number);
+        const [h2, m2] = clase.horario.hora_fin.split(':').map(Number);
+        const duracionMin = (h2 * 60 + m2) - (h1 * 60 + m1);
+        return clase.horario.profesor ? (
+          <SolicitudCambioForm
+            horarioOriginalId={clase.horario.id}
+            profesorId={clase.horario.profesor.id}
+            duracionMin={duracionMin}
+            onSuccess={() => setModal(null)}
+            onCancel={() => setModal(null)}
+          />
+        ) : null;
+      })()}
     </div>
   );
 }
 
 export default function AlumnoDashboardPage() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-brand-gold)] border-t-transparent" /></div>}>
+    <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="size-8 animate-spin rounded-full border-4 border-[var(--color-brand-gold)] border-t-transparent" /></div>}>
       <AlumnoDashboardContent />
     </Suspense>
   );

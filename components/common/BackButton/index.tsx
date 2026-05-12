@@ -31,7 +31,7 @@ export function BackButton({ fallback = '/', className }: BackButtonProps) {
         className
       )}
     >
-      <ArrowLeft className="w-4 h-4" />
+      <ArrowLeft className="size-4" />
       {t('volver')}
     </button>
   );

@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, use, useEffect } from 'react';
+import { useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { useQuery } from '@tanstack/react-query';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/common/Button';
@@ -22,29 +23,23 @@ export default function SetupPasswordPage({ params }: { params: Promise<{ code: 
   const [error, setError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [invalidCode, setInvalidCode] = useState(false);
 
-  const [checkingCode, setCheckingCode] = useState(true);
-  const [email, setEmail] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchInvite = async () => {
-      try {
-        const res = await fetch(`/api/auth/setup?code=${resolvedParams.code}`);
-        const data = await res.json();
-        if (!res.ok || data.used) {
-          setInvalidCode(true);
-          return;
-        }
-        setEmail(data.email);
-      } catch {
-        setInvalidCode(true);
-      } finally {
-        setCheckingCode(false);
+  const { data: inviteData, isLoading: checkingCode } = useQuery({
+    queryKey: ['setup-invite', resolvedParams.code],
+    queryFn: async () => {
+      const res = await fetch(`/api/auth/setup?code=${resolvedParams.code}`);
+      const data = await res.json();
+      if (!res.ok || data.used) {
+        return { valid: false, email: null };
       }
-    };
-    fetchInvite();
-  }, [resolvedParams.code]);
+      return { valid: true, email: data.email as string };
+    },
+    staleTime: Infinity,
+    retry: false,
+  });
+
+  const invalidCode = inviteData ? !inviteData.valid : false;
+  const email = inviteData?.email ?? null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,7 +88,7 @@ export default function SetupPasswordPage({ params }: { params: Promise<{ code: 
   if (checkingCode) {
     return (
       <div className="flex flex-col items-center justify-center space-y-4 py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-current border-t-transparent text-[var(--color-brand-gold)]" />
+        <div className="size-8 animate-spin rounded-full border-4 border-current border-t-transparent text-[var(--color-brand-gold)]" />
         <p className="text-[var(--color-text-secondary)]">{t('validando')}</p>
       </div>
     );
@@ -115,8 +110,8 @@ export default function SetupPasswordPage({ params }: { params: Promise<{ code: 
               animate={{ opacity: 1, scale: 1 }}
               className="text-center py-6"
             >
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--color-error)]/10">
-                <LinkIcon className="h-8 w-8 text-[var(--color-error)]" />
+              <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-[var(--color-error)]/10">
+                <LinkIcon className="size-8 text-[var(--color-error)]" />
               </div>
               <h3 className="text-xl font-bold text-[var(--color-text-primary)] mb-3">
                 {t('error_invalido_titulo')}
@@ -137,10 +132,10 @@ export default function SetupPasswordPage({ params }: { params: Promise<{ code: 
               animate={{ opacity: 1, scale: 1 }}
               className="text-center py-6"
             >
-              <CheckCircle2 className="mx-auto h-16 w-16 text-[var(--color-success)] mb-4" />
+              <CheckCircle2 className="mx-auto size-16 text-[var(--color-success)] mb-4" />
               <h3 className="text-xl font-bold text-[var(--color-text-primary)] mb-2">{t('exito_titulo')}</h3>
               <p className="text-[var(--color-text-secondary)] mb-6">{t('exito_desc')}</p>
-              <div className="h-6 w-6 animate-spin rounded-full border-2 border-current border-t-transparent text-[var(--color-brand-gold)] mx-auto" />
+              <div className="size-6 animate-spin rounded-full border-2 border-current border-t-transparent text-[var(--color-brand-gold)] mx-auto" />
             </motion.div>
 
           ) : (
@@ -169,7 +164,7 @@ export default function SetupPasswordPage({ params }: { params: Promise<{ code: 
                   <div className="rounded-[var(--radius-md)] bg-[var(--color-error)]/10 p-4 border border-[var(--color-error)]/20 animate-in fade-in zoom-in duration-300">
                     <div className="flex">
                       <div className="flex-shrink-0">
-                        <AlertCircle className="h-5 w-5 text-[var(--color-error)]" aria-hidden="true" />
+                        <AlertCircle className="size-5 text-[var(--color-error)]" aria-hidden="true" />
                       </div>
                       <div className="ml-3">
                         <h3 className="text-sm font-medium text-[var(--color-error)]">{formError}</h3>
@@ -198,9 +193,9 @@ export default function SetupPasswordPage({ params }: { params: Promise<{ code: 
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
                         aria-label={showPassword ? t('ocultar_password') : t('mostrar_password')}
-                        className="absolute right-2 top-1/2 z-10 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text-secondary)]"
+                        className="absolute right-2 top-1/2 z-10 inline-flex size-8 -translate-y-1/2 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text-secondary)]"
                       >
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                       </button>
                     </div>
                   </div>

@@ -11,7 +11,7 @@ export function NotasIndicator({ count }: NotasIndicatorProps) {
 
   return (
     <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-brand-gold-muted)] px-2 py-0.5 text-xs font-medium text-[var(--color-brand-gold)]">
-      <StickyNote className="h-3 w-3" />
+      <StickyNote className="size-3" />
       {count}
     </span>
   );

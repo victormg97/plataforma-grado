@@ -17,8 +17,8 @@ export default function ErrorPage({
   return (
     <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-secondary)] p-6">
       <div className="w-full max-w-md text-center">
-        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-red-100 dark:bg-red-950/30">
-          <AlertTriangle className="h-8 w-8 text-[var(--color-error)]" />
+        <div className="mx-auto mb-6 flex size-16 items-center justify-center rounded-full bg-red-100 dark:bg-red-950/30">
+          <AlertTriangle className="size-8 text-[var(--color-error)]" />
         </div>
         <h1
           className="mb-2 text-2xl font-bold text-[var(--color-text-primary)]"

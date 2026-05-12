@@ -120,8 +120,8 @@ export function Tooltip({
     : 'pointer-events-none fixed z-[99999] px-3 py-1.5 text-xs font-medium tracking-wide text-white bg-[var(--color-brand-black)] rounded-[var(--radius-md)] shadow-[0_4px_12px_rgba(0,0,0,0.15)] ring-1 ring-white/10 dark:ring-white/5 whitespace-nowrap';
 
   const arrowClass = isSubtle
-    ? 'absolute w-2 h-2 bg-[var(--color-bg)]/80 backdrop-blur-md rotate-45'
-    : 'absolute w-2 h-2 bg-[var(--color-brand-black)] rotate-45 border-r border-b border-transparent';
+    ? 'absolute size-2 bg-[var(--color-bg)]/80 backdrop-blur-md rotate-45'
+    : 'absolute size-2 bg-[var(--color-brand-black)] rotate-45 border-r border-b border-transparent';
 
   const transform =
     position === 'top'

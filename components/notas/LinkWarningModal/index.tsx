@@ -32,6 +32,7 @@ export function LinkWarningModal({
       {/* Backdrop */}
       <div
         className="fixed inset-0 z-50 bg-black/30 backdrop-blur-[2px] animate-in fade-in-0 duration-100"
+        role="presentation"
         onClick={onCancel}
       />
 
@@ -42,8 +43,8 @@ export function LinkWarningModal({
           {/* Header */}
           <div className="flex items-center justify-between px-4 pt-4 pb-3">
             <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-950/40">
-                <AlertTriangle className="h-4 w-4 text-amber-500" />
+              <div className="flex size-8 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-950/40">
+                <AlertTriangle className="size-4 text-amber-500" />
               </div>
               <h3 className="text-base font-semibold font-[family-name:var(--font-display)] text-[var(--color-text-primary)]">
                 {t('advertencia_enlace_titulo')}
@@ -52,9 +53,9 @@ export function LinkWarningModal({
             <button
               type="button"
               onClick={onCancel}
-              className="flex h-7 w-7 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]"
+              className="flex size-7 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]"
             >
-              <X className="h-4 w-4" />
+              <X className="size-4" />
             </button>
           </div>
 
@@ -66,7 +67,7 @@ export function LinkWarningModal({
 
             {/* URL box */}
             <div className="flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2">
-              <ExternalLink className="h-3.5 w-3.5 shrink-0 text-[var(--color-text-muted)]" />
+              <ExternalLink className="size-3.5 shrink-0 text-[var(--color-text-muted)]" />
               <span className="text-xs text-[var(--color-text-muted)] font-mono break-all">
                 {displayUrl}
               </span>
@@ -79,7 +80,7 @@ export function LinkWarningModal({
                   type="checkbox"
                   checked={trust}
                   onChange={(e) => setTrust(e.target.checked)}
-                  className="h-4 w-4 rounded border-[var(--color-border)] accent-[var(--color-brand-gold)] cursor-pointer"
+                  className="size-4 rounded border-[var(--color-border)] accent-[var(--color-brand-gold)] cursor-pointer"
                 />
                 <span className="text-sm text-[var(--color-text-primary)]">
                   {t('advertencia_enlace_confiar', { nombre: authorName })}
@@ -102,7 +103,7 @@ export function LinkWarningModal({
               onClick={() => onConfirm(trust)}
               className="flex items-center gap-1.5 h-8 rounded-[var(--radius-md)] bg-[var(--color-brand-gold)] px-3 text-sm font-medium text-white hover:opacity-90 transition-opacity"
             >
-              <ExternalLink className="h-3.5 w-3.5" />
+              <ExternalLink className="size-3.5" />
               {t('advertencia_enlace_abrir')}
             </button>
           </div>

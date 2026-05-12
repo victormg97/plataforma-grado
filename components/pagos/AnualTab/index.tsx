@@ -11,67 +11,27 @@ import { Tooltip } from '@/components/common/Tooltip';
 import { PagoPopup, type PagoEstado } from '@/components/pagos/PagoPopup';
 import type { AlumnoResumenAnual } from '@/app/api/admin/pagos/resumen/route';
 
-type EstadoCell = 'pagado' | 'parcial' | null;
+import { CellButton } from './components/CellButton';
+import { AlumnoRow } from './components/AlumnoRow';
+import { LegendSection } from './components/LegendSection';
+import { GridSkeleton } from './components/GridSkeleton';
+
+// ─── Constants ────────────────────────────────────────────────────────────────
 
 const MESES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface OpenPopup {
   alumnoId: string;
   mes: number;
 }
 
-// ── Clickable cell ────────────────────────────────────────────────────────────
-
-interface CellButtonProps {
-  estado: EstadoCell;
-  monto: number | null;
-  mesLabel: string;
-  onClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
-  buttonRef: React.RefObject<HTMLButtonElement | null>;
-  isOpen: boolean;
-}
-
-function CellButton({ estado, monto, mesLabel, onClick, buttonRef, isOpen }: CellButtonProps) {
-  const isPaid = estado === 'pagado';
-  const isPartial = estado === 'parcial';
-
-  const title = isPaid
-    ? `${mesLabel}: Pagado${monto ? ` · $${monto.toLocaleString('es-CL')}` : ''}`
-    : isPartial
-    ? `${mesLabel}: Parcial${monto ? ` · $${monto.toLocaleString('es-CL')}` : ''}`
-    : `${mesLabel}: Sin pago`;
-
-  return (
-    <Tooltip content={title} position="top">
-      <button
-        ref={buttonRef as React.RefObject<HTMLButtonElement>}
-        onClick={onClick}
-        aria-label={title}
-        aria-expanded={isOpen}
-        className={cn(
-          'flex h-8 w-8 items-center justify-center rounded-full text-[11px] font-bold',
-          'transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand-gold)]',
-          'hover:scale-110 active:scale-95',
-          isPaid && 'bg-[var(--color-success)] text-white shadow-sm',
-          isPartial && 'bg-orange-400 text-white shadow-sm dark:bg-orange-500',
-          !estado && cn(
-            'border border-dashed border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-transparent',
-            'hover:border-[var(--color-brand-gold)] hover:bg-[var(--color-brand-gold-muted)] hover:text-[var(--color-brand-gold)]'
-          ),
-          isOpen && 'ring-2 ring-[var(--color-brand-gold)] ring-offset-1'
-        )}
-      >
-        {isPaid ? '✓' : isPartial ? '½' : '+'}
-      </button>
-    </Tooltip>
-  );
-}
-
-// ── Main component ────────────────────────────────────────────────────────────
-
 interface AnualTabProps {
   año: number;
 }
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export function AnualTab({ año }: AnualTabProps) {
   const t = useTranslations('pagos');
@@ -79,7 +39,7 @@ export function AnualTab({ año }: AnualTabProps) {
   const [searchText, setSearchText] = useState('');
   const [showInactive, setShowInactive] = useState(false);
   const [openPopup, setOpenPopup] = useState<OpenPopup | null>(null);
-  const [openColPopup, setOpenColPopup] = useState<number | null>(null); // stores mes
+  const [openColPopup, setOpenColPopup] = useState<number | null>(null);
 
   // Map of button refs: key = `${alumnoId}-${mes}`
   const buttonRefs = useRef<Map<string, React.RefObject<HTMLButtonElement | null>>>(new Map());
@@ -207,7 +167,6 @@ export function AnualTab({ año }: AnualTabProps) {
     },
     onSettled: (_data, _err, vars) => {
       queryClient.invalidateQueries({ queryKey: ['admin-pagos-anual', año] });
-      // Invalidate TrackingTab + StatsTab cache for the affected month
       queryClient.invalidateQueries({ queryKey: ['admin-pagos', año, vars.mes] });
     },
   });
@@ -276,7 +235,7 @@ export function AnualTab({ año }: AnualTabProps) {
           {t('anual_titulo', { año })}
         </p>
         <div className="relative w-full sm:w-56">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-text-muted)]" />
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--color-text-muted)]" />
           <input
             type="text"
             value={searchText}
@@ -292,20 +251,7 @@ export function AnualTab({ año }: AnualTabProps) {
       </div>
 
       {/* Legend */}
-      <div className="flex flex-wrap items-center gap-4 text-xs text-[var(--color-text-muted)]">
-        <div className="flex items-center gap-1.5">
-          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-success)] text-[9px] font-bold text-white">✓</div>
-          <span>{t('anual_leyenda_pagado')}</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-orange-400 text-[9px] font-bold text-white">½</div>
-          <span>{t('anual_leyenda_parcial')}</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <div className="h-5 w-5 rounded-full border border-dashed border-[var(--color-border)] bg-[var(--color-bg-secondary)]" />
-          <span>{t('anual_leyenda_pendiente')}</span>
-        </div>
-      </div>
+      <LegendSection t={t} />
 
       {/* Grid */}
       {isLoading ? (
@@ -424,82 +370,3 @@ export function AnualTab({ año }: AnualTabProps) {
     </div>
   );
 }
-
-// ── Row sub-component ────────────────────────────────────────────────────────
-
-function AlumnoRow({
-  alumno,
-  t,
-  openPopup,
-  onCellClick,
-  getButtonRef,
-}: {
-  alumno: AlumnoResumenAnual;
-  t: ReturnType<typeof useTranslations<'pagos'>>;
-  openPopup: OpenPopup | null;
-  onCellClick: (alumnoId: string, mes: number) => void;
-  getButtonRef: (alumnoId: string, mes: number) => React.RefObject<HTMLButtonElement | null>;
-}) {
-  const pagadosMeses = alumno.pagos.filter((p) => p.estado === 'pagado' || p.estado === 'parcial').length;
-  const tasaMes = Math.round((pagadosMeses / 12) * 100);
-
-  return (
-    <tr className="group hover:bg-[var(--color-bg-secondary)] transition-colors">
-      <td className="sticky left-0 z-10 bg-[var(--color-bg)] px-3 py-2 group-hover:bg-[var(--color-bg-secondary)] transition-colors">
-        <span className="whitespace-nowrap text-sm font-medium text-[var(--color-text-primary)]">
-          {alumno.nombre} {alumno.apellido}
-        </span>
-      </td>
-      {alumno.pagos.map((pago) => {
-        const ref = getButtonRef(alumno.alumno_id, pago.mes);
-        const isOpen = openPopup?.alumnoId === alumno.alumno_id && openPopup?.mes === pago.mes;
-        return (
-          <td key={pago.mes} className="px-1 py-2">
-            <div className="flex justify-center">
-              <CellButton
-                estado={pago.estado as EstadoCell}
-                monto={pago.monto_pagado}
-                mesLabel={t(`meses.${pago.mes}` as Parameters<typeof t>[0])}
-                buttonRef={ref}
-                isOpen={isOpen}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  (ref as React.MutableRefObject<HTMLButtonElement | null>).current = e.currentTarget;
-                  onCellClick(alumno.alumno_id, pago.mes);
-                }}
-              />
-            </div>
-          </td>
-        );
-      })}
-      <td className="px-3 py-2 text-center">
-        <span
-          className={cn(
-            'text-xs font-semibold',
-            tasaMes >= 80 ? 'text-[var(--color-success)]' : tasaMes >= 50 ? 'text-orange-500' : 'text-[var(--color-text-muted)]'
-          )}
-        >
-          {tasaMes}%
-        </span>
-      </td>
-    </tr>
-  );
-}
-
-function GridSkeleton() {
-  return (
-    <div className="overflow-hidden rounded-[var(--radius-md)] border border-[var(--color-border)] divide-y divide-[var(--color-border)]">
-      {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="flex items-center gap-2 px-3 py-2.5">
-          <div className="h-4 w-32 animate-pulse rounded bg-[var(--color-bg-secondary)]" />
-          <div className="flex flex-1 gap-1 justify-around">
-            {Array.from({ length: 12 }).map((_, j) => (
-              <div key={j} className="h-8 w-8 animate-pulse rounded-full bg-[var(--color-bg-secondary)]" />
-            ))}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-

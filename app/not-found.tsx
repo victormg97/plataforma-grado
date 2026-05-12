@@ -4,8 +4,8 @@ export default function NotFound() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-secondary)] p-6">
       <div className="w-full max-w-md text-center">
-        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--color-brand-gold-muted)]">
-          <FileX className="h-8 w-8 text-[var(--color-brand-gold)]" />
+        <div className="mx-auto mb-6 flex size-16 items-center justify-center rounded-full bg-[var(--color-brand-gold-muted)]">
+          <FileX className="size-8 text-[var(--color-brand-gold)]" />
         </div>
         <h1
           className="mb-2 text-2xl font-bold text-[var(--color-text-primary)]"

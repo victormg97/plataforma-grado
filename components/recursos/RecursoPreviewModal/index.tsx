@@ -123,8 +123,8 @@ export function RecursoPreviewModal({ recurso, onClose }: RecursoPreviewModalPro
       case 'audio':
         return (
           <div className="flex h-full flex-col items-center justify-center gap-6 p-8">
-            <div className={cn('flex h-20 w-20 items-center justify-center rounded-[var(--radius-xl)]', fileInfo.iconBg)}>
-              <fileInfo.Icon className={cn('h-10 w-10', fileInfo.iconColor)} />
+            <div className={cn('flex size-20 items-center justify-center rounded-[var(--radius-xl)]', fileInfo.iconBg)}>
+              <fileInfo.Icon className={cn('size-10', fileInfo.iconColor)} />
             </div>
             <p className="text-sm font-medium text-[var(--color-text-primary)]">{recurso.titulo}</p>
             {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
@@ -141,8 +141,9 @@ export function RecursoPreviewModal({ recurso, onClose }: RecursoPreviewModalPro
   return createPortal(
     <div
       ref={overlayRef}
+      role="presentation"
       onClick={handleOverlayClick}
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
       style={{ animation: 'fadeInOverlay 0.15s ease' }}
     >
       <style>{`
@@ -153,13 +154,15 @@ export function RecursoPreviewModal({ recurso, onClose }: RecursoPreviewModalPro
       <div
         className="relative flex h-[90dvh] w-full max-w-4xl flex-col overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-bg)] shadow-[var(--shadow-lg)]"
         style={{ animation: 'slideInModal 0.18s ease' }}
+        role="dialog"
+        aria-modal="true"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center gap-3 border-b border-[var(--color-border)] px-4 py-3">
           {fileInfo && (
-            <div className={cn('flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-[var(--radius-sm)]', fileInfo.iconBg)}>
-              <fileInfo.Icon className={cn('h-4 w-4', fileInfo.iconColor)} />
+            <div className={cn('flex size-7 flex-shrink-0 items-center justify-center rounded-[var(--radius-sm)]', fileInfo.iconBg)}>
+              <fileInfo.Icon className={cn('size-4', fileInfo.iconColor)} />
             </div>
           )}
           <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -183,9 +186,9 @@ export function RecursoPreviewModal({ recurso, onClose }: RecursoPreviewModalPro
                 type="button"
                 title={t('descargar')}
                 onClick={handleDownload}
-                className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]"
+                className="flex size-8 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]"
               >
-                <Download className="h-4 w-4" />
+                <Download className="size-4" />
               </button>
             )}
             {url && (recurso.tipo === 'enlace' || recurso.tipo === 'video') && (
@@ -194,18 +197,18 @@ export function RecursoPreviewModal({ recurso, onClose }: RecursoPreviewModalPro
                 target="_blank"
                 rel="noopener noreferrer"
                 title={t('abrir')}
-                className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]"
+                className="flex size-8 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]"
               >
-                <ExternalLink className="h-4 w-4" />
+                <ExternalLink className="size-4" />
               </a>
             )}
             <button
               type="button"
               onClick={onClose}
               title={t('cerrar')}
-              className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]"
+              className="flex size-8 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]"
             >
-              <X className="h-4 w-4" />
+              <X className="size-4" />
             </button>
           </div>
         </div>
@@ -225,7 +228,7 @@ export function RecursoPreviewModal({ recurso, onClose }: RecursoPreviewModalPro
 function LoadingState() {
   return (
     <div className="flex h-full items-center justify-center">
-      <Loader2 className="h-8 w-8 animate-spin text-[var(--color-brand-gold)]" />
+      <Loader2 className="size-8 animate-spin text-[var(--color-brand-gold)]" />
     </div>
   );
 }
@@ -255,7 +258,7 @@ function DownloadPrompt({
         onClick={onDownload}
         className="flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-brand-gold)] px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
       >
-        <Download className="h-4 w-4" />
+        <Download className="size-4" />
         {t('descargar')}
       </button>
     </div>
@@ -273,7 +276,7 @@ function ExternalLinkPreview({
 }) {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-4 p-8 text-center">
-      <ExternalLink className="h-10 w-10 text-[var(--color-text-muted)]" />
+      <ExternalLink className="size-10 text-[var(--color-text-muted)]" />
       <p className="max-w-sm text-sm text-[var(--color-text-secondary)]">{titulo}</p>
       <a
         href={url}
@@ -281,7 +284,7 @@ function ExternalLinkPreview({
         rel="noopener noreferrer"
         className="flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-brand-gold)] px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
       >
-        <ExternalLink className="h-4 w-4" />
+        <ExternalLink className="size-4" />
         {t('abrir_enlace')}
       </a>
     </div>

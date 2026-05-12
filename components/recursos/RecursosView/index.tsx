@@ -197,7 +197,7 @@ export function RecursosView({ rol }: RecursosViewProps) {
             onClick={() => setShowUploader((v) => !v)}
             className="flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-brand-gold)] px-4 py-2.5 text-sm font-semibold text-white shadow-[var(--shadow-gold)] transition-all hover:opacity-90 min-h-[44px]"
           >
-            {showUploader ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+            {showUploader ? <X className="size-4" /> : <Plus className="size-4" />}
             {showUploader ? t('cancelar') : t('nuevo_recurso')}
           </button>
         ) : null}
@@ -247,13 +247,13 @@ export function RecursosView({ rol }: RecursosViewProps) {
       {/* Content */}
       {isLoading ? (
         <div className="py-16 text-center">
-          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-[var(--color-border)] border-t-[var(--color-brand-gold)]" />
+          <div className="mx-auto size-8 animate-spin rounded-full border-2 border-[var(--color-border)] border-t-[var(--color-brand-gold)]" />
           <p className="mt-4 text-sm text-[var(--color-text-muted)]">{t('cargando')}</p>
         </div>
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center gap-4 rounded-[var(--radius-xl)] border border-dashed border-[var(--color-border)] bg-[var(--color-bg-secondary)] py-16 px-8 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-[var(--radius-xl)] bg-[var(--color-brand-gold-muted)]">
-            <FolderOpen className="h-7 w-7 text-[var(--color-brand-gold)]" />
+          <div className="flex size-14 items-center justify-center rounded-[var(--radius-xl)] bg-[var(--color-brand-gold-muted)]">
+            <FolderOpen className="size-7 text-[var(--color-brand-gold)]" />
           </div>
           <div>
             <p className="text-sm font-semibold text-[var(--color-text-primary)]">
@@ -268,7 +268,7 @@ export function RecursosView({ rol }: RecursosViewProps) {
               onClick={() => setShowUploader(true)}
               className="flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-brand-gold)] px-4 py-2 text-sm font-medium text-[var(--color-brand-gold)] transition-colors hover:bg-[var(--color-brand-gold-muted)]"
             >
-              <Plus className="h-4 w-4" />
+              <Plus className="size-4" />
               {t('nuevo_recurso')}
             </button>
           )}

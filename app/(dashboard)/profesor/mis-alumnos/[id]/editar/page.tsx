@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft, Copy, Check, Loader2, Key, AlertCircle, Link as LinkIcon, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { ConfirmDeleteModal } from '@/components/common/ConfirmDeleteModal';
 
 export default function ProfesorEditarAlumnoPage({ params }: { params: Promise<{ id: string }> }) {
@@ -81,7 +81,7 @@ export default function ProfesorEditarAlumnoPage({ params }: { params: Promise<{
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-8 h-8 animate-spin text-[var(--color-brand-gold)]" />
+        <Loader2 className="size-8 animate-spin text-[var(--color-brand-gold)]" />
       </div>
     );
   }
@@ -89,7 +89,7 @@ export default function ProfesorEditarAlumnoPage({ params }: { params: Promise<{
   if (isError || !alumno) {
     return (
       <div className="text-center py-20">
-        <AlertCircle className="w-12 h-12 text-[var(--color-error)] mx-auto mb-4" />
+        <AlertCircle className="size-12 text-[var(--color-error)] mx-auto mb-4" />
         <h2 className="text-xl font-bold text-[var(--color-text-primary)]">{ta('error_cargar')}</h2>
         <Button onClick={() => router.push('/profesor/mis-alumnos')} className="mt-4">
           {tc('volver')}
@@ -99,7 +99,7 @@ export default function ProfesorEditarAlumnoPage({ params }: { params: Promise<{
   }
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       className="space-y-6"
@@ -109,7 +109,7 @@ export default function ProfesorEditarAlumnoPage({ params }: { params: Promise<{
         subtitle={`${alumno.nombre} ${alumno.apellido}`}
         actions={
           <Button variant="ghost" onClick={() => router.push('/profesor/mis-alumnos')}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
+            <ArrowLeft className="size-4 mr-2" />
             {tc('volver')}
           </Button>
         }
@@ -140,10 +140,10 @@ export default function ProfesorEditarAlumnoPage({ params }: { params: Promise<{
         </Card>
 
         {/* Restablecer Acceso */}
-        <Card className="p-6 shadow-sm border-orange-100 dark:border-orange-900/30 bg-orange-50/30 dark:bg-orange-950/10 space-y-6">
+        <Card className="p-6 shadow-sm border-[var(--color-border)] bg-[var(--color-bg-secondary)] space-y-6">
           <div className="flex items-center gap-3">
-            <div className="bg-orange-100 dark:bg-orange-900/50 w-10 h-10 rounded-full flex items-center justify-center text-orange-600 dark:text-orange-400 shrink-0">
-              <Key className="w-5 h-5" />
+            <div className="bg-[var(--color-brand-gold-muted)] size-10 rounded-full flex items-center justify-center text-[var(--color-brand-gold)] shrink-0">
+              <Key className="size-5" />
             </div>
             <div>
               <h3 className="text-base font-medium text-[var(--color-text-primary)]">{ta('restablecer_titulo')}</h3>
@@ -156,28 +156,28 @@ export default function ProfesorEditarAlumnoPage({ params }: { params: Promise<{
 
           {/* Current pending invitation (shown if exists and no new code generated) */}
           {alumno.current_invitation && !setupCode && (
-            <div className="bg-[var(--color-bg)] p-4 rounded-lg border border-orange-200 dark:border-orange-900/50">
-              <h4 className="text-sm font-medium text-orange-900 dark:text-orange-300 mb-2">
+            <div className="bg-[var(--color-bg)] p-4 rounded-lg border border-[var(--color-border)]">
+              <h4 className="text-sm font-medium text-[var(--color-text-primary)] mb-2">
                 {alumno.current_invitation.invitation_type === 'link' ? ta('enlace_pendiente') : ta('contrasena_pendiente')}
               </h4>
               {alumno.current_invitation.invitation_type === 'link' ? (
                 <div className="space-y-2">
-                  <Input readOnly value={`${window.location.origin}/setup/${alumno.current_invitation.code}`} className="bg-orange-50/50 dark:bg-orange-950/20 text-xs" />
+                  <Input readOnly value={`${window.location.origin}/setup/${alumno.current_invitation.code}`} className="bg-[var(--color-bg-secondary)] text-xs" />
                   <Button onClick={() => {
                     navigator.clipboard.writeText(`${window.location.origin}/setup/${alumno.current_invitation.code}`);
                     toast.success(tc('exito'));
                   }} variant="secondary" size="sm" className="w-full">
-                    <Copy className="w-4 h-4 mr-2" /> {ta('copiar_enlace')}
+                    <Copy className="size-4 mr-2" /> {ta('copiar_enlace')}
                   </Button>
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <Input readOnly value={alumno.current_invitation.temp_password} className="bg-orange-50/50 dark:bg-orange-950/20 font-mono text-center tracking-wider" />
+                  <Input readOnly value={alumno.current_invitation.temp_password} className="bg-[var(--color-bg-secondary)] font-mono text-center tracking-wider" />
                   <Button onClick={() => {
                     navigator.clipboard.writeText(alumno.current_invitation.temp_password);
                     toast.success(tc('exito'));
                   }} variant="secondary" size="sm" className="w-full">
-                    <Copy className="w-4 h-4 mr-2" /> {ta('copiar_contrasena')}
+                    <Copy className="size-4 mr-2" /> {ta('copiar_contrasena')}
                   </Button>
                 </div>
               )}
@@ -186,11 +186,11 @@ export default function ProfesorEditarAlumnoPage({ params }: { params: Promise<{
 
           <AnimatePresence mode="wait">
             {setupCode ? (
-              <motion.div
+              <m.div
                 key="result"
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
-                className="space-y-3 pt-2 border-t border-orange-100 dark:border-orange-900/30"
+                className="space-y-3 pt-2 border-t border-[var(--color-border)]"
               >
                 <Label className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">
                   {ta('nuevo_acceso_generado')}
@@ -199,31 +199,31 @@ export default function ProfesorEditarAlumnoPage({ params }: { params: Promise<{
                   <Input
                     readOnly
                     value={setupCode.code ? `${window.location.origin}/setup/${setupCode.code}` : ''}
-                    className="bg-[var(--color-bg)] border-orange-200 dark:border-orange-900/50 text-sm"
+                    className="bg-[var(--color-bg)] border-[var(--color-border)] text-sm"
                   />
                   <Button onClick={handleCopyLink} variant="secondary" className="shrink-0">
-                    {copiedLink ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
+                    {copiedLink ? <Check className="size-4 text-[var(--color-success)]" /> : <Copy className="size-4" />}
                   </Button>
                 </div>
-              </motion.div>
+              </m.div>
             ) : (
-              <motion.div
+              <m.div
                 key="form"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="border-t border-orange-100 dark:border-orange-900/30 pt-4"
+                className="border-t border-[var(--color-border)] pt-4"
               >
                 <Button
                   type="button"
                   variant="secondary"
-                  className="w-full bg-orange-100 hover:bg-orange-200 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300 dark:hover:bg-orange-900/50"
+                  className="w-full"
                   onClick={generateLink}
                   disabled={generatingLink}
                 >
-                  {generatingLink ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <LinkIcon className="w-4 h-4 mr-2" />}
+                  {generatingLink ? <Loader2 className="size-4 mr-2 animate-spin" /> : <LinkIcon className="size-4 mr-2" />}
                   {isPending ? ta('regenerar_acceso') : ta('generar_enlace_cambio')}
                 </Button>
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
         </Card>
@@ -232,8 +232,8 @@ export default function ProfesorEditarAlumnoPage({ params }: { params: Promise<{
         <Card className="mt-6 p-6 shadow-sm border-red-100 dark:border-red-900/30 bg-red-50/30 dark:bg-red-950/10">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-start gap-4">
-              <div className="bg-red-100 dark:bg-red-900/50 w-10 h-10 rounded-full flex items-center justify-center text-red-600 dark:text-red-400 shrink-0">
-                <Trash2 className="w-5 h-5" />
+              <div className="bg-red-100 dark:bg-red-900/50 size-10 rounded-full flex items-center justify-center text-red-600 dark:text-red-400 shrink-0">
+                <Trash2 className="size-5" />
               </div>
               <div>
                 <h3 className="text-base font-medium text-[var(--color-text-primary)]">{ta('eliminar_titulo')}</h3>
@@ -247,7 +247,7 @@ export default function ProfesorEditarAlumnoPage({ params }: { params: Promise<{
               onClick={() => setShowDeleteModal(true)}
               className="inline-flex items-center gap-2 rounded-lg border border-red-200 dark:border-red-800 bg-[var(--color-bg)] px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 transition-colors hover:bg-red-50 dark:hover:bg-red-950/30 shrink-0"
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="size-4" />
               {tc('eliminar')}
             </button>
           </div>
@@ -262,6 +262,6 @@ export default function ProfesorEditarAlumnoPage({ params }: { params: Promise<{
         entityType="alumno"
         description="Se eliminarán su historial, asistencias, notas y datos de acceso."
       />
-    </motion.div>
+    </m.div>
   );
 }

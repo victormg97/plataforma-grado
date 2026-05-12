@@ -15,6 +15,7 @@ import {
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { Avatar } from '@/components/common/Avatar';
+import { Tooltip } from '@/components/common/Tooltip';
 import { useTranslations, useLocale } from 'next-intl';
 
 export type AlumnoPago = {
@@ -132,30 +133,32 @@ function StudentCard({ alumno, isExpanded, onToggleExpand, onMark, t, dateLocale
           {isPending && (
             <>
               {/* Mark paid — primary action */}
-              <button
-                onClick={() => onMark(alumno.alumno_id, 'pagado')}
-                className={cn(
-                  'flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] transition-colors',
-                  'bg-green-50 text-[var(--color-success)] hover:bg-green-100',
-                  'dark:bg-green-950/30 dark:hover:bg-green-950/50'
-                )}
-                aria-label={t('marcar_pagado')}
-                title={t('marcar_pagado')}
-              >
-                <Check className="h-5 w-5" />
-              </button>
+              <Tooltip content={t('marcar_pagado')}>
+                <button
+                  onClick={() => onMark(alumno.alumno_id, 'pagado')}
+                  className={cn(
+                    'flex size-10 items-center justify-center rounded-[var(--radius-md)] transition-colors',
+                    'bg-green-50 text-[var(--color-success)] hover:bg-green-100',
+                    'dark:bg-green-950/30 dark:hover:bg-green-950/50'
+                  )}
+                  aria-label={t('marcar_pagado')}
+                >
+                  <Check className="size-5" />
+                </button>
+              </Tooltip>
               {/* Mark partial */}
-              <button
-                onClick={handleExpandPartial}
-                className={cn(
-                  'flex h-10 items-center gap-1 rounded-[var(--radius-md)] px-2.5 text-xs font-medium transition-colors',
-                  'bg-orange-50 text-orange-600 hover:bg-orange-100',
-                  'dark:bg-orange-950/30 dark:text-orange-400 dark:hover:bg-orange-950/50'
-                )}
-                aria-label={t('marcar_parcial')}
-              >
-                {t('marcar_parcial')}
-              </button>
+              <Tooltip content={t('marcar_parcial_tooltip')}>
+                <button
+                  onClick={handleExpandPartial}
+                  className={cn(
+                    'flex h-10 items-center gap-1 rounded-[var(--radius-md)] px-2.5 text-xs font-medium transition-colors',
+                    'bg-[var(--color-partial-muted)] text-[var(--color-partial)] hover:opacity-80'
+                  )}
+                  aria-label={t('marcar_parcial_tooltip')}
+                >
+                  {t('marcar_parcial')}
+                </button>
+              </Tooltip>
             </>
           )}
 
@@ -167,10 +170,10 @@ function StudentCard({ alumno, isExpanded, onToggleExpand, onMark, t, dateLocale
                   'inline-flex h-10 items-center gap-1.5 rounded-[var(--radius-md)] px-2.5 text-xs font-semibold',
                   isPaid
                     ? 'bg-green-50 text-[var(--color-success)] dark:bg-green-950/30'
-                    : 'bg-orange-50 text-orange-600 dark:bg-orange-950/30 dark:text-orange-400'
+                    : 'bg-[var(--color-partial-muted)] text-[var(--color-partial)]'
                 )}
               >
-                {isPaid ? <Check className="h-3.5 w-3.5" /> : null}
+                {isPaid ? <Check className="size-3.5" /> : null}
                 {isPaid ? t('estado_pagado') : t('estado_parcial')}
               </span>
 
@@ -178,22 +181,23 @@ function StudentCard({ alumno, isExpanded, onToggleExpand, onMark, t, dateLocale
               {isPartial && (
                 <button
                   onClick={handleExpandPartial}
-                  className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] transition-colors"
+                  className="flex size-10 items-center justify-center rounded-[var(--radius-md)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] transition-colors"
                   aria-label="Editar monto"
                 >
-                  {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  {isExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
                 </button>
               )}
 
               {/* Unmark */}
-              <button
-                onClick={() => onMark(alumno.alumno_id, 'pendiente')}
-                className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] text-[var(--color-text-muted)] hover:bg-red-50 hover:text-[var(--color-error)] dark:hover:bg-red-950/30 transition-colors"
-                aria-label={t('desmarcar')}
-                title={t('desmarcar')}
-              >
-                <X className="h-4 w-4" />
-              </button>
+              <Tooltip content={t('desmarcar')}>
+                <button
+                  onClick={() => onMark(alumno.alumno_id, 'pendiente')}
+                  className="flex size-10 items-center justify-center rounded-[var(--radius-md)] text-[var(--color-text-muted)] hover:bg-red-50 hover:text-[var(--color-error)] dark:hover:bg-red-950/30 transition-colors"
+                  aria-label={t('desmarcar')}
+                >
+                  <X className="size-4" />
+                </button>
+              </Tooltip>
             </>
           )}
         </div>
@@ -433,7 +437,7 @@ export function TrackingTab({ año, mes }: TrackingTabProps) {
         {/* Search row */}
         <div className="flex gap-2">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-text-muted)]" />
+            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--color-text-muted)]" />
             <input
               type="text"
               value={searchText}
@@ -518,7 +522,7 @@ export function TrackingTab({ año, mes }: TrackingTabProps) {
             onClick={() => setShowInactive((v) => !v)}
             className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
           >
-            {showInactive ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+            {showInactive ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
             {t('alumnos_inactivos')} ({inactiveFiltered.length})
           </button>
           {showInactive && (
@@ -560,9 +564,9 @@ function SummaryChip({
   loading: boolean;
 }) {
   const colorCls = {
-    success: 'text-[var(--color-success)] bg-green-50 dark:bg-green-950/30',
-    warning: 'text-[var(--color-warning,#e8a020)] bg-orange-50 dark:bg-orange-950/30',
-    partial: 'text-orange-600 bg-orange-50 dark:bg-orange-950/30 dark:text-orange-400',
+    success: 'text-[var(--color-success)] bg-[var(--color-success)]/10',
+    warning: 'text-[var(--color-partial)] bg-[var(--color-partial-muted)]',
+    partial: 'text-[var(--color-partial)] bg-[var(--color-partial-muted)]',
   }[color];
 
   return (
@@ -585,7 +589,7 @@ function SummaryChip({
 function EmptyState({ label }: { label: string }) {
   return (
     <div className="flex items-center justify-center gap-2 rounded-[var(--radius-md)] border border-dashed border-[var(--color-border)] py-8 text-sm text-[var(--color-text-muted)]">
-      <CreditCard className="h-4 w-4" />
+      <CreditCard className="size-4" />
       {label}
     </div>
   );

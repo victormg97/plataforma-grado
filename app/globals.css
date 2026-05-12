@@ -124,6 +124,8 @@
   --color-warning: #C9993F;
   --color-error: #C0392B;
   --color-info: #2C5F8A;
+  --color-partial: #e8a020;
+  --color-partial-muted: rgba(232, 160, 32, 0.12);
 
   /* Professor calendar palette (admin calendar, color-per-professor) */
   --color-profe-1: #C9993F;
@@ -199,6 +201,73 @@
   --color-text-muted: #666666;
   --color-border: #2A2A2A;
   --color-border-strong: #3A3A3A;
+  --color-partial: #f0a830;
+  --color-partial-muted: rgba(240, 168, 48, 0.15);
+
+  /* Professor palette — slightly brighter for dark backgrounds */
+  --color-profe-1: #D4A94F;
+  --color-profe-2: #60a5fa;
+  --color-profe-3: #a78bfa;
+  --color-profe-4: #f472b6;
+  --color-profe-5: #2dd4bf;
+  --color-profe-6: #fb923c;
+  --color-profe-7: #22d3ee;
+}
+
+.graduado {
+  --background: #0E0B00;
+  --foreground: #F5D78A;
+  --card: #1a1500;
+  --card-foreground: #F5D78A;
+  --popover: #1a1500;
+  --popover-foreground: #F5D78A;
+  --primary: #C9993F;
+  --primary-foreground: #0E0B00;
+  --secondary: #251e00;
+  --secondary-foreground: #E8C97A;
+  --muted: #1e1900;
+  --muted-foreground: #9a7d3a;
+  --accent: #E8C97A;
+  --accent-foreground: #0E0B00;
+  --destructive: #C0392B;
+  --border: #3a2e0a;
+  --input: #3a2e0a;
+  --ring: #C9993F;
+  --chart-1: #C9993F;
+  --chart-2: #E8C97A;
+  --chart-3: #F5D78A;
+  --chart-4: #FFE4A0;
+  --chart-5: #F5D78A;
+  --sidebar: #1a1500;
+  --sidebar-foreground: #F5D78A;
+  --sidebar-primary: #C9993F;
+  --sidebar-primary-foreground: #0E0B00;
+  --sidebar-accent: #251e00;
+  --sidebar-accent-foreground: #E8C97A;
+  --sidebar-border: #3a2e0a;
+  --sidebar-ring: #C9993F;
+
+  /* CTA Brand graduado overrides */
+  --color-bg: #0E0B00;
+  --color-bg-secondary: #1a1500;
+  --color-bg-elevated: #251e00;
+  --color-text-primary: #F5D78A;
+  --color-text-secondary: #C9993F;
+  --color-text-muted: #7a6020;
+  --color-border: #3a2e0a;
+  --color-border-strong: #5a4a10;
+  --color-partial: #f0a830;
+  --color-partial-muted: rgba(240, 168, 48, 0.2);
+
+  /* Professor palette — warm-tinted for graduado theme */
+  --color-profe-1: #E8C97A;
+  --color-profe-2: #60a5fa;
+  --color-profe-3: #a78bfa;
+  --color-profe-4: #f472b6;
+  --color-profe-5: #2dd4bf;
+  --color-profe-6: #fb923c;
+  --color-profe-7: #22d3ee;
+  --shadow-gold: 0 4px 20px rgba(201, 153, 63, 0.35);
 }
 
 /* Tiptap editor styles */
@@ -330,5 +399,17 @@
   button:not(:disabled),
   [role="button"]:not(:disabled) {
     cursor: pointer;
+  }
+}
+
+/* Subtle fade-in animation for filtered content transitions */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

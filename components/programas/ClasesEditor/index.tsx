@@ -124,7 +124,7 @@ export function ClasesEditor({
                   {/* Orden indicator */}
                   <div
                     className={cn(
-                      'flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-medium transition-colors',
+                      'flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-medium transition-colors',
                       isEmpty
                         ? 'bg-[var(--color-error)]/10 text-[var(--color-error)]'
                         : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)]'
@@ -136,9 +136,9 @@ export function ClasesEditor({
                   {/* Type icon */}
                   <div className="shrink-0">
                     {clase.tipo === 'prueba' ? (
-                      <FileText className="h-4 w-4 text-[var(--color-brand-gold)]" />
+                      <FileText className="size-4 text-[var(--color-brand-gold)]" />
                     ) : (
-                      <BookOpen className="h-4 w-4 text-[var(--color-text-muted)]" />
+                      <BookOpen className="size-4 text-[var(--color-text-muted)]" />
                     )}
                   </div>
 
@@ -191,7 +191,7 @@ export function ClasesEditor({
                             type="button"
                             disabled={idx === 0}
                             onClick={() => moveClase(key, -1)}
-                            className="flex h-5 w-5 items-center justify-center rounded text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] disabled:opacity-30 text-[10px] leading-none transition-colors"
+                            className="flex size-5 items-center justify-center rounded text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] disabled:opacity-30 text-[10px] leading-none transition-colors"
                           >
                             ▲
                           </button>
@@ -201,7 +201,7 @@ export function ClasesEditor({
                             type="button"
                             disabled={idx === clases.length - 1}
                             onClick={() => moveClase(key, 1)}
-                            className="flex h-5 w-5 items-center justify-center rounded text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] disabled:opacity-30 text-[10px] leading-none transition-colors"
+                            className="flex size-5 items-center justify-center rounded text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] disabled:opacity-30 text-[10px] leading-none transition-colors"
                           >
                             ▼
                           </button>
@@ -211,9 +211,9 @@ export function ClasesEditor({
                         <button
                           type="button"
                           onClick={() => removeClase(key)}
-                          className="flex h-6 w-6 items-center justify-center rounded text-[var(--color-text-muted)] hover:bg-red-50 hover:text-[var(--color-error)] dark:hover:bg-red-950/20 transition-colors"
+                          className="flex size-6 items-center justify-center rounded text-[var(--color-text-muted)] hover:bg-red-50 hover:text-[var(--color-error)] dark:hover:bg-red-950/20 transition-colors"
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
+                          <Trash2 className="size-3.5" />
                         </button>
                       </Tooltip>
                     </div>
@@ -257,7 +257,7 @@ export function ClasesEditor({
               onClick={() => addClase('materia')}
               className="flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-dashed border-[var(--color-text-secondary)] px-3 py-1.5 text-sm font-medium text-[var(--color-text-secondary)] hover:border-[var(--color-brand-gold)] hover:text-[var(--color-brand-gold)] hover:bg-[var(--color-brand-gold)]/5 active:scale-[0.98] transition-all"
             >
-              <Plus className="h-3.5 w-3.5" />
+              <Plus className="size-3.5" />
               {t('editor.agregar_clase')}
             </button>
           </Tooltip>
@@ -268,7 +268,7 @@ export function ClasesEditor({
               onClick={() => addClase('prueba')}
               className="flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-dashed border-[var(--color-brand-gold)] px-3 py-1.5 text-sm font-medium text-[var(--color-brand-gold)] hover:bg-[var(--color-brand-gold)]/10 active:scale-[0.98] transition-all"
             >
-              <Plus className="h-3.5 w-3.5" />
+              <Plus className="size-3.5" />
               {t('editor.agregar_prueba')}
             </button>
           </Tooltip>
@@ -281,7 +281,7 @@ export function ClasesEditor({
                   onClick={handleRevert}
                   className="flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--color-border)] px-3 py-1.5 text-sm text-[var(--color-text-muted)] hover:border-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
                 >
-                  <RotateCcw className="h-3.5 w-3.5" />
+                  <RotateCcw className="size-3.5" />
                   {t('editor.revertir_cambios')}
                 </button>
               </Tooltip>

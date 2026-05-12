@@ -1,6 +1,7 @@
 'use client';
 
 import { Suspense, useMemo } from 'react';
+import dynamic from 'next/dynamic';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { format } from 'date-fns';
@@ -10,14 +11,18 @@ import { useQueryParam } from '@/lib/hooks/useQueryParam';
 import { cn } from '@/lib/utils';
 import { PageHeader } from '@/components/common/PageHeader';
 import { TrackingTab } from '@/components/pagos/TrackingTab';
-import { StatsTab } from '@/components/pagos/StatsTab';
 import { AnualTab } from '@/components/pagos/AnualTab';
+
+const StatsTab = dynamic(
+  () => import('@/components/pagos/StatsTab').then(m => m.StatsTab),
+  { ssr: false, loading: () => <div className="flex justify-center py-12"><div className="size-6 animate-spin rounded-full border-2 border-[var(--color-brand-gold)] border-t-transparent" /></div> }
+);
 
 type Tab = 'seguimiento' | 'estadisticas' | 'anual';
 
 const SPINNER = (
   <div className="flex items-center justify-center py-16">
-    <div className="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-brand-gold)] border-t-transparent" />
+    <div className="size-8 animate-spin rounded-full border-4 border-[var(--color-brand-gold)] border-t-transparent" />
   </div>
 );
 
@@ -103,7 +108,7 @@ function PagosContent() {
           />
 
           {/* Arrow indicators — purely decorative, pointer-events-none */}
-          <ChevronLeft className="pointer-events-none h-5 w-5 text-[var(--color-text-muted)]" />
+          <ChevronLeft className="pointer-events-none size-5 text-[var(--color-text-muted)]" />
 
           <div className="pointer-events-none relative flex flex-col items-center gap-0.5">
             <span
@@ -126,7 +131,7 @@ function PagosContent() {
             )}
           </div>
 
-          <ChevronRight className="pointer-events-none h-5 w-5 text-[var(--color-text-muted)]" />
+          <ChevronRight className="pointer-events-none size-5 text-[var(--color-text-muted)]" />
         </div>
       )}
 
@@ -146,7 +151,7 @@ function PagosContent() {
             className="absolute inset-y-0 right-0 w-1/2 cursor-pointer transition-colors hover:bg-[var(--color-brand-gold-muted)]/40 active:bg-[var(--color-brand-gold-muted)]/70"
           />
 
-          <ChevronLeft className="pointer-events-none h-5 w-5 text-[var(--color-text-muted)]" />
+          <ChevronLeft className="pointer-events-none size-5 text-[var(--color-text-muted)]" />
           <div className="pointer-events-none flex flex-col items-center gap-0.5">
             <span
               className="text-base font-semibold text-[var(--color-text-primary)]"
@@ -158,7 +163,7 @@ function PagosContent() {
               {t('tab_anual')}
             </span>
           </div>
-          <ChevronRight className="pointer-events-none h-5 w-5 text-[var(--color-text-muted)]" />
+          <ChevronRight className="pointer-events-none size-5 text-[var(--color-text-muted)]" />
         </div>
       )}
 

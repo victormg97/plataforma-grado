@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
@@ -16,7 +17,11 @@ import { Modal } from '@/components/common/Modal';
 import { Tooltip } from '@/components/common/Tooltip';
 import { GraduadoEffect } from './GraduadoEffect';
 import { TabInformacion } from './tabs/TabInformacion';
-import { TabEstadisticas } from './tabs/TabEstadisticas';
+
+const TabEstadisticas = dynamic(
+  () => import('./tabs/TabEstadisticas').then(m => m.TabEstadisticas),
+  { ssr: false, loading: () => <div className="flex justify-center py-12"><div className="size-6 animate-spin rounded-full border-2 border-[var(--color-brand-gold)] border-t-transparent" /></div> }
+);
 
 type Tab = 'info' | 'stats';
 
@@ -39,7 +44,7 @@ export function FichaAlumnoPage({ alumnoId, role = 'profesor', backHref }: Ficha
   const [activeTab, setActiveTab] = useState<Tab>('info');
   const [graduadoModal, setGraduadoModal] = useState(false);
   const [quitarGraduadoModal, setQuitarGraduadoModal] = useState(false);
-  const [fechaPrueba, setFechaPrueba] = useState(new Date().toISOString().slice(0, 10));
+  const [fechaPrueba, setFechaPrueba] = useState(() => new Date().toISOString().slice(0, 10));
   const [intentosPrueba, setIntentosPrueba] = useState<string>('');
 
   // ── Fetch all data at once ──
@@ -88,7 +93,7 @@ export function FichaAlumnoPage({ alumnoId, role = 'profesor', backHref }: Ficha
   if (isLoading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-[var(--color-brand-gold)] border-t-transparent" />
+        <div className="size-10 animate-spin rounded-full border-4 border-[var(--color-brand-gold)] border-t-transparent" />
       </div>
     );
   }
@@ -98,7 +103,7 @@ export function FichaAlumnoPage({ alumnoId, role = 'profesor', backHref }: Ficha
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
         <p className="text-[var(--color-text-muted)]">{tf('error_cargar')}</p>
         <Button variant="ghost" onClick={() => router.push(back)}>
-          <ArrowLeft className="mr-2 h-4 w-4" /> {tc('volver')}
+          <ArrowLeft className="mr-2 size-4" /> {tc('volver')}
         </Button>
       </div>
     );
@@ -129,7 +134,7 @@ export function FichaAlumnoPage({ alumnoId, role = 'profesor', backHref }: Ficha
             onClick={() => router.push(back)}
             className="mb-6 flex items-center gap-1.5 text-sm text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text-primary)]"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="size-4" />
             {tc('volver')}
           </button>
         )}
@@ -145,7 +150,7 @@ export function FichaAlumnoPage({ alumnoId, role = 'profesor', backHref }: Ficha
           {pasoPrueba && (
             <div
               aria-hidden
-              className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full opacity-20"
+              className="pointer-events-none absolute -right-20 -top-20 size-72 rounded-full opacity-20"
               style={{ background: 'radial-gradient(circle, #C9993F 0%, transparent 70%)' }}
             />
           )}
@@ -160,8 +165,8 @@ export function FichaAlumnoPage({ alumnoId, role = 'profesor', backHref }: Ficha
                 size="xl"
               />
               {pasoPrueba && (
-                <div className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-brand-gold)] shadow-lg">
-                  <GraduationCap className="h-4 w-4 text-white" />
+                <div className="absolute -bottom-1 -right-1 flex size-8 items-center justify-center rounded-full bg-[var(--color-brand-gold)] shadow-lg">
+                  <GraduationCap className="size-4 text-white" />
                 </div>
               )}
             </div>
@@ -183,13 +188,13 @@ export function FichaAlumnoPage({ alumnoId, role = 'profesor', backHref }: Ficha
                     <StatusBadge status={getStatus()} />
                     {pasoPrueba && extra?.fecha_prueba && (
                       <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-brand-gold-muted)] px-2.5 py-0.5 text-xs font-medium text-[var(--color-brand-gold)]">
-                        <Calendar className="h-3 w-3" />
+                        <Calendar className="size-3" />
                         {new Date(extra.fecha_prueba).toLocaleDateString()}
                       </span>
                     )}
                     {pasoPrueba && extra?.intentos_prueba != null && (
                       <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-brand-gold-muted)] px-2.5 py-0.5 text-xs font-medium text-[var(--color-brand-gold)]">
-                        <Trophy className="h-3 w-3" />
+                        <Trophy className="size-3" />
                         {tf('intentos_count', { count: extra.intentos_prueba })}
                       </span>
                     )}
@@ -224,7 +229,7 @@ export function FichaAlumnoPage({ alumnoId, role = 'profesor', backHref }: Ficha
                       }`}
                     onClick={() => {/* handled in admin page */ }}
                   >
-                    {data.activo ? <ShieldAlert className="h-5 w-5" /> : <ShieldCheck className="h-5 w-5" />}
+                    {data.activo ? <ShieldAlert className="size-5" /> : <ShieldCheck className="size-5" />}
                   </button>
                 </Tooltip>
               </div>
@@ -247,8 +252,8 @@ export function FichaAlumnoPage({ alumnoId, role = 'profesor', backHref }: Ficha
                     }`}
                 >
                   {pasoPrueba
-                    ? <GraduationCap className="h-5 w-5 text-white" />
-                    : <GraduationCap className="h-5 w-5 text-[var(--color-text-muted)]" />
+                    ? <GraduationCap className="size-5 text-white" />
+                    : <GraduationCap className="size-5 text-[var(--color-text-muted)]" />
                   }
                 </div>
                 <div>
@@ -275,7 +280,7 @@ export function FichaAlumnoPage({ alumnoId, role = 'profesor', backHref }: Ficha
                   onClick={() => setGraduadoModal(true)}
                   className="shrink-0 bg-[var(--color-brand-gold)] text-white hover:bg-[var(--color-brand-gold)]/90"
                 >
-                  <CheckCircle className="mr-1.5 h-4 w-4" />
+                  <CheckCircle className="mr-1.5 size-4" />
                   {tf('marcar_graduado')}
                 </Button>
               )}
@@ -284,8 +289,8 @@ export function FichaAlumnoPage({ alumnoId, role = 'profesor', backHref }: Ficha
         ) : pasoPrueba ? (
           /* ── Banner estático de graduation para el alumno ── */
           <div className="mb-6 flex items-center gap-3 rounded-[var(--radius-xl)] border border-[var(--color-brand-gold)]/50 bg-gradient-to-r from-[var(--color-brand-gold)]/10 via-[var(--color-brand-gold)]/5 to-transparent p-5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-brand-gold)]">
-              <GraduationCap className="h-5 w-5 text-white" />
+            <div className="flex size-10 items-center justify-center rounded-full bg-[var(--color-brand-gold)]">
+              <GraduationCap className="size-5 text-white" />
             </div>
             <div>
               <p className="font-semibold text-[var(--color-brand-gold)]">{tf('graduado_titulo')}</p>
@@ -297,8 +302,8 @@ export function FichaAlumnoPage({ alumnoId, role = 'profesor', backHref }: Ficha
         {/* ── Tabs ── */}
         <div className="mb-5 flex gap-1 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-1">
           {([
-            { key: 'info' as const, label: tf('tab_info'), icon: <User className="h-4 w-4" /> },
-            { key: 'stats' as const, label: tf('tab_stats'), icon: <BarChart2 className="h-4 w-4" /> },
+            { key: 'info' as const, label: tf('tab_info'), icon: <User className="size-4" /> },
+            { key: 'stats' as const, label: tf('tab_stats'), icon: <BarChart2 className="size-4" /> },
           ] as const).map(({ key, label, icon }) => (
             <button
               key={key}

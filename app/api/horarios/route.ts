@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -19,10 +19,17 @@ export async function GET() {
     return NextResponse.json({ error: 'Perfil no encontrado' }, { status: 404 });
   }
 
+  // Optional date filter: ?fecha=YYYY-MM-DD
+  const fecha = request.nextUrl.searchParams.get('fecha');
+
   let query = supabase
     .from('horarios')
     .select('*, asistencia:asistencia!asistencia_horario_id_fkey(*), alumno:profiles!horarios_alumno_id_fkey(*), profesor:profiles!horarios_profesor_id_fkey(*)')
     .eq('activo', true);
+
+  if (fecha) {
+    query = query.eq('fecha', fecha);
+  }
 
   if (profile.rol === 'profesor') {
     query = query.eq('profesor_id', user.id);
@@ -30,7 +37,7 @@ export async function GET() {
     query = query.eq('alumno_id', user.id);
   }
 
-  const { data, error } = await query.order('fecha', { ascending: true });
+  const { data, error } = await query.order('hora_inicio', { ascending: true });
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

@@ -1,0 +1,68 @@
+{
+  "form": {
+    "titulo": "Request schedule change",
+    "fecha_label": "Proposed date",
+    "hora_inicio_label": "Start time",
+    "hora_fin_label": "End time",
+    "nota_label": "Note or comment (optional)",
+    "nota_placeholder": "Add a message for your teacher...",
+    "enviar": "Submit request",
+    "enviando": "Submitting request...",
+    "cancelar": "Cancel",
+    "exito": "Request submitted successfully. Your teacher has been notified.",
+    "error_no_disponible": "The selected time is not available. Please choose another.",
+    "error_duplicado": "A pending request already exists for this class.",
+    "error_generico": "An error occurred while submitting the request. Please try again.",
+    "campo_requerido": "This field is required",
+    "fecha_futura": "The date must be after today",
+    "disponible": "Time available",
+    "no_disponible": "Time not available",
+    "verificando": "Checking availability..."
+  },
+  "modal": {
+    "titulo_respuesta": "Respond to schedule change request",
+    "titulo_rechazo_detalle": "Rejection details",
+    "clase_original": "Original class",
+    "horario_propuesto": "Proposed schedule",
+    "alumno": "Student",
+    "aceptar": "Accept",
+    "rechazar": "Reject",
+    "motivo_rechazo_label": "Rejection reason",
+    "motivo_rechazo_placeholder": "Indicate the reason for rejection (optional)...",
+    "confirmar_rechazo": "Confirm rejection",
+    "cancelar": "Cancel",
+    "aceptando": "Accepting...",
+    "rechazando": "Rejecting...",
+    "exito_aceptada": "Request accepted. The new class has been created.",
+    "exito_rechazada": "Request rejected. The student has been notified.",
+    "error_aceptar": "Error accepting the request",
+    "error_rechazar": "Error rejecting the request"
+  },
+  "estado": {
+    "pendiente": "Pending",
+    "solicitud_pendiente": "Pending request",
+    "aceptada": "Accepted",
+    "rechazada": "Rejected"
+  },
+  "notificacion": {
+    "solicitud_cambio_horario": "{alumno} requested a schedule change",
+    "cambio_horario_aceptado": "Your schedule change request was accepted",
+    "cambio_horario_rechazado": "Your schedule change request was rejected"
+  },
+  "vista": {
+    "titulo": "Notifications",
+    "filtro_tipo": "Notification type",
+    "filtro_tipo_todas": "All",
+    "filtro_fecha_desde": "From",
+    "filtro_fecha_hasta": "To",
+    "filtro_alumno": "Search student",
+    "sin_resultados": "No notifications to display",
+    "ver_todo": "View all",
+    "pagina_info": "Page {page} of {total}",
+    "anterior": "Previous",
+    "siguiente": "Next",
+    "seleccionar_todo": "Select all",
+    "deseleccionar_todo": "Deselect all",
+    "eliminar_seleccionados": "Delete ({count})"
+  }
+}

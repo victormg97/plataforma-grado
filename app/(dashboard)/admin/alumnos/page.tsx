@@ -3,42 +3,22 @@
 import { Suspense, useState, useMemo, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { Plus, Search, UserX, UserCheck, ArrowRight, GraduationCap, Copy, Check, Pencil, ChevronDown } from 'lucide-react';
+import { Plus, Search, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
-import { Avatar } from '@/components/common/Avatar';
-import { StatusBadge } from '@/components/common/StatusBadge';
 import { Modal } from '@/components/common/Modal';
 
 import { useQueryParam } from '@/lib/hooks/useQueryParam';
 import { useTranslations } from 'next-intl';
-import { Tooltip } from '@/components/common/Tooltip';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
-
-type AlumnoAdmin = {
-  id: string;
-  nombre: string;
-  apellido: string;
-  email: string;
-  telefono: string | null;
-  avatar_url: string | null;
-  activo: boolean;
-  profesor_id: string | null;
-  profesor: { id: string; nombre: string; apellido: string } | null;
-  universidad: string | null;
-  año_ingreso: string | null;
-  notas: string | null;
-  paso_prueba: boolean;
-  fecha_prueba: string | null;
-  estado_cuenta?: 'Pendiente' | 'Activo';
-};
+import { AlumnoMobileCard, AlumnoTableRow, type AlumnoAdmin } from './components';
 
 type ProfesorOption = {
   id: string;
@@ -110,7 +90,6 @@ function AdminAlumnosContent() {
     return result;
   }, [allAlumnos, searchText, estadoFilter, profesorFilter]);
 
-  const activeProfesores = useMemo(() => profesores.filter((p) => p.activo), [profesores]);
 
   // Action modals
   const [confirmBlock, setConfirmBlock] = useState<AlumnoAdmin | null>(null);
@@ -188,7 +167,7 @@ function AdminAlumnosContent() {
         subtitle={ta('subtitulo')}
         actions={
           <Button onClick={() => router.push('/admin/alumnos/crear')}>
-            <Plus className="mr-1.5 h-4 w-4" />
+            <Plus className="mr-1.5 size-4" />
             {ta('nuevo_alumno')}
           </Button>
         }
@@ -197,7 +176,7 @@ function AdminAlumnosContent() {
       {/* Filters */}
       <div className="mt-[var(--space-lg)] flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-text-muted)]" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-[var(--color-text-muted)]" />
           <input
             value={searchText}
             onChange={(e) => {
@@ -218,7 +197,7 @@ function AdminAlumnosContent() {
                 : estadoFilter === 'graduado' ? ta('estado_graduado')
                 : ta('todos_estados')}
             </span>
-            <ChevronDown className="h-4 w-4 shrink-0 text-[var(--color-text-muted)]" />
+            <ChevronDown className="size-4 shrink-0 text-[var(--color-text-muted)]" />
           </DropdownMenuTrigger>
           <DropdownMenuContent>
             <DropdownMenuItem onClick={() => setEstadoFilter(null)}>{ta('todos_estados')}</DropdownMenuItem>
@@ -235,7 +214,7 @@ function AdminAlumnosContent() {
                 return p ? `${p.nombre} ${p.apellido}` : ta('todos_profesores');
               })()}
             </span>
-            <ChevronDown className="h-4 w-4 shrink-0 text-[var(--color-text-muted)]" />
+            <ChevronDown className="size-4 shrink-0 text-[var(--color-text-muted)]" />
           </DropdownMenuTrigger>
           <DropdownMenuContent>
             <DropdownMenuItem onClick={() => setProfesorFilter(null)}>{ta('todos_profesores')}</DropdownMenuItem>
@@ -250,7 +229,7 @@ function AdminAlumnosContent() {
       <div className="mt-[var(--space-md)]">
         {loading ? (
           <div className="flex justify-center py-12">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-brand-gold)] border-t-transparent" />
+            <div className="size-8 animate-spin rounded-full border-4 border-[var(--color-brand-gold)] border-t-transparent" />
           </div>
         ) : alumnos.length === 0 ? (
           <Card className="py-12 text-center">
@@ -261,67 +240,15 @@ function AdminAlumnosContent() {
             {/* ── Mobile: card list (< md) ── */}
             <div className="space-y-[var(--space-sm)] md:hidden">
               {alumnos.map((a) => (
-                <div
+                <AlumnoMobileCard
                   key={a.id}
-                  className="cursor-pointer rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] p-[var(--space-md)] transition-colors hover:bg-[var(--color-bg-secondary)]"
-                  onClick={() => openFicha(a.id)}
-                >
-                  {/* Info row */}
-                  <div className="flex items-center gap-3">
-                    <Avatar nombre={a.nombre} apellido={a.apellido} avatarUrl={a.avatar_url} size="sm" />
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium text-[var(--color-text-primary)] truncate">{a.nombre} {a.apellido}</p>
-                      <p className="text-xs text-[var(--color-text-muted)] truncate">{a.email}</p>
-                      {a.profesor && (
-                        <p className="mt-0.5 text-xs text-[var(--color-text-secondary)]">
-                          Prof. {a.profesor.nombre} {a.profesor.apellido}
-                        </p>
-                      )}
-                    </div>
-                    <StatusBadge status={getAlumnoStatus(a)} />
-                  </div>
-
-                  {/* Actions row */}
-                  <div
-                    className="mt-[var(--space-sm)] flex items-center justify-end gap-1 border-t border-[var(--color-border)] pt-[var(--space-sm)]"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <Tooltip content={tc('editar')}>
-                      <button
-                        onClick={() => router.push(`/admin/alumnos/${a.id}/editar`)}
-                        className="cursor-pointer rounded p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)]"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </button>
-                    </Tooltip>
-                    <Tooltip content={ta('reasignar_titulo')}>
-                      <button
-                        onClick={() => { setReassign(a); setNewProfesorId(a.profesor_id || ''); }}
-                        className="cursor-pointer rounded p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)]"
-                      >
-                        <ArrowRight className="h-4 w-4" />
-                      </button>
-                    </Tooltip>
-                    {!a.paso_prueba && a.activo && (
-                      <Tooltip content={ta('graduar_titulo')}>
-                        <button
-                          onClick={() => setGraduateModal(a)}
-                          className="cursor-pointer rounded p-1.5 text-[var(--color-brand-gold)] hover:bg-[var(--color-brand-gold-muted)]"
-                        >
-                          <GraduationCap className="h-4 w-4" />
-                        </button>
-                      </Tooltip>
-                    )}
-                    <Tooltip content={a.activo ? ta('bloquear') : ta('desbloquear')}>
-                      <button
-                        onClick={() => setConfirmBlock(a)}
-                        className={`cursor-pointer rounded p-1.5 ${a.activo ? 'text-[var(--color-error)] hover:bg-red-50 dark:hover:bg-red-950/20' : 'text-[var(--color-success)] hover:bg-green-50 dark:hover:bg-green-950/20'}`}
-                      >
-                        {a.activo ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
-                      </button>
-                    </Tooltip>
-                  </div>
-                </div>
+                  alumno={a}
+                  status={getAlumnoStatus(a)}
+                  onOpen={openFicha}
+                  onReassign={(al) => { setReassign(al); setNewProfesorId(al.profesor_id || ''); }}
+                  onGraduate={setGraduateModal}
+                  onToggleBlock={setConfirmBlock}
+                />
               ))}
             </div>
 
@@ -340,72 +267,15 @@ function AdminAlumnosContent() {
                   </thead>
                   <tbody>
                     {alumnos.map((a) => (
-                      <tr
+                      <AlumnoTableRow
                         key={a.id}
-                        className="cursor-pointer border-b border-[var(--color-border)] last:border-0 hover:bg-[var(--color-bg-secondary)] transition-colors"
-                        onClick={() => openFicha(a.id)}
-                      >
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-3">
-                            <Avatar nombre={a.nombre} apellido={a.apellido} avatarUrl={a.avatar_url} size="sm" />
-                            <div>
-                              <p className="font-medium text-[var(--color-text-primary)]">{a.nombre} {a.apellido}</p>
-                              <p className="text-xs text-[var(--color-text-muted)]">{a.email}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3">
-                          {a.profesor ? (
-                            <span className="text-[var(--color-text-primary)]">{a.profesor.nombre} {a.profesor.apellido}</span>
-                          ) : (
-                            <span className="text-[var(--color-text-muted)]">—</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3">
-                          <StatusBadge status={getAlumnoStatus(a)} />
-                        </td>
-                        <td className="px-4 py-3 hidden lg:table-cell text-[var(--color-text-muted)]">
-                          {a.universidad || '—'}
-                        </td>
-                        <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
-                          <div className="flex items-center justify-end gap-1">
-                            <Tooltip content={tc('editar')}>
-                              <button
-                                onClick={() => router.push(`/admin/alumnos/${a.id}/editar`)}
-                                className="cursor-pointer rounded p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)]"
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </button>
-                            </Tooltip>
-                            <Tooltip content={ta('reasignar_titulo')}>
-                              <button
-                                onClick={() => { setReassign(a); setNewProfesorId(a.profesor_id || ''); }}
-                                className="cursor-pointer rounded p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)]"
-                              >
-                                <ArrowRight className="h-4 w-4" />
-                              </button>
-                            </Tooltip>
-                            {!a.paso_prueba && a.activo && (
-                              <Tooltip content={ta('graduar_titulo')}>
-                                <button
-                                  onClick={() => setGraduateModal(a)}
-                                  className="cursor-pointer rounded p-1.5 text-[var(--color-brand-gold)] hover:bg-[var(--color-brand-gold-muted)]"
-                                >
-                                  <GraduationCap className="h-4 w-4" />
-                                </button>
-                              </Tooltip>
-                            )}
-                            <Tooltip content={a.activo ? ta('bloquear') : ta('desbloquear')}>
-                              <button
-                                onClick={() => setConfirmBlock(a)}
-                                className={`cursor-pointer rounded p-1.5 ${a.activo ? 'text-[var(--color-error)] hover:bg-red-50 dark:hover:bg-red-950/20' : 'text-[var(--color-success)] hover:bg-green-50 dark:hover:bg-green-950/20'}`}
-                              >
-                                {a.activo ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
-                              </button>
-                            </Tooltip>
-                          </div>
-                        </td>
-                      </tr>
+                        alumno={a}
+                        status={getAlumnoStatus(a)}
+                        onOpen={openFicha}
+                        onReassign={(al) => { setReassign(al); setNewProfesorId(al.profesor_id || ''); }}
+                        onGraduate={setGraduateModal}
+                        onToggleBlock={setConfirmBlock}
+                      />
                     ))}
                   </tbody>
                 </table>
@@ -460,7 +330,7 @@ function AdminAlumnosContent() {
                   return p ? `${p.nombre} ${p.apellido}` : ta('seleccionar_profesor');
                 })()}
               </span>
-              <ChevronDown className="h-4 w-4 shrink-0 text-[var(--color-text-muted)]" />
+              <ChevronDown className="size-4 shrink-0 text-[var(--color-text-muted)]" />
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuItem onClick={() => setNewProfesorId('')}>{ta('seleccionar_profesor')}</DropdownMenuItem>
@@ -507,7 +377,7 @@ function AdminAlumnosContent() {
 
 export default function AdminAlumnosPage() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-brand-gold)] border-t-transparent" /></div>}>
+    <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="size-8 animate-spin rounded-full border-4 border-[var(--color-brand-gold)] border-t-transparent" /></div>}>
       <AdminAlumnosContent />
     </Suspense>
   );

@@ -80,7 +80,7 @@ export default function ProfesoresPage() {
         subtitle={tp('subtitulo')}
         actions={
           <Button onClick={() => router.push('/admin/profesores/crear')}>
-            <Plus className="mr-1.5 h-4 w-4" />
+            <Plus className="mr-1.5 size-4" />
             {tp('nuevo_profesor')}
           </Button>
         }
@@ -89,7 +89,7 @@ export default function ProfesoresPage() {
       <div className="mt-[var(--space-lg)] space-y-3">
         {loading ? (
           <div className="flex justify-center py-12">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-brand-gold)] border-t-transparent" />
+            <div className="size-8 animate-spin rounded-full border-4 border-[var(--color-brand-gold)] border-t-transparent" />
           </div>
         ) : profesores.length === 0 ? (
           <Card className="py-12 text-center">
@@ -119,7 +119,7 @@ export default function ProfesoresPage() {
                     onClick={() => router.push(`/admin/profesores/${p.id}/editar`)}
                     className="rounded p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)]"
                   >
-                    <Pencil className="h-4 w-4" />
+                    <Pencil className="size-4" />
                   </button>
                 </Tooltip>
                 {p.rol !== 'admin' && (
@@ -132,7 +132,7 @@ export default function ProfesoresPage() {
                           : 'border-[var(--color-success)] text-[var(--color-success)] hover:bg-green-50 dark:hover:bg-green-950/20'
                       }`}
                     >
-                      {p.activo ? <UserX className="h-3.5 w-3.5" /> : <UserCheck className="h-3.5 w-3.5" />}
+                      {p.activo ? <UserX className="size-3.5" /> : <UserCheck className="size-3.5" />}
                       {p.activo ? tp('deshabilitar') : tp('habilitar')}
                     </button>
                   </Tooltip>
@@ -142,7 +142,7 @@ export default function ProfesoresPage() {
                     href={`/admin/alumnos?profesor_id=${p.id}`}
                     className="flex items-center gap-1 rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 py-1.5 text-xs font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)]"
                   >
-                    <Eye className="h-3.5 w-3.5" />
+                    <Eye className="size-3.5" />
                     {tp('ver_alumnos')}
                   </Link>
                 </Tooltip>
@@ -151,7 +151,7 @@ export default function ProfesoresPage() {
                     href={`/admin/profesores/${p.id}/horarios`}
                     className="flex items-center gap-1 rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 py-1.5 text-xs font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)]"
                   >
-                    <CalendarDays className="h-3.5 w-3.5" />
+                    <CalendarDays className="size-3.5" />
                     {tp('ver_clases')}
                   </Link>
                 </Tooltip>

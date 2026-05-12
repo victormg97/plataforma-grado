@@ -138,6 +138,7 @@
     "cancelaste": "Cancelaste esta clase",
     "esperando_cambio": "Solicitaste cambio de horario — esperando aprobación del profesor.",
     "pedir_otro_horario": "Pedir otro horario",
+    "ver_detalles": "Ver detalles",
     "cancelar_confirmado": "Cancelar asistencia",
     "mi_horario": "Mi Horario",
     "mi_clase": "Mi Clase",
@@ -159,7 +160,9 @@
     "confirmar_eliminar": "¿Eliminar este horario?",
     "clase_en_curso": "Esta clase está en curso.",
     "clase_ya_paso": "Esta clase ya finalizó.",
+    "clase_finalizo_solo_profesor": "La clase ya finalizó. Solo un profesor puede modificar el estado.",
     "ver_detalle_completo": "Ver detalle completo",
+    "ver_detalle_desc": "Notas, asistencia y más información",
     "tab_proximas": "Próximas",
     "tab_historial": "Historial",
     "buscar_proximas": "Buscar por título o fecha…",
@@ -189,7 +192,27 @@
     "aprobado": "Aprobado",
     "agendar_reintento": "Agendar nueva fecha de reintento",
     "actualizar_nota": "Actualizar nota",
-    "error_siguiente_clase_paso": "No se puede modificar la nota porque la siguiente clase ya ocurrió."
+    "error_siguiente_clase_paso": "No se puede modificar la nota porque la siguiente clase ya ocurrió.",
+    "popover": {
+      "prueba": "Prueba",
+      "sin_graduar": "Sin graduar",
+      "reprobado": "Reprobado"
+    },
+    "cambio": {
+      "titulo": "Solicitar cambio de horario",
+      "clase_actual": "Clase actual",
+      "elegir_horario": "Elige un horario disponible:",
+      "cargando": "Cargando horarios…",
+      "sin_disponibles": "No hay horarios disponibles para cambio.",
+      "mensaje_label": "Mensaje para tu profesor (opcional)",
+      "mensaje_placeholder": "Me gustaría cambiar porque...",
+      "cancelar": "Cancelar",
+      "enviando": "Enviando...",
+      "enviar": "Enviar solicitud",
+      "exito": "Solicitud enviada. Tu profesor fue notificado.",
+      "error": "Error al solicitar cambio",
+      "error_cargar": "Error al cargar horarios disponibles"
+    }
   },
   "asistencia": {
     "estados": {
@@ -206,6 +229,8 @@
       "calificada": "Calificada"
     },
     "estado_label": "Estado",
+    "cambiar_estado": "Cambiar estado",
+    "estado_actualizado": "Estado actualizado correctamente",
     "nota_alumno_title": "Nota del alumno",
     "confirmar_titulo": "¿Confirmar asistencia?",
     "cancelar_titulo": "¿No podrás asistir?",
@@ -431,7 +456,10 @@
       "nueva_clase": "Tu profesor agendó una nueva clase",
       "clase_modificada": "Tu profesor modificó la clase",
       "clase_cancelada": "Tu profesor canceló la clase",
-      "programa_asignado": "Tu profesor te asignó un programa de clases"
+      "programa_asignado": "Tu profesor te asignó un programa de clases",
+      "solicitud_cambio_horario": "solicitó un cambio de horario",
+      "cambio_horario_aceptado": "Cambio de horario aceptado",
+      "cambio_horario_rechazado": "Cambio de horario rechazado"
     },
     "mensajes": {
       "alumno_generico": "El alumno",
@@ -1047,9 +1075,10 @@
     "filtro_parcial": "Parcial",
     "buscar_placeholder": "Buscar alumno...",
     "todos_profesores": "Todos los profesores",
-    "marcar_pagado": "Pagado",
+    "marcar_pagado": "Marcar como pagado",
     "marcar_parcial": "Parcial",
-    "desmarcar": "Desmarcar",
+    "marcar_parcial_tooltip": "Marcar como parcial",
+    "desmarcar": "Desmarcar pago",
     "estado_pagado": "Pagado",
     "estado_pendiente": "Pendiente",
     "estado_parcial": "Parcial",

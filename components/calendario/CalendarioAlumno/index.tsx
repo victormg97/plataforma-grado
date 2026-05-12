@@ -17,6 +17,8 @@ import { useTranslations, useLocale } from 'next-intl';
 import { CalendarioDownloadButton, type CalendarioExportEvent } from '@/components/calendario/CalendarioDownloadButton';
 import { resolveCssVar } from '@/lib/utils/cssTokens';
 import { useUserStore } from '@/stores/useUserStore';
+import { CalendarEventPopover, useCalendarPopover, type PopoverEventData } from '@/components/calendario/CalendarEventPopover';
+import type { EstadoAsistencia } from '@/lib/supabase/types';
 
 const ESTADO_COLORS: Record<string, { bg: string; border: string; text: string }> = {
   pendiente:  { bg: 'var(--color-brand-gold)',  border: 'var(--color-brand-gold)',  text: '#1a1a1a' },
@@ -47,6 +49,9 @@ export function CalendarioAlumno() {
     () => new Set(pruebas.filter((p) => p.horario_id).map((p) => p.horario_id!)),
     [pruebas]
   );
+
+  // Popover on hover (desktop only)
+  const { popoverData, popoverAnchor, handleMouseEnter, handleMouseLeave, closePopover } = useCalendarPopover();
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -86,7 +91,7 @@ export function CalendarioAlumno() {
       backgroundColor: colors.bg,
       borderColor: colors.border,
       textColor: colors.text,
-      extendedProps: { asistenciaId: c.id, estado: c.estado },
+      extendedProps: { asistenciaId: c.id, estado: c.estado, clase: c },
     };
   });
 
@@ -125,25 +130,27 @@ export function CalendarioAlumno() {
   }, [clases]);
 
   function handleEventClick(info: EventClickArg) {
+    closePopover();
     router.push(buildAlumnoHorarioDetailHref(info.event.id, currentPath));
   }
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-brand-gold)] border-t-transparent" />
+        <div className="size-8 animate-spin rounded-full border-4 border-[var(--color-brand-gold)] border-t-transparent" />
       </div>
     );
   }
 
   return (
+  <>
     <div className="calendario-alumno" style={{ overflow: 'hidden' }}>
       {/* Legend row */}
       <div className="mb-3 flex flex-wrap items-center gap-3">
         <div className="flex flex-wrap gap-3">
           {Object.entries(ESTADO_COLORS).map(([estado, colors]) => (
             <div key={estado} className="flex items-center gap-1.5">
-              <span className="h-3 w-3 rounded-full" style={{ backgroundColor: colors.bg }} />
+              <span className="size-3 rounded-full" style={{ backgroundColor: colors.bg }} />
               <span className="text-xs capitalize text-[var(--color-text-muted)]">{ta(`estados.${estado}`)}</span>
             </div>
           ))}
@@ -254,6 +261,24 @@ export function CalendarioAlumno() {
         }}
         events={[]}
         eventClick={handleEventClick}
+        eventMouseEnter={(info) => {
+          const c = info.event.extendedProps.clase;
+          if (!c) return;
+          const isPrueba = pruebaHorarioIds.has(c.horario.id);
+          const prueba = isPrueba ? pruebas.find((p) => p.horario_id === c.horario.id) : null;
+          const data: PopoverEventData = {
+            titulo: c.horario.titulo,
+            hora_inicio: c.horario.hora_inicio,
+            hora_fin: c.horario.hora_fin,
+            estado: c.estado as EstadoAsistencia,
+            profesor: c.horario.profesor,
+            esPrueba: isPrueba,
+            notaPrueba: prueba?.nota ?? null,
+            descripcion: c.horario.descripcion,
+          };
+          handleMouseEnter(data, info.el);
+        }}
+        eventMouseLeave={() => handleMouseLeave()}
         eventDisplay="block"
         height={currentView === 'timeGridWeek' ? (isMobile ? '65vh' : '78vh') : 'auto'}
         aspectRatio={1.8}
@@ -263,6 +288,20 @@ export function CalendarioAlumno() {
         datesSet={(arg) => setCurrentView(arg.view.type)}
         eventContent={(arg) => {
           const isExam = pruebaHorarioIds.has(arg.event.id);
+          // In list view, render title inline (FC handles time + dot separately)
+          if (arg.view.type === 'listWeek') {
+            return (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', overflow: 'hidden' }}>
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{arg.event.title}</span>
+                {isExam && (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, opacity: 0.8 }}>
+                    <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                    <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+                  </svg>
+                )}
+              </span>
+            );
+          }
           return (
             <div style={{ display: 'flex', alignItems: 'center', width: '100%', overflow: 'hidden', gap: '3px', padding: '0 4px' }}>
               {arg.timeText && (
@@ -282,6 +321,15 @@ export function CalendarioAlumno() {
         }}
       />
     </div>
+
+    {/* Hover popover (desktop only) */}
+    <CalendarEventPopover
+      data={popoverData}
+      anchorEl={popoverAnchor}
+      rol="alumno"
+      onClose={closePopover}
+    />
+  </>
   );
 }
 

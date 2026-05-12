@@ -21,7 +21,7 @@ export function LanguageSelector({ currentLocale, onLocaleChange, className }: L
   const [isPending, startTransition] = useTransition();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  function handleChange(e: React.ChangeEvent<HTMLSelectElement>) {
+  function switchLocale(e: React.ChangeEvent<HTMLSelectElement>) {
     const locale = e.target.value as LocaleCode;
 
     // 1. Optimistic: set cookie client-side immediately so router.refresh() picks it up
@@ -42,14 +42,15 @@ export function LanguageSelector({ currentLocale, onLocaleChange, className }: L
 
   return (
     <div className={cn('space-y-1.5', className)}>
-      <label className="block text-sm font-medium text-[var(--color-text-primary)]">
+      <label htmlFor="language-selector" className="block text-sm font-medium text-[var(--color-text-primary)]">
         Idioma / Language
       </label>
       <div className="relative flex items-center">
-        <Globe className="pointer-events-none absolute left-2.5 h-4 w-4 text-[var(--color-text-muted)]" />
+        <Globe className="pointer-events-none absolute left-2.5 size-4 text-[var(--color-text-muted)]" />
         <select
+          id="language-selector"
           value={currentLocale}
-          onChange={handleChange}
+          onChange={switchLocale}
           disabled={isPending}
           className={cn(
             'w-full rounded-[var(--radius-md)] border border-[var(--color-border)]',

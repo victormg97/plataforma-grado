@@ -4,15 +4,16 @@ import { useEffect, useState, useRef, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
-import { GraduationCap } from 'lucide-react';
 import { horarioSchema, type HorarioFormData } from '@/lib/validations/horario.schema';
 import { createClient } from '@/lib/supabase/client';
 import { Modal } from '@/components/common/Modal';
 import { Button } from '@/components/common/Button';
 import type { Profile } from '@/lib/supabase/types';
 import type { HorarioConAsistencia } from '@/lib/hooks/useHorarios';
+import { AlumnoCombobox } from './components/AlumnoCombobox';
+import { ExamenToggle } from './components/ExamenToggle';
 
 interface HorarioFormProps {
   open: boolean;
@@ -27,17 +28,41 @@ interface HorarioFormProps {
   adminProfesores?: { id: string; nombre: string; apellido: string }[];
 }
 
+/** Fetch alumnos for a given professor (or all active alumnos in admin mode) */
+async function fetchAlumnosForProfesor(fetchTargetId: string, isAdmin: boolean): Promise<Profile[]> {
+  if (!fetchTargetId) return [];
+  const supabase = createClient();
+  if (isAdmin) {
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, nombre, apellido, email, telefono, avatar_url, activo, rol, created_at, updated_at')
+      .eq('rol', 'alumno')
+      .eq('activo', true)
+      .order('nombre');
+    return (profiles as Profile[]) ?? [];
+  }
+  const { data, error } = await supabase
+    .from('alumnos_extra')
+    .select('alumno_id')
+    .eq('profesor_id', fetchTargetId);
+  if (error || !data || data.length === 0) return [];
+  const ids = data.map((d) => d.alumno_id);
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('*')
+    .in('id', ids)
+    .eq('activo', true)
+    .order('nombre');
+  return (profiles as Profile[]) ?? [];
+}
+
 export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, defaultTime, onSuccess, cachedAlumnos, adminProfesores }: HorarioFormProps) {
   const t = useTranslations('horarios');
   const tc = useTranslations('common');
   const ta = useTranslations('alumnos');
   const queryClient = useQueryClient();
-  const [alumnos, setAlumnos] = useState<Profile[]>([]);
-  const [loadingAlumnos, setLoadingAlumnos] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [alumnoSearch, setAlumnoSearch] = useState('');
-  const [showDropdown, setShowDropdown] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
   // In admin mode, track which professor will teach this class
   const [activeProfId, setActiveProfId] = useState(profesorId);
   const [esExamen, setEsExamen] = useState(false);
@@ -73,6 +98,8 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
     // Admin mode: init activeProfId from edited horario or prop
     if (adminProfesores) {
       setActiveProfId((horario?.profesor_id as string) || profesorId || '');
+    } else {
+      setActiveProfId(profesorId);
     }
     if (horario) {
       reset({
@@ -109,78 +136,42 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
       setAlumnoSearch('');
       setEsExamen(false);
     }
-  }, [horario, defaultDate, defaultTime, open, reset]);
+  }, [horario, defaultDate, defaultTime, open, reset, adminProfesores, profesorId]);
 
-  // Close dropdown on outside click
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setShowDropdown(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  // Fetch alumnos using React Query — eliminates the effect chain
+  const fetchTargetId = adminProfesores ? activeProfId : profesorId;
+  const useCachedAlumnos = !adminProfesores && cachedAlumnos && cachedAlumnos.length > 0;
 
-  // Sync search text when selected alumno changes from external source
-  useEffect(() => {
+  const { data: fetchedAlumnos = [], isLoading: loadingAlumnos } = useQuery({
+    queryKey: ['form-alumnos', fetchTargetId, !!adminProfesores],
+    queryFn: () => fetchAlumnosForProfesor(fetchTargetId, !!adminProfesores),
+    enabled: open && !!fetchTargetId && !useCachedAlumnos,
+    staleTime: 60_000,
+  });
+
+  // Derive alumnos list: use cached if available, otherwise fetched
+  const alumnos: Profile[] = useMemo(
+    () => useCachedAlumnos ? (cachedAlumnos as Profile[]) : fetchedAlumnos,
+    [useCachedAlumnos, cachedAlumnos, fetchedAlumnos]
+  );
+
+  // Sync search text when selected alumno changes — derived during render, no effect needed
+  const syncedAlumnoSearch = useMemo(() => {
     if (selectedAlumnoId && alumnos.length > 0) {
       const found = alumnos.find((a) => a.id === selectedAlumnoId);
-      if (found) setAlumnoSearch(`${found.nombre} ${found.apellido}`);
+      if (found) return `${found.nombre} ${found.apellido}`;
     }
+    return null;
   }, [selectedAlumnoId, alumnos]);
 
-  // Use cached alumnos from parent (SP) or fetch as fallback
+  // Only sync once when alumnos load and there's a selected ID (e.g. editing)
+  const prevSyncRef = useRef<string | null>(null);
   useEffect(() => {
-    if (!adminProfesores && cachedAlumnos && cachedAlumnos.length > 0) {
-      setAlumnos(cachedAlumnos as Profile[]);
-      setLoadingAlumnos(false);
-      return;
+    if (syncedAlumnoSearch && syncedAlumnoSearch !== prevSyncRef.current) {
+      prevSyncRef.current = syncedAlumnoSearch;
+      setAlumnoSearch(syncedAlumnoSearch);
     }
-    const fetchTargetId = adminProfesores ? activeProfId : profesorId;
-    async function fetchAlumnos() {
-      if (!fetchTargetId) { setAlumnos([]); return; }
-      setLoadingAlumnos(true);
-      try {
-        const supabase = createClient();
-        if (adminProfesores) {
-          // Admin mode: all active alumnos (substitute professors can teach anyone)
-          const { data: profiles } = await supabase
-            .from('profiles')
-            .select('id, nombre, apellido, email, telefono, avatar_url, activo, rol, created_at, updated_at')
-            .eq('rol', 'alumno')
-            .eq('activo', true)
-            .order('nombre');
-          if (profiles) setAlumnos(profiles as Profile[]);
-        } else {
-          const { data, error } = await supabase
-            .from('alumnos_extra')
-            .select('alumno_id')
-            .eq('profesor_id', fetchTargetId);
-          if (error) { console.error('Error fetching alumnos_extra:', error.message); return; }
-          if (data && data.length > 0) {
-            const ids = data.map((d) => d.alumno_id);
-            const { data: profiles, error: profilesError } = await supabase
-              .from('profiles')
-              .select('*')
-              .in('id', ids)
-              .eq('activo', true)
-              .order('nombre');
-            if (profilesError) { console.error('Error fetching profiles:', profilesError.message); return; }
-            if (profiles) setAlumnos(profiles);
-          } else {
-            setAlumnos([]);
-          }
-        }
-      } catch (err) {
-        console.error('Error in fetchAlumnos:', err);
-      } finally {
-        setLoadingAlumnos(false);
-      }
-    }
-    if (open) fetchAlumnos();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, profesorId, activeProfId, cachedAlumnos, adminProfesores]);
+  }, [syncedAlumnoSearch]);
 
   // Filter alumnos for the dropdown — show all when search is empty
   const filteredAlumnos = useMemo(() => {
@@ -221,6 +212,8 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
       queryClient.invalidateQueries({ queryKey: ['horarios'] });
       queryClient.invalidateQueries({ queryKey: ['asistencia'] });
       queryClient.invalidateQueries({ queryKey: ['pruebas'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-clases-hoy'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
       onSuccess();
       onClose();
     } catch (err) {
@@ -238,6 +231,8 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
       queryClient.invalidateQueries({ queryKey: ['horarios'] });
       queryClient.invalidateQueries({ queryKey: ['asistencia'] });
       queryClient.invalidateQueries({ queryKey: ['pruebas'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-clases-hoy'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
       onSuccess();
       onClose();
     } catch {
@@ -299,57 +294,26 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
         {/* Alumno — searchable combo dropdown */}
         <div>
           <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">{t('campo_alumno')}</label>
-          <div className="relative" ref={dropdownRef}>
-            <input
-              type="text"
-              value={alumnoSearch}
-              onChange={(e) => {
-                setAlumnoSearch(e.target.value);
-                setShowDropdown(true);
-                if (!e.target.value) setValue('alumno_id', '');
-              }}
-              onFocus={() => setShowDropdown(true)}
-              placeholder={t('buscar_alumno_placeholder')}
-              className={inputClass}
-              autoComplete="off"
-            />
-            {showDropdown && (
-              <div className="absolute z-50 mt-1 max-h-48 w-full overflow-auto rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] shadow-lg">
-                {loadingAlumnos ? (
-                  <div className="flex items-center justify-center py-3">
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--color-brand-gold)] border-t-transparent" />
-                    <span className="ml-2 text-sm text-[var(--color-text-muted)]">{tc('cargando')}</span>
-                  </div>
-                ) : filteredAlumnos.length > 0 ? (
-                  filteredAlumnos.map((a) => (
-                    <button
-                      key={a.id}
-                      type="button"
-                      className={`w-full px-3 py-2 text-left text-sm transition-colors hover:bg-[var(--color-bg-secondary)] ${
-                        selectedAlumnoId === a.id ? 'bg-[var(--color-bg-secondary)] font-medium' : ''
-                      }`}
-                      onClick={() => {
-                        setValue('alumno_id', a.id, { shouldValidate: true });
-                        setAlumnoSearch(`${a.nombre} ${a.apellido}`);
-                        setShowDropdown(false);
-                      }}
-                    >
-                      <span className="text-[var(--color-text-primary)]">{a.nombre} {a.apellido}</span>
-                      <span className="ml-2 text-xs text-[var(--color-text-muted)]">{a.email}</span>
-                    </button>
-                  ))
-                ) : alumnos.length === 0 ? (
-                  <p className="px-3 py-2 text-sm text-[var(--color-text-muted)]">
-                    {ta('sin_alumnos')}
-                  </p>
-                ) : (
-                  <p className="px-3 py-2 text-sm text-[var(--color-text-muted)]">
-                    {t('no_alumnos_encontrados')}
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
+          <AlumnoCombobox
+            alumnos={alumnos}
+            loading={loadingAlumnos}
+            selectedId={selectedAlumnoId}
+            searchText={alumnoSearch}
+            onSearchChange={(text) => {
+              setAlumnoSearch(text);
+              if (!text) setValue('alumno_id', '');
+            }}
+            onSelect={(id, displayName) => {
+              setValue('alumno_id', id, { shouldValidate: true });
+              setAlumnoSearch(displayName);
+            }}
+            placeholder={t('buscar_alumno_placeholder')}
+            emptyMessage={ta('sin_alumnos')}
+            noResultsMessage={t('no_alumnos_encontrados')}
+            loadingMessage={tc('cargando')}
+            inputClassName={inputClass}
+            filteredAlumnos={filteredAlumnos}
+          />
           {errors.alumno_id && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.alumno_id.message}</p>}
         </div>
 
@@ -411,35 +375,12 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
         </div>
 
         {/* Es Examen toggle */}
-        <button
-          type="button"
-          onClick={() => setEsExamen(!esExamen)}
-          className={`flex w-full items-center gap-3 rounded-[var(--radius-md)] border p-3 text-left transition-colors ${
-            esExamen
-              ? 'border-[var(--color-brand-gold)] bg-[var(--color-brand-gold-muted)]'
-              : 'border-[var(--color-border)] hover:bg-[var(--color-bg-secondary)]'
-          }`}
-        >
-          {/* Toggle switch */}
-          <div
-            className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${
-              esExamen ? 'bg-[var(--color-brand-gold)]' : 'bg-[var(--color-border)]'
-            }`}
-          >
-            <div
-              className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
-                esExamen ? 'translate-x-4' : 'translate-x-0.5'
-              }`}
-            />
-          </div>
-          <div className="flex-1">
-            <p className={`text-sm font-medium ${
-              esExamen ? 'text-[var(--color-brand-gold)]' : 'text-[var(--color-text-primary)]'
-            }`}>{t('es_examen')}</p>
-            <p className="text-xs text-[var(--color-text-muted)]">{t('es_examen_desc')}</p>
-          </div>
-          {esExamen && <GraduationCap className="h-4 w-4 shrink-0 text-[var(--color-brand-gold)]" />}
-        </button>
+        <ExamenToggle
+          checked={esExamen}
+          onChange={setEsExamen}
+          label={t('es_examen')}
+          description={t('es_examen_desc')}
+        />
       </form>
     </Modal>
   );

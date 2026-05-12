@@ -83,12 +83,12 @@ export function NotasSection({ horarioId }: NotasSectionProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <StickyNote className="h-4 w-4 text-[var(--color-brand-gold)]" />
+          <StickyNote className="size-4 text-[var(--color-brand-gold)]" />
           <h3 className="text-sm font-semibold uppercase text-[var(--color-text-muted)]">
             {t('titulo')}
           </h3>
           {allNotas.length > 0 && (
-            <span className="inline-flex items-center justify-center h-5 min-w-5 rounded-full bg-[var(--color-brand-gold-muted)] px-1.5 text-[10px] font-medium text-[var(--color-brand-gold)]">
+            <span className="inline-flex items-center justify-center min-size-5 rounded-full bg-[var(--color-brand-gold-muted)] px-1.5 text-[10px] font-medium text-[var(--color-brand-gold)]">
               {allNotas.length}
             </span>
           )}
@@ -99,7 +99,7 @@ export function NotasSection({ horarioId }: NotasSectionProps) {
             onClick={() => setShowEditor(true)}
             className="flex items-center gap-1 rounded-[var(--radius-md)] bg-[var(--color-brand-gold)] px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 min-h-[32px]"
           >
-            <Plus className="h-3.5 w-3.5" />
+            <Plus className="size-3.5" />
             {t('nueva_nota')}
           </button>
         )}
@@ -118,7 +118,7 @@ export function NotasSection({ horarioId }: NotasSectionProps) {
       {/* Search (only show when there are notes) */}
       {allNotas.length > 3 && (
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-text-muted)]" />
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--color-text-muted)]" />
           <input
             type="text"
             value={debouncedSearch}
@@ -132,7 +132,7 @@ export function NotasSection({ horarioId }: NotasSectionProps) {
               onClick={() => handleSearchChange('')}
               className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
             >
-              <X className="h-3.5 w-3.5" />
+              <X className="size-3.5" />
             </button>
           )}
         </div>
@@ -141,11 +141,11 @@ export function NotasSection({ horarioId }: NotasSectionProps) {
       {/* Notes list */}
       {loading ? (
         <div className="flex items-center justify-center py-8">
-          <div className="h-6 w-6 animate-spin rounded-full border-3 border-[var(--color-brand-gold)] border-t-transparent" />
+          <div className="size-6 animate-spin rounded-full border-3 border-[var(--color-brand-gold)] border-t-transparent" />
         </div>
       ) : notas.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-8 text-center">
-          <StickyNote className="h-10 w-10 text-[var(--color-text-muted)] mb-2 opacity-50" />
+          <StickyNote className="size-10 text-[var(--color-text-muted)] mb-2 opacity-50" />
           <p className="text-sm text-[var(--color-text-muted)]">
             {searchTerm ? t('sin_resultados_busqueda') : t('sin_notas')}
           </p>

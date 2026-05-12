@@ -30,25 +30,25 @@ interface NavItem {
 
 const navItems: Record<UserRol, NavItem[]> = {
   admin: [
-    { key: 'dashboard', href: '/admin', icon: <LayoutDashboard className="h-4 w-4" /> },
-    { key: 'agenda', href: '/admin/agenda', icon: <Calendar className="h-4 w-4" /> },
-    { key: 'profesores', href: '/admin/profesores', icon: <BookOpen className="h-4 w-4" /> },
-    { key: 'alumnos', href: '/admin/alumnos', icon: <GraduationCap className="h-4 w-4" /> },
-    { key: 'programas', href: '/admin/programas', icon: <ClipboardList className="h-4 w-4" /> },
-    { key: 'pagos', href: '/admin/pagos', icon: <CreditCard className="h-4 w-4" /> },
+    { key: 'dashboard', href: '/admin', icon: <LayoutDashboard className="size-4" /> },
+    { key: 'agenda', href: '/admin/agenda', icon: <Calendar className="size-4" /> },
+    { key: 'profesores', href: '/admin/profesores', icon: <BookOpen className="size-4" /> },
+    { key: 'alumnos', href: '/admin/alumnos', icon: <GraduationCap className="size-4" /> },
+    { key: 'programas', href: '/admin/programas', icon: <ClipboardList className="size-4" /> },
+    { key: 'pagos', href: '/admin/pagos', icon: <CreditCard className="size-4" /> },
   ],
   profesor: [
-    { key: 'dashboard', href: '/profesor', icon: <LayoutDashboard className="h-4 w-4" /> },
-    { key: 'agenda', href: '/profesor/agenda', icon: <Calendar className="h-4 w-4" /> },
-    { key: 'mis_alumnos', href: '/profesor/mis-alumnos', icon: <Users className="h-4 w-4" /> },
-    { key: 'horarios', href: '/profesor/horarios', icon: <BookOpen className="h-4 w-4" /> },
-    { key: 'programas', href: '/profesor/programas', icon: <ClipboardList className="h-4 w-4" /> },
+    { key: 'dashboard', href: '/profesor', icon: <LayoutDashboard className="size-4" /> },
+    { key: 'agenda', href: '/profesor/agenda', icon: <Calendar className="size-4" /> },
+    { key: 'mis_alumnos', href: '/profesor/mis-alumnos', icon: <Users className="size-4" /> },
+    { key: 'horarios', href: '/profesor/horarios', icon: <BookOpen className="size-4" /> },
+    { key: 'programas', href: '/profesor/programas', icon: <ClipboardList className="size-4" /> },
   ],
   alumno: [
-    { key: 'mis_clases', href: '/alumno', icon: <LayoutDashboard className="h-4 w-4" /> },
-    { key: 'agenda', href: '/alumno/agenda', icon: <Calendar className="h-4 w-4" /> },
-    { key: 'horario', href: '/alumno/horario', icon: <GraduationCap className="h-4 w-4" /> },
-    { key: 'perfil', href: '/alumno/perfil', icon: <User className="h-4 w-4" /> },
+    { key: 'mis_clases', href: '/alumno', icon: <LayoutDashboard className="size-4" /> },
+    { key: 'agenda', href: '/alumno/agenda', icon: <Calendar className="size-4" /> },
+    { key: 'horario', href: '/alumno/horario', icon: <GraduationCap className="size-4" /> },
+    { key: 'perfil', href: '/alumno/perfil', icon: <User className="size-4" /> },
   ],
 };
 
@@ -75,6 +75,7 @@ export function Sidebar() {
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          role="presentation"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -95,7 +96,7 @@ export function Sidebar() {
             onClick={() => setSidebarOpen(false)}
             className="absolute right-4 lg:hidden text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
           >
-            <X className="h-5 w-5" />
+            <X className="size-5" />
           </button>
         </div>
 
@@ -134,7 +135,7 @@ export function Sidebar() {
                 : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]'
             )}
           >
-            <FolderOpen className="h-4 w-4" />
+            <FolderOpen className="size-4" />
             {t('recursos')}
           </Link>
         </div>

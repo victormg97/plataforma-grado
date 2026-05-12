@@ -264,7 +264,7 @@ export function CalendarioDownloadButton({
               left: mobilePopup.x,
               top: mobilePopup.y - 8,
               transform: 'translateX(-50%) translateY(-100%)',
-              zIndex: 9999,
+              zIndex: 50,
             }}
             className="animate-in fade-in slide-in-from-bottom-2 duration-200"
           >
@@ -290,14 +290,14 @@ export function CalendarioDownloadButton({
                 disabled={isLocked || !!downloading}
                 title={locale === 'es' ? 'Descargar imagen PNG' : 'Download PNG image'}
                 className={cn(
-                  'flex h-7 w-7 items-center justify-center rounded-full',
+                  'flex size-7 items-center justify-center rounded-full',
                   'text-[var(--color-text-secondary)] hover:bg-[var(--color-brand-gold-muted)] hover:text-[var(--color-brand-gold)]',
                   'transition-colors disabled:pointer-events-none disabled:opacity-40',
                 )}
               >
                 {downloading === 'image'
-                  ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  : <ImageIcon className="h-3.5 w-3.5" />
+                  ? <Loader2 className="size-3.5 animate-spin" />
+                  : <ImageIcon className="size-3.5" />
                 }
               </button>
 
@@ -307,24 +307,24 @@ export function CalendarioDownloadButton({
                 disabled={isLocked || !!downloading}
                 title={locale === 'es' ? 'Descargar PDF' : 'Download PDF'}
                 className={cn(
-                  'flex h-7 w-7 items-center justify-center rounded-full',
+                  'flex size-7 items-center justify-center rounded-full',
                   'text-[var(--color-text-secondary)] hover:bg-[var(--color-brand-gold-muted)] hover:text-[var(--color-brand-gold)]',
                   'transition-colors disabled:pointer-events-none disabled:opacity-40',
                 )}
               >
                 {downloading === 'pdf'
-                  ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  : <FileText className="h-3.5 w-3.5" />
+                  ? <Loader2 className="size-3.5 animate-spin" />
+                  : <FileText className="size-3.5" />
                 }
               </button>
 
               {/* Close */}
               <button
                 onClick={() => setMobilePopup(null)}
-                className="flex h-7 w-7 items-center justify-center rounded-full text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
+                className="flex size-7 items-center justify-center rounded-full text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
                 aria-label="Cerrar"
               >
-                <X className="h-3 w-3" />
+                <X className="size-3" />
               </button>
             </div>
 
@@ -343,7 +343,7 @@ export function CalendarioDownloadButton({
               aria-hidden
             >
               <div
-                className="h-2.5 w-2.5 rotate-45 bg-[var(--color-bg)] border-r border-b border-[var(--color-border)]"
+                className="size-2.5 rotate-45 bg-[var(--color-bg)] border-r border-b border-[var(--color-border)]"
               />
             </div>
           </div>
@@ -374,7 +374,7 @@ export function CalendarioDownloadButton({
   const dropdownContent = (pos: { top: number; right: number }) => (
     <div
       ref={desktopDropdownRef}
-      style={{ position: 'fixed', top: pos.top, right: pos.right, zIndex: 9999 }}
+      style={{ position: 'fixed', top: pos.top, right: pos.right, zIndex: 50 }}
       className={cn(
         'min-w-[168px] overflow-hidden',
         'rounded-[var(--radius-md)]',
@@ -384,7 +384,7 @@ export function CalendarioDownloadButton({
     >
       {/* Header: current view label */}
       <div className="flex items-center gap-1.5 border-b border-[var(--color-border)] px-3 py-2">
-        <Download className="h-3 w-3 text-[var(--color-brand-gold)]" />
+        <Download className="size-3 text-[var(--color-brand-gold)]" />
         <span className="text-[11px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
           {viewLabel}
         </span>
@@ -401,7 +401,7 @@ export function CalendarioDownloadButton({
           'transition-colors disabled:pointer-events-none disabled:opacity-40',
         )}
       >
-        <ImageIcon className="h-3.5 w-3.5 shrink-0 text-[var(--color-brand-gold)]" />
+        <ImageIcon className="size-3.5 shrink-0 text-[var(--color-brand-gold)]" />
         <div className="text-left">
           <p className="text-xs font-medium">
             {locale === 'es' ? 'Imagen PNG' : 'PNG Image'}
@@ -425,7 +425,7 @@ export function CalendarioDownloadButton({
           'transition-colors disabled:pointer-events-none disabled:opacity-40',
         )}
       >
-        <FileText className="h-3.5 w-3.5 shrink-0 text-[var(--color-brand-gold)]" />
+        <FileText className="size-3.5 shrink-0 text-[var(--color-brand-gold)]" />
         <div className="text-left">
           <p className="text-xs font-medium">
             {locale === 'es' ? 'Documento PDF' : 'PDF Document'}
@@ -460,11 +460,11 @@ export function CalendarioDownloadButton({
             aria-label={locale === 'es' ? 'Descargar agenda' : 'Download agenda'}
             onClick={handleDesktopClick}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleDesktopClick(); }}
-            className="flex h-full w-full items-center justify-center"
+            className="inline-flex items-center justify-center"
           >
             {downloading
-              ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              : <Download className="h-3.5 w-3.5" />
+              ? <Loader2 className="size-3.5 animate-spin" />
+              : <Download className="size-3.5" />
             }
           </span>
         </Tooltip>,

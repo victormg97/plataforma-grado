@@ -38,17 +38,17 @@ export function Modal({
       }}
     >
       <DialogContent
-        className="max-w-lg flex flex-col max-h-[90dvh] overflow-hidden border-[var(--color-border)] bg-[var(--color-bg)]"
+        className="max-w-lg md:max-w-xl flex flex-col max-h-[90dvh] overflow-hidden border-[var(--color-border)] bg-[var(--color-bg)]"
         showCloseButton={!preventOutsideClose}
       >
         {preventOutsideClose && (
           <button
             type="button"
             onClick={onClose}
-            className="absolute top-2 right-2 inline-flex h-7 w-7 items-center justify-center rounded-md text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+            className="absolute top-2 right-2 inline-flex size-7 items-center justify-center rounded-md text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
             aria-label="Cerrar"
           >
-            <XIcon className="h-4 w-4" />
+            <XIcon className="size-4" />
           </button>
         )}
         <DialogHeader>

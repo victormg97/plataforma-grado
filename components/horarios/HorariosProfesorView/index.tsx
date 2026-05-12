@@ -23,16 +23,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 import { useHorarios } from '@/lib/hooks/useHorarios';
-import { useNotasCount } from '@/lib/hooks/useNotasCount';
-import { useDebounce } from '@/lib/hooks/useDebounce';
 import { usePruebas } from '@/lib/hooks/usePruebas';
 import { buildClaseDetailHref } from '@/lib/utils/horarioNavigation';
 import type { HorarioConAsistencia } from '@/lib/hooks/useHorarios';
+import { useHorariosFilters } from './useHorariosFilters';
+import { FilterChip } from './FilterChip';
 
 type EstadoAsistencia = 'pendiente' | 'confirmado' | 'no_asistio' | 'cancelado' | 'cambiado';
-
-type ActiveTab = 'proximas' | 'historial';
-type EstadoFilter = EstadoAsistencia | 'todos';
 
 /* ─────────────────────────────────────────── helpers ── */
 
@@ -50,7 +47,7 @@ function SearchInput({
   const inputRef = useRef<HTMLInputElement>(null);
   return (
     <div className="relative">
-      <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-text-muted)]" />
+      <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-4 text-[var(--color-text-muted)]" />
       <input
         ref={inputRef}
         id={id}
@@ -67,33 +64,11 @@ function SearchInput({
           className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
           aria-label="Limpiar búsqueda"
         >
-          <X className="h-3.5 w-3.5" />
+          <X className="size-3.5" />
         </button>
       )}
     </div>
   );
-}
-
-/* ─── date search helper ── */
-function matchesDateQuery(fecha: string, query: string, locale: Locale): boolean {
-  if (!query.trim()) return false;
-  try {
-    const [y, m, d] = fecha.split('-').map(Number);
-    const date = new Date(y, m - 1, d);
-    const q = query.toLowerCase().trim();
-    const combined = [
-      format(date, 'd/M/yyyy'),
-      format(date, 'dd/MM/yyyy'),
-      format(date, 'd-M-yyyy'),
-      format(date, 'dd-MM-yyyy'),
-      format(date, "EEEE d 'de' MMMM 'de' yyyy", { locale }),
-      format(date, "EEEE 'de' MMMM 'de' yyyy", { locale }),
-      format(date, 'MMMM yyyy', { locale }),
-    ].join(' ').toLowerCase();
-    return combined.includes(q);
-  } catch {
-    return false;
-  }
 }
 
 /* ─── alumno combobox ── */
@@ -135,17 +110,17 @@ function AlumnoCombobox({
             : 'border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text-secondary)] hover:border-[var(--color-border-strong)] hover:text-[var(--color-text-primary)]'
         }`}
       >
-        <User className="h-3.5 w-3.5 shrink-0" />
+        <User className="size-3.5 shrink-0" />
         <span className="truncate max-w-[120px]">
           {selected ? `${selected.nombre} ${selected.apellido}` : t('seleccionar_alumno')}
         </span>
         {value ? (
           <X
-            className="h-3 w-3 shrink-0 hover:opacity-60 cursor-pointer"
+            className="size-3 shrink-0 hover:opacity-60 cursor-pointer"
             onClick={(e) => { e.stopPropagation(); onChange(null); setOpen(false); }}
           />
         ) : (
-          <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-60" />
+          <ChevronDown className="size-3.5 shrink-0 opacity-60" />
         )}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" side="bottom" className="w-56 p-0">
@@ -279,6 +254,9 @@ function ProximaClaseCard({
   return (
     <div
       onClick={onEdit}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onEdit(); } }}
       className={`relative rounded-[var(--radius-lg)] border bg-[var(--color-bg)] shadow-[var(--shadow-sm)] overflow-hidden cursor-pointer transition-all hover:shadow-[var(--shadow-md)] hover:-translate-y-0.5 ${
         isFirst
           ? 'border-[var(--color-brand-gold)]/50 shadow-[var(--shadow-gold)]'
@@ -322,7 +300,7 @@ function ProximaClaseCard({
                 color: 'var(--color-brand-gold)',
               }}
             >
-              <GraduationCap className="h-2.5 w-2.5" />
+              <GraduationCap className="size-2.5" />
               {t('badge_examen')}
             </span>
           )}
@@ -331,7 +309,7 @@ function ProximaClaseCard({
         {/* Info pills */}
         <div className="flex flex-wrap gap-2 text-xs text-[var(--color-text-muted)]">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-bg-secondary)] px-3 py-1">
-            <Calendar className="h-3.5 w-3.5 text-[var(--color-brand-gold)] flex-shrink-0" />
+            <Calendar className="size-3.5 text-[var(--color-brand-gold)] flex-shrink-0" />
             <span className="capitalize">
               {format(
                 new Date(horario.fecha + 'T12:00:00'),
@@ -354,7 +332,7 @@ function ProximaClaseCard({
               onClick={(e) => e.stopPropagation()}
               className="inline-flex rounded p-1.5 text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-brand-gold)]"
             >
-              <ExternalLink className="h-4 w-4" />
+              <ExternalLink className="size-4" />
             </Link>
           </Tooltip>
           <Tooltip content={tc('editar')} position="top">
@@ -362,7 +340,7 @@ function ProximaClaseCard({
               onClick={(e) => { e.stopPropagation(); onEdit(); }}
               className="rounded p-1.5 text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-brand-gold)]"
             >
-              <Edit2 className="h-4 w-4" />
+              <Edit2 className="size-4" />
             </button>
           </Tooltip>
           <Tooltip content={tc('eliminar')} position="top">
@@ -370,7 +348,7 @@ function ProximaClaseCard({
               onClick={(e) => { e.stopPropagation(); onDelete(); }}
               className="rounded p-1.5 text-[var(--color-text-muted)] transition-colors hover:bg-red-50 hover:text-[var(--color-error)]"
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="size-4" />
             </button>
           </Tooltip>
         </div>
@@ -412,6 +390,9 @@ function HistorialClaseCard({
   return (
     <div
       onClick={onEdit}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onEdit(); } }}
       className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg)] shadow-[var(--shadow-sm)] overflow-hidden cursor-pointer transition-all hover:shadow-[var(--shadow-md)] hover:border-[var(--color-border-strong)]"
     >
       <div className="p-4">
@@ -450,7 +431,7 @@ function HistorialClaseCard({
                 color: 'var(--color-brand-gold)',
               }}
             >
-              <GraduationCap className="h-2.5 w-2.5" />
+              <GraduationCap className="size-2.5" />
               {t('badge_examen')}
             </span>
           )}
@@ -459,7 +440,7 @@ function HistorialClaseCard({
         {/* Info pills */}
         <div className="flex flex-wrap gap-1.5 text-xs text-[var(--color-text-muted)]">
           <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-bg-secondary)] px-2.5 py-0.5">
-            <Calendar className="h-3 w-3 text-[var(--color-brand-gold)] flex-shrink-0" />
+            <Calendar className="size-3 text-[var(--color-brand-gold)] flex-shrink-0" />
             <span className="capitalize">
               {format(
                 new Date(horario.fecha + 'T12:00:00'),
@@ -482,7 +463,7 @@ function HistorialClaseCard({
               onClick={(e) => e.stopPropagation()}
               className="inline-flex rounded p-1.5 text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-brand-gold)]"
             >
-              <ExternalLink className="h-4 w-4" />
+              <ExternalLink className="size-4" />
             </Link>
           </Tooltip>
           <Tooltip content={tc('editar')} position="top">
@@ -490,7 +471,7 @@ function HistorialClaseCard({
               onClick={(e) => { e.stopPropagation(); onEdit(); }}
               className="rounded p-1.5 text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-brand-gold)]"
             >
-              <Edit2 className="h-4 w-4" />
+              <Edit2 className="size-4" />
             </button>
           </Tooltip>
           <Tooltip content={tc('eliminar')} position="top">
@@ -498,7 +479,7 @@ function HistorialClaseCard({
               onClick={(e) => { e.stopPropagation(); onDelete(); }}
               className="rounded p-1.5 text-[var(--color-text-muted)] transition-colors hover:bg-red-50 hover:text-[var(--color-error)]"
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="size-4" />
             </button>
           </Tooltip>
         </div>
@@ -533,127 +514,11 @@ export function HorariosProfesorView({ profesorId, role }: HorariosProfesorViewP
     [pruebas]
   );
 
-  const [activeTab, setActiveTab] = useState<ActiveTab>('proximas');
+  const filters = useHorariosFilters({ rawData, pruebaHorarioIds, dateFnsLocale });
+
   const [editHorarioId, setEditHorarioId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-
-  /* Proximas tab state */
-  const [searchProximas, setSearchProximas] = useState('');
-  const [estadoProximas, setEstadoProximas] = useState<EstadoFilter>('todos');
-
-  /* Historial tab state */
-  const [searchHistorial, setSearchHistorial] = useState('');
-  const [historialFilter, setHistorialFilter] = useState<EstadoFilter>('todos');
-  const [soloConNotas, setSoloConNotas] = useState(false);
-  const [soloPruebas, setSoloPruebas] = useState(false);
-  const [soloPruebasProximas, setSoloPruebasProximas] = useState(false);
-  const [selectedAlumnoId, setSelectedAlumnoId] = useState<string | null>(null);
-
-  const debouncedProximas = useDebounce(searchProximas, 280);
-  const debouncedHistorial = useDebounce(searchHistorial, 280);
-
-  const today = new Date().toISOString().split('T')[0];
-
-  const upcoming = useMemo(
-    () =>
-      rawData
-        .filter((h) => h.fecha >= today && h.activo)
-        .sort((a, b) => a.fecha.localeCompare(b.fecha) || a.hora_inicio.localeCompare(b.hora_inicio)),
-    [rawData, today]
-  );
-
-  const past = useMemo(
-    () =>
-      rawData
-        .filter((h) => h.fecha < today)
-        .sort((a, b) => b.fecha.localeCompare(a.fecha)),
-    [rawData, today]
-  );
-
-  /* Notas counts for past classes */
-  const notableIds = useMemo(
-    () =>
-      past
-        .filter((h) => {
-          const e = h.asistencia?.[0]?.estado;
-          return e === 'confirmado' || e === 'no_asistio';
-        })
-        .map((h) => h.id),
-    [past]
-  );
-  const notasCounts = useNotasCount(notableIds);
-
-  /* Upcoming statuses (for filter dropdown) */
-  const upcomingStatuses = useMemo(() => {
-    const seen = new Set<EstadoAsistencia>();
-    upcoming.forEach((h) => {
-      const e = h.asistencia?.[0]?.estado;
-      if (e) seen.add(e);
-    });
-    return Array.from(seen);
-  }, [upcoming]);
-
-  /* Historial statuses */
-  const historialStatuses = useMemo(() => {
-    const seen = new Set<EstadoAsistencia>();
-    past.forEach((h) => {
-      const e = h.asistencia?.[0]?.estado;
-      if (e) seen.add(e);
-    });
-    return Array.from(seen);
-  }, [past]);
-
-  /* Filtered upcoming */
-  const filteredUpcoming = useMemo(() => {
-    let data = upcoming;
-    if (estadoProximas !== 'todos') {
-      data = data.filter((h) => (h.asistencia?.[0]?.estado ?? 'pendiente') === estadoProximas);
-    }
-    if (soloPruebasProximas) {
-      data = data.filter((h) => pruebaHorarioIds.has(h.id));
-    }
-    if (selectedAlumnoId) {
-      data = data.filter((h) => h.alumno?.id === selectedAlumnoId);
-    }
-    if (!debouncedProximas.trim()) return data;
-    const q = debouncedProximas.toLowerCase();
-    return data.filter(
-      (h) => h.titulo.toLowerCase().includes(q) || matchesDateQuery(h.fecha, q, dateFnsLocale)
-    );
-  }, [upcoming, estadoProximas, soloPruebasProximas, selectedAlumnoId, pruebaHorarioIds, debouncedProximas, dateFnsLocale]);
-
-  /* Filtered historial */
-  const filteredHistorial = useMemo(() => {
-    let data = past;
-    if (historialFilter !== 'todos') {
-      data = data.filter((h) => (h.asistencia?.[0]?.estado ?? 'pendiente') === historialFilter);
-    }
-    if (soloConNotas) {
-      data = data.filter((h) => (notasCounts[h.id] ?? 0) > 0);
-    }
-    if (soloPruebas) {
-      data = data.filter((h) => pruebaHorarioIds.has(h.id));
-    }
-    if (selectedAlumnoId) {
-      data = data.filter((h) => h.alumno?.id === selectedAlumnoId);
-    }
-    if (!debouncedHistorial.trim()) return data;
-    const q = debouncedHistorial.toLowerCase();
-    return data.filter(
-      (h) => h.titulo.toLowerCase().includes(q) || matchesDateQuery(h.fecha, q, dateFnsLocale)
-    );
-  }, [
-    past,
-    historialFilter,
-    soloConNotas,
-    soloPruebas,
-    notasCounts,
-    pruebaHorarioIds,
-    selectedAlumnoId,
-    debouncedHistorial,
-    dateFnsLocale,
-  ]);
 
   const editingHorario = useMemo(
     () =>
@@ -693,19 +558,19 @@ export function HorariosProfesorView({ profesorId, role }: HorariosProfesorViewP
       <div className="flex items-end justify-between border-b border-[var(--color-border)] mb-5">
         <div className="flex gap-1">
           <TabButton
-            active={activeTab === 'proximas'}
-            onClick={() => setActiveTab('proximas')}
-            count={upcoming.length}
+            active={filters.activeTab === 'proximas'}
+            onClick={() => filters.setActiveTab('proximas')}
+            count={filters.upcoming.length}
           >
-            <BookOpen className="h-4 w-4" />
+            <BookOpen className="size-4" />
             {t('tab_proximas')}
           </TabButton>
           <TabButton
-            active={activeTab === 'historial'}
-            onClick={() => setActiveTab('historial')}
-            count={past.length}
+            active={filters.activeTab === 'historial'}
+            onClick={() => filters.setActiveTab('historial')}
+            count={filters.past.length}
           >
-            <History className="h-4 w-4" />
+            <History className="size-4" />
             {t('tab_historial')}
           </TabButton>
         </div>
@@ -713,47 +578,47 @@ export function HorariosProfesorView({ profesorId, role }: HorariosProfesorViewP
           onClick={() => setEditHorarioId('new')}
           className="mb-1 inline-flex items-center gap-1.5 rounded-[var(--radius-md)] bg-[var(--color-brand-gold)] px-3 py-1.5 text-sm font-medium text-white hover:opacity-90 transition-opacity"
         >
-          <Plus className="h-3.5 w-3.5" />
+          <Plus className="size-3.5" />
           {t('nueva_clase')}
         </button>
       </div>
 
       {/* ── Tab: Próximas ── */}
-      {activeTab === 'proximas' && (
+      {filters.activeTab === 'proximas' && (
         <div className="space-y-4">
           <div className="flex flex-col gap-2">
             <SearchInput
               id="search-proximas"
-              value={searchProximas}
-              onChange={setSearchProximas}
+              value={filters.searchProximas}
+              onChange={filters.setSearchProximas}
               placeholder={t('buscar_proximas')}
             />
             <div className="flex flex-wrap items-center gap-2">
-              {upcomingStatuses.length > 0 && (
+              {filters.upcomingStatuses.length > 0 && (
                 <DropdownMenu>
                   <DropdownMenuTrigger
                     className={`inline-flex items-center gap-1.5 h-9 px-3 rounded-[var(--radius-md)] border text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-gold)] cursor-pointer shrink-0 ${
-                      estadoProximas !== 'todos'
+                      filters.estadoProximas !== 'todos'
                         ? 'bg-[var(--color-brand-gold-muted)] border-[var(--color-brand-gold)] text-[var(--color-brand-gold)]'
                         : 'border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text-secondary)] hover:border-[var(--color-border-strong)] hover:text-[var(--color-text-primary)]'
                     }`}
                   >
-                    <SlidersHorizontal className="h-3.5 w-3.5 shrink-0" />
+                    <SlidersHorizontal className="size-3.5 shrink-0" />
                     <span className="hidden sm:inline">
-                      {estadoProximas === 'todos' ? t('todos_estados') : te(estadoProximas)}
+                      {filters.estadoProximas === 'todos' ? t('todos_estados') : te(filters.estadoProximas)}
                     </span>
-                    <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-60" />
+                    <ChevronDown className="size-3.5 shrink-0 opacity-60" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start" side="bottom" className="min-w-[180px]">
                     <DropdownMenuRadioGroup
-                      value={estadoProximas}
-                      onValueChange={(v) => setEstadoProximas(v as EstadoFilter)}
+                      value={filters.estadoProximas}
+                      onValueChange={(v) => filters.setEstadoProximas(v as typeof filters.estadoProximas)}
                     >
                       <DropdownMenuRadioItem value="todos">
                         {t('todos_estados')}
                       </DropdownMenuRadioItem>
                       <DropdownMenuSeparator />
-                      {upcomingStatuses.map((s) => (
+                      {filters.upcomingStatuses.map((s) => (
                         <DropdownMenuRadioItem key={s} value={s}>
                           {te(s)}
                         </DropdownMenuRadioItem>
@@ -762,66 +627,45 @@ export function HorariosProfesorView({ profesorId, role }: HorariosProfesorViewP
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}
-              {/* Alumno filter */}
               {alumnos && alumnos.length > 0 && (
                 <AlumnoCombobox
                   alumnos={alumnos}
-                  value={selectedAlumnoId}
-                  onChange={setSelectedAlumnoId}
+                  value={filters.selectedAlumnoId}
+                  onChange={filters.setSelectedAlumnoId}
                 />
               )}
-              {/* Exámenes filter chip */}
-              <Tooltip content={t('tooltip_filtro_pruebas')} position="top">
-                <button
-                  onClick={() => setSoloPruebasProximas(!soloPruebasProximas)}
-                  className={`inline-flex items-center gap-1.5 h-9 px-3 rounded-[var(--radius-md)] border text-sm font-medium transition-colors select-none ${
-                    soloPruebasProximas
-                      ? 'bg-[var(--color-brand-gold-muted)] border-[var(--color-brand-gold)] text-[var(--color-brand-gold)]'
-                      : 'border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text-secondary)] hover:border-[var(--color-border-strong)] hover:text-[var(--color-text-primary)]'
-                  }`}
-                >
-                  <span
-                    className={`flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-sm border transition-colors ${
-                      soloPruebasProximas
-                        ? 'bg-[var(--color-brand-gold)] border-[var(--color-brand-gold)]'
-                        : 'border-[var(--color-border-strong)]'
-                    }`}
-                  >
-                    {soloPruebasProximas && (
-                      <svg viewBox="0 0 8 8" className="h-2.5 w-2.5 text-white fill-current">
-                        <path d="M1.5 4L3 5.5L6.5 2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                      </svg>
-                    )}
-                  </span>
-                  <GraduationCap className="h-3.5 w-3.5 shrink-0" />
-                  {t('filtro_pruebas')}
-                </button>
-              </Tooltip>
+              <FilterChip
+                active={filters.soloPruebasProximas}
+                onClick={() => filters.setSoloPruebasProximas(!filters.soloPruebasProximas)}
+                icon={<GraduationCap className="size-3.5 shrink-0" />}
+                label={t('filtro_pruebas')}
+                tooltip={t('tooltip_filtro_pruebas')}
+              />
             </div>
           </div>
 
-          {upcoming.length === 0 ? (
+          {filters.upcoming.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] bg-[var(--color-bg-secondary)] py-16 px-4 text-center">
-              <CalendarOff className="h-12 w-12 text-[var(--color-text-muted)] mb-4" />
+              <CalendarOff className="size-12 text-[var(--color-text-muted)] mb-4" />
               <p className="font-semibold text-[var(--color-text-primary)] mb-1">{t('sin_horarios')}</p>
               <p className="text-sm text-[var(--color-text-muted)]">{t('nueva_descripcion')}</p>
             </div>
-          ) : filteredUpcoming.length === 0 ? (
+          ) : filters.filteredUpcoming.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] bg-[var(--color-bg-secondary)] py-12 px-4 text-center">
-              <Search className="h-8 w-8 text-[var(--color-text-muted)] mb-3" />
+              <Search className="size-8 text-[var(--color-text-muted)] mb-3" />
               <p className="text-sm text-[var(--color-text-muted)]">
-                {debouncedProximas.trim()
-                  ? t('sin_resultados_busqueda', { query: debouncedProximas })
-                  : t('sin_historial_filtro', { estado: te(estadoProximas as EstadoAsistencia) })}
+                {filters.debouncedProximas.trim()
+                  ? t('sin_resultados_busqueda', { query: filters.debouncedProximas })
+                  : t('sin_historial_filtro', { estado: te(filters.estadoProximas as EstadoAsistencia) })}
               </p>
             </div>
           ) : (
             <div className="space-y-3">
-              {filteredUpcoming.map((h, idx) => (
+              {filters.filteredUpcoming.map((h, idx) => (
                 <ProximaClaseCard
                   key={h.id}
                   horario={h}
-                  isFirst={idx === 0 && !debouncedProximas.trim() && estadoProximas === 'todos' && !soloPruebasProximas && !selectedAlumnoId}
+                  isFirst={idx === 0 && !filters.debouncedProximas.trim() && filters.estadoProximas === 'todos' && !filters.soloPruebasProximas && !filters.selectedAlumnoId}
                   isExamen={pruebaHorarioIds.has(h.id)}
                   locale={locale}
                   dateFnsLocale={dateFnsLocale}
@@ -838,43 +682,41 @@ export function HorariosProfesorView({ profesorId, role }: HorariosProfesorViewP
       )}
 
       {/* ── Tab: Historial ── */}
-      {activeTab === 'historial' && (
+      {filters.activeTab === 'historial' && (
         <div className="space-y-4">
           <div className="flex flex-col gap-2">
             <SearchInput
               id="search-historial"
-              value={searchHistorial}
-              onChange={setSearchHistorial}
+              value={filters.searchHistorial}
+              onChange={filters.setSearchHistorial}
               placeholder={t('buscar_historial')}
             />
-            {/* Filter chips */}
             <div className="flex flex-wrap items-center gap-2">
-              {/* Estado dropdown */}
-              {historialStatuses.length > 0 && (
+              {filters.historialStatuses.length > 0 && (
                 <DropdownMenu>
                   <DropdownMenuTrigger
                     className={`inline-flex items-center gap-1.5 h-9 px-3 rounded-[var(--radius-md)] border text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-gold)] cursor-pointer ${
-                      historialFilter !== 'todos'
+                      filters.historialFilter !== 'todos'
                         ? 'bg-[var(--color-brand-gold-muted)] border-[var(--color-brand-gold)] text-[var(--color-brand-gold)]'
                         : 'border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text-secondary)] hover:border-[var(--color-border-strong)] hover:text-[var(--color-text-primary)]'
                     }`}
                   >
-                    <SlidersHorizontal className="h-3.5 w-3.5 shrink-0" />
+                    <SlidersHorizontal className="size-3.5 shrink-0" />
                     <span>
-                      {historialFilter === 'todos' ? t('todos_estados_historial') : te(historialFilter as EstadoAsistencia)}
+                      {filters.historialFilter === 'todos' ? t('todos_estados_historial') : te(filters.historialFilter as EstadoAsistencia)}
                     </span>
-                    <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-60" />
+                    <ChevronDown className="size-3.5 shrink-0 opacity-60" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start" side="bottom" className="min-w-[180px]">
                     <DropdownMenuRadioGroup
-                      value={historialFilter}
-                      onValueChange={(v) => setHistorialFilter(v as EstadoFilter)}
+                      value={filters.historialFilter}
+                      onValueChange={(v) => filters.setHistorialFilter(v as typeof filters.historialFilter)}
                     >
                       <DropdownMenuRadioItem value="todos">
                         {t('todos_estados_historial')}
                       </DropdownMenuRadioItem>
                       <DropdownMenuSeparator />
-                      {historialStatuses.map((s) => (
+                      {filters.historialStatuses.map((s) => (
                         <DropdownMenuRadioItem key={s} value={s}>
                           {te(s)}
                         </DropdownMenuRadioItem>
@@ -883,102 +725,58 @@ export function HorariosProfesorView({ profesorId, role }: HorariosProfesorViewP
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}
-
-              {/* Alumno filter */}
               {alumnos && alumnos.length > 0 && (
                 <AlumnoCombobox
                   alumnos={alumnos}
-                  value={selectedAlumnoId}
-                  onChange={setSelectedAlumnoId}
+                  value={filters.selectedAlumnoId}
+                  onChange={filters.setSelectedAlumnoId}
                 />
               )}
-
-              {/* Notas filter chip */}
-              <Tooltip content={t('tooltip_filtro_notas')} position="top">
-                <button
-                  onClick={() => setSoloConNotas(!soloConNotas)}
-                  className={`inline-flex items-center gap-1.5 h-9 px-3 rounded-[var(--radius-md)] border text-sm font-medium transition-colors select-none ${
-                    soloConNotas
-                      ? 'bg-[var(--color-brand-gold-muted)] border-[var(--color-brand-gold)] text-[var(--color-brand-gold)]'
-                      : 'border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text-secondary)] hover:border-[var(--color-border-strong)] hover:text-[var(--color-text-primary)]'
-                  }`}
-                >
-                  <span
-                    className={`flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-sm border transition-colors ${
-                      soloConNotas
-                        ? 'bg-[var(--color-brand-gold)] border-[var(--color-brand-gold)]'
-                        : 'border-[var(--color-border-strong)]'
-                    }`}
-                  >
-                    {soloConNotas && (
-                      <svg viewBox="0 0 8 8" className="h-2.5 w-2.5 text-white fill-current">
-                        <path d="M1.5 4L3 5.5L6.5 2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                      </svg>
-                    )}
-                  </span>
-                  <FileText className="h-3.5 w-3.5 shrink-0" />
-                  {t('filtro_con_notas')}
-                </button>
-              </Tooltip>
-
-              {/* Prueba filter chip */}
-              <Tooltip content={t('tooltip_filtro_pruebas')} position="top">
-                <button
-                  onClick={() => setSoloPruebas(!soloPruebas)}
-                  className={`inline-flex items-center gap-1.5 h-9 px-3 rounded-[var(--radius-md)] border text-sm font-medium transition-colors select-none ${
-                    soloPruebas
-                      ? 'bg-[var(--color-brand-gold-muted)] border-[var(--color-brand-gold)] text-[var(--color-brand-gold)]'
-                      : 'border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text-secondary)] hover:border-[var(--color-border-strong)] hover:text-[var(--color-text-primary)]'
-                  }`}
-                >
-                  <span
-                    className={`flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-sm border transition-colors ${
-                      soloPruebas
-                        ? 'bg-[var(--color-brand-gold)] border-[var(--color-brand-gold)]'
-                        : 'border-[var(--color-border-strong)]'
-                    }`}
-                  >
-                    {soloPruebas && (
-                      <svg viewBox="0 0 8 8" className="h-2.5 w-2.5 text-white fill-current">
-                        <path d="M1.5 4L3 5.5L6.5 2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                      </svg>
-                    )}
-                  </span>
-                  <GraduationCap className="h-3.5 w-3.5 shrink-0" />
-                  {t('filtro_pruebas')}
-                </button>
-              </Tooltip>
+              <FilterChip
+                active={filters.soloConNotas}
+                onClick={() => filters.setSoloConNotas(!filters.soloConNotas)}
+                icon={<FileText className="size-3.5 shrink-0" />}
+                label={t('filtro_con_notas')}
+                tooltip={t('tooltip_filtro_notas')}
+              />
+              <FilterChip
+                active={filters.soloPruebas}
+                onClick={() => filters.setSoloPruebas(!filters.soloPruebas)}
+                icon={<GraduationCap className="size-3.5 shrink-0" />}
+                label={t('filtro_pruebas')}
+                tooltip={t('tooltip_filtro_pruebas')}
+              />
             </div>
           </div>
 
-          {past.length === 0 ? (
+          {filters.past.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] bg-[var(--color-bg-secondary)] py-16 px-4 text-center">
-              <History className="h-12 w-12 text-[var(--color-text-muted)] mb-4" />
+              <History className="size-12 text-[var(--color-text-muted)] mb-4" />
               <p className="font-semibold text-[var(--color-text-primary)]">{t('sin_historial')}</p>
             </div>
-          ) : filteredHistorial.length === 0 ? (
+          ) : filters.filteredHistorial.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border)] bg-[var(--color-bg-secondary)] py-12 px-4 text-center">
-              <Search className="h-8 w-8 text-[var(--color-text-muted)] mb-3" />
+              <Search className="size-8 text-[var(--color-text-muted)] mb-3" />
               <p className="text-sm text-[var(--color-text-muted)]">
-                {debouncedHistorial.trim()
-                  ? t('sin_resultados_busqueda', { query: debouncedHistorial })
-                  : historialFilter !== 'todos'
-                    ? t('sin_historial_filtro', { estado: te(historialFilter as EstadoAsistencia) })
+                {filters.debouncedHistorial.trim()
+                  ? t('sin_resultados_busqueda', { query: filters.debouncedHistorial })
+                  : filters.historialFilter !== 'todos'
+                    ? t('sin_historial_filtro', { estado: te(filters.historialFilter as EstadoAsistencia) })
                     : t('sin_historial_filtro', {
-                        estado: soloConNotas ? t('filtro_con_notas') : t('filtro_pruebas'),
+                        estado: filters.soloConNotas ? t('filtro_con_notas') : t('filtro_pruebas'),
                       })}
               </p>
             </div>
           ) : (
             <div className="space-y-2.5">
-              {filteredHistorial.map((h) => (
+              {filters.filteredHistorial.map((h) => (
                 <HistorialClaseCard
                   key={h.id}
                   horario={h}
                   isExamen={pruebaHorarioIds.has(h.id)}
                   locale={locale}
                   dateFnsLocale={dateFnsLocale}
-                  notasCount={notasCounts[h.id] ?? 0}
+                  notasCount={filters.notasCounts[h.id] ?? 0}
                   alumnoBasePath={alumnoBasePath}
                   fromPath={fromPath}
                   role={role}

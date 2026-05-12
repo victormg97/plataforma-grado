@@ -57,7 +57,7 @@ function MisAlumnosContent() {
               onClick={() => router.push('/profesor/mis-alumnos/crear')}
               className="flex items-center gap-2 rounded-[var(--radius-sm)] bg-[var(--color-brand-gold)] px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-opacity"
             >
-              <Users className="h-4 w-4" />
+              <Users className="size-4" />
               {t('agregar_alumno')}
             </button>
           )
@@ -86,7 +86,7 @@ function MisAlumnosContent() {
 
       {/* Search */}
       <div className="relative mt-[var(--space-md)]">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-text-muted)]" />
+        <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--color-text-muted)]" />
         <input
           type="text"
           placeholder={t('buscar_nombre_email')}
@@ -99,11 +99,11 @@ function MisAlumnosContent() {
       {/* Grid */}
       {loading ? (
         <div className="mt-[var(--space-xl)] flex justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-brand-gold)] border-t-transparent" />
+          <div className="size-8 animate-spin rounded-full border-4 border-[var(--color-brand-gold)] border-t-transparent" />
         </div>
       ) : filtered.length === 0 ? (
         <div className="mt-[var(--space-xl)] flex flex-col items-center gap-2 text-[var(--color-text-muted)]">
-          <Users className="h-12 w-12 opacity-50" />
+          <Users className="size-12 opacity-50" />
           <p className="text-sm">
             {search ? t('sin_resultados_busqueda') : t('sin_asignados')}
           </p>

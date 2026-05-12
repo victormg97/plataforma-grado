@@ -138,6 +138,7 @@
     "cancelaste": "You cancelled this class",
     "esperando_cambio": "You requested a schedule change — waiting for professor approval.",
     "pedir_otro_horario": "Request another time slot",
+    "ver_detalles": "View details",
     "cancelar_confirmado": "Cancel attendance",
     "mi_horario": "My Schedule",
     "mi_clase": "My Class",
@@ -159,7 +160,9 @@
     "confirmar_eliminar": "Delete this schedule?",
     "clase_en_curso": "This class is currently in progress.",
     "clase_ya_paso": "This class has already ended.",
+    "clase_finalizo_solo_profesor": "The class has ended. Only a teacher can modify the status.",
     "ver_detalle_completo": "View full detail",
+    "ver_detalle_desc": "Notes, attendance and more information",
     "tab_proximas": "Upcoming",
     "tab_historial": "History",
     "buscar_proximas": "Search by title or date…",
@@ -189,7 +192,27 @@
     "aprobado": "Passed",
     "agendar_reintento": "Schedule new retry date",
     "actualizar_nota": "Update grade",
-    "error_siguiente_clase_paso": "The grade cannot be modified because the next class has already occurred."
+    "error_siguiente_clase_paso": "The grade cannot be modified because the next class has already occurred.",
+    "popover": {
+      "prueba": "Exam",
+      "sin_graduar": "Not graded",
+      "reprobado": "Failed"
+    },
+    "cambio": {
+      "titulo": "Request schedule change",
+      "clase_actual": "Current class",
+      "elegir_horario": "Choose an available time slot:",
+      "cargando": "Loading schedules…",
+      "sin_disponibles": "No available time slots for change.",
+      "mensaje_label": "Message for your teacher (optional)",
+      "mensaje_placeholder": "I'd like to change because...",
+      "cancelar": "Cancel",
+      "enviando": "Sending...",
+      "enviar": "Send request",
+      "exito": "Request sent. Your teacher has been notified.",
+      "error": "Error requesting change",
+      "error_cargar": "Error loading available schedules"
+    }
   },
   "asistencia": {
     "estados": {
@@ -206,6 +229,8 @@
       "calificada": "Graded"
     },
     "estado_label": "Status",
+    "cambiar_estado": "Change status",
+    "estado_actualizado": "Status updated successfully",
     "nota_alumno_title": "Student note",
     "confirmar_titulo": "Confirm attendance?",
     "cancelar_titulo": "Cannot attend?",
@@ -431,7 +456,10 @@
       "nueva_clase": "Your professor scheduled a new class",
       "clase_modificada": "Your professor modified the class",
       "clase_cancelada": "Your professor cancelled the class",
-      "programa_asignado": "Your professor assigned a class program to you"
+      "programa_asignado": "Your professor assigned a class program to you",
+      "solicitud_cambio_horario": "requested a schedule change",
+      "cambio_horario_aceptado": "Schedule change accepted",
+      "cambio_horario_rechazado": "Schedule change rejected"
     },
     "mensajes": {
       "alumno_generico": "The student",
@@ -1047,9 +1075,10 @@
     "filtro_parcial": "Partial",
     "buscar_placeholder": "Search student...",
     "todos_profesores": "All professors",
-    "marcar_pagado": "Paid",
+    "marcar_pagado": "Mark as paid",
     "marcar_parcial": "Partial",
-    "desmarcar": "Unmark",
+    "marcar_parcial_tooltip": "Mark as partial",
+    "desmarcar": "Unmark payment",
     "estado_pagado": "Paid",
     "estado_pendiente": "Pending",
     "estado_parcial": "Partial",
