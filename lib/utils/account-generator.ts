@@ -27,7 +27,7 @@ export async function generateAppEmail(nombre: string, apellido: string): Promis
   }
 }
 
-export function generateSecurePassword(role: 'admin' | 'profesor' | 'alumno'): string {
+export function generateSecurePassword(_role: 'admin' | 'profesor' | 'alumno'): string {
   const upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   const lower = 'abcdefghijklmnopqrstuvwxyz';
   const digits = '0123456789';

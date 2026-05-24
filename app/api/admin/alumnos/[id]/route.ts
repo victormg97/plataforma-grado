@@ -81,7 +81,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Usuario inválido' }, { status: 400 });
     }
 
-    const { generateDefaultPassword, generateSecurePassword } = await import('@/lib/utils/account-generator');
+    const { generateDefaultPassword } = await import('@/lib/utils/account-generator');
     const { generateShortCode } = await import('@/lib/utils/invitations');
 
     // Check for existing pending invitation (may or may not exist)
@@ -95,7 +95,7 @@ export async function PATCH(
       .single();
 
     // Use existing temp_password if available, otherwise generate a new one
-    const tempPassword = (oldInv as any)?.temp_password ?? generateDefaultPassword('alumno');
+    const tempPassword = (oldInv as { temp_password?: string })?.temp_password ?? generateDefaultPassword('alumno');
 
     // If user is already activated (no pending invitation), we must reset their
     // Supabase auth password to the temp_password so the setup flow can sign in

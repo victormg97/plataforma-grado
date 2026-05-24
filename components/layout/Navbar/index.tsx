@@ -8,7 +8,7 @@ import { NotificacionesPanel } from '@/components/layout/Navbar/NotificacionesPa
 import { EditarPerfilModal } from '@/components/common/EditarPerfilModal';
 import { useUIStore } from '@/stores/useUIStore';
 import { useUserStore } from '@/stores/useUserStore';
-import { createClient } from '@/lib/supabase/client';
+import { useTenant } from '@/config/client';
 import { useTranslations } from 'next-intl';
 import {
   DropdownMenu,
@@ -21,6 +21,7 @@ import {
 export function Navbar() {
   const { toggleSidebar } = useUIStore();
   const { user, clearUser } = useUserStore();
+  const tenant = useTenant();
   const [perfilOpen, setPerfilOpen] = useState(false);
   const t = useTranslations('perfil');
   const ta = useTranslations('auth');
@@ -51,7 +52,7 @@ export function Navbar() {
           className="hidden text-lg font-bold text-[var(--color-text-primary)] sm:block"
           style={{ fontFamily: 'var(--font-display)' }}
         >
-          CTA Graduados
+          {tenant.nombre}
         </span>
       </div>
 

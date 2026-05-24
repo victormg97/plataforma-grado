@@ -24,7 +24,7 @@ export function Card({
   return (
     <div
       className={cn(
-        'rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] shadow-[var(--shadow-sm)]',
+        'rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-card,var(--color-bg))] shadow-[var(--shadow-sm)]',
         paddingStyles[padding],
         hover && 'transition-shadow hover:shadow-[var(--shadow-md)] cursor-pointer',
         className

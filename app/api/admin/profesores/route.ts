@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
-import { generateTempPassword } from '@/lib/utils/formatters';
-
 export async function GET() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -127,7 +125,7 @@ export async function POST(request: NextRequest) {
 
   // Update profile with phone and puede_crear_alumno
   if (newUser.user) {
-    const updates: any = {};
+    const updates: Record<string, string | boolean> = {};
     if (telefono) updates.telefono = telefono;
     if (typeof puede_crear_alumno === 'boolean') updates.puede_crear_alumno = puede_crear_alumno;
     

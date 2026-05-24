@@ -9,6 +9,7 @@ import {
   ChevronDown, FileText, GraduationCap,
 } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card } from '@/components/common/Card';
 import { StatusBadge } from '@/components/common/StatusBadge';
@@ -17,7 +18,6 @@ import { ConfirmacionForm } from '@/components/horarios/ConfirmacionForm';
 import { CancelacionForm } from '@/components/horarios/CancelacionForm';
 import { SolicitudCambioForm } from '@/components/horarios/SolicitudCambioForm';
 import { NotasSection } from '@/components/notas/NotasSection';
-import { Tooltip } from '@/components/common/Tooltip';
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent,
   DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator,
@@ -523,14 +523,14 @@ function HorarioListView({ clases, loading }: { clases: ClaseAlumno[]; loading: 
 }
 
 /* ── Detail view (?id= present) ── */
-function HorarioDetailView({ clase, user, confirmar, cancelar, pedirCambio, isExamen, pruebaData }: {
+function HorarioDetailView({ clase, user, confirmar, cancelar, pedirCambio: _pedirCambio, isExamen, pruebaData }: {
   clase: ClaseAlumno;
   user: { id: string } | null;
   confirmar: (id: string) => Promise<void>;
   cancelar: (id: string, nota?: string) => Promise<void>;
   pedirCambio: (id: string, nuevoId: string, nota?: string) => Promise<void>;
   isExamen?: boolean;
-  pruebaData?: any;
+  pruebaData?: { estado?: string; nota?: number | null; observaciones?: string | null; [key: string]: unknown };
 }) {
   const [modal, setModal] = useState<{ type: 'confirmar' | 'cancelar' | 'cambio'; clase: ClaseAlumno } | null>(null);
   const t = useTranslations('horarios');
@@ -619,7 +619,7 @@ function HorarioDetailView({ clase, user, confirmar, cancelar, pedirCambio, isEx
               <div className="flex items-center gap-3 rounded-[var(--radius-md)] bg-[var(--color-bg-secondary)] p-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-brand-gold-muted)]">
                   {clase.horario.profesor.avatar_url ? (
-                    <img src={clase.horario.profesor.avatar_url} alt="" className="h-10 w-10 rounded-full object-cover" />
+                    <Image src={clase.horario.profesor.avatar_url} alt="" width={40} height={40} className="h-10 w-10 rounded-full object-cover" />
                   ) : (
                     <User className="h-5 w-5 text-[var(--color-brand-gold)]" />
                   )}
@@ -639,7 +639,7 @@ function HorarioDetailView({ clase, user, confirmar, cancelar, pedirCambio, isEx
               </div>
             )}
 
-            {pruebaData?.estado === 'calificada' && pruebaData.nota !== null && (
+            {pruebaData?.estado === 'calificada' && pruebaData.nota != null && (
               <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] p-4 flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-[var(--color-text-primary)]">

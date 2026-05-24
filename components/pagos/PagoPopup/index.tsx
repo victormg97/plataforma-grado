@@ -17,7 +17,7 @@ function calcPosition(
   const vH = window.innerHeight;
   const vW = window.innerWidth;
   const placement: Placement = vH - r.bottom >= popupH + 8 ? 'below' : 'above';
-  let top = placement === 'below' ? r.bottom + 8 : r.top - popupH - 8;
+  const top = placement === 'below' ? r.bottom + 8 : r.top - popupH - 8;
   let left = r.left + r.width / 2 - popupW / 2;
   left = Math.max(8, Math.min(left, vW - popupW - 8));
   return { top, left, placement };
@@ -56,6 +56,7 @@ export function PagoPopup({
   const [monto, setMonto] = useState(monto_pagado != null ? String(monto_pagado) : '');
 
   // Estimate placement synchronously so initial animation direction is correct
+  // eslint-disable-next-line react-hooks/refs
   const [pos, setPos] = useState<{ top: number; left: number; placement: Placement }>(() => {
     if (typeof window === 'undefined' || !anchorRef.current)
       return { top: 0, left: 0, placement: 'below' };

@@ -9,7 +9,6 @@ import listPlugin from '@fullcalendar/list';
 import interactionPlugin from '@fullcalendar/interaction';
 import esLocale from '@fullcalendar/core/locales/es';
 import type { EventClickArg } from '@fullcalendar/core';
-import { GraduationCap } from 'lucide-react';
 import { useAsistencia } from '@/lib/hooks/useAsistencia';
 import { usePruebas } from '@/lib/hooks/usePruebas';
 import { buildAlumnoHorarioDetailHref } from '@/lib/utils/horarioNavigation';
@@ -196,7 +195,7 @@ export function CalendarioAlumno() {
         .calendario-alumno .fc .fc-button.fc-button-active {
           background: var(--color-brand-gold) !important;
           border-color: var(--color-brand-gold) !important;
-          color: var(--color-brand-black) !important;
+          color: var(--accent-foreground) !important;
         }
         .calendario-alumno .fc .fc-descargar-button { padding: 0.25rem 0.5rem; }
         .calendario-alumno .fc .fc-col-header-cell {

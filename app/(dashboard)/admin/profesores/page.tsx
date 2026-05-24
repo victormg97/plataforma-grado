@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, UserCheck, UserX, Eye, Copy, Check, Pencil, CalendarDays } from 'lucide-react';
+import { Plus, UserCheck, UserX, Eye, Pencil, CalendarDays } from 'lucide-react';
 import { toast } from 'sonner';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card } from '@/components/common/Card';
@@ -33,7 +33,6 @@ export default function ProfesoresPage() {
   const queryClient = useQueryClient();
   const tp = useTranslations('profesores');
   const tc = useTranslations('common');
-  const ta = useTranslations('alumnos');
   const { data: profesores = [], isLoading: loading } = useQuery<Profesor[]>({
     queryKey: ['admin-profesores'],
     queryFn: async () => {

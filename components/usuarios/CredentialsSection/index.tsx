@@ -15,6 +15,7 @@ interface CredentialsSectionProps {
   onTelefonoChange: (value: string) => void;
   modoCreacion: ModoCreacion;
   onModoCreacionChange: (modo: ModoCreacion) => void;
+  hideTitle?: boolean;
 }
 
 export function CredentialsSection({
@@ -26,14 +27,17 @@ export function CredentialsSection({
   onTelefonoChange,
   modoCreacion,
   onModoCreacionChange,
+  hideTitle = false,
 }: CredentialsSectionProps) {
   const t = useTranslations('crear_usuario.alumno');
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-medium text-[var(--color-text-primary)] border-b pb-2 border-[var(--color-border)]">
-        {t('contacto_acceso')}
-      </h3>
+      {!hideTitle && (
+        <h3 className="text-lg font-medium text-[var(--color-text-primary)] border-b pb-2 border-[var(--color-border)]">
+          {t('contacto_acceso')}
+        </h3>
+      )}
 
       <div className="space-y-4 bg-[var(--color-bg-secondary)]/50 p-4 rounded-lg border border-[var(--color-border)]">
         <div className="flex items-center space-x-2 mb-2">

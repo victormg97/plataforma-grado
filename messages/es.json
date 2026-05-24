@@ -1,6 +1,6 @@
 {
   "app": {
-    "nombre": "CTA Graduados",
+    "nombre": "{tenantName}",
     "slogan": "Preparación para el Examen de Grado"
   },
   "common": {
@@ -33,7 +33,7 @@
   "auth": {
     "login": {
       "titulo": "Bienvenido",
-      "subtitulo": "Ingresa a tu cuenta de CTA Graduados",
+      "subtitulo": "Ingresa a tu cuenta",
       "email": "Correo electrónico",
       "password": "Contraseña",
       "mostrar_password": "Mostrar contraseña",
@@ -68,7 +68,7 @@
   "dashboard": {
     "admin": {
       "titulo": "Resumen general",
-      "subtitulo": "Vista general de CTA Graduados",
+      "subtitulo": "Vista general del sistema",
       "total_alumnos": "Total alumnos",
       "total_profesores": "Profesores activos",
       "clases_hoy": "Clases hoy",

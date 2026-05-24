@@ -58,6 +58,7 @@ export function PruebaCalificacion({
     }
   }, [open, prueba, reset]);
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const notaVal = watch('nota');
 
   const handleFormSubmit = async (data: CalificarPruebaData) => {

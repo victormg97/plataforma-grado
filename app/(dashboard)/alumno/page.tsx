@@ -24,7 +24,7 @@ import { useTranslations, useLocale } from 'next-intl';
 
 function AlumnoDashboardContent() {
   const { user } = useUserStore();
-  const { proximas, historial, proximaClase, loading, confirmar, cancelar, pedirCambio } = useAsistencia();
+  const { proximas, historial, proximaClase, loading, confirmar, cancelar } = useAsistencia();
   const { data: pruebas = [] } = usePruebas(user?.id);
   const t = useTranslations('horarios');
   const tCambio = useTranslations('cambioHorario.estado');

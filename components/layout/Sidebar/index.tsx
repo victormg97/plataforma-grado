@@ -7,6 +7,7 @@ import { useUIStore } from '@/stores/useUIStore';
 import { useUserStore } from '@/stores/useUserStore';
 import { AppLogo } from '@/components/common/AppLogo';
 import { AppInfoPopover } from '@/components/common/AppInfoPopover';
+import { useTenant } from '@/config/client';
 import { useTranslations } from 'next-intl';
 import {
   LayoutDashboard,
@@ -56,6 +57,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const { sidebarOpen, setSidebarOpen } = useUIStore();
   const { user } = useUserStore();
+  const tenant = useTenant();
   const t = useTranslations('nav');
 
   const items = user ? navItems[user.rol] : [];
@@ -143,7 +145,7 @@ export function Sidebar() {
         {/* Footer */}
         <div className="border-t border-[var(--color-border)] px-3 py-2.5">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-[var(--color-text-muted)]">CTA Graduados</span>
+            <span className="text-xs text-[var(--color-text-muted)]">{tenant.nombre}</span>
             <AppInfoPopover />
           </div>
         </div>

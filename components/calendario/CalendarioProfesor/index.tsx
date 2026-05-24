@@ -45,7 +45,7 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
   const tc = useTranslations('common');
   const ta = useTranslations('asistencia');
   const locale = useLocale();
-  const { events, stats, alumnos, rawData, refetch } = useHorarios(profesorId);
+  const { events, alumnos, rawData, refetch } = useHorarios(profesorId);
   const [selectedHorario, setSelectedHorario] = useState<HorarioConAsistencia | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
@@ -154,7 +154,6 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
     if (openNewClassTrigger && openNewClassTrigger > 0) {
       handleNewClass();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [openNewClassTrigger]);
 
   function handleEventClick(info: EventClickArg) {

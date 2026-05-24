@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { useState } from 'react';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
+import { useTenant } from '@/config/client';
 
 interface AppLogoProps {
   /** 'sidebar' = compact horizontal, 'login' = large centered */
@@ -14,11 +15,12 @@ interface AppLogoProps {
 export function AppLogo({ variant = 'sidebar', className }: AppLogoProps) {
   const [imgError, setImgError] = useState(false);
   const { resolvedTheme } = useTheme();
+  const tenant = useTenant();
 
   // resolvedTheme is undefined during SSR; falls back to light safely.
   const logoSrc = resolvedTheme === 'dark'
-    ? '/assets/logo-dark.png'
-    : '/assets/logo-light.png';
+    ? tenant.logoDark
+    : tenant.logoLight;
 
   if (variant === 'login') {
     if (imgError) {
@@ -28,7 +30,7 @@ export function AppLogo({ variant = 'sidebar', className }: AppLogoProps) {
             className="text-[clamp(1.75rem,5vw,2.5rem)] font-bold text-[var(--color-brand-gold)]"
             style={{ fontFamily: 'var(--font-display)' }}
           >
-            CTA Graduados
+            {tenant.nombre}
           </span>
         </div>
       );
@@ -38,7 +40,7 @@ export function AppLogo({ variant = 'sidebar', className }: AppLogoProps) {
         <div className="w-[clamp(100px,30vw,160px)]">
           <Image
             src={logoSrc}
-            alt="CTA Graduados"
+            alt={tenant.nombre}
             width={160}
             height={80}
             style={{ width: '100%', height: 'auto' }}
@@ -57,7 +59,7 @@ export function AppLogo({ variant = 'sidebar', className }: AppLogoProps) {
         className={cn('text-lg font-bold text-[var(--color-brand-gold)]', className)}
         style={{ fontFamily: 'var(--font-display)' }}
       >
-        CTA Graduados
+        {tenant.nombre}
       </span>
     );
   }
@@ -66,7 +68,7 @@ export function AppLogo({ variant = 'sidebar', className }: AppLogoProps) {
     <div className={cn(className)}>
       <Image
         src={logoSrc}
-        alt="CTA Graduados"
+        alt={tenant.nombre}
         width={140}
         height={46}
         style={{ width: 'auto', height: '38px' }}

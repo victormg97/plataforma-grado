@@ -11,7 +11,7 @@ export function ThemeToggle() {
   const esGraduado = useUserStore((s) => s.esGraduado);
 
   useEffect(() => {
-    setMounted(true);
+    setMounted(true); // eslint-disable-line react-hooks/set-state-in-effect
   }, []);
 
   if (!mounted) {

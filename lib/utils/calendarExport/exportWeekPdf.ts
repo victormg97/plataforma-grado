@@ -21,6 +21,7 @@ export async function exportWeekPdf(
   events: CalendarioExportEvent[],
   weekStart: Date,
   locale: 'es' | 'en' = 'es',
+  appName?: string,
 ): Promise<void> {
   const brand = getBrand();
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
@@ -39,7 +40,7 @@ export async function exportWeekPdf(
   const weekLabel = `${fmt(weekStart)} – ${fmt(weekEnd)}, ${weekEnd.getFullYear()}`;
   const viewLabel = locale === 'es' ? 'Vista semanal' : 'Weekly view';
 
-  const contentStartY = drawHeader(doc, pageW, mX, mY, cW, weekLabel, viewLabel, brand);
+  const contentStartY = drawHeader(doc, pageW, mX, mY, cW, weekLabel, viewLabel, brand, appName);
 
   // 7 columns (one per day)
   const colW = cW / 7;
@@ -172,7 +173,7 @@ export async function exportWeekPdf(
     }
   }
 
-  drawFooter(doc, pageW, pageH, mX, cW, locale, brand);
+  drawFooter(doc, pageW, pageH, mX, cW, locale, brand, appName);
 
   const ws = weekStart;
   const filename = `agenda-semanal-${ws.getFullYear()}-${String(ws.getMonth()+1).padStart(2,'0')}-${String(ws.getDate()).padStart(2,'0')}.pdf`;

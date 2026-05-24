@@ -2,7 +2,7 @@
 
 **Última actualización:** 30 de abril de 2026
 
-En **CTA Graduados** nos tomamos muy en serio la privacidad de nuestros usuarios. Esta Política describe qué información recopilamos, cómo la utilizamos y cómo la protegemos.
+En **{{APP_NAME}}** nos tomamos muy en serio la privacidad de nuestros usuarios. Esta Política describe qué información recopilamos, cómo la utilizamos y cómo la protegemos.
 
 ---
 
@@ -10,9 +10,9 @@ En **CTA Graduados** nos tomamos muy en serio la privacidad de nuestros usuarios
 
 El responsable del tratamiento de sus datos personales es:
 
-**Carlos Toro Araya**  
-Plataforma CTA Graduados  
-Email: contacto@ctagraduados.cl  
+**{{OWNER_NAME}}**  
+Plataforma {{APP_NAME}}  
+Email: {{OWNER_EMAIL}}  
 País: Chile
 
 ## 2. Datos que Recopilamos
@@ -75,7 +75,7 @@ De acuerdo con la legislación chilena vigiente (Ley N° 19.628 sobre Protecció
 - **Cancelación:** solicitar la eliminación de sus datos.
 - **Oposición:** oponerse al tratamiento de sus datos.
 
-Para ejercer estos derechos, escríbanos a **contacto@ctagraduados.cl**.
+Para ejercer estos derechos, escríbanos a **{{OWNER_EMAIL}}**.
 
 ## 8. Cookies y Tecnologías Similares
 
@@ -98,5 +98,5 @@ Podemos actualizar esta Política periódicamente. Notificaremos los cambios rel
 
 Si tiene preguntas o inquietudes sobre esta Política, contáctenos en:
 
-**CTA Graduados**  
-Email: contacto@ctagraduados.cl
+**{{APP_NAME}}**  
+Email: {{OWNER_EMAIL}}

@@ -109,8 +109,8 @@ export default function EditarProfesorPage({ params }: { params: Promise<{ id: s
       
       setSetupCode({ code: json.setup_code, password: json.password });
       toast.success(tc('exito'));
-    } catch (e: any) {
-      toast.error(e.message || tc('error'));
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : tc('error'));
     } finally {
       setGeneratingLink(false);
     }

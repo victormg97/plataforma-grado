@@ -9,7 +9,6 @@ import {
 } from 'lucide-react';
 import { Collapsible } from '@/components/common/Collapsible';
 import { StatusBadge } from '@/components/common/StatusBadge';
-import { Button } from '@/components/common/Button';
 import { useRouter } from 'next/navigation';
 import { NotasProfesorSection } from './NotasProfesorSection';
 
@@ -76,10 +75,6 @@ export function TabInformacion({ alumnoId, data, role = 'profesor' }: TabInforma
     (c) => c.asistencia?.[0]?.estado === 'cancelado'
   );
   const clasesPrueba = data.historial_clases.filter((c) => c.from_programa);
-  const clasesFuturas = data.historial_clases.filter((c) => {
-    const fecha = new Date(`${c.fecha}T${c.hora_inicio}`);
-    return fecha >= new Date();
-  });
 
   // ── Promedio de notas de pruebas ──
   const pruebasCalificadas = data.pruebas.filter(

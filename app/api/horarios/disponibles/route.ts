@@ -43,7 +43,6 @@ export async function GET(request: NextRequest) {
   });
 
   // Remove the asistencia join data from the response
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const cleaned = disponibles.map(({ asistencia: _asistencia, ...rest }) => rest);
 
   return NextResponse.json(cleaned);

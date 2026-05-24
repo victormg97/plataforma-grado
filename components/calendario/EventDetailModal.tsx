@@ -5,6 +5,7 @@ import { Clock, FileText, MessageSquare, GraduationCap } from 'lucide-react';
 import { Modal } from '@/components/common/Modal';
 import { Avatar } from '@/components/common/Avatar';
 import { StatusBadge } from '@/components/common/StatusBadge';
+import type { EstadoAsistencia } from '@/lib/supabase/types';
 import type { ReactNode } from 'react';
 
 interface EventDetailHorario {
@@ -82,7 +83,7 @@ export function EventDetailModal({
           {/* Estado + exam badge */}
           <div className="flex items-center gap-2">
             <span className="text-sm text-[var(--color-text-muted)]">{ta('estado_label')}:</span>
-            <StatusBadge status={(horario.asistencia?.[0]?.estado as any) || 'pendiente'} />
+            <StatusBadge status={(horario.asistencia?.[0]?.estado as EstadoAsistencia) || 'pendiente'} />
             {isExamen && (
               <span
                 className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium"

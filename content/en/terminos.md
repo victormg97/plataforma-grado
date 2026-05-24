@@ -2,20 +2,20 @@
 
 **Last updated:** April 30, 2026
 
-Welcome to **CTA Graduados**. By accessing and using this platform, you agree to these Terms and Conditions in full. If you disagree with any part of them, please do not use the service.
+Welcome to **{{APP_NAME}}**. By accessing and using this platform, you agree to these Terms and Conditions in full. If you disagree with any part of them, please do not use the service.
 
 ---
 
 ## 1. Description of Service
 
-CTA Graduados is a digital platform for managing class schedules and preparation for the Law degree examination. Through it, students can manage their attendance, review assigned classes, and communicate with their professors.
+{{APP_NAME}} is a digital platform for managing class schedules and preparation for the Law degree examination. Through it, students can manage their attendance, review assigned classes, and communicate with their professors.
 
 ## 2. Registration and Access
 
 - Access to the platform is **exclusively for users invited** by the system administrator.
 - Each user is responsible for maintaining the confidentiality of their login credentials.
 - Sharing credentials with third parties is strictly prohibited.
-- CTA Graduados reserves the right to suspend or cancel accounts that violate these conditions.
+- {{APP_NAME}} reserves the right to suspend or cancel accounts that violate these conditions.
 
 ## 3. Acceptable Use
 
@@ -28,15 +28,15 @@ The user agrees to:
 
 ## 4. Intellectual Property
 
-All content on the platform — including texts, study materials, design, and software — is the property of **Carlos Toro Araya** or their respective owners. Reproduction, distribution, or modification without prior written authorization is expressly prohibited.
+All content on the platform — including texts, study materials, design, and software — is the property of **{{OWNER_NAME}}** or their respective owners. Reproduction, distribution, or modification without prior written authorization is expressly prohibited.
 
 ## 5. Service Availability
 
-CTA Graduados does not guarantee uninterrupted service availability. Interruptions may occur due to maintenance, updates, or force majeure. The service is provided **"as is"** and **"as available"**.
+{{APP_NAME}} does not guarantee uninterrupted service availability. Interruptions may occur due to maintenance, updates, or force majeure. The service is provided **"as is"** and **"as available"**.
 
 ## 6. Limitation of Liability
 
-CTA Graduados shall not be liable for:
+{{APP_NAME}} shall not be liable for:
 
 - Data loss due to causes beyond its control.
 - Damages arising from the use or inability to use the service.
@@ -54,5 +54,5 @@ These Terms are governed by the laws of the **Republic of Chile**. Any dispute s
 
 For inquiries related to these Terms, please write to us at:
 
-**CTA Graduados**  
-Email: contacto@ctagraduados.cl
+**{{APP_NAME}}**  
+Email: {{OWNER_EMAIL}}

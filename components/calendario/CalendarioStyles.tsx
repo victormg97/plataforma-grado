@@ -38,7 +38,7 @@ export function CalendarioStyles({ containerClass }: { containerClass: string })
       ${containerClass} .fc .fc-button.fc-button-active {
         background: var(--color-brand-gold) !important;
         border-color: var(--color-brand-gold) !important;
-        color: var(--color-brand-black) !important;
+        color: var(--accent-foreground) !important;
       }
       ${containerClass} .fc .fc-col-header-cell {
         padding: 0.5rem 0;

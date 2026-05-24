@@ -152,6 +152,7 @@ export default function LoginPage() {
           {t('titulo')}
         </h2>
 
+        {/* eslint-disable-next-line react-hooks/refs */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email" className="text-[var(--color-text-secondary)]">

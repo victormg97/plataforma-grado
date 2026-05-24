@@ -1,6 +1,6 @@
 {
   "app": {
-    "nombre": "CTA Graduates",
+    "nombre": "{tenantName}",
     "slogan": "Bar Exam Preparation"
   },
   "common": {
@@ -33,7 +33,7 @@
   "auth": {
     "login": {
       "titulo": "Welcome",
-      "subtitulo": "Sign in to your CTA Graduates account",
+      "subtitulo": "Sign in to your account",
       "email": "Email",
       "password": "Password",
       "mostrar_password": "Show password",
@@ -68,7 +68,7 @@
   "dashboard": {
     "admin": {
       "titulo": "Dashboard",
-      "subtitulo": "CTA Graduates overview",
+      "subtitulo": "System overview",
       "total_alumnos": "Total students",
       "total_profesores": "Active professors",
       "clases_hoy": "Classes today",

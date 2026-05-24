@@ -130,13 +130,13 @@ export async function PATCH(
                
                if (upcomingClasses) {
                  const futureClasses = upcomingClasses
-                   .filter((c: any) => {
+                   .filter((c: { horarios: { fecha: string; hora_inicio: string } | null }) => {
                      if (!c.horarios) return false;
                      if (c.horarios.fecha > failedFecha) return true;
                      if (c.horarios.fecha === failedFecha && c.horarios.hora_inicio > failedHora) return true;
                      return false;
                    })
-                   .sort((a: any, b: any) => {
+                   .sort((a: { horarios: { fecha: string; hora_inicio: string } }, b: { horarios: { fecha: string; hora_inicio: string } }) => {
                      if (a.horarios.fecha !== b.horarios.fecha) return a.horarios.fecha.localeCompare(b.horarios.fecha);
                      return a.horarios.hora_inicio.localeCompare(b.horarios.hora_inicio);
                    });

@@ -9,12 +9,11 @@ import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, Save, Loader2 } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, User, Mail, GraduationCap } from 'lucide-react';
 import { toast } from 'sonner';
 import { m, AnimatePresence } from 'framer-motion';
 import { CreatedUserSuccess } from '@/components/usuarios/CreatedUserSuccess';
 import { CredentialsSection } from '@/components/usuarios/CredentialsSection';
-import { PersonalInfoFields } from '@/components/usuarios/PersonalInfoFields';
 
 export default function CrearAlumnoProfesorPage() {
   const router = useRouter();
@@ -100,79 +99,132 @@ export default function CrearAlumnoProfesorPage() {
           />
         ) : (
           <m.div key="form" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.22 }}>
-            <Card className="max-w-2xl mx-auto shadow-sm">
-              <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-8">
-                <PersonalInfoFields
-                  nombre={formData.nombre}
-                  onNombreChange={(v) => setFormData(prev => ({ ...prev, nombre: v }))}
-                  apellido={formData.apellido}
-                  onApellidoChange={(v) => setFormData(prev => ({ ...prev, apellido: v }))}
-                />
-
-                <CredentialsSection
-                  useAppEmail={formData.useAppEmail}
-                  onUseAppEmailChange={(v) => setFormData(prev => ({ ...prev, useAppEmail: v }))}
-                  email={formData.email}
-                  onEmailChange={(v) => setFormData(prev => ({ ...prev, email: v }))}
-                  telefono={formData.telefono}
-                  onTelefonoChange={(v) => setFormData(prev => ({ ...prev, telefono: v }))}
-                  modoCreacion={formData.modo_creacion}
-                  onModoCreacionChange={(v) => setFormData(prev => ({ ...prev, modo_creacion: v }))}
-                />
-
-                {/* Detalles Académicos */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium text-[var(--color-text-primary)] border-b pb-2 border-[var(--color-border)]">
-                    {t('universidad')}
-                  </h3>
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="universidad">{t('universidad')}</Label>
-                      <Input
-                        id="universidad"
-                        placeholder={t('universidad_placeholder')}
-                        autoComplete="off"
-                        value={formData.universidad}
-                        onChange={(e) => setFormData(prev => ({ ...prev, universidad: e.target.value }))}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="año_ingreso">{t('año_ingreso')}</Label>
-                      <Input
-                        id="año_ingreso"
-                        type="number"
-                        placeholder={t('año_ingreso_placeholder')}
-                        autoComplete="off"
-                        value={formData.año_ingreso}
-                        onChange={(e) => setFormData(prev => ({ ...prev, año_ingreso: e.target.value }))}
-                      />
+            <form onSubmit={handleSubmit}>
+              <div className="space-y-[var(--space-md)]">
+                {/* Card: Datos Personales + Académicos */}
+                <Card padding="none">
+                  <div className="px-6 pt-5 pb-3 border-b border-[var(--color-border)]">
+                    <div className="flex items-center gap-3">
+                      <div className="flex size-9 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--color-brand-gold)_12%,transparent)]">
+                        <User className="size-4 text-[var(--color-brand-gold)]" />
+                      </div>
+                      <h3 className="text-base font-semibold text-[var(--color-text-primary)]">
+                        {t('datos_personales')}
+                      </h3>
                     </div>
                   </div>
-                </div>
+                  <div className="p-6 space-y-6">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="nombre">{t('nombre')} <span className="text-red-500">*</span></Label>
+                        <Input
+                          id="nombre"
+                          placeholder={t('nombre_placeholder')}
+                          autoComplete="off"
+                          value={formData.nombre}
+                          onChange={(e) => setFormData(prev => ({ ...prev, nombre: e.target.value }))}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="apellido">{t('apellidos')} <span className="text-red-500">*</span></Label>
+                        <Input
+                          id="apellido"
+                          placeholder={t('apellidos_placeholder')}
+                          autoComplete="off"
+                          value={formData.apellido}
+                          onChange={(e) => setFormData(prev => ({ ...prev, apellido: e.target.value }))}
+                          required
+                        />
+                      </div>
+                    </div>
 
-                <div className="flex justify-end pt-6 border-t border-[var(--color-border)] gap-3">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => router.push('/profesor/mis-alumnos')}
-                    disabled={mutation.isPending}
-                  >
-                    {tc('cancelar')}
-                  </Button>
-                  <button
-                    type="submit"
-                    disabled={mutation.isPending}
-                    className="min-w-[140px] flex items-center justify-center gap-2 rounded-[var(--radius-sm)] bg-[var(--color-brand-gold)] px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50 transition-opacity"
-                  >
-                    {mutation.isPending ? (
-                      <><Loader2 className="size-4 animate-spin" /> {tc('cargando')}</>
-                    ) : (
-                      <><Save className="size-4" /> {t('crear_btn')}</>
-                    )}
-                  </button>
-                </div>
-              </form>
-            </Card>
+                    {/* Sección académica dentro de datos personales */}
+                    <div className="border-t border-[var(--color-border)] pt-5">
+                      <div className="flex items-center gap-2 mb-4">
+                        <GraduationCap className="size-4 text-[var(--color-text-muted)]" />
+                        <span className="text-sm font-medium text-[var(--color-text-secondary)]">{t('universidad')}</span>
+                      </div>
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div className="space-y-2">
+                          <Label htmlFor="universidad">{t('universidad')}</Label>
+                          <Input
+                            id="universidad"
+                            placeholder={t('universidad_placeholder')}
+                            autoComplete="off"
+                            value={formData.universidad}
+                            onChange={(e) => setFormData(prev => ({ ...prev, universidad: e.target.value }))}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="año_ingreso">{t('año_ingreso')}</Label>
+                          <Input
+                            id="año_ingreso"
+                            type="number"
+                            placeholder={t('año_ingreso_placeholder')}
+                            autoComplete="off"
+                            value={formData.año_ingreso}
+                            onChange={(e) => setFormData(prev => ({ ...prev, año_ingreso: e.target.value }))}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Card: Contacto y Acceso */}
+                <Card padding="none">
+                  <div className="px-6 pt-5 pb-3 border-b border-[var(--color-border)]">
+                    <div className="flex items-center gap-3">
+                      <div className="flex size-9 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--color-brand-gold)_12%,transparent)]">
+                        <Mail className="size-4 text-[var(--color-brand-gold)]" />
+                      </div>
+                      <h3 className="text-base font-semibold text-[var(--color-text-primary)]">
+                        {t('contacto_acceso')}
+                      </h3>
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    <CredentialsSection
+                      hideTitle
+                      useAppEmail={formData.useAppEmail}
+                      onUseAppEmailChange={(v) => setFormData(prev => ({ ...prev, useAppEmail: v }))}
+                      email={formData.email}
+                      onEmailChange={(v) => setFormData(prev => ({ ...prev, email: v }))}
+                      telefono={formData.telefono}
+                      onTelefonoChange={(v) => setFormData(prev => ({ ...prev, telefono: v }))}
+                      modoCreacion={formData.modo_creacion}
+                      onModoCreacionChange={(v) => setFormData(prev => ({ ...prev, modo_creacion: v }))}
+                    />
+                  </div>
+                </Card>
+
+                {/* Barra de acciones */}
+                <Card padding="none">
+                  <div className="flex items-center justify-end gap-3 px-6 py-4">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => router.push('/profesor/mis-alumnos')}
+                      disabled={mutation.isPending}
+                    >
+                      {tc('cancelar')}
+                    </Button>
+                    <button
+                      type="submit"
+                      disabled={mutation.isPending}
+                      className="min-w-[140px] flex items-center justify-center gap-2 rounded-[var(--radius-sm)] bg-[var(--color-brand-gold)] px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50 transition-opacity"
+                    >
+                      {mutation.isPending ? (
+                        <><Loader2 className="size-4 animate-spin" /> {tc('cargando')}</>
+                      ) : (
+                        <><Save className="size-4" /> {t('crear_btn')}</>
+                      )}
+                    </button>
+                  </div>
+                </Card>
+              </div>
+            </form>
           </m.div>
         )}
       </AnimatePresence>

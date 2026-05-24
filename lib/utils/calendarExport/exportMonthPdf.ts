@@ -21,6 +21,7 @@ export async function exportMonthPdf(
   year: number,
   month: number,      // 0-indexed
   locale: 'es' | 'en' = 'es',
+  appName?: string,
 ): Promise<void> {
   const brand = getBrand();
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
@@ -38,7 +39,7 @@ export async function exportMonthPdf(
   const viewLabel = locale === 'es' ? 'Vista mensual' : 'Monthly view';
 
   const contentStartY = drawHeader(doc, pageW, mX, mY, cW,
-    monthName.replace(/^\w/, (c) => c.toUpperCase()), viewLabel, brand);
+    monthName.replace(/^\w/, (c) => c.toUpperCase()), viewLabel, brand, appName);
 
   // Day-of-week headers
   const DOW_ES = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
@@ -160,7 +161,7 @@ export async function exportMonthPdf(
     }
   }
 
-  drawFooter(doc, pageW, pageH, mX, cW, locale, brand);
+  drawFooter(doc, pageW, pageH, mX, cW, locale, brand, appName);
 
   const filename = `agenda-mensual-${year}-${String(month+1).padStart(2,'0')}.pdf`;
   doc.save(filename);

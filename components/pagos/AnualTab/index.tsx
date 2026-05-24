@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable react-hooks/refs */
 
 import { useMemo, useState, useRef, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -11,7 +12,6 @@ import { Tooltip } from '@/components/common/Tooltip';
 import { PagoPopup, type PagoEstado } from '@/components/pagos/PagoPopup';
 import type { AlumnoResumenAnual } from '@/app/api/admin/pagos/resumen/route';
 
-import { CellButton } from './components/CellButton';
 import { AlumnoRow } from './components/AlumnoRow';
 import { LegendSection } from './components/LegendSection';
 import { GridSkeleton } from './components/GridSkeleton';

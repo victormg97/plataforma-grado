@@ -22,6 +22,7 @@ export async function exportListPdf(
   events: CalendarioExportEvent[],
   weekStart: Date,
   locale: 'es' | 'en' = 'es',
+  appName?: string,
 ): Promise<void> {
   const brand = getBrand();
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
@@ -39,7 +40,7 @@ export async function exportListPdf(
   const weekLabel = `${fmt(weekStart)} – ${fmt(weekEnd)}, ${weekEnd.getFullYear()}`;
   const viewLabel = locale === 'es' ? 'Vista de agenda' : 'Agenda view';
 
-  const contentStartY = drawHeader(doc, pageW, mX, mY, cW, weekLabel, viewLabel, brand);
+  const contentStartY = drawHeader(doc, pageW, mX, mY, cW, weekLabel, viewLabel, brand, appName);
 
   // Filter events to the visible week
   const ws = weekStart.getTime();
@@ -54,7 +55,7 @@ export async function exportListPdf(
     doc.setFontSize(11);
     doc.setTextColor(...brand.textMuted);
     doc.text(noData, pageW / 2, contentStartY + 20, { align: 'center' });
-    drawFooter(doc, pageW, pageH, mX, cW, locale, brand);
+    drawFooter(doc, pageW, pageH, mX, cW, locale, brand, appName);
     doc.save(`agenda-lista-${weekStart.getFullYear()}-${String(weekStart.getMonth()+1).padStart(2,'0')}-${String(weekStart.getDate()).padStart(2,'0')}.pdf`);
     return;
   }
@@ -190,7 +191,7 @@ export async function exportListPdf(
     : `Total: ${weekEvents.length} class${weekEvents.length !== 1 ? 'es' : ''}`;
   doc.text(totalLabel, mX, curY);
 
-  drawFooter(doc, pageW, pageH, mX, cW, locale, brand);
+  drawFooter(doc, pageW, pageH, mX, cW, locale, brand, appName);
 
   const filename = `agenda-lista-${weekStart.getFullYear()}-${String(weekStart.getMonth()+1).padStart(2,'0')}-${String(weekStart.getDate()).padStart(2,'0')}.pdf`;
   doc.save(filename);

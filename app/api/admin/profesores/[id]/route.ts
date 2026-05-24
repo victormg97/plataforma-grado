@@ -88,7 +88,7 @@ export async function PATCH(
       .single();
 
     // Use existing temp_password if available, otherwise generate a new one
-    const tempPassword = (oldInv as any)?.temp_password ?? generateDefaultPassword('profesor');
+    const tempPassword = (oldInv as { temp_password?: string })?.temp_password ?? generateDefaultPassword('profesor');
 
     // If user is already activated (no pending invitation), reset their Supabase auth password
     if (!oldInv) {

@@ -112,7 +112,6 @@ export function RecursoPreviewModal({ recurso, onClose }: RecursoPreviewModalPro
       case 'video':
         return (
           <div className="flex h-full items-center justify-center p-4">
-            {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
             <video
               src={url}
               controls
@@ -127,7 +126,6 @@ export function RecursoPreviewModal({ recurso, onClose }: RecursoPreviewModalPro
               <fileInfo.Icon className={cn('size-10', fileInfo.iconColor)} />
             </div>
             <p className="text-sm font-medium text-[var(--color-text-primary)]">{recurso.titulo}</p>
-            {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
             <audio src={url} controls className="w-full max-w-md" />
           </div>
         );
@@ -242,7 +240,7 @@ function ErrorState({ t }: { t: ReturnType<typeof useTranslations> }) {
 }
 
 function DownloadPrompt({
-  titulo,
+  titulo: _titulo,
   onDownload,
   t,
 }: {

@@ -29,6 +29,7 @@ import {
 import { toast } from 'sonner';
 import type FullCalendar from '@fullcalendar/react';
 import { useLocale } from 'next-intl';
+import { useTenant } from '@/config/client';
 
 export type { CalendarioExportEvent };
 
@@ -64,9 +65,10 @@ export function CalendarioDownloadButton({
   isMobile,
   containerClass,
   exportEvents,
-  className,
+  className: _className,
 }: CalendarioDownloadButtonProps) {
   const locale = useLocale() as 'es' | 'en';
+  const tenant = useTenant();
 
   // Desktop: the FC toolbar button element (found via DOM after FC renders)
   const [desktopBtnEl, setDesktopBtnEl] = useState<Element | null>(null);
@@ -207,12 +209,12 @@ export function CalendarioDownloadButton({
           const viewStart = new Date(api.view.currentStart);
 
           if (currentView === 'dayGridMonth') {
-            await exportMonthPdf(exportEvents, viewStart.getFullYear(), viewStart.getMonth(), locale);
+            await exportMonthPdf(exportEvents, viewStart.getFullYear(), viewStart.getMonth(), locale, tenant.nombre);
           } else if (currentView === 'timeGridWeek') {
-            await exportWeekPdf(exportEvents, viewStart, locale);
+            await exportWeekPdf(exportEvents, viewStart, locale, tenant.nombre);
           } else {
             // listWeek or any other view → agenda list
-            await exportListPdf(exportEvents, viewStart, locale);
+            await exportListPdf(exportEvents, viewStart, locale, tenant.nombre);
           }
         }
 
@@ -237,6 +239,7 @@ export function CalendarioDownloadButton({
       exportEvents,
       locale,
       remainingSeconds,
+      tenant.nombre,
     ],
   );
 

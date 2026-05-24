@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, startTransition } from 'react';
+import { useState } from 'react';
 import { format } from 'date-fns';
 import { es as esDateFns, enUS } from 'date-fns/locale';
 import { Calendar, Clock, FileText, MessageSquare, ArrowLeft, GraduationCap } from 'lucide-react';
@@ -22,7 +22,6 @@ import type { HorarioConAsistencia } from '@/lib/hooks/useHorarios';
 import { Button } from '@/components/common/Button';
 import { cn } from '@/lib/utils';
 import { useCalificarPrueba } from '@/lib/hooks/usePruebas';
-import type { EstadoAsistencia } from '@/lib/supabase/types';
 
 const inputCls = cn(
   'w-full rounded-[var(--radius-md)] border border-[var(--color-border)]',
@@ -32,29 +31,38 @@ const inputCls = cn(
   'transition-colors'
 );
 
+interface PruebaWithGrade {
+  id: string;
+  nombre: string;
+  estado: string;
+  nota?: number | null;
+  observaciones?: string | null;
+}
+
 function GradeInlineForm({ 
   horario, 
   tc, 
   th 
 }: { 
-  horario: any; 
-  tc: any; 
-  th: any; 
+  horario: HorarioConAsistencia; 
+  tc: ReturnType<typeof useTranslations>; 
+  th: ReturnType<typeof useTranslations>; 
 }) {
-  const prueba = horario.pruebas?.[0];
+  const prueba = (horario.pruebas as PruebaWithGrade[] | undefined)?.[0];
   const [nota, setNota] = useState<string>(prueba?.nota != null ? prueba.nota.toFixed(1) : '');
   const { mutateAsync: calificar, isPending } = useCalificarPrueba();
 
   if (!prueba) return null;
 
   async function handleSave() {
-    let finalStr = nota.trim().replace(',', '.');
+    if (!prueba) return;
+    const finalStr = nota.trim().replace(',', '.');
     if (finalStr === '') {
       try {
         await calificar({ id: prueba.id, nota: null, observaciones: prueba.observaciones });
         toast.success(tc('exito'));
-      } catch(e: any) {
-        toast.error(e.message || tc('error'));
+      } catch(e: unknown) {
+        toast.error(e instanceof Error ? e.message : tc('error'));
       }
       return;
     }
@@ -73,8 +81,8 @@ function GradeInlineForm({
       if (res.needs_scheduling) {
         toast.warning(th('agendar_reintento'), { duration: 8000 });
       }
-    } catch(e: any) {
-      toast.error(e.message || tc('error'));
+    } catch(e: unknown) {
+      toast.error(e instanceof Error ? e.message : tc('error'));
     }
   }
 

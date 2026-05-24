@@ -75,7 +75,7 @@ export function statusLabel(status?: string, locale: 'es' | 'en' = 'es'): string
 
 // ─── Shared PDF header ───────────────────────────────────────────────────────
 /**
- * Draws the CTA Graduados branded header band.
+ * Draws the branded header band.
  * Returns the Y position right after the header.
  */
 export function drawHeader(
@@ -87,6 +87,7 @@ export function drawHeader(
   title: string,
   subtitle: string,
   brand: Brand,
+  appName = 'CTA Graduados',
 ): number {
   const hH = 22; // header height (mm)
 
@@ -102,11 +103,7 @@ export function drawHeader(
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9);
   doc.setTextColor(...brand.gold);
-  doc.text('CTA', marginX + 5, marginY + 8);
-  doc.setFontSize(7);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(...brand.goldLight);
-  doc.text('GRADUADOS', marginX + 5, marginY + 13);
+  doc.text(appName, marginX + 5, marginY + 10.5);
 
   // Title — centre
   doc.setFont('helvetica', 'bold');
@@ -132,6 +129,7 @@ export function drawFooter(
   contentW: number,
   locale: 'es' | 'en',
   brand: Brand,
+  appName = 'CTA Graduados',
 ): void {
   const footerY = pageH - 10;
   doc.setDrawColor(...brand.border);
@@ -141,7 +139,7 @@ export function drawFooter(
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7);
   doc.setTextColor(...brand.textMuted);
-  doc.text('CTA Graduados', marginX, footerY + 2);
+  doc.text(appName, marginX, footerY + 2);
 
   const dateStr = new Date().toLocaleDateString(locale === 'es' ? 'es-CL' : 'en-US', {
     day: '2-digit', month: 'long', year: 'numeric',

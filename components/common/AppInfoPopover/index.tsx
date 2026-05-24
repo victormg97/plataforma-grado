@@ -31,7 +31,7 @@ export function AppInfoPopover() {
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    setMounted(true);
+    setMounted(true); // eslint-disable-line react-hooks/set-state-in-effect
     setIsHoverDevice(window.matchMedia('(hover: hover)').matches);
   }, []);
 

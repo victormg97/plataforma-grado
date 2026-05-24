@@ -51,7 +51,7 @@ export function useAsistencia(alumnoId?: string) {
     staleTime: 30_000,
   });
 
-  const clases = data?.clases ?? [];
+  const clases = useMemo(() => data?.clases ?? [], [data?.clases]);
 
   // Realtime: invalidate on changes
   useEffect(() => {

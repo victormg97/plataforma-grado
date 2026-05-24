@@ -58,7 +58,7 @@ export async function GET(
 
   // Fetch all actual horarios for this student to know the dates and status
   const horarioIds = (horariosPrograma || []).map(hp => hp.horario_id).filter(Boolean);
-  let horariosData: any[] = [];
+  let horariosData: { id: string; fecha: string; hora_inicio: string; hora_fin: string; activo: boolean; asistencia_estado?: string }[] = [];
   if (horarioIds.length > 0) {
     const { data: hData } = await supabase
       .from('horarios')
@@ -80,8 +80,8 @@ export async function GET(
   }
 
   // Get the student's tests specifically in these classes
-  const claseIds = (data.clases_programa || []).filter((c: any) => c.tipo === 'prueba').map((c: any) => c.id);
-  let pruebasData: any[] = [];
+  const claseIds = (data.clases_programa || []).filter((c: { tipo: string }) => c.tipo === 'prueba').map((c: { id: string }) => c.id);
+  let pruebasData: { id: string; clase_id: string | null; nombre: string; fecha: string; nota: number | null; observaciones: string | null; estado: string }[] = [];
   if (claseIds.length > 0) {
     const { data: rTests } = await supabase
       .from('pruebas')
@@ -94,7 +94,7 @@ export async function GET(
   const result = {
     ...data,
     asignado_el: asignacion.created_at,
-    clases_programadas: data.clases_programa?.map((cp: any) => {
+    clases_programadas: data.clases_programa?.map((cp: { id: string; tipo: string; [key: string]: unknown }) => {
       const hp = (horariosPrograma || []).find(h => h.clase_id === cp.id);
       const horario = hp ? horariosData.find(h => h.id === hp.horario_id) : null;
       const prueba = cp.tipo === 'prueba' ? pruebasData.find(p => p.clase_id === cp.id) : null;

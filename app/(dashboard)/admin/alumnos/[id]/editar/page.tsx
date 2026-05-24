@@ -9,7 +9,7 @@ import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, Save, Copy, Check, Loader2, Key, AlertCircle, Link as LinkIcon, ChevronDown, Trash2 } from 'lucide-react';
+import { ArrowLeft, Save, Copy, Check, Loader2, Key, AlertCircle, Link as LinkIcon, ChevronDown, Trash2, User, Mail, GraduationCap, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { m, AnimatePresence } from 'framer-motion';
 import { ConfirmDeleteModal } from '@/components/common/ConfirmDeleteModal';
@@ -26,7 +26,6 @@ export default function EditarAlumnoPage({ params }: { params: Promise<{ id: str
   const queryClient = useQueryClient();
   const t = useTranslations('crear_usuario.alumno');
   const tc = useTranslations('common');
-  const tp = useTranslations('profesores');
   const ta = useTranslations('alumnos');
 
   const { data: alumno, isLoading: loadingData, isError } = useQuery({
@@ -131,8 +130,8 @@ export default function EditarAlumnoPage({ params }: { params: Promise<{ id: str
       
       setSetupCode({ code: json.setup_code, password: json.password });
       toast.success(tc('exito'));
-    } catch (e: any) {
-      toast.error(e.message || tc('error'));
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : tc('error'));
     } finally {
       setGeneratingLink(false);
     }
@@ -196,13 +195,23 @@ export default function EditarAlumnoPage({ params }: { params: Promise<{ id: str
         }
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start max-w-6xl mx-auto">
-        <div className="lg:col-span-2">
-          <Card className="shadow-sm">
-            <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-8">
-              
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium text-[var(--color-text-primary)] border-b border-[var(--color-border)] pb-2">{t('datos_personales')}</h3>
+      <form onSubmit={handleSubmit}>
+        <div className="grid grid-cols-1 gap-[var(--space-md)] lg:grid-cols-3">
+          {/* Columna principal — Formulario de edición */}
+          <div className="lg:col-span-2 space-y-[var(--space-md)]">
+            {/* Card: Datos Personales */}
+            <Card padding="none">
+              <div className="px-6 pt-5 pb-3 border-b border-[var(--color-border)]">
+                <div className="flex items-center gap-3">
+                  <div className="flex size-9 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--color-brand-gold)_12%,transparent)]">
+                    <User className="size-4 text-[var(--color-brand-gold)]" />
+                  </div>
+                  <h3 className="text-base font-semibold text-[var(--color-text-primary)]">
+                    {t('datos_personales')}
+                  </h3>
+                </div>
+              </div>
+              <div className="p-6">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="nombre">{t('nombre')} <span className="text-red-500">*</span></Label>
@@ -224,9 +233,21 @@ export default function EditarAlumnoPage({ params }: { params: Promise<{ id: str
                   </div>
                 </div>
               </div>
+            </Card>
 
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium text-[var(--color-text-primary)] border-b border-[var(--color-border)] pb-2">{t('contacto_acceso')}</h3>
+            {/* Card: Contacto */}
+            <Card padding="none">
+              <div className="px-6 pt-5 pb-3 border-b border-[var(--color-border)]">
+                <div className="flex items-center gap-3">
+                  <div className="flex size-9 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--color-brand-gold)_12%,transparent)]">
+                    <Mail className="size-4 text-[var(--color-brand-gold)]" />
+                  </div>
+                  <h3 className="text-base font-semibold text-[var(--color-text-primary)]">
+                    {t('contacto_acceso')}
+                  </h3>
+                </div>
+              </div>
+              <div className="p-6">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label>{ta('email')}</Label>
@@ -243,70 +264,232 @@ export default function EditarAlumnoPage({ params }: { params: Promise<{ id: str
                   </div>
                 </div>
               </div>
+            </Card>
 
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium text-[var(--color-text-primary)] border-b border-[var(--color-border)] pb-2">{t('profesor_asignado')}</h3>
-                
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>{t('seleccionar_profesor')}</Label>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger className="w-full flex items-center justify-between gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
-                        <span className="truncate">
-                          {(() => {
-                            const p = profesores.find((p: any) => p.id === formData.profesor_id);
-                            return p ? `${p.nombre} ${p.apellido}` : tc('sin_datos');
-                          })()}
-                        </span>
-                        <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent className="w-full max-h-60 overflow-y-auto">
-                        <DropdownMenuItem onClick={() => setFormData(prev => ({ ...prev, profesor_id: '' }))}>
-                          {tc('sin_datos')}
+            {/* Card: Profesor y Académico */}
+            <Card padding="none">
+              <div className="px-6 pt-5 pb-3 border-b border-[var(--color-border)]">
+                <div className="flex items-center gap-3">
+                  <div className="flex size-9 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--color-brand-gold)_12%,transparent)]">
+                    <GraduationCap className="size-4 text-[var(--color-brand-gold)]" />
+                  </div>
+                  <h3 className="text-base font-semibold text-[var(--color-text-primary)]">
+                    {t('profesor_asignado')}
+                  </h3>
+                </div>
+              </div>
+              <div className="p-6 space-y-4">
+                <div className="space-y-2">
+                  <Label>{t('seleccionar_profesor')}</Label>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger className="w-full flex items-center justify-between gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
+                      <span className="truncate">
+                        {(() => {
+                          const p = profesores.find((prof: { id: string }) => prof.id === formData.profesor_id);
+                          return p ? `${p.nombre} ${p.apellido}` : tc('sin_datos');
+                        })()}
+                      </span>
+                      <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-full max-h-60 overflow-y-auto">
+                      <DropdownMenuItem onClick={() => setFormData(prev => ({ ...prev, profesor_id: '' }))}>
+                        {tc('sin_datos')}
+                      </DropdownMenuItem>
+                      {profesores.filter((prof: { id: string; activo: boolean }) => prof.activo).map((prof: { id: string; nombre: string; apellido: string }) => (
+                        <DropdownMenuItem key={prof.id} onClick={() => setFormData(prev => ({ ...prev, profesor_id: prof.id }))}>
+                          {prof.nombre} {prof.apellido}
                         </DropdownMenuItem>
-                        {profesores.filter((p: any) => p.activo).map((p: any) => (
-                          <DropdownMenuItem key={p.id} onClick={() => setFormData(prev => ({ ...prev, profesor_id: p.id }))}>
-                            {p.nombre} {p.apellido}
-                          </DropdownMenuItem>
-                        ))}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
 
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="universidad">{t('universidad')}</Label>
-                      <Input
-                        id="universidad"
-                        value={formData.universidad}
-                        onChange={(e) => setFormData(prev => ({ ...prev, universidad: e.target.value }))}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="año_ingreso">{t('año_ingreso')}</Label>
-                      <Input
-                        id="año_ingreso"
-                        type="number"
-                        value={formData.año_ingreso}
-                        onChange={(e) => setFormData(prev => ({ ...prev, año_ingreso: e.target.value }))}
-                      />
-                    </div>
-                  </div>
-                  
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="notas">{ta('notas')}</Label>
-                    <textarea 
-                      id="notas"
-                      rows={3} 
-                      value={formData.notas} 
-                      onChange={(e) => setFormData(prev => ({ ...prev, notas: e.target.value }))} 
-                      className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 resize-none" 
+                    <Label htmlFor="universidad">{t('universidad')}</Label>
+                    <Input
+                      id="universidad"
+                      value={formData.universidad}
+                      onChange={(e) => setFormData(prev => ({ ...prev, universidad: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="año_ingreso">{t('año_ingreso')}</Label>
+                    <Input
+                      id="año_ingreso"
+                      type="number"
+                      value={formData.año_ingreso}
+                      onChange={(e) => setFormData(prev => ({ ...prev, año_ingreso: e.target.value }))}
                     />
                   </div>
                 </div>
               </div>
+            </Card>
 
-              <div className="flex justify-end pt-6 border-t border-[var(--color-border)] gap-3">
+            {/* Card: Notas */}
+            <Card padding="none">
+              <div className="px-6 pt-5 pb-3 border-b border-[var(--color-border)]">
+                <div className="flex items-center gap-3">
+                  <div className="flex size-9 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--color-brand-gold)_12%,transparent)]">
+                    <FileText className="size-4 text-[var(--color-brand-gold)]" />
+                  </div>
+                  <h3 className="text-base font-semibold text-[var(--color-text-primary)]">
+                    {ta('notas')}
+                  </h3>
+                </div>
+              </div>
+              <div className="p-6">
+                <textarea 
+                  id="notas"
+                  rows={3} 
+                  value={formData.notas} 
+                  onChange={(e) => setFormData(prev => ({ ...prev, notas: e.target.value }))} 
+                  className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 resize-none" 
+                />
+              </div>
+            </Card>
+          </div>
+
+          {/* Columna lateral — Gestión de Acceso */}
+          <div className="lg:col-span-1">
+            <Card padding="none" className="lg:sticky lg:top-6 bg-[var(--color-bg-secondary)]">
+              <div className="px-6 pt-5 pb-3 border-b border-[var(--color-border)]">
+                <div className="flex items-center gap-3">
+                  <div className="flex size-9 items-center justify-center rounded-full bg-[var(--color-brand-gold-muted)]">
+                    <Key className="size-4 text-[var(--color-brand-gold)]" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-semibold text-[var(--color-text-primary)]">{ta('restablecer_titulo')}</h3>
+                    <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                      {isPending ? ta('restablecer_desc_pendiente') : ta('restablecer_desc_activo')}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="p-6 space-y-4">
+                {/* Current pending invitation (if any) */}
+                {alumno.current_invitation && !setupCode && (
+                  <div className="bg-[var(--color-bg)] p-4 rounded-lg border border-[var(--color-border)]">
+                    <h4 className="text-sm font-medium text-[var(--color-text-primary)] mb-2">
+                      {alumno.current_invitation.invitation_type === 'link' ? ta('enlace_pendiente') : ta('contrasena_pendiente')}
+                    </h4>
+                    {alumno.current_invitation.invitation_type === 'link' ? (
+                      <div className="space-y-2">
+                         <Input readOnly value={`${window.location.origin}/setup/${alumno.current_invitation.code}`} className="bg-[var(--color-bg-secondary)] text-xs" />
+                         <Button onClick={() => {
+                           navigator.clipboard.writeText(`${window.location.origin}/setup/${alumno.current_invitation.code}`);
+                           toast.success(tc('exito'));
+                         }} variant="secondary" size="sm" className="w-full">
+                           <Copy className="size-4 mr-2" /> {ta('copiar_enlace')}
+                         </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                         <Input readOnly value={alumno.current_invitation.temp_password} className="bg-[var(--color-bg-secondary)] font-mono text-center tracking-wider" />
+                         <Button onClick={() => {
+                           navigator.clipboard.writeText(alumno.current_invitation.temp_password);
+                           toast.success(tc('exito'));
+                         }} variant="secondary" size="sm" className="w-full">
+                           <Copy className="size-4 mr-2" /> {ta('copiar_contrasena')}
+                         </Button>
+                      </div>
+                    )}
+                    <p className="text-xs text-[var(--color-text-muted)] mt-3 text-center">
+                      {ta('expira_el', {
+                        fecha: new Date(alumno.current_invitation.expires_at).toLocaleDateString(),
+                        hora: new Date(alumno.current_invitation.expires_at).toLocaleTimeString()
+                      })}
+                    </p>
+                  </div>
+                )}
+
+                <AnimatePresence mode="wait">
+                  {setupCode ? (
+                    <m.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      className="space-y-3 pt-2 border-t border-[var(--color-border)]"
+                    >
+                      <Label className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">{ta('nuevo_acceso_generado')}</Label>
+                      {setupCode && typeof setupCode !== 'string' && setupCode.password ? (
+                        <div className="flex items-center gap-2">
+                          <Input 
+                            readOnly 
+                            value={setupCode.password}
+                            className="bg-[var(--color-bg)] border-[var(--color-border)] text-sm font-mono text-center tracking-wider"
+                          />
+                          <Button onClick={() => {
+                             navigator.clipboard.writeText(setupCode.password!);
+                             setCopiedLink(true);
+                             setTimeout(() => setCopiedLink(false), 2000);
+                          }} variant="secondary" className="shrink-0">
+                            {copiedLink ? <Check className="size-4 text-[var(--color-success)]" /> : <Copy className="size-4" />}
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <Input 
+                            readOnly 
+                            value={setupCode && typeof setupCode !== 'string' && setupCode.code ? `${window.location.origin}/setup/${setupCode.code}` : ''}
+                            className="bg-[var(--color-bg)] border-[var(--color-border)] text-sm"
+                          />
+                          <Button onClick={handleCopyLink} variant="secondary" className="shrink-0">
+                            {copiedLink ? <Check className="size-4 text-[var(--color-success)]" /> : <Copy className="size-4" />}
+                          </Button>
+                        </div>
+                      )}
+                    </m.div>
+                  ) : (
+                    <m.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      className="pt-2"
+                    >
+                      <div className="space-y-3 border-t border-[var(--color-border)] pt-4">
+                        <Label className="text-sm font-medium text-[var(--color-text-secondary)]">
+                          {alumno.current_invitation ? ta('regenerar_acceso') : ta('generar_enlace_cambio')}
+                        </Label>
+                        {/* For pending users: show link/password toggle */}
+                        {isPending && (
+                          <div className="flex bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg overflow-hidden shadow-sm mb-3">
+                            <button
+                              type="button"
+                              onClick={() => setRegenModo('link')}
+                              className={`flex-1 py-2 text-xs font-medium transition-colors ${regenModo !== 'default' ? 'bg-[var(--color-brand-gold-muted)] text-[var(--color-brand-gold)] border-b-2 border-[var(--color-brand-gold)]' : 'text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)]'}`}
+                            >
+                              {ta('modo_enlace')}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setRegenModo('default')}
+                              className={`flex-1 py-2 text-xs font-medium transition-colors border-l border-[var(--color-border)] ${regenModo === 'default' ? 'bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] border-b-2 border-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)]'}`}
+                            >
+                              {ta('modo_contrasena')}
+                            </button>
+                          </div>
+                        )}
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          className="w-full"
+                          onClick={generateLink}
+                          disabled={generatingLink}
+                        >
+                          {generatingLink ? <Loader2 className="size-4 mr-2 animate-spin" /> : <LinkIcon className="size-4 mr-2" />}
+                          {alumno.current_invitation ? ta('regenerar_acceso') : ta('generar_enlace')}
+                        </Button>
+                      </div>
+                    </m.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </Card>
+          </div>
+
+          {/* Barra de acciones — full width */}
+          <div className="lg:col-span-3">
+            <Card padding="none">
+              <div className="flex items-center justify-between gap-3 px-6 py-4">
                 <Button 
                   type="button" 
                   variant="ghost" 
@@ -323,170 +506,39 @@ export default function EditarAlumnoPage({ params }: { params: Promise<{ id: str
                   )}
                 </Button>
               </div>
-            </form>
-          </Card>
-        </div>
+            </Card>
+          </div>
 
-        <div className="lg:col-span-1">
-          <Card className="p-6 md:p-8 space-y-6 sticky top-6 shadow-sm border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
-            <div className="bg-[var(--color-brand-gold-muted)] size-12 rounded-full flex items-center justify-center text-[var(--color-brand-gold)]">
-              <Key className="size-6" />
-            </div>
-            <div>
-              <h3 className="text-lg font-medium text-[var(--color-text-primary)]">{ta('restablecer_titulo')}</h3>
-              <p className="text-sm text-[var(--color-text-secondary)] mt-1">
-                {isPending ? ta('restablecer_desc_pendiente') : ta('restablecer_desc_activo')}
-              </p>
-            </div>
-
-            {/* Current pending invitation (if any) */}
-            {alumno.current_invitation && !setupCode && (
-              <div className="space-y-4">
-                <div className="bg-[var(--color-bg)] p-4 rounded-lg border border-[var(--color-border)]">
-                  <h4 className="text-sm font-medium text-[var(--color-text-primary)] mb-2">
-                    {alumno.current_invitation.invitation_type === 'link' ? ta('enlace_pendiente') : ta('contrasena_pendiente')}
-                  </h4>
-                  {alumno.current_invitation.invitation_type === 'link' ? (
-                    <div className="space-y-2">
-                       <Input readOnly value={`${window.location.origin}/setup/${alumno.current_invitation.code}`} className="bg-[var(--color-bg-secondary)] text-xs" />
-                       <Button onClick={() => {
-                         navigator.clipboard.writeText(`${window.location.origin}/setup/${alumno.current_invitation.code}`);
-                         toast.success(tc('exito'));
-                       }} variant="secondary" size="sm" className="w-full">
-                         <Copy className="size-4 mr-2" /> {ta('copiar_enlace')}
-                       </Button>
+          {/* Card: Zona de Peligro — full width */}
+          <div className="lg:col-span-3">
+            <Card padding="none" className="border-red-100 dark:border-red-900/30 bg-red-50/30 dark:bg-red-950/10">
+              <div className="p-6">
+                <div className="flex items-center justify-between flex-wrap gap-4">
+                  <div className="flex items-start gap-4">
+                    <div className="bg-red-100 dark:bg-red-900/50 size-10 rounded-full flex items-center justify-center text-red-600 dark:text-red-400 shrink-0">
+                      <Trash2 className="size-5" />
                     </div>
-                  ) : (
-                    <div className="space-y-2">
-                       <Input readOnly value={alumno.current_invitation.temp_password} className="bg-[var(--color-bg-secondary)] font-mono text-center tracking-wider" />
-                       <Button onClick={() => {
-                         navigator.clipboard.writeText(alumno.current_invitation.temp_password);
-                         toast.success(tc('exito'));
-                       }} variant="secondary" size="sm" className="w-full">
-                         <Copy className="size-4 mr-2" /> {ta('copiar_contrasena')}
-                       </Button>
+                    <div>
+                      <h3 className="text-base font-medium text-[var(--color-text-primary)]">{ta('eliminar_titulo')}</h3>
+                      <p className="text-sm text-[var(--color-text-secondary)] mt-0.5">
+                        {ta('eliminar_desc', { nombre: alumno?.nombre ?? '', apellido: alumno?.apellido ?? '' })}
+                      </p>
                     </div>
-                  )}
-                  <p className="text-xs text-[var(--color-text-muted)] mt-3 text-center">
-                    {ta('expira_el', {
-                      fecha: new Date(alumno.current_invitation.expires_at).toLocaleDateString(),
-                      hora: new Date(alumno.current_invitation.expires_at).toLocaleTimeString()
-                    })}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            <AnimatePresence mode="wait">
-              {setupCode ? (
-                <m.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  className="space-y-3 pt-2 border-t border-[var(--color-border)]"
-                >
-                  <Label className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">{ta('nuevo_acceso_generado')}</Label>
-                  {setupCode && typeof setupCode !== 'string' && setupCode.password ? (
-                    <div className="flex items-center gap-2">
-                      <Input 
-                        readOnly 
-                        value={setupCode.password}
-                        className="bg-[var(--color-bg)] border-[var(--color-border)] text-sm font-mono text-center tracking-wider"
-                      />
-                      <Button onClick={() => {
-                         navigator.clipboard.writeText(setupCode.password!);
-                         setCopiedLink(true);
-                         setTimeout(() => setCopiedLink(false), 2000);
-                      }} variant="secondary" className="shrink-0">
-                        {copiedLink ? <Check className="size-4 text-[var(--color-success)]" /> : <Copy className="size-4" />}
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <Input 
-                        readOnly 
-                        value={setupCode && typeof setupCode !== 'string' && setupCode.code ? `${window.location.origin}/setup/${setupCode.code}` : ''}
-                        className="bg-[var(--color-bg)] border-[var(--color-border)] text-sm"
-                      />
-                      <Button onClick={handleCopyLink} variant="secondary" className="shrink-0">
-                        {copiedLink ? <Check className="size-4 text-[var(--color-success)]" /> : <Copy className="size-4" />}
-                      </Button>
-                    </div>
-                  )}
-                </m.div>
-              ) : (
-                <m.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  className="pt-2"
-                >
-                  <div className="space-y-3 border-t border-[var(--color-border)] pt-4">
-                    <Label className="text-sm font-medium text-[var(--color-text-secondary)]">
-                      {alumno.current_invitation ? ta('regenerar_acceso') : ta('generar_enlace_cambio')}
-                    </Label>
-                    {/* For pending users: show link/password toggle. For active: link only */}
-                    {isPending && (
-                      <div className="flex bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg overflow-hidden shadow-sm mb-3">
-                        <button
-                          type="button"
-                          onClick={() => setRegenModo('link')}
-                          className={`flex-1 py-2 text-xs font-medium transition-colors ${regenModo !== 'default' ? 'bg-[var(--color-brand-gold-muted)] text-[var(--color-brand-gold)] border-b-2 border-[var(--color-brand-gold)]' : 'text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)]'}`}
-                        >
-                          {ta('modo_enlace')}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setRegenModo('default')}
-                          className={`flex-1 py-2 text-xs font-medium transition-colors border-l border-[var(--color-border)] ${regenModo === 'default' ? 'bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] border-b-2 border-[var(--color-text-primary)]' : 'text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)]'}`}
-                        >
-                          {ta('modo_contrasena')}
-                        </button>
-                      </div>
-                    )}
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      className="w-full"
-                      onClick={generateLink}
-                      disabled={generatingLink}
-                    >
-                      {generatingLink ? <Loader2 className="size-4 mr-2 animate-spin" /> : <LinkIcon className="size-4 mr-2" />}
-                      {alumno.current_invitation ? ta('regenerar_acceso') : ta('generar_enlace')}
-                    </Button>
                   </div>
-                </m.div>
-              )}
-            </AnimatePresence>
-
-          </Card>
-        </div>
-
-        {/* Delete Card */}
-        <div className="lg:col-span-3">
-          <Card className="p-6 shadow-sm border-red-100 dark:border-red-900/30 bg-red-50/30 dark:bg-red-950/10">
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              <div className="flex items-start gap-4">
-                <div className="bg-red-100 dark:bg-red-900/50 size-10 rounded-full flex items-center justify-center text-red-600 dark:text-red-400 shrink-0">
-                  <Trash2 className="size-5" />
-                </div>
-                <div>
-                  <h3 className="text-base font-medium text-[var(--color-text-primary)]">{ta('eliminar_titulo')}</h3>
-                  <p className="text-sm text-[var(--color-text-secondary)] mt-0.5">
-                    {ta('eliminar_desc', { nombre: alumno?.nombre ?? '', apellido: alumno?.apellido ?? '' })}
-                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setShowDeleteModal(true)}
+                    className="inline-flex items-center gap-2 rounded-lg border border-red-200 dark:border-red-800 bg-[var(--color-bg)] px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 transition-colors hover:bg-red-50 dark:hover:bg-red-950/30 shrink-0"
+                  >
+                    <Trash2 className="size-4" />
+                    {tc('eliminar')}
+                  </button>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setShowDeleteModal(true)}
-                className="inline-flex items-center gap-2 rounded-lg border border-red-200 dark:border-red-800 bg-[var(--color-bg)] px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 transition-colors hover:bg-red-50 dark:hover:bg-red-950/30 shrink-0"
-              >
-                <Trash2 className="size-4" />
-                {tc('eliminar')}
-              </button>
-            </div>
-          </Card>
+            </Card>
+          </div>
         </div>
-      </div>
+      </form>
 
       <ConfirmDeleteModal
         open={showDeleteModal}

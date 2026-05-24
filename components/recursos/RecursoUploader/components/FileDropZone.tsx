@@ -60,15 +60,7 @@ export function FileDropZone({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setDragging(false);
-    const incoming = Array.from(e.dataTransfer.files);
-    const valid = validateFiles(incoming);
-    if (valid.length > 0) onFilesAdd(valid);
-  }, [onFilesAdd]);
-
-  function validateFiles(incoming: File[]): File[] {
+  const validateFiles = useCallback((incoming: File[]): File[] => {
     const valid: File[] = [];
     for (const file of incoming) {
       if (!ACCEPTED_TYPES[file.type]) {
@@ -82,7 +74,15 @@ export function FileDropZone({
       valid.push(file);
     }
     return valid;
-  }
+  }, [t]);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(false);
+    const incoming = Array.from(e.dataTransfer.files);
+    const valid = validateFiles(incoming);
+    if (valid.length > 0) onFilesAdd(valid);
+  }, [onFilesAdd, validateFiles]);
 
   function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
     if (!e.target.files) return;

@@ -36,7 +36,7 @@ yarn-error.log*
 .env.*.local
 .env.development
 .env.production
-!.env.example
+.env.example
 
 # vercel
 .vercel
@@ -48,6 +48,7 @@ next-env.d.ts
 # AI agent context files (internal dev tooling, not for source control)
 CLAUDE.md
 AGENTS.md
+/.agents/
 
 # Supabase SQL files (migrations and seed — managed via Supabase CLI, not source control)
 *.sql
@@ -56,3 +57,6 @@ supabase/seed.sql
 
 # VSCode workspace settings (contains MCP server config with project refs)
 .vscode/
+
+# IDE
+/.kiro

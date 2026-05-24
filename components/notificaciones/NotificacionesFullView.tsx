@@ -143,7 +143,7 @@ export function NotificacionesFullView({ role }: NotificacionesFullViewProps) {
     staleTime: 30_000,
   });
 
-  const allNotificaciones = response?.data ?? [];
+  const allNotificaciones = useMemo(() => response?.data ?? [], [response?.data]);
 
   // Derive available tipos from the actual data
   const availableTipos = useMemo(() => {

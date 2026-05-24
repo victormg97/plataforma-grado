@@ -2,7 +2,7 @@
 
 **Last updated:** April 30, 2026
 
-At **CTA Graduados** we take your privacy seriously. This Policy describes what information we collect, how we use it, and how we protect it.
+At **{{APP_NAME}}** we take your privacy seriously. This Policy describes what information we collect, how we use it, and how we protect it.
 
 ---
 
@@ -10,9 +10,9 @@ At **CTA Graduados** we take your privacy seriously. This Policy describes what 
 
 The controller responsible for processing your personal data is:
 
-**Carlos Toro Araya**  
-CTA Graduados Platform  
-Email: contacto@ctagraduados.cl  
+**{{OWNER_NAME}}**  
+{{APP_NAME}} Platform  
+Email: {{OWNER_EMAIL}}  
 Country: Chile
 
 ## 2. Data We Collect
@@ -75,7 +75,7 @@ In accordance with applicable Chilean legislation (Law No. 19,628 on Protection 
 - **Deletion:** request the deletion of your data.
 - **Objection:** object to the processing of your data.
 
-To exercise these rights, write to us at **contacto@ctagraduados.cl**.
+To exercise these rights, write to us at **{{OWNER_EMAIL}}**.
 
 ## 8. Cookies and Similar Technologies
 
@@ -98,5 +98,5 @@ We may update this Policy periodically. We will notify significant changes throu
 
 If you have questions or concerns about this Policy, contact us at:
 
-**CTA Graduados**  
-Email: contacto@ctagraduados.cl
+**{{APP_NAME}}**  
+Email: {{OWNER_EMAIL}}

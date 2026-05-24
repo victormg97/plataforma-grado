@@ -14,6 +14,7 @@ export function useRealtimeNotifications(userId: string | undefined) {
   // Use a ref so the channel effect only depends on userId (stable primitive),
   // not on `t` which may return a new reference each render in next-intl.
   const tRef = useRef(t);
+  // eslint-disable-next-line react-hooks/refs
   tRef.current = t;
 
   useEffect(() => {

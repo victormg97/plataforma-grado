@@ -72,7 +72,7 @@ export function CalendarEventPopover({ data, anchorEl, rol, onClose }: CalendarE
   // Compute position when anchor changes
   useEffect(() => {
     if (!anchorEl || !data) {
-      setPos(null);
+      setPos(null); // eslint-disable-line react-hooks/set-state-in-effect
       return;
     }
     setPos(computePosition(anchorEl));
@@ -220,7 +220,7 @@ export function useCalendarPopover() {
   // Only enable on devices with hover capability
   useEffect(() => {
     const mq = window.matchMedia('(hover: hover) and (pointer: fine)');
-    setIsDesktop(mq.matches);
+    setIsDesktop(mq.matches); // eslint-disable-line react-hooks/set-state-in-effect
     const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);

@@ -38,7 +38,7 @@ export function Tooltip({
   const [isHoverDevice, setIsHoverDevice] = useState(true);
 
   useEffect(() => {
-    setMounted(true);
+    setMounted(true); // eslint-disable-line react-hooks/set-state-in-effect
     setIsHoverDevice(window.matchMedia('(hover: hover)').matches);
   }, []);
 

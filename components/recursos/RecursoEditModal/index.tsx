@@ -66,6 +66,7 @@ export function RecursoEditModal({
 
   // Initialise selectedIds once acceso records arrive
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (accesoIds) setSelectedIds(accesoIds);
   }, [accesoIds]);
 

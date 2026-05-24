@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/client';
 import { useUserStore } from '@/stores/useUserStore';
 import { toast } from 'sonner';
 
-import { FileDropZone, type FileEntry, ACCEPTED_TYPES } from './components/FileDropZone';
+import { FileDropZone, type FileEntry } from './components/FileDropZone';
 import { AlumnoAssignmentSelector } from './components/AlumnoAssignmentSelector';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
