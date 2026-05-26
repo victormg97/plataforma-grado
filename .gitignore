@@ -30,13 +30,12 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files
+# env files (NEVER commit secrets)
 .env
 .env.local
 .env.*.local
 .env.development
 .env.production
-.env.example
 
 # vercel
 .vercel
@@ -45,18 +44,21 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# AI agent context files (internal dev tooling, not for source control)
+# AI agent context files
 CLAUDE.md
 AGENTS.md
 /.agents/
 
-# Supabase SQL files (migrations and seed — managed via Supabase CLI, not source control)
-*.sql
-supabase/migrations/
-supabase/seed.sql
-
-# VSCode workspace settings (contains MCP server config with project refs)
+# VSCode / IDE
 .vscode/
-
-# IDE
 /.kiro
+
+# Internal dev prompts (not for source control)
+00_CONTEXTO_MAESTRO.md
+01_*.md
+02_*.md
+02b_*.md
+03_*.md
+04_*.md
+05_*.md
+START_HERE.md
