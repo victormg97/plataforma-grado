@@ -4,6 +4,7 @@ import { getTranslations, getLocale } from "next-intl/server";
 import { MarkdownRenderer } from "@/components/common/MarkdownRenderer";
 import { BackButton } from "@/components/common/BackButton";
 import { tenantConfig } from "@/config";
+import { formatOwnerNames, formatOwnerEmails } from "@/lib/tenant-utils";
 
 export async function generateMetadata() {
   const t = await getTranslations("privacidad");
@@ -22,8 +23,8 @@ export default async function PrivacidadPage() {
 
   const content = raw
     .replaceAll("{{APP_NAME}}", tenantConfig.nombre)
-    .replaceAll("{{OWNER_NAME}}", tenantConfig.propietarios[0].nombre)
-    .replaceAll("{{OWNER_EMAIL}}", tenantConfig.propietarios[0].email);
+    .replaceAll("{{OWNER_NAME}}", formatOwnerNames(tenantConfig.propietarios))
+    .replaceAll("{{OWNER_EMAIL}}", formatOwnerEmails(tenantConfig.propietarios));
 
   return (
     <div className="container-app py-12 max-w-2xl mx-auto">
