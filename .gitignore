@@ -62,3 +62,7 @@ AGENTS.md
 04_*.md
 05_*.md
 START_HERE.md
+
+# Seed files (contain passwords/test data — keep local only)
+supabase/seed.sql
+supabase/seeds/
