@@ -1031,6 +1031,88 @@ export type Database = {
           }
       get_is_prueba_locked: { Args: { p_prueba_id: string }; Returns: boolean }
       get_notas_clase: { Args: { p_horario_id: string }; Returns: Json }
+      get_alumnos_admin: {
+        Args: { p_estado?: string; p_profesor_id?: string; p_q?: string }
+        Returns: {
+          activo: boolean
+          año_ingreso: string | null
+          apellido: string
+          apellido_materno: string | null
+          avatar_url: string | null
+          email: string
+          estado: string
+          fecha_ingreso: string | null
+          fecha_prueba: string | null
+          id: string
+          nombre: string
+          notas: string | null
+          paso_prueba: boolean
+          profesor_apellido: string | null
+          profesor_id: string | null
+          profesor_nombre: string | null
+          telefono: string | null
+          universidad: string | null
+        }[]
+      }
+      get_alumnos_profesor: {
+        Args: { p_profesor_id: string; p_scope?: string }
+        Returns: {
+          activo: boolean
+          alumno_id: string
+          año_ingreso: string | null
+          apellido: string
+          apellido_materno: string | null
+          avatar_url: string | null
+          email: string
+          estado_cuenta: string
+          fecha_prueba: string | null
+          ha_dado_examen: boolean
+          id: string
+          intentos_prueba: number | null
+          nombre: string
+          notas: string | null
+          paso_prueba: boolean
+          profesor_id: string | null
+          rol: string
+          telefono: string | null
+          universidad: string | null
+        }[]
+      }
+      get_pagos_mes: {
+        Args: { p_año: number; p_mes: number }
+        Returns: {
+          activo: boolean
+          alumno_id: string
+          apellido: string
+          avatar_url: string | null
+          nombre: string
+          pago_estado: string | null
+          pago_fecha: string | null
+          pago_id: string | null
+          pago_monto: number | null
+          paso_prueba: boolean
+          profesor_apellido: string | null
+          profesor_id: string | null
+          profesor_nombre: string | null
+        }[]
+      }
+      get_profesores_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          activo: boolean
+          alumnos_count: number
+          apellido: string
+          apellido_materno: string | null
+          avatar_url: string | null
+          email: string
+          estado_cuenta: string
+          id: string
+          nombre: string
+          puede_crear_alumno: boolean | null
+          rol: string
+          telefono: string | null
+        }[]
+      }
       get_profesor_dashboard: { Args: { p_profesor_id: string }; Returns: Json }
       get_recursos_for_user: { Args: never; Returns: Json }
       get_server_time: { Args: never; Returns: string }
