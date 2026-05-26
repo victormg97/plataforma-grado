@@ -1032,7 +1032,7 @@ export type Database = {
       get_is_prueba_locked: { Args: { p_prueba_id: string }; Returns: boolean }
       get_notas_clase: { Args: { p_horario_id: string }; Returns: Json }
       get_alumnos_admin: {
-        Args: { p_estado?: string; p_profesor_id?: string; p_q?: string }
+        Args: { p_estado?: string | null; p_profesor_id?: string | null; p_q?: string | null }
         Returns: {
           activo: boolean
           año_ingreso: string | null
@@ -1055,7 +1055,7 @@ export type Database = {
         }[]
       }
       get_alumnos_profesor: {
-        Args: { p_profesor_id: string; p_scope?: string }
+        Args: { p_profesor_id: string; p_scope?: string | null }
         Returns: {
           activo: boolean
           alumno_id: string
