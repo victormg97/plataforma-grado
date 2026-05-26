@@ -28,7 +28,8 @@
     "entendido": "Got it",
     "guardar_cambios": "Save changes",
     "nombre_completo": "Full name",
-    "telefono": "Phone"
+    "telefono": "Phone",
+    "opcional": "(optional)"
   },
   "auth": {
     "login": {
@@ -45,6 +46,7 @@
       "error_demasiados_intentos": "Too many attempts. Try again in {minutes} minute(s).",
       "error_bloqueado": "Access temporarily blocked. Please try again later.",
       "error_servidor": "Server error. Please try again later.",
+      "error_cuenta_bloqueada": "Your account has been blocked. Please contact your professor or administrator.",
       "intentos_restantes": "{count} attempt(s) remaining before temporary lockout"
     },
     "logout": "Sign out"
@@ -251,6 +253,8 @@
     "año_ingreso": "Year of admission",
     "notas": "Professor notes",
     "notas_placeholder": "Add notes about the student...",
+    "fecha_ingreso": "Course start date",
+    "fecha_ingreso_hint": "Date when the student started their classes",
     "paso_prueba": "Passed the bar exam",
     "fecha_prueba": "Exam date",
     "graduado_badge": "🎓 Graduated",
@@ -276,6 +280,8 @@
     "desbloquear_titulo": "Unblock student",
     "confirm_bloquear": "Block {nombre}? They will not be able to access the system.",
     "confirm_desbloquear": "Unblock {nombre}?",
+    "bloquear_motivo": "Reason for blocking",
+    "bloquear_motivo_placeholder": "E.g. Payment issues, student request...",
     "reasignar_titulo": "Reassign student",
     "reasignar_texto": "Reassign {nombre}:",
     "reasignar_btn": "Reassign",
@@ -434,7 +440,12 @@
     "ha_dado_examen": "I have taken the bar exam",
     "ha_dado_examen_desc": "Check this if you have already taken the exam at least once",
     "veces_dado": "Number of times I took it",
-    "veces_dado_placeholder": "e.g. 2"
+    "veces_dado_placeholder": "e.g. 2",
+    "preferencias": "Preferences",
+    "idioma": "Language",
+    "duracion_clase": "Default class duration",
+    "duracion_clase_hint": "Default time when creating new classes",
+    "minutos": "minutes"
   },
   "notificaciones": {
     "titulo": "Notifications",
@@ -902,6 +913,10 @@
       "nombre_placeholder": "E.g. Maria",
       "apellidos": "Last Names",
       "apellidos_placeholder": "E.g. Gonzalez",
+      "apellido1": "First Last Name",
+      "apellido1_placeholder": "E.g. Gonzalez",
+      "apellido2": "Second Last Name",
+      "apellido2_placeholder": "E.g. Martinez",
       "generar_correo": "Generate email automatically (@ctagraduados.cl)",
       "correo": "Email Address",
       "correo_requerido": "Email Address *",
@@ -1089,8 +1104,10 @@
     "fecha_pago": "Paid on {fecha}",
     "alumnos_activos": "Active students",
     "alumnos_inactivos": "Inactive",
+    "alumnos_graduados": "Graduated",
     "sin_activos": "No active students",
     "sin_inactivos": "No inactive students",
+    "sin_graduados": "No graduated students",
     "sin_resultados": "No results",
     "exito_marcado": "Payment recorded",
     "exito_desmarcado": "Payment removed",

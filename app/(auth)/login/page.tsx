@@ -22,9 +22,17 @@ export default function LoginPage() {
   const { theme, setTheme } = useTheme();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  // Seconds remaining before the user can try again after a 429
   const [cooldownSeconds, setCooldownSeconds] = useState(0);
   const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Show blocked banner if redirected from dashboard with ?blocked=1
+  const [showBlockedBanner, setShowBlockedBanner] = useState(false);
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('blocked') === '1') setShowBlockedBanner(true);
+    }
+  }, []);
 
   // Countdown timer — ticks every second, stops at 0
   function startCooldown(seconds: number) {
@@ -102,6 +110,13 @@ export default function LoginPage() {
       return;
     }
 
+    // ── 403 Account blocked ──────────────────────────────────────────────────
+    if (res.status === 403) {
+      toast.error(t('error_cuenta_bloqueada'));
+      setLoading(false);
+      return;
+    }
+
     // ── 5xx Server error ─────────────────────────────────────────────────────
     if (!res.ok) {
       toast.error(t('error_servidor'));
@@ -151,6 +166,12 @@ export default function LoginPage() {
         >
           {t('titulo')}
         </h2>
+
+        {showBlockedBanner && (
+          <div className="mb-4 rounded-[var(--radius-md)] border border-[var(--color-error)]/30 bg-[var(--color-error)]/8 px-4 py-3 text-sm text-[var(--color-error)]">
+            {t('error_cuenta_bloqueada')}
+          </div>
+        )}
 
         {/* eslint-disable-next-line react-hooks/refs */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

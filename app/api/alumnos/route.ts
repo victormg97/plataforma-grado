@@ -11,45 +11,29 @@ export async function GET(request: NextRequest) {
 
   const scope = request.nextUrl.searchParams.get('scope') || 'mis';
 
-  // Get all alumnos with their extra info (explicit FK hint: alumnos_extra has 2 FKs to profiles)
-  let query = supabase
-    .from('profiles')
-    .select('*, alumnos_extra!alumnos_extra_alumno_id_fkey(*)')
-    .eq('rol', 'alumno')
-    .eq('activo', true);
-
-  if (scope === 'mis') {
-    // Only alumnos assigned to this profesor
-    const { data: extras } = await supabase
-      .from('alumnos_extra')
-      .select('alumno_id')
-      .eq('profesor_id', user.id);
-
-    const alumnoIds = extras?.map(e => e.alumno_id) || [];
-    if (alumnoIds.length === 0) {
-      return NextResponse.json([]);
-    }
-    query = query.in('id', alumnoIds);
-  }
-
-  const { data, error } = await query.order('nombre', { ascending: true });
+  const { data, error } = await supabase.rpc('get_alumnos_profesor', {
+    p_profesor_id: user.id,
+    p_scope: scope,
+  });
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const alumnoIdsResult = data?.map(d => d.id) || [];
-  const { data: invs } = await supabase
-    .from('invitations')
-    .select('user_id')
-    .in('user_id', alumnoIdsResult.length > 0 ? alumnoIdsResult : ['none'])
-    .eq('used', false);
-    
-  const pendingSet = new Set((invs ?? []).map(i => i.user_id));
-
-  const result = (data ?? []).map((a) => ({
-    ...a,
-    estado_cuenta: pendingSet.has(a.id) ? 'Pendiente' : 'Activo'
+  // Reshape to match AlumnoConExtra shape expected by the frontend
+  const result = (data ?? []).map((r: Record<string, unknown>) => ({
+    ...r,
+    alumnos_extra: r.alumno_id ? [{
+      alumno_id: r.alumno_id,
+      profesor_id: r.profesor_id,
+      universidad: r.universidad,
+      año_ingreso: r.año_ingreso,
+      notas: r.notas,
+      paso_prueba: r.paso_prueba,
+      fecha_prueba: r.fecha_prueba,
+      ha_dado_examen: r.ha_dado_examen,
+      intentos_prueba: r.intentos_prueba,
+    }] : [],
   }));
 
   return NextResponse.json(result);

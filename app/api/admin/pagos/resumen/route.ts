@@ -12,6 +12,7 @@ export type AlumnoResumenAnual = {
   nombre: string;
   apellido: string;
   activo: boolean;
+  paso_prueba: boolean;
   pagos: PagoResumenMes[];
 };
 
@@ -44,14 +45,26 @@ export async function GET(request: NextRequest) {
   const alumnoIds = (alumnos ?? []).map((a) => a.id);
   if (alumnoIds.length === 0) return NextResponse.json([]);
 
-  // Fetch all pagos for this year
-  const { data: pagos, error: pagosError } = await supabase
-    .from('pagos')
-    .select('alumno_id, mes, estado, monto_pagado')
-    .in('alumno_id', alumnoIds)
-    .eq('anio', año);
+  // Fetch pagos and alumnos_extra in parallel
+  const [{ data: pagos, error: pagosError }, { data: extras }] = await Promise.all([
+    supabase
+      .from('pagos')
+      .select('alumno_id, mes, estado, monto_pagado')
+      .in('alumno_id', alumnoIds)
+      .eq('anio', año),
+    supabase
+      .from('alumnos_extra')
+      .select('alumno_id, paso_prueba')
+      .in('alumno_id', alumnoIds),
+  ]);
 
   if (pagosError) return NextResponse.json({ error: pagosError.message }, { status: 500 });
+
+  // Build paso_prueba map
+  const pasoPruebaMap = new Map<string, boolean>();
+  for (const e of extras ?? []) {
+    pasoPruebaMap.set(e.alumno_id as string, (e.paso_prueba as boolean) ?? false);
+  }
 
   // Build a map: alumnoId → { mes → pago }
   const pagosMap = new Map<string, Map<number, { estado: string; monto_pagado: number | null }>>();
@@ -80,6 +93,7 @@ export async function GET(request: NextRequest) {
       nombre: a.nombre,
       apellido: a.apellido,
       activo: a.activo,
+      paso_prueba: pasoPruebaMap.get(a.id) ?? false,
       pagos: pagosArr,
     };
   });

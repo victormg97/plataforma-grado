@@ -9,55 +9,21 @@ export async function GET() {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('rol')
-    .eq('id', user.id)
-    .single();
+  // Run rol check and main query in parallel
+  const [{ data: profile }, { data: rows, error }] = await Promise.all([
+    supabase.from('profiles').select('rol').eq('id', user.id).single(),
+    supabase.rpc('get_profesores_admin'),
+  ]);
 
   if (profile?.rol !== 'admin') {
     return NextResponse.json({ error: 'Solo admin' }, { status: 403 });
   }
 
-  // Get all professors with student count
-  const { data: profesores, error } = await supabase
-    .from('profiles')
-    .select('id, nombre, apellido, email, telefono, avatar_url, activo, rol')
-    .in('rol', ['profesor', 'admin'])
-    .order('nombre');
-
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  // Get student counts per professor
-  const { data: counts } = await supabase
-    .from('alumnos_extra')
-    .select('profesor_id');
-
-  const countMap: Record<string, number> = {};
-  for (const c of counts ?? []) {
-    if (c.profesor_id) {
-      countMap[c.profesor_id] = (countMap[c.profesor_id] || 0) + 1;
-    }
-  }
-
-  const profesorIds = (profesores ?? []).map(p => p.id);
-  const { data: invs } = await supabase
-    .from('invitations')
-    .select('user_id')
-    .in('user_id', profesorIds.length > 0 ? profesorIds : ['none'])
-    .eq('used', false);
-    
-  const pendingSet = new Set((invs ?? []).map(i => i.user_id));
-
-  const result = (profesores ?? []).map((p) => ({
-    ...p,
-    estado_cuenta: pendingSet.has(p.id) ? 'Pendiente' : 'Activo',
-    alumnos_count: countMap[p.id] || 0,
-  }));
-
-  return NextResponse.json(result);
+  return NextResponse.json(rows ?? []);
 }
 
 export async function POST(request: NextRequest) {
@@ -79,7 +45,7 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { nombre, apellido, email, telefono, useAppEmail, modo_creacion, puede_crear_alumno } = body;
+  const { nombre, apellido, apellido_materno, email, telefono, useAppEmail, modo_creacion, puede_crear_alumno } = body;
 
   if (!nombre || !apellido) {
     return NextResponse.json({ error: 'Nombre y apellido son requeridos' }, { status: 400 });
@@ -127,6 +93,7 @@ export async function POST(request: NextRequest) {
   if (newUser.user) {
     const updates: Record<string, string | boolean> = {};
     if (telefono) updates.telefono = telefono;
+    if (apellido_materno) updates.apellido_materno = apellido_materno;
     if (typeof puede_crear_alumno === 'boolean') updates.puede_crear_alumno = puede_crear_alumno;
     
     if (Object.keys(updates).length > 0) {

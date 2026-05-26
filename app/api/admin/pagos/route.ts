@@ -43,70 +43,28 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Parámetros inválidos' }, { status: 400 });
   }
 
-  // Fetch all alumnos with their extra data (profesor_id)
-  const { data: alumnos, error: alumnosError } = await supabase
-    .from('profiles')
-    .select('id, nombre, apellido, avatar_url, activo')
-    .eq('rol', 'alumno')
-    .order('nombre');
+  const { data: rows, error } = await supabase.rpc('get_pagos_mes', { p_año: año, p_mes: mes });
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  if (alumnosError) return NextResponse.json({ error: alumnosError.message }, { status: 500 });
-
-  const alumnoIds = (alumnos ?? []).map((a) => a.id);
-  if (alumnoIds.length === 0) return NextResponse.json([]);
-
-  // Fetch extras (profesor assignments)
-  const { data: extras } = await supabase
-    .from('alumnos_extra')
-    .select('alumno_id, profesor_id')
-    .in('alumno_id', alumnoIds);
-
-  const extrasMap = new Map(
-    (extras ?? []).map((e) => [e.alumno_id as string, e.profesor_id as string | null])
-  );
-
-  // Fetch profesores referenced
-  const profesorIds = [...new Set((extras ?? []).map((e) => e.profesor_id).filter(Boolean))] as string[];
-  const { data: profData } = profesorIds.length > 0
-    ? await supabase.from('profiles').select('id, nombre, apellido').in('id', profesorIds)
-    : { data: [] };
-  const profMap = new Map((profData ?? []).map((p) => [p.id, p]));
-
-  // Fetch pagos for the requested month
-  const { data: pagos, error: pagosError } = await supabase
-    .from('pagos')
-    .select('id, alumno_id, estado, monto_pagado, fecha_pago')
-    .in('alumno_id', alumnoIds)
-    .eq('anio', año)
-    .eq('mes', mes);
-
-  if (pagosError) return NextResponse.json({ error: pagosError.message }, { status: 500 });
-
-  const pagosMap = new Map(
-    (pagos ?? []).map((p) => [p.alumno_id as string, p])
-  );
-
-  const result: AlumnoPago[] = (alumnos ?? []).map((a) => {
-    const profesorId = extrasMap.get(a.id) ?? null;
-    const profesor = profesorId ? (profMap.get(profesorId) ?? null) : null;
-    const pago = pagosMap.get(a.id);
-    return {
-      alumno_id: a.id,
-      nombre: a.nombre,
-      apellido: a.apellido,
-      avatar_url: a.avatar_url,
-      activo: a.activo,
-      profesor: profesor ? { id: profesor.id, nombre: profesor.nombre, apellido: profesor.apellido } : null,
-      pago: pago
-        ? {
-            id: pago.id as string,
-            estado: pago.estado as 'pagado' | 'parcial',
-            monto_pagado: pago.monto_pagado as number | null,
-            fecha_pago: pago.fecha_pago as string,
-          }
-        : null,
-    };
-  });
+  const result: AlumnoPago[] = (rows ?? []).map((r: Record<string, unknown>) => ({
+    alumno_id: r.alumno_id as string,
+    nombre: r.nombre as string,
+    apellido: r.apellido as string,
+    avatar_url: r.avatar_url as string | null,
+    activo: r.activo as boolean,
+    paso_prueba: (r.paso_prueba as boolean) ?? false,
+    profesor: r.profesor_id
+      ? { id: r.profesor_id as string, nombre: r.profesor_nombre as string, apellido: r.profesor_apellido as string }
+      : null,
+    pago: r.pago_id
+      ? {
+          id: r.pago_id as string,
+          estado: r.pago_estado as 'pagado' | 'parcial',
+          monto_pagado: r.pago_monto as number | null,
+          fecha_pago: r.pago_fecha as string,
+        }
+      : null,
+  }));
 
   return NextResponse.json(result);
 }

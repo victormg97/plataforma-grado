@@ -28,7 +28,8 @@
     "entendido": "Entendido",
     "guardar_cambios": "Guardar cambios",
     "nombre_completo": "Nombre completo",
-    "telefono": "Teléfono"
+    "telefono": "Teléfono",
+    "opcional": "(opcional)"
   },
   "auth": {
     "login": {
@@ -45,6 +46,7 @@
       "error_demasiados_intentos": "Demasiados intentos. Intenta de nuevo en {minutes} minuto(s).",
       "error_bloqueado": "Acceso bloqueado temporalmente. Intenta más tarde.",
       "error_servidor": "Error del servidor. Intenta más tarde.",
+      "error_cuenta_bloqueada": "Tu cuenta ha sido bloqueada. Contacta a tu profesor o administrador.",
       "intentos_restantes": "Queda(n) {count} intento(s) antes de bloqueo temporal"
     },
     "logout": "Cerrar sesión"
@@ -251,6 +253,8 @@
     "año_ingreso": "Año de ingreso",
     "notas": "Notas del profesor",
     "notas_placeholder": "Agrega notas sobre el alumno...",
+    "fecha_ingreso": "Fecha de ingreso al curso",
+    "fecha_ingreso_hint": "Fecha en que el alumno comenzó sus clases",
     "paso_prueba": "Aprobó el examen de grado",
     "fecha_prueba": "Fecha del examen",
     "graduado_badge": "🎓 Graduado",
@@ -276,6 +280,8 @@
     "desbloquear_titulo": "Desbloquear alumno",
     "confirm_bloquear": "¿Bloquear a {nombre}? No podrá acceder al sistema.",
     "confirm_desbloquear": "¿Desbloquear a {nombre}?",
+    "bloquear_motivo": "Motivo del bloqueo",
+    "bloquear_motivo_placeholder": "Ej. Incumplimiento de pagos, solicitud del alumno...",
     "reasignar_titulo": "Reasignar alumno",
     "reasignar_texto": "Reasignar a {nombre}:",
     "reasignar_btn": "Reasignar",
@@ -434,7 +440,12 @@
     "ha_dado_examen": "Ya di el examen de grado",
     "ha_dado_examen_desc": "Marca esta opción si ya rendiste el examen al menos una vez",
     "veces_dado": "Número de veces que lo di",
-    "veces_dado_placeholder": "Ej. 1"
+    "veces_dado_placeholder": "Ej. 1",
+    "preferencias": "Preferencias",
+    "idioma": "Idioma",
+    "duracion_clase": "Duración de clase por defecto",
+    "duracion_clase_hint": "Tiempo predeterminado al crear nuevas clases",
+    "minutos": "minutos"
   },
   "notificaciones": {
     "titulo": "Notificaciones",
@@ -902,6 +913,10 @@
       "nombre_placeholder": "Ej. María",
       "apellidos": "Apellidos",
       "apellidos_placeholder": "Ej. González",
+      "apellido1": "Primer Apellido",
+      "apellido1_placeholder": "Ej. González",
+      "apellido2": "Segundo Apellido",
+      "apellido2_placeholder": "Ej. Martínez",
       "generar_correo": "Generar correo automáticamente (@ctagraduados.cl)",
       "correo": "Correo Electrónico",
       "correo_requerido": "Correo Electrónico *",
@@ -1089,8 +1104,10 @@
     "fecha_pago": "Pagado el {fecha}",
     "alumnos_activos": "Alumnos activos",
     "alumnos_inactivos": "Inactivos",
+    "alumnos_graduados": "Graduados",
     "sin_activos": "No hay alumnos activos",
     "sin_inactivos": "Sin alumnos inactivos",
+    "sin_graduados": "Sin alumnos graduados",
     "sin_resultados": "Sin resultados",
     "exito_marcado": "Pago registrado",
     "exito_desmarcado": "Pago eliminado",

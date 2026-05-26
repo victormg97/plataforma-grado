@@ -3,101 +3,57 @@ import { createClient } from '@/lib/supabase/server';
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
+
+  // Run auth check and param parsing in parallel
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('rol')
-    .eq('id', user.id)
-    .single();
+  const { searchParams } = request.nextUrl;
+  const profesorFilter = searchParams.get('profesor_id');
+  const estadoFilter = searchParams.get('estado');
+  const q = searchParams.get('q');
+
+  // Run rol check and main query in parallel
+  const [{ data: profile }, { data: rows, error }] = await Promise.all([
+    supabase.from('profiles').select('rol').eq('id', user.id).single(),
+    supabase.rpc('get_alumnos_admin', {
+      p_q: q || null,
+      p_profesor_id: profesorFilter || null,
+      p_estado: estadoFilter || null,
+    }),
+  ]);
 
   if (profile?.rol !== 'admin') {
     return NextResponse.json({ error: 'Solo admin' }, { status: 403 });
   }
 
-  const { searchParams } = request.nextUrl;
-  const profesorFilter = searchParams.get('profesor_id');
-  const estadoFilter = searchParams.get('estado'); // activo | bloqueado | graduado
-  const q = searchParams.get('q');
-
-  // Get all alumnos with their extra data
-  let query = supabase
-    .from('profiles')
-    .select('id, nombre, apellido, email, telefono, avatar_url, activo, rol')
-    .eq('rol', 'alumno')
-    .order('nombre');
-
-  if (q) {
-    query = query.or(`nombre.ilike.%${q}%,apellido.ilike.%${q}%,email.ilike.%${q}%`);
-  }
-
-  if (estadoFilter === 'bloqueado') {
-    query = query.eq('activo', false);
-  } else if (estadoFilter === 'activo') {
-    query = query.eq('activo', true);
-  }
-
-  const { data: alumnos, error } = await query;
-
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  // Get alumnos_extra for all returned students
-  const alumnoIds = (alumnos ?? []).map((a) => a.id);
-
-  const { data: extras } = await supabase
-    .from('alumnos_extra')
-    .select('*')
-    .in('alumno_id', alumnoIds.length > 0 ? alumnoIds : ['none']);
-
-  const extrasMap = new Map((extras ?? []).map((e: Record<string, unknown>) => [e.alumno_id as string, e]));
-
-  // Get profesor info for each unique profesor_id
-  const profesorIds = [...new Set((extras ?? []).map((e: Record<string, unknown>) => e.profesor_id as string).filter(Boolean))];
-  const { data: profData } = profesorIds.length > 0
-    ? await supabase.from('profiles').select('id, nombre, apellido').in('id', profesorIds)
-    : { data: [] };
-  const profMap = new Map((profData ?? []).map((p) => [p.id, p]));
-
-  // Get all active invitations to identify pending users
-  const { data: invs } = await supabase
-    .from('invitations')
-    .select('user_id')
-    .in('user_id', alumnoIds.length > 0 ? alumnoIds : ['none'])
-    .eq('used', false);
-    
-  const pendingSet = new Set((invs ?? []).map(i => i.user_id));
-
-  let result = (alumnos ?? []).map((a) => {
-    const extra = extrasMap.get(a.id) as Record<string, unknown> | undefined;
-    const profId = extra?.profesor_id as string | null;
-    return {
-      ...a,
-      estado_cuenta: pendingSet.has(a.id) ? 'Pendiente' : 'Activo',
-      profesor_id: profId ?? null,
-      profesor: profId ? profMap.get(profId) ?? null : null,
-      universidad: (extra?.universidad as string) ?? null,
-      año_ingreso: (extra?.año_ingreso as string) ?? null,
-      notas: (extra?.notas as string) ?? null,
-      paso_prueba: (extra?.paso_prueba as boolean) ?? false,
-      fecha_prueba: (extra?.fecha_prueba as string) ?? null,
-    };
-  });
-
-  // Apply profesor filter after join
-  if (profesorFilter) {
-    result = result.filter((a) => a.profesor_id === profesorFilter);
-  }
-
-  // Apply graduado filter
-  if (estadoFilter === 'graduado') {
-    result = result.filter((a) => a.paso_prueba);
-  }
+  const result = (rows ?? []).map((r: Record<string, unknown>) => ({
+    id: r.id,
+    nombre: r.nombre,
+    apellido: r.apellido,
+    apellido_materno: r.apellido_materno,
+    email: r.email,
+    telefono: r.telefono,
+    avatar_url: r.avatar_url,
+    activo: r.activo,
+    estado_cuenta: r.estado === 'pendiente' ? 'Pendiente' : 'Activo',
+    estado: r.estado,
+    profesor_id: r.profesor_id,
+    profesor: r.profesor_id ? { id: r.profesor_id, nombre: r.profesor_nombre, apellido: r.profesor_apellido } : null,
+    universidad: r.universidad,
+    año_ingreso: r.año_ingreso,
+    fecha_ingreso: r.fecha_ingreso,
+    notas: r.notas,
+    paso_prueba: r.paso_prueba ?? false,
+    fecha_prueba: r.fecha_prueba,
+  }));
 
   return NextResponse.json(result);
 }
@@ -121,7 +77,7 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { nombre, apellido, email, telefono, profesor_id, universidad, año_ingreso, useAppEmail, modo_creacion } = body;
+  const { nombre, apellido, apellido_materno, email, telefono, profesor_id, universidad, año_ingreso, useAppEmail, modo_creacion } = body;
 
   if (!nombre || !apellido) {
     return NextResponse.json({ error: 'Nombre y apellido son requeridos' }, { status: 400 });
@@ -172,12 +128,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Error al crear usuario' }, { status: 500 });
   }
 
-  // Update profile with phone
-  if (telefono) {
-    await supabase
-      .from('profiles')
-      .update({ telefono })
-      .eq('id', newUser.user.id);
+  // Update profile with phone and apellido_materno
+  if (newUser.user) {
+    const profileUpdates: Record<string, string> = {};
+    if (telefono) profileUpdates.telefono = telefono;
+    if (apellido_materno) profileUpdates.apellido_materno = apellido_materno;
+    if (Object.keys(profileUpdates).length > 0) {
+      await supabase
+        .from('profiles')
+        .update(profileUpdates)
+        .eq('id', newUser.user.id);
+    }
   }
 
   // Create alumnos_extra

@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
   const total = count ?? 0;
   const totalPages = Math.ceil(total / pageSize);
 
-  // Get distinct notification types for this user (for smart filter population)
+  // Get distinct notification types in parallel with main query (already resolved above)
   let tiposQuery = supabase
     .from('notificaciones')
     .select('tipo');

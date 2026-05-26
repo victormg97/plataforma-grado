@@ -76,6 +76,8 @@ export interface AvatarUploadSectionProps {
   hasSavedAvatar: boolean;
   /** Whether image processing is in progress */
   processing?: boolean;
+  /** Avatar display size (default: 'lg') */
+  size?: 'md' | 'lg' | 'xl';
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -88,6 +90,7 @@ export function AvatarUploadSection({
   onDelete,
   hasSavedAvatar,
   processing: externalProcessing,
+  size = 'lg',
 }: AvatarUploadSectionProps) {
   const t = useTranslations('perfil');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -127,7 +130,7 @@ export function AvatarUploadSection({
           nombre={nombre}
           apellido={apellido}
           avatarUrl={avatarUrl}
-          size="lg"
+          size={size}
         />
 
         {/* Camera button opens dropdown with photo options */}

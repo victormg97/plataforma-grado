@@ -32,7 +32,49 @@ export async function prefetchDashboardData(userId: string, rol: UserRol) {
         staleTime: 60_000,
       }),
 
-      // Alumnos + profesores in one SP round-trip
+      // Alumnos list — uses get_alumnos_admin to include computed estado field
+      queryClient.prefetchQuery({
+        queryKey: ['admin-alumnos'],
+        queryFn: async () => {
+          const { data } = await supabase.rpc('get_alumnos_admin', {
+            p_q: null,
+            p_profesor_id: null,
+            p_estado: null,
+          });
+          return (data ?? []).map((r: Record<string, unknown>) => ({
+            id: r.id,
+            nombre: r.nombre,
+            apellido: r.apellido,
+            apellido_materno: r.apellido_materno,
+            email: r.email,
+            telefono: r.telefono,
+            avatar_url: r.avatar_url,
+            activo: r.activo,
+            estado_cuenta: r.estado === 'pendiente' ? 'Pendiente' : 'Activo',
+            estado: r.estado,
+            profesor_id: r.profesor_id,
+            profesor: r.profesor_id ? { id: r.profesor_id, nombre: r.profesor_nombre, apellido: r.profesor_apellido } : null,
+            universidad: r.universidad,
+            año_ingreso: r.año_ingreso,
+            notas: r.notas,
+            paso_prueba: r.paso_prueba ?? false,
+            fecha_prueba: r.fecha_prueba,
+          }));
+        },
+        staleTime: STALE_ADMIN_LISTS,
+      }),
+
+      // Profesores list — uses get_profesores_admin to include computed estado_cuenta and alumnos_count
+      queryClient.prefetchQuery({
+        queryKey: ['admin-profesores'],
+        queryFn: async () => {
+          const { data } = await supabase.rpc('get_profesores_admin');
+          return data ?? [];
+        },
+        staleTime: STALE_ADMIN_LISTS,
+      }),
+
+      // Alumnos + profesores batched SP (kept for admin-init consumers)
       queryClient.prefetchQuery({
         queryKey: ['admin-init'],
         queryFn: async () => {
@@ -96,47 +138,22 @@ export async function prefetchDashboardData(userId: string, rol: UserRol) {
         staleTime: STALE_ADMIN_LISTS,
       }),
 
-      // Pagos annual summary (current year) — for /admin/pagos page
-      queryClient.prefetchQuery({
-        queryKey: ['admin-pagos-anual', new Date().getFullYear()],
-        queryFn: async () => {
-          const año = new Date().getFullYear();
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const { data } = await (supabase as any).rpc('get_pagos_resumen_anual', { p_año: año });
-          return data ?? [];
-        },
-        staleTime: 60_000,
-      }),
-
       // Recursos — for /admin/recursos page
       queryClient.prefetchQuery({
         queryKey: ['recursos', userId],
         queryFn: async () => {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const { data } = await (supabase as any).rpc('get_recursos_compartidos', { p_user_id: userId });
+          const { data } = await supabase.rpc('get_recursos_for_user');
           return data ?? [];
         },
         staleTime: 30_000,
       }),
     ]);
 
-    // Seed individual list keys from the batched SP result so those pages
-    // show instantly without a separate fetch
-    const initData = queryClient.getQueryData<{ alumnos: unknown[]; profesores: unknown[] }>(['admin-init']);
-    if (initData) {
-      queryClient.setQueryData(['admin-alumnos'], initData.alumnos, { updatedAt: Date.now() });
-      queryClient.setQueryData(['admin-profesores'], initData.profesores, { updatedAt: Date.now() });
-    }
+    // admin-alumnos and admin-profesores are now prefetched directly above
+    // with the correct data shape (including computed estado field)
   }
 
   if (rol === 'profesor') {
-    // Need assigned alumno IDs first to seed 'mis-alumnos' tab without a separate round-trip
-    const { data: extras } = await supabase
-      .from('alumnos_extra')
-      .select('alumno_id')
-      .eq('profesor_id', userId);
-    const alumnoIds = extras?.map((e) => e.alumno_id) ?? [];
-
     await Promise.allSettled([
       // SP: horarios (calendar/table) + weekly stats + alumnos list
       queryClient.prefetchQuery({
@@ -148,23 +165,31 @@ export async function prefetchDashboardData(userId: string, rol: UserRol) {
         staleTime: STALE_HORARIOS,
       }),
 
-      // Mis-alumnos page (default tab is 'mis')
-      alumnoIds.length > 0
-        ? queryClient.prefetchQuery({
-            queryKey: ['alumnos', 'mis'],
-            queryFn: async () => {
-              const { data } = await supabase
-                .from('profiles')
-                .select('*, alumnos_extra!alumnos_extra_alumno_id_fkey(*)')
-                .eq('rol', 'alumno')
-                .eq('activo', true)
-                .in('id', alumnoIds)
-                .order('nombre', { ascending: true });
-              return data ?? [];
-            },
-            staleTime: STALE_ADMIN_LISTS,
-          })
-        : Promise.resolve(queryClient.setQueryData(['alumnos', 'mis'], [])),
+      // Mis-alumnos page — uses get_alumnos_profesor to include estado_cuenta
+      queryClient.prefetchQuery({
+        queryKey: ['alumnos', 'mis'],
+        queryFn: async () => {
+          const { data } = await supabase.rpc('get_alumnos_profesor', {
+            p_profesor_id: userId,
+            p_scope: 'mis',
+          });
+          return (data ?? []).map((r: Record<string, unknown>) => ({
+            ...r,
+            alumnos_extra: r.alumno_id ? [{
+              alumno_id: r.alumno_id,
+              profesor_id: r.profesor_id,
+              universidad: r.universidad,
+              año_ingreso: r.año_ingreso,
+              notas: r.notas,
+              paso_prueba: r.paso_prueba,
+              fecha_prueba: r.fecha_prueba,
+              ha_dado_examen: r.ha_dado_examen,
+              intentos_prueba: r.intentos_prueba,
+            }] : [],
+          }));
+        },
+        staleTime: STALE_ADMIN_LISTS,
+      }),
 
       // Programas (active) — for /profesor/programas page
       queryClient.prefetchQuery({
@@ -185,8 +210,7 @@ export async function prefetchDashboardData(userId: string, rol: UserRol) {
       queryClient.prefetchQuery({
         queryKey: ['recursos', userId],
         queryFn: async () => {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const { data } = await (supabase as any).rpc('get_recursos_compartidos', { p_user_id: userId });
+          const { data } = await supabase.rpc('get_recursos_for_user');
           return data ?? [];
         },
         staleTime: 30_000,
@@ -210,8 +234,7 @@ export async function prefetchDashboardData(userId: string, rol: UserRol) {
       queryClient.prefetchQuery({
         queryKey: ['recursos', userId],
         queryFn: async () => {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const { data } = await (supabase as any).rpc('get_recursos_compartidos', { p_user_id: userId });
+          const { data } = await supabase.rpc('get_recursos_for_user');
           return data ?? [];
         },
         staleTime: 30_000,

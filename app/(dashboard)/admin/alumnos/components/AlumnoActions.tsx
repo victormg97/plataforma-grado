@@ -9,6 +9,7 @@ export type AlumnoAdmin = {
   id: string;
   nombre: string;
   apellido: string;
+  apellido_materno?: string | null;
   email: string;
   telefono: string | null;
   avatar_url: string | null;
@@ -21,6 +22,7 @@ export type AlumnoAdmin = {
   paso_prueba: boolean;
   fecha_prueba: string | null;
   estado_cuenta?: 'Pendiente' | 'Activo';
+  estado: 'activo' | 'pendiente' | 'bloqueado' | 'graduado';
 };
 
 interface AlumnoActionsProps {
@@ -35,8 +37,11 @@ export function AlumnoActions({ alumno, onReassign, onGraduate, onToggleBlock }:
   const tc = useTranslations('common');
   const ta = useTranslations('alumnos');
 
+  // Graduación visible solo si activo y no graduado
+  const canGraduate = !alumno.paso_prueba && alumno.activo;
+
   return (
-    <>
+    <div className="flex items-center gap-1 w-[112px] justify-end">
       <Tooltip content={tc('editar')}>
         <button
           onClick={() => router.push(`/admin/alumnos/${alumno.id}/editar`)}
@@ -53,7 +58,7 @@ export function AlumnoActions({ alumno, onReassign, onGraduate, onToggleBlock }:
           <ArrowRight className="size-4" />
         </button>
       </Tooltip>
-      {!alumno.paso_prueba && alumno.activo && (
+      {canGraduate && (
         <Tooltip content={ta('graduar_titulo')}>
           <button
             onClick={() => onGraduate(alumno)}
@@ -71,6 +76,6 @@ export function AlumnoActions({ alumno, onReassign, onGraduate, onToggleBlock }:
           {alumno.activo ? <UserX className="size-4" /> : <UserCheck className="size-4" />}
         </button>
       </Tooltip>
-    </>
+    </div>
   );
 }

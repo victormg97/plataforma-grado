@@ -38,6 +38,7 @@ export function AnualTab({ año }: AnualTabProps) {
   const queryClient = useQueryClient();
   const [searchText, setSearchText] = useState('');
   const [showInactive, setShowInactive] = useState(false);
+  const [showGraduados, setShowGraduados] = useState(false);
   const [openPopup, setOpenPopup] = useState<OpenPopup | null>(null);
   const [openColPopup, setOpenColPopup] = useState<number | null>(null);
 
@@ -176,8 +177,9 @@ export function AnualTab({ año }: AnualTabProps) {
     return resumen.filter((a) => !q || `${a.nombre} ${a.apellido}`.toLowerCase().includes(q));
   }, [resumen, searchText]);
 
-  const activeAlumnos = useMemo(() => filtered.filter((a) => a.activo), [filtered]);
+  const activeAlumnos = useMemo(() => filtered.filter((a) => a.activo && !a.paso_prueba), [filtered]);
   const inactiveAlumnos = useMemo(() => filtered.filter((a) => !a.activo), [filtered]);
+  const graduadosAlumnos = useMemo(() => filtered.filter((a) => a.activo && a.paso_prueba), [filtered]);
 
   const popupData = useMemo(() => {
     if (!openPopup) return null;
@@ -307,6 +309,33 @@ export function AnualTab({ año }: AnualTabProps) {
               ))}
             </tbody>
           </table>
+
+          {graduadosAlumnos.length > 0 && (
+            <div className="border-t border-[var(--color-border)]">
+              <button
+                onClick={() => setShowGraduados((v) => !v)}
+                className="flex w-full items-center gap-2 bg-[var(--color-bg-secondary)] px-3 py-2 text-left text-xs font-semibold text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
+              >
+                🎓 {t('alumnos_graduados')} ({graduadosAlumnos.length})
+              </button>
+              {showGraduados && (
+                <table className="w-full min-w-[640px] text-sm opacity-75">
+                  <tbody className="divide-y divide-[var(--color-border)]">
+                    {graduadosAlumnos.map((alumno) => (
+                      <AlumnoRow
+                        key={alumno.alumno_id}
+                        alumno={alumno}
+                        t={t}
+                        openPopup={openPopup}
+                        onCellClick={handleCellClick}
+                        getButtonRef={getButtonRef}
+                      />
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          )}
 
           {inactiveAlumnos.length > 0 && (
             <div className="border-t border-[var(--color-border)]">

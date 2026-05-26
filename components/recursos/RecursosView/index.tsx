@@ -44,7 +44,7 @@ export function RecursosView({ rol }: RecursosViewProps) {
   const { data: recursos = [], isLoading } = useQuery<RecursoItem[]>({
     queryKey: ['recursos', user?.id],
     enabled: !!user,
-    staleTime: 0,
+    staleTime: 30_000,
     queryFn: async () => {
       const { data, error } = await supabase.rpc('get_recursos_for_user');
       if (error) throw error;
@@ -245,7 +245,7 @@ export function RecursosView({ rol }: RecursosViewProps) {
       </div>
 
       {/* Content */}
-      {isLoading ? (
+      {isLoading || !user ? (
         <div className="py-16 text-center">
           <div className="mx-auto size-8 animate-spin rounded-full border-2 border-[var(--color-border)] border-t-[var(--color-brand-gold)]" />
           <p className="mt-4 text-sm text-[var(--color-text-muted)]">{t('cargando')}</p>

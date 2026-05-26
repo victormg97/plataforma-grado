@@ -15,6 +15,8 @@ const config: TenantConfigInput = {
   theme: {
     colorAccent: '#C9993F',
     colorAccentLight: '#E8C97A',
+    colorInput: '#FDFBF7',       // Crema muy suave (casi blanco con tinte cálido)
+    colorPopover: '#FDFBF7',     // Dropdowns mismo tono
   },
   fonts: {
     display: 'Playfair Display',

@@ -50,10 +50,12 @@ export default function EditarAlumnoPage({ params }: { params: Promise<{ id: str
   const [formData, setFormData] = useState({
     nombre: '',
     apellido: '',
+    apellido_materno: '',
     telefono: '',
     profesor_id: '',
     universidad: '',
     año_ingreso: '',
+    fecha_ingreso: '',
     notas: ''
   });
 
@@ -68,10 +70,12 @@ export default function EditarAlumnoPage({ params }: { params: Promise<{ id: str
       setFormData({
         nombre: alumno.nombre || '',
         apellido: alumno.apellido || '',
+        apellido_materno: alumno.apellido_materno || '',
         telefono: alumno.telefono || '',
         profesor_id: alumno.profesor_id || '',
         universidad: alumno.universidad || '',
         año_ingreso: alumno.año_ingreso || '',
+        fecha_ingreso: alumno.fecha_ingreso || '',
         notas: alumno.notas || ''
       });
     }
@@ -84,10 +88,12 @@ export default function EditarAlumnoPage({ params }: { params: Promise<{ id: str
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...data,
+          apellido_materno: data.apellido_materno || null,
           profesor_id: data.profesor_id || null,
           telefono: data.telefono || null,
           universidad: data.universidad || null,
           año_ingreso: data.año_ingreso || null,
+          fecha_ingreso: data.fecha_ingreso || null,
           notas: data.notas || null
         }),
       });
@@ -212,7 +218,7 @@ export default function EditarAlumnoPage({ params }: { params: Promise<{ id: str
                 </div>
               </div>
               <div className="p-6">
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="nombre">{t('nombre')} <span className="text-red-500">*</span></Label>
                     <Input
@@ -222,14 +228,24 @@ export default function EditarAlumnoPage({ params }: { params: Promise<{ id: str
                       required
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="apellido">{t('apellidos')} <span className="text-red-500">*</span></Label>
-                    <Input
-                      id="apellido"
-                      value={formData.apellido}
-                      onChange={(e) => setFormData(prev => ({ ...prev, apellido: e.target.value }))}
-                      required
-                    />
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="apellido">{t('apellido1')} <span className="text-red-500">*</span></Label>
+                      <Input
+                        id="apellido"
+                        value={formData.apellido}
+                        onChange={(e) => setFormData(prev => ({ ...prev, apellido: e.target.value }))}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="apellido_materno">{t('apellido2')} <span className="text-[var(--color-text-muted)] text-sm font-normal">{t('opcional')}</span></Label>
+                      <Input
+                        id="apellido_materno"
+                        value={formData.apellido_materno}
+                        onChange={(e) => setFormData(prev => ({ ...prev, apellido_materno: e.target.value }))}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -321,6 +337,16 @@ export default function EditarAlumnoPage({ params }: { params: Promise<{ id: str
                       value={formData.año_ingreso}
                       onChange={(e) => setFormData(prev => ({ ...prev, año_ingreso: e.target.value }))}
                     />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="fecha_ingreso">{ta('fecha_ingreso')}</Label>
+                    <Input
+                      id="fecha_ingreso"
+                      type="date"
+                      value={formData.fecha_ingreso}
+                      onChange={(e) => setFormData(prev => ({ ...prev, fecha_ingreso: e.target.value }))}
+                    />
+                    <p className="text-xs text-[var(--color-text-muted)]">{ta('fecha_ingreso_hint')}</p>
                   </div>
                 </div>
               </div>

@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
 
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
-    .select('rol, tema, idioma')
+    .select('rol, tema, idioma, activo')
     .eq('id', user.id)
     .single();
 
@@ -78,6 +78,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { error: 'SERVER_ERROR', message: 'Profile not found' },
       { status: 500 },
+    );
+  }
+
+  // ── 5. Check if account is blocked ────────────────────────────────────────
+  if (!profile.activo) {
+    // Sign out immediately so the session is not kept
+    await supabase.auth.signOut();
+    return NextResponse.json(
+      { error: 'ACCOUNT_BLOCKED', message: 'Tu cuenta ha sido bloqueada. Contacta a tu profesor.' },
+      { status: 403 },
     );
   }
 

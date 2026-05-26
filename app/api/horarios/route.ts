@@ -9,18 +9,18 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
 
+  const fecha = request.nextUrl.searchParams.get('fecha');
+
+  // Fetch profile role (minimal select) and build query
   const { data: profile } = await supabase
     .from('profiles')
-    .select('*')
+    .select('rol')
     .eq('id', user.id)
     .single();
 
   if (!profile) {
     return NextResponse.json({ error: 'Perfil no encontrado' }, { status: 404 });
   }
-
-  // Optional date filter: ?fecha=YYYY-MM-DD
-  const fecha = request.nextUrl.searchParams.get('fecha');
 
   let query = supabase
     .from('horarios')

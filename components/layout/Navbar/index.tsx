@@ -1,11 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Menu, LogOut, UserCog } from 'lucide-react';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import { Avatar } from '@/components/common/Avatar';
 import { NotificacionesPanel } from '@/components/layout/Navbar/NotificacionesPanel';
-import { EditarPerfilModal } from '@/components/common/EditarPerfilModal';
 import { useUIStore } from '@/stores/useUIStore';
 import { useUserStore } from '@/stores/useUserStore';
 import { useTenant } from '@/config/client';
@@ -22,7 +21,7 @@ export function Navbar() {
   const { toggleSidebar } = useUIStore();
   const { user, clearUser } = useUserStore();
   const tenant = useTenant();
-  const [perfilOpen, setPerfilOpen] = useState(false);
+  const router = useRouter();
   const t = useTranslations('perfil');
   const ta = useTranslations('auth');
 
@@ -58,24 +57,22 @@ export function Navbar() {
 
       {/* Right: notifications, theme, profile */}
       <div className="flex items-center gap-2">
-        {/* Notifications panel */}
         {user && <NotificacionesPanel />}
 
         <ThemeToggle />
 
-        {/* User dropdown */}
         {user && (
           <DropdownMenu>
             <DropdownMenuTrigger className="flex items-center gap-2 rounded-[var(--radius-md)] p-1 transition-colors hover:bg-[var(--color-bg-secondary)]">
-                <Avatar
-                  nombre={user.nombre}
-                  apellido={user.apellido}
-                  avatarUrl={user.avatar_url}
-                  size="sm"
-                />
-                <span className="hidden text-sm font-medium text-[var(--color-text-primary)] md:block">
-                  {user.nombre}
-                </span>
+              <Avatar
+                nombre={user.nombre}
+                apellido={user.apellido}
+                avatarUrl={user.avatar_url}
+                size="sm"
+              />
+              <span className="hidden text-sm font-medium text-[var(--color-text-primary)] md:block">
+                {user.nombre}
+              </span>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
               <div className="px-2 py-1.5">
@@ -83,12 +80,18 @@ export function Navbar() {
                 <p className="text-xs text-[var(--color-text-muted)]">{user.email}</p>
               </div>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setPerfilOpen(true)}>
+              <DropdownMenuItem
+                onClick={() => router.push('/perfil')}
+                className="cursor-pointer"
+              >
                 <UserCog className="mr-2 size-4" />
                 {t('editar_perfil')}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout} className="text-[var(--color-error)]">
+              <DropdownMenuItem
+                onClick={handleLogout}
+                className="cursor-pointer text-[var(--color-error)] focus:text-[var(--color-error)]"
+              >
                 <LogOut className="mr-2 size-4" />
                 {ta('logout')}
               </DropdownMenuItem>
@@ -96,8 +99,6 @@ export function Navbar() {
           </DropdownMenu>
         )}
       </div>
-
-      <EditarPerfilModal open={perfilOpen} onClose={() => setPerfilOpen(false)} />
     </header>
   );
 }

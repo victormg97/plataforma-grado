@@ -32,7 +32,9 @@ export function AlumnoTableRow({
         <div className="flex items-center gap-3">
           <Avatar nombre={alumno.nombre} apellido={alumno.apellido} avatarUrl={alumno.avatar_url} size="sm" />
           <div>
-            <p className="font-medium text-[var(--color-text-primary)]">{alumno.nombre} {alumno.apellido}</p>
+            <p className="font-medium text-[var(--color-text-primary)]">
+              {alumno.nombre} {[alumno.apellido, alumno.apellido_materno].filter(Boolean).join(' ')}
+            </p>
             <p className="text-xs text-[var(--color-text-muted)]">{alumno.email}</p>
           </div>
         </div>

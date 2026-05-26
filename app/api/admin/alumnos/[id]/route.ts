@@ -14,30 +14,33 @@ export async function GET(
   const { data: me } = await supabase.from('profiles').select('rol').eq('id', user.id).single();
   if (me?.rol !== 'admin') return NextResponse.json({ error: 'Solo admin' }, { status: 403 });
 
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('id, nombre, apellido, email, telefono, avatar_url, activo, rol')
-    .eq('id', id)
-    .single();
+  // Run all 3 independent queries in parallel
+  const [
+    { data, error },
+    { data: extra },
+    { data: current_invitation },
+  ] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('id, nombre, apellido, apellido_materno, email, telefono, avatar_url, activo, rol')
+      .eq('id', id)
+      .single(),
+    supabase
+      .from('alumnos_extra')
+      .select('alumno_id, profesor_id, universidad, año_ingreso, fecha_ingreso, notas, paso_prueba, fecha_prueba, ha_dado_examen, intentos_prueba')
+      .eq('alumno_id', id)
+      .single(),
+    supabase
+      .from('invitations')
+      .select('code, temp_password, invitation_type, expires_at')
+      .eq('user_id', id)
+      .eq('used', false)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single(),
+  ]);
 
   if (error || !data) return NextResponse.json({ error: 'No encontrado' }, { status: 404 });
-
-  // Get additional alumni info
-  const { data: extra } = await supabase
-    .from('alumnos_extra')
-    .select('*')
-    .eq('alumno_id', id)
-    .single();
-
-  // Get active invitation if pending
-  const { data: current_invitation } = await supabase
-    .from('invitations')
-    .select('code, temp_password, invitation_type, expires_at')
-    .eq('user_id', id)
-    .eq('used', false)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .single();
 
   return NextResponse.json({ ...data, ...extra, current_invitation: current_invitation || null });
 }
@@ -138,6 +141,7 @@ export async function PATCH(
   if (typeof body.activo === 'boolean') profileUpdates.activo = body.activo;
   if (body.nombre !== undefined) profileUpdates.nombre = body.nombre;
   if (body.apellido !== undefined) profileUpdates.apellido = body.apellido;
+  if (body.apellido_materno !== undefined) profileUpdates.apellido_materno = body.apellido_materno;
   if (body.telefono !== undefined) profileUpdates.telefono = body.telefono;
 
   if (Object.keys(profileUpdates).length > 0) {
@@ -149,6 +153,16 @@ export async function PATCH(
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
+    // Register block/unblock event
+    if (typeof body.activo === 'boolean') {
+      await supabase.from('alumno_bloqueos').insert({
+        alumno_id: id,
+        bloqueado_por: user.id,
+        accion: body.activo ? 'desbloqueado' : 'bloqueado',
+        motivo: body.motivo ?? null,
+      });
+    }
   }
 
   // Update alumnos_extra fields
@@ -156,6 +170,7 @@ export async function PATCH(
   if (body.profesor_id !== undefined) extraUpdates.profesor_id = body.profesor_id;
   if (body.universidad !== undefined) extraUpdates.universidad = body.universidad;
   if (body.año_ingreso !== undefined) extraUpdates.año_ingreso = body.año_ingreso;
+  if (body.fecha_ingreso !== undefined) extraUpdates.fecha_ingreso = body.fecha_ingreso || null;
   if (body.notas !== undefined) extraUpdates.notas = body.notas;
   if (typeof body.paso_prueba === 'boolean') {
     extraUpdates.paso_prueba = body.paso_prueba;

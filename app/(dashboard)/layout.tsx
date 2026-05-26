@@ -24,6 +24,9 @@ export default async function DashboardLayout({
 
   if (!profile) redirect('/login');
 
+  // Block access if account is inactive
+  if (!profile.activo) redirect('/login?blocked=1');
+
   // For alumnos, check graduation status (used for easter-egg theme)
   let esGraduado = false;
   if (profile.rol === 'alumno') {

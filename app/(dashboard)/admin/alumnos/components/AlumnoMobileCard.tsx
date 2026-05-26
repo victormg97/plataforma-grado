@@ -35,7 +35,7 @@ export function AlumnoMobileCard({
       <div className="flex items-center gap-3">
         <Avatar nombre={alumno.nombre} apellido={alumno.apellido} avatarUrl={alumno.avatar_url} size="sm" />
         <div className="min-w-0 flex-1">
-          <p className="font-medium text-[var(--color-text-primary)] truncate">{alumno.nombre} {alumno.apellido}</p>
+          <p className="font-medium text-[var(--color-text-primary)] truncate">{alumno.nombre} {[alumno.apellido, alumno.apellido_materno].filter(Boolean).join(' ')}</p>
           <p className="text-xs text-[var(--color-text-muted)] truncate">{alumno.email}</p>
           {alumno.profesor && (
             <p className="mt-0.5 text-xs text-[var(--color-text-secondary)]">

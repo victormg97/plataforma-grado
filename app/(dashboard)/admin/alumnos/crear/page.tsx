@@ -30,6 +30,7 @@ export default function CrearAlumnoPage() {
   const [formData, setFormData] = useState({
     nombre: '',
     apellido: '',
+    apellido_materno: '',
     email: '',
     telefono: '',
     profesor_id: '',
@@ -136,27 +137,37 @@ export default function CrearAlumnoPage() {
                       </div>
                     </div>
                     <div className="p-6 space-y-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="nombre">{t('nombre')} <span className="text-red-500">*</span></Label>
+                        <Input
+                          id="nombre"
+                          placeholder={t('nombre_placeholder')}
+                          autoComplete="off"
+                          value={formData.nombre}
+                          onChange={(e) => setFormData(prev => ({ ...prev, nombre: e.target.value }))}
+                          required
+                        />
+                      </div>
                       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div className="space-y-2">
-                          <Label htmlFor="nombre">{t('nombre')} <span className="text-red-500">*</span></Label>
-                          <Input
-                            id="nombre"
-                            placeholder={t('nombre_placeholder')}
-                            autoComplete="off"
-                            value={formData.nombre}
-                            onChange={(e) => setFormData(prev => ({ ...prev, nombre: e.target.value }))}
-                            required
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="apellido">{t('apellidos')} <span className="text-red-500">*</span></Label>
+                          <Label htmlFor="apellido">{t('apellido1')} <span className="text-red-500">*</span></Label>
                           <Input
                             id="apellido"
-                            placeholder={t('apellidos_placeholder')}
+                            placeholder={t('apellido1_placeholder')}
                             autoComplete="off"
                             value={formData.apellido}
                             onChange={(e) => setFormData(prev => ({ ...prev, apellido: e.target.value }))}
                             required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="apellido_materno">{t('apellido2')} <span className="text-[var(--color-text-muted)] text-sm font-normal">{t('opcional')}</span></Label>
+                          <Input
+                            id="apellido_materno"
+                            placeholder={t('apellido2_placeholder')}
+                            autoComplete="off"
+                            value={formData.apellido_materno}
+                            onChange={(e) => setFormData(prev => ({ ...prev, apellido_materno: e.target.value }))}
                           />
                         </div>
                       </div>

@@ -24,6 +24,7 @@ export type AlumnoPago = {
   apellido: string;
   avatar_url: string | null;
   activo: boolean;
+  paso_prueba: boolean;
   profesor: { id: string; nombre: string; apellido: string } | null;
   pago: {
     id: string;
@@ -262,6 +263,7 @@ export function TrackingTab({ año, mes }: TrackingTabProps) {
   const [profesorFilter, setProfesorFilter] = useState<string>('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [showInactive, setShowInactive] = useState(false);
+  const [showGraduados, setShowGraduados] = useState(false);
 
   const queryKey = ['admin-pagos', año, mes] as const;
 
@@ -272,7 +274,7 @@ export function TrackingTab({ año, mes }: TrackingTabProps) {
       if (!r.ok) throw new Error('Error fetching pagos');
       return r.json();
     },
-    staleTime: 30_000,
+    staleTime: 0,
   });
 
   // Mutation with optimistic update
@@ -386,12 +388,17 @@ export function TrackingTab({ año, mes }: TrackingTabProps) {
   );
 
   const activeFiltered = useMemo(
-    () => alumnos.filter((a) => a.activo).filter(filterAlumno),
+    () => alumnos.filter((a) => a.activo && !a.paso_prueba).filter(filterAlumno),
     [alumnos, filterAlumno]
   );
 
   const inactiveFiltered = useMemo(
     () => alumnos.filter((a) => !a.activo).filter(filterAlumno),
+    [alumnos, filterAlumno]
+  );
+
+  const graduadosFiltered = useMemo(
+    () => alumnos.filter((a) => a.activo && a.paso_prueba).filter(filterAlumno),
     [alumnos, filterAlumno]
   );
 
@@ -514,6 +521,38 @@ export function TrackingTab({ año, mes }: TrackingTabProps) {
           </div>
         )}
       </section>
+
+      {/* Graduated students (collapsible) */}
+      {(graduadosFiltered.length > 0 || alumnos.some((a) => a.activo && a.paso_prueba)) && (
+        <section>
+          <button
+            onClick={() => setShowGraduados((v) => !v)}
+            className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
+          >
+            {showGraduados ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
+            🎓 {t('alumnos_graduados')} ({graduadosFiltered.length})
+          </button>
+          {showGraduados && (
+            <div className="mt-2 space-y-2 opacity-75">
+              {graduadosFiltered.length === 0 ? (
+                <EmptyState label={t('sin_graduados')} />
+              ) : (
+                graduadosFiltered.map((a) => (
+                  <StudentCard
+                    key={a.alumno_id}
+                    alumno={a}
+                    isExpanded={expandedId === a.alumno_id}
+                    onToggleExpand={handleToggleExpand}
+                    onMark={handleMark}
+                    t={t}
+                    dateLocale={dateLocale as Locale}
+                  />
+                ))
+              )}
+            </div>
+          )}
+        </section>
+      )}
 
       {/* Inactive students (collapsible) */}
       {(inactiveFiltered.length > 0 || alumnos.some((a) => !a.activo)) && (

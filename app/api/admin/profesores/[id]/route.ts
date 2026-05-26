@@ -15,23 +15,24 @@ export async function GET(
   const { data: me } = await supabase.from('profiles').select('rol').eq('id', user.id).single();
   if (me?.rol !== 'admin') return NextResponse.json({ error: 'Solo admin' }, { status: 403 });
 
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('id, nombre, apellido, email, telefono, avatar_url, activo, rol')
-    .eq('id', id)
-    .single();
+  // Run profile and invitation queries in parallel
+  const [{ data, error }, { data: current_invitation }] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('id, nombre, apellido, apellido_materno, email, telefono, avatar_url, activo, rol, puede_crear_alumno')
+      .eq('id', id)
+      .single(),
+    supabase
+      .from('invitations')
+      .select('code, temp_password, invitation_type, expires_at')
+      .eq('user_id', id)
+      .eq('used', false)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single(),
+  ]);
 
   if (error || !data) return NextResponse.json({ error: 'No encontrado' }, { status: 404 });
-
-  // Get active invitation if pending
-  const { data: current_invitation } = await supabase
-    .from('invitations')
-    .select('code, temp_password, invitation_type, expires_at')
-    .eq('user_id', id)
-    .eq('used', false)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .single();
 
   return NextResponse.json({ ...data, current_invitation: current_invitation || null });
 }
@@ -130,6 +131,7 @@ export async function PATCH(
   if (typeof body.activo === 'boolean') updates.activo = body.activo;
   if (body.nombre !== undefined) updates.nombre = body.nombre;
   if (body.apellido !== undefined) updates.apellido = body.apellido;
+  if (body.apellido_materno !== undefined) updates.apellido_materno = body.apellido_materno;
   if (body.telefono !== undefined) updates.telefono = body.telefono;
   if (typeof body.puede_crear_alumno === 'boolean') updates.puede_crear_alumno = body.puede_crear_alumno;
 
