@@ -1,21 +1,21 @@
-import fs from 'fs';
-import path from 'path';
 import { tenantConfigSchema, type TenantConfig } from './schema';
 
+// ─── Static tenant registry ──────────────────────────────────────────────────
+// Each tenant must be imported statically so Turbopack/Webpack can resolve them
+// at build time. Add new tenants here when created.
+import ctaGraduados from './tenants/cta-graduados';
+import preguntaEstrategica from './tenants/pregunta-estrategica';
+
+const tenantRegistry: Record<string, unknown> = {
+  'cta-graduados': ctaGraduados,
+  'pregunta-estrategica': preguntaEstrategica,
+};
+
 /**
- * Lista los tenants disponibles leyendo el directorio config/tenants/
+ * Lista los tenants disponibles.
  */
 export function getAvailableTenants(): string[] {
-  const tenantsDir = path.join(__dirname, 'tenants');
-
-  if (!fs.existsSync(tenantsDir)) {
-    return [];
-  }
-
-  return fs
-    .readdirSync(tenantsDir)
-    .filter((file) => file.endsWith('.ts') || file.endsWith('.js'))
-    .map((file) => file.replace(/\.(ts|js)$/, ''));
+  return Object.keys(tenantRegistry);
 }
 
 /**
@@ -25,15 +25,12 @@ export function getAvailableTenants(): string[] {
 function loadTenantConfig(): TenantConfig {
   const tenantId = process.env.NEXT_PUBLIC_TENANT_ID || 'cta-graduados';
 
-  let rawConfig: unknown;
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    rawConfig = require(`./tenants/${tenantId}`).default;
-  } catch {
+  const rawConfig = tenantRegistry[tenantId];
+  if (!rawConfig) {
     const available = getAvailableTenants();
     throw new Error(
       `[Sistema_Config] Tenant "${tenantId}" no encontrado.\n` +
-        `Tenants disponibles: ${available.length > 0 ? available.join(', ') : '(ninguno)'}\n` +
+        `Tenants disponibles: ${available.join(', ')}\n` +
         `Verifica la variable NEXT_PUBLIC_TENANT_ID`
     );
   }
