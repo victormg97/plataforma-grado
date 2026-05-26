@@ -42,7 +42,7 @@ export async function GET(
 
   if (error || !data) return NextResponse.json({ error: 'No encontrado' }, { status: 404 });
 
-  return NextResponse.json({ ...data, ...extra, current_invitation: current_invitation || null });
+  return NextResponse.json({ ...data, ...(extra ?? {}), current_invitation: current_invitation || null });
 }
 
 
