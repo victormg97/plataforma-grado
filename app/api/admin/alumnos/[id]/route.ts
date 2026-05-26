@@ -42,7 +42,29 @@ export async function GET(
 
   if (error || !data) return NextResponse.json({ error: 'No encontrado' }, { status: 404 });
 
-  return NextResponse.json({ ...data, ...(extra ?? {}), current_invitation: current_invitation || null });
+  return NextResponse.json({
+    id: data.id,
+    nombre: data.nombre,
+    apellido: data.apellido,
+    apellido_materno: data.apellido_materno,
+    email: data.email,
+    telefono: data.telefono,
+    avatar_url: data.avatar_url,
+    activo: data.activo,
+    rol: data.rol,
+    // alumnos_extra fields (null if no row exists)
+    alumno_id: extra?.alumno_id ?? null,
+    profesor_id: extra?.profesor_id ?? null,
+    universidad: extra?.universidad ?? null,
+    año_ingreso: extra?.año_ingreso ?? null,
+    fecha_ingreso: extra?.fecha_ingreso ?? null,
+    notas: extra?.notas ?? null,
+    paso_prueba: extra?.paso_prueba ?? false,
+    fecha_prueba: extra?.fecha_prueba ?? null,
+    ha_dado_examen: extra?.ha_dado_examen ?? false,
+    intentos_prueba: extra?.intentos_prueba ?? null,
+    current_invitation: current_invitation || null,
+  });
 }
 
 
