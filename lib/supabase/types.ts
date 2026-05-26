@@ -14,11 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      alumno_bloqueos: {
+        Row: {
+          accion: string
+          alumno_id: string
+          bloqueado_por: string | null
+          created_at: string
+          id: string
+          motivo: string | null
+        }
+        Insert: {
+          accion: string
+          alumno_id: string
+          bloqueado_por?: string | null
+          created_at?: string
+          id?: string
+          motivo?: string | null
+        }
+        Update: {
+          accion?: string
+          alumno_id?: string
+          bloqueado_por?: string | null
+          created_at?: string
+          id?: string
+          motivo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alumno_bloqueos_alumno_id_fkey"
+            columns: ["alumno_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alumno_bloqueos_bloqueado_por_fkey"
+            columns: ["bloqueado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       alumnos_extra: {
         Row: {
           alumno_id: string
           año_ingreso: string | null
           created_at: string
+          fecha_ingreso: string | null
           fecha_prueba: string | null
           ha_dado_examen: boolean
           id: string
@@ -33,6 +76,7 @@ export type Database = {
           alumno_id: string
           año_ingreso?: string | null
           created_at?: string
+          fecha_ingreso?: string | null
           fecha_prueba?: string | null
           ha_dado_examen?: boolean
           id?: string
@@ -47,6 +91,7 @@ export type Database = {
           alumno_id?: string
           año_ingreso?: string | null
           created_at?: string
+          fecha_ingreso?: string | null
           fecha_prueba?: string | null
           ha_dado_examen?: boolean
           id?: string
