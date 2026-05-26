@@ -27,9 +27,9 @@ export async function GET(
       .single(),
     supabase
       .from('alumnos_extra')
-      .select('alumno_id, profesor_id, universidad, año_ingreso, fecha_ingreso, notas, paso_prueba, fecha_prueba, ha_dado_examen, intentos_prueba')
+      .select('*')
       .eq('alumno_id', id)
-      .single(),
+      .single() as unknown as Promise<{ data: Record<string, unknown> | null; error: unknown }>,
     supabase
       .from('invitations')
       .select('code, temp_password, invitation_type, expires_at')

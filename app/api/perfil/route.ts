@@ -19,9 +19,9 @@ export async function GET() {
     if (profile.rol === 'alumno') {
       const { data: extra } = await supabase
         .from('alumnos_extra')
-        .select('universidad, año_ingreso, ha_dado_examen, intentos_prueba')
+        .select('*')
         .eq('alumno_id', user.id)
-        .maybeSingle();
+        .maybeSingle() as unknown as { data: Record<string, unknown> | null };
 
       return NextResponse.json({ ...profile, alumno_extra: extra ?? null });
     }
