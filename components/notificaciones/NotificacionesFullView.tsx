@@ -386,7 +386,7 @@ export function NotificacionesFullView({ role }: NotificacionesFullViewProps) {
               type="date"
               value={fechaDesde}
               onChange={(e) => handleFechaDesdeChange(e.target.value)}
-              className="h-9 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-brand-gold)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-gold)]"
+              className="h-9 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-brand-gold)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-gold)]"
             />
           </div>
 
@@ -399,7 +399,7 @@ export function NotificacionesFullView({ role }: NotificacionesFullViewProps) {
               type="date"
               value={fechaHasta}
               onChange={(e) => handleFechaHastaChange(e.target.value)}
-              className="h-9 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-brand-gold)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-gold)]"
+              className="h-9 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-brand-gold)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-gold)]"
             />
           </div>
 
@@ -414,7 +414,7 @@ export function NotificacionesFullView({ role }: NotificacionesFullViewProps) {
                 value={alumnoSearch}
                 onChange={(e) => handleAlumnoChange(e.target.value)}
                 placeholder={tv('filtro_alumno')}
-                className="h-9 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-brand-gold)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-gold)]"
+                className="h-9 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-brand-gold)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-gold)]"
               />
             </div>
           )}

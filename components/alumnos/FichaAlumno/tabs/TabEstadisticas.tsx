@@ -205,7 +205,7 @@ export function TabEstadisticas({ data }: TabEstadisticasProps) {
             min={minFecha}
             max={fechaFin}
             onChange={(e) => setFechaInicio(e.target.value)}
-            className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm focus:border-[var(--color-brand-gold)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-gold)]"
+            className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm focus:border-[var(--color-brand-gold)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-gold)]"
           />
         </div>
 
@@ -220,7 +220,7 @@ export function TabEstadisticas({ data }: TabEstadisticasProps) {
             min={fechaInicio}
             max={maxFecha}
             onChange={(e) => setFechaFin(e.target.value)}
-            className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm focus:border-[var(--color-brand-gold)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-gold)]"
+            className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm focus:border-[var(--color-brand-gold)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-gold)]"
           />
         </div>
       </div>

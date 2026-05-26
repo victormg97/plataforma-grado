@@ -400,6 +400,12 @@
   [role="button"]:not(:disabled) {
     cursor: pointer;
   }
+  /* Tenant-configurable input/select background */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+  textarea,
+  select {
+    background-color: var(--color-input, var(--color-bg));
+  }
 }
 
 /* Subtle fade-in animation for filtered content transitions */

@@ -62,7 +62,7 @@ export function CancelacionForm({ clase, onCancel, onClose }: CancelacionFormPro
             onChange={(e) => setNota(e.target.value)}
             placeholder="Tengo un compromiso..."
             rows={3}
-            className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-gold)]"
+            className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-gold)]"
           />
         </div>
 

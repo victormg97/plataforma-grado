@@ -240,7 +240,7 @@ export default function CrearAlumnoPage() {
                       <div className="space-y-2">
                         <Label>{t('seleccionar_profesor')}</Label>
                         <DropdownMenu>
-                          <DropdownMenuTrigger className="w-full flex items-center justify-between gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm">
+                          <DropdownMenuTrigger className="w-full flex items-center justify-between gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm">
                             <span className="truncate">
                               {(() => {
                                 // eslint-disable-next-line @typescript-eslint/no-explicit-any

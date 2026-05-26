@@ -186,11 +186,11 @@ function AdminAlumnosContent() {
               searchDebounce.current = setTimeout(() => setQ(val || null), 400);
             }}
             placeholder={ta('buscar_placeholder')}
-            className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] pl-9 pr-3 py-2 text-sm"
+            className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] pl-9 pr-3 py-2 text-sm"
           />
         </div>
         <DropdownMenu>
-          <DropdownMenuTrigger className="flex items-center justify-between gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm min-w-[160px]">
+          <DropdownMenuTrigger className="flex items-center justify-between gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm min-w-[160px]">
             <span>
               {estadoFilter === 'activo' ? ta('estado_activo')
                 : estadoFilter === 'bloqueado' ? ta('estado_bloqueado')
@@ -207,7 +207,7 @@ function AdminAlumnosContent() {
           </DropdownMenuContent>
         </DropdownMenu>
         <DropdownMenu>
-          <DropdownMenuTrigger className="flex items-center justify-between gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm min-w-[180px]">
+          <DropdownMenuTrigger className="flex items-center justify-between gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm min-w-[180px]">
             <span className="truncate">
               {(() => {
                 const p = profesores.find((p) => p.id === profesorFilter);
@@ -323,7 +323,7 @@ function AdminAlumnosContent() {
             {ta('reasignar_texto', { nombre: `${reassign?.nombre} ${reassign?.apellido}` })}
           </p>
           <DropdownMenu>
-            <DropdownMenuTrigger className="w-full flex items-center justify-between gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm">
+            <DropdownMenuTrigger className="w-full flex items-center justify-between gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm">
               <span className="truncate">
                 {(() => {
                   const p = profesores.find((p) => p.id === newProfesorId);
@@ -364,7 +364,7 @@ function AdminAlumnosContent() {
               type="date"
               value={fechaPrueba}
               onChange={(e) => setFechaPrueba(e.target.value)}
-              className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm"
+              className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm"
             />
           </div>
         </div>

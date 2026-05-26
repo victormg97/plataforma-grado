@@ -56,9 +56,13 @@ function getTenantThemeCSS(): string {
   if (theme.colorCard) {
     lightVars.push(`--color-card: ${theme.colorCard}`);
     lightVars.push(`--card: ${theme.colorCard}`);
-    lightVars.push(`--popover: ${theme.colorCard}`);
   } else if (theme.colorBg) {
     lightVars.push(`--card: ${theme.colorBg}`);
+  }
+  if (theme.colorPopover) {
+    lightVars.push(`--popover: ${theme.colorPopover}`);
+  } else if (theme.colorCard) {
+    lightVars.push(`--popover: ${theme.colorCard}`);
   }
   if (theme.colorBgSecondary) {
     lightVars.push(`--color-bg-secondary: ${theme.colorBgSecondary}`);
@@ -74,6 +78,11 @@ function getTenantThemeCSS(): string {
   if (theme.colorBorder) {
     lightVars.push(`--color-border: ${theme.colorBorder}`);
     lightVars.push(`--border: ${theme.colorBorder}`);
+  }
+  if (theme.colorInput) {
+    lightVars.push(`--color-input: ${theme.colorInput}`);
+    lightVars.push(`--input: ${theme.colorInput}`);
+  } else if (theme.colorBorder) {
     lightVars.push(`--input: ${theme.colorBorder}`);
   }
   if (lightVars.length > 0) {
@@ -86,14 +95,17 @@ function getTenantThemeCSS(): string {
     if (theme.dark.colorBg) {
       darkVars.push(`--color-bg: ${theme.dark.colorBg}`);
       darkVars.push(`--background: ${theme.dark.colorBg}`);
-      darkVars.push(`--popover: ${theme.dark.colorBg}`);
     }
     if (theme.dark.colorCard) {
       darkVars.push(`--color-card: ${theme.dark.colorCard}`);
       darkVars.push(`--card: ${theme.dark.colorCard}`);
-      darkVars.push(`--popover: ${theme.dark.colorCard}`);
     } else if (theme.dark.colorBg) {
       darkVars.push(`--card: ${theme.dark.colorBg}`);
+    }
+    if (theme.dark.colorPopover) {
+      darkVars.push(`--popover: ${theme.dark.colorPopover}`);
+    } else if (theme.dark.colorCard) {
+      darkVars.push(`--popover: ${theme.dark.colorCard}`);
     }
     if (theme.dark.colorBgSecondary) {
       darkVars.push(`--color-bg-secondary: ${theme.dark.colorBgSecondary}`);
@@ -110,6 +122,11 @@ function getTenantThemeCSS(): string {
     if (theme.dark.colorBorder) {
       darkVars.push(`--color-border: ${theme.dark.colorBorder}`);
       darkVars.push(`--border: ${theme.dark.colorBorder}`);
+    }
+    if (theme.dark.colorInput) {
+      darkVars.push(`--color-input: ${theme.dark.colorInput}`);
+      darkVars.push(`--input: ${theme.dark.colorInput}`);
+    } else if (theme.dark.colorBorder) {
       darkVars.push(`--input: ${theme.dark.colorBorder}`);
     }
     if (darkVars.length > 0) {

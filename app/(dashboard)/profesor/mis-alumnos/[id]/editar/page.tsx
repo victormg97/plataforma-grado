@@ -244,7 +244,7 @@ export default function ProfesorEditarAlumnoPage({ params }: { params: Promise<{
                       <Input
                         readOnly
                         value={setupCode.code ? `${window.location.origin}/setup/${setupCode.code}` : ''}
-                        className="bg-[var(--color-bg)] border-[var(--color-border)] text-sm"
+                        className="bg-[var(--color-input,var(--color-bg))] border-[var(--color-border)] text-sm"
                       />
                       <Button onClick={handleCopyLink} variant="secondary" className="shrink-0">
                         {copiedLink ? <Check className="size-4 text-[var(--color-success)]" /> : <Copy className="size-4" />}

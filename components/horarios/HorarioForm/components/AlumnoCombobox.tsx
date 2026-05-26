@@ -65,7 +65,7 @@ export function AlumnoCombobox({
         autoComplete="off"
       />
       {showDropdown && (
-        <div className="absolute z-50 mt-1 max-h-48 w-full overflow-auto rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] shadow-lg">
+        <div className="absolute z-50 mt-1 max-h-48 w-full overflow-auto rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] shadow-lg">
           {loading ? (
             <div className="flex items-center justify-center py-3">
               <div className="size-4 animate-spin rounded-full border-2 border-[var(--color-brand-gold)] border-t-transparent" />

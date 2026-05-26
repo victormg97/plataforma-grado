@@ -139,7 +139,7 @@ export function ProgramaForm({
           </label>
           <input
             {...register('nombre')}
-            className="h-10 w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-brand-gold)] focus:ring-2 focus:ring-[var(--color-brand-gold)]/20"
+            className="h-10 w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-brand-gold)] focus:ring-2 focus:ring-[var(--color-brand-gold)]/20"
             placeholder={t('form.nombre_placeholder')}
           />
           {errors.nombre && (
@@ -155,7 +155,7 @@ export function ProgramaForm({
           <textarea
             {...register('descripcion')}
             rows={3}
-            className="w-full resize-none rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-brand-gold)] focus:ring-2 focus:ring-[var(--color-brand-gold)]/20"
+            className="w-full resize-none rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-brand-gold)] focus:ring-2 focus:ring-[var(--color-brand-gold)]/20"
             placeholder={t('form.descripcion_placeholder')}
           />
           {errors.descripcion && (
@@ -224,7 +224,7 @@ export function ProgramaForm({
                 )}
 
                 {/* Search + list */}
-                <div className="rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-bg)]">
+                <div className="rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))]">
                   <input
                     type="text"
                     value={profSearch}

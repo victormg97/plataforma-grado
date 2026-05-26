@@ -110,7 +110,7 @@ export function AppSelect({
         <div
           ref={listRef}
           style={dropdownStyle}
-          className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] shadow-[var(--shadow-lg)] ring-1 ring-[var(--color-brand-gold)]/20 overflow-hidden max-h-[240px] overflow-y-auto"
+          className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] shadow-[var(--shadow-lg)] ring-1 ring-[var(--color-brand-gold)]/20 overflow-hidden max-h-[240px] overflow-y-auto"
           role="listbox"
         >
           {options.map((opt) => (
@@ -148,7 +148,7 @@ export function AppSelect({
         aria-expanded={open}
         disabled={disabled}
         onClick={() => (open ? setOpen(false) : openDropdown())}
-        className={`flex items-center justify-between gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm text-left transition-colors hover:border-[var(--color-brand-gold)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand-gold)] ${open ? 'border-[var(--color-brand-gold)] ring-1 ring-[var(--color-brand-gold)]/30' : ''} ${disabled ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''} ${className}`}
+        className={`flex items-center justify-between gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm text-left transition-colors hover:border-[var(--color-brand-gold)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand-gold)] ${open ? 'border-[var(--color-brand-gold)] ring-1 ring-[var(--color-brand-gold)]/30' : ''} ${disabled ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''} ${className}`}
       >
         <span className={`flex items-center gap-2 truncate ${!selected ? 'text-[var(--color-text-muted)]' : 'text-[var(--color-text-primary)]'}`}>
           {selected?.icon && <span className="shrink-0">{selected.icon}</span>}

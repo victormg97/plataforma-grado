@@ -367,7 +367,7 @@ export function FichaAlumnoPage({ alumnoId, role = 'profesor', backHref }: Ficha
               type="date"
               value={fechaPrueba}
               onChange={(e) => setFechaPrueba(e.target.value)}
-              className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm focus:border-[var(--color-brand-gold)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-gold)]"
+              className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm focus:border-[var(--color-brand-gold)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-gold)]"
             />
           </div>
           <div>
@@ -380,7 +380,7 @@ export function FichaAlumnoPage({ alumnoId, role = 'profesor', backHref }: Ficha
               value={intentosPrueba}
               onChange={(e) => setIntentosPrueba(e.target.value)}
               placeholder="1"
-              className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm focus:border-[var(--color-brand-gold)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-gold)]"
+              className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm focus:border-[var(--color-brand-gold)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-gold)]"
             />
           </div>
         </div>

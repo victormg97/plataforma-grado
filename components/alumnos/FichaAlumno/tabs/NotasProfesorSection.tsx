@@ -109,7 +109,7 @@ export function NotasProfesorSection({ alumnoId, notas, fmtFecha }: NotasProfeso
                     value={editContent}
                     onChange={(e) => setEditContent(e.target.value)}
                     rows={3}
-                    className="w-full resize-none rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-bg)] p-2 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-brand-gold)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-gold)]"
+                    className="w-full resize-none rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] p-2 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-brand-gold)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-gold)]"
                     autoFocus
                   />
                   <div className="flex gap-2">
@@ -168,7 +168,7 @@ export function NotasProfesorSection({ alumnoId, notas, fmtFecha }: NotasProfeso
                 onChange={(e) => setNewNota(e.target.value)}
                 rows={3}
                 placeholder={tf('nota_placeholder')}
-                className="w-full resize-none rounded-[var(--radius-sm)] border border-[var(--color-brand-gold)]/50 bg-[var(--color-bg)] p-2 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-brand-gold)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-gold)]"
+                className="w-full resize-none rounded-[var(--radius-sm)] border border-[var(--color-brand-gold)]/50 bg-[var(--color-input,var(--color-bg))] p-2 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-brand-gold)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-gold)]"
                 autoFocus
               />
               <div className="flex gap-2">

@@ -112,7 +112,7 @@ export function PruebaCalificacion({
             min="1.0"
             max="7.0"
             placeholder="4.0"
-            className="h-10 w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-brand-gold)] focus:ring-2 focus:ring-[var(--color-brand-gold)]/20"
+            className="h-10 w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-brand-gold)] focus:ring-2 focus:ring-[var(--color-brand-gold)]/20"
             onChange={(e) => {
               const raw = e.target.value;
               // Auto-insert decimal: "14" → 1.4, "56" → 5.6 (two digits, no dot, >7)
@@ -146,7 +146,7 @@ export function PruebaCalificacion({
             {...register('observaciones')}
             rows={3}
             placeholder={t('calificacion.observaciones_placeholder')}
-            className="w-full resize-none rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-brand-gold)] focus:ring-2 focus:ring-[var(--color-brand-gold)]/20"
+            className="w-full resize-none rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-brand-gold)] focus:ring-2 focus:ring-[var(--color-brand-gold)]/20"
           />
           {errors.observaciones && (
             <p className="text-xs text-[var(--color-error)]">{errors.observaciones.message}</p>

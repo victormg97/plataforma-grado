@@ -81,7 +81,7 @@ export function StepHorario({
                     type="date"
                     value={h?.fecha ?? ''}
                     onChange={(e) => onUpdateHorario(clase.id, 'fecha', e.target.value)}
-                    className="h-8 rounded border border-[var(--color-border)] bg-[var(--color-bg)] px-2 text-xs outline-none focus:border-[var(--color-brand-gold)]"
+                    className="h-8 rounded border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-2 text-xs outline-none focus:border-[var(--color-brand-gold)]"
                   />
                 </div>
                 <div className="flex flex-col gap-1">
@@ -90,7 +90,7 @@ export function StepHorario({
                     type="time"
                     value={h?.hora_inicio ?? ''}
                     onChange={(e) => onUpdateHorario(clase.id, 'hora_inicio', e.target.value)}
-                    className="h-8 rounded border border-[var(--color-border)] bg-[var(--color-bg)] px-2 text-xs outline-none focus:border-[var(--color-brand-gold)]"
+                    className="h-8 rounded border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-2 text-xs outline-none focus:border-[var(--color-brand-gold)]"
                   />
                 </div>
                 <div className="flex flex-col gap-1">
@@ -99,7 +99,7 @@ export function StepHorario({
                     type="time"
                     value={h?.hora_fin ?? ''}
                     onChange={(e) => onUpdateHorario(clase.id, 'hora_fin', e.target.value)}
-                    className="h-8 rounded border border-[var(--color-border)] bg-[var(--color-bg)] px-2 text-xs outline-none focus:border-[var(--color-brand-gold)]"
+                    className="h-8 rounded border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-2 text-xs outline-none focus:border-[var(--color-brand-gold)]"
                   />
                 </div>
               </div>

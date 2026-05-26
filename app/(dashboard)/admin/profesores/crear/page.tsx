@@ -150,7 +150,7 @@ export default function CrearProfesorPage() {
                   </h3>
                   <textarea
                     id="datos_adicionales"
-                    className="flex w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-brand-gold)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-gold)] min-h-[100px]"
+                    className="flex w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-brand-gold)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-gold)] min-h-[100px]"
                     placeholder={t('datos_adicionales_placeholder')}
                     value={formData.datos_adicionales}
                     onChange={(e) => setFormData(prev => ({ ...prev, datos_adicionales: e.target.value }))}

@@ -39,6 +39,8 @@ const themeSchema = z.object({
   colorBg: hexColorSchema.optional(),
   colorBgSecondary: hexColorSchema.optional(),
   colorCard: hexColorSchema.optional(), // Fondo de cards (si se quiere diferente al fondo principal)
+  colorInput: hexColorSchema.optional(), // Fondo de inputs, selects, búsquedas (diferenciarlo del fondo)
+  colorPopover: hexColorSchema.optional(), // Fondo de dropdown lists / popovers (default: colorCard)
   colorTextPrimary: hexColorSchema.optional(),
   colorBorder: hexColorSchema.optional(),
   dark: z
@@ -46,6 +48,8 @@ const themeSchema = z.object({
       colorBg: hexColorSchema.optional(),
       colorBgSecondary: hexColorSchema.optional(),
       colorCard: hexColorSchema.optional(),
+      colorInput: hexColorSchema.optional(),
+      colorPopover: hexColorSchema.optional(),
       colorTextPrimary: hexColorSchema.optional(),
       colorBorder: hexColorSchema.optional(),
     })

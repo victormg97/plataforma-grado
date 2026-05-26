@@ -86,7 +86,7 @@ export function CredentialsSection({
           <Label className="text-sm font-medium text-[var(--color-text-secondary)]">
             {t('modo_acceso')}
           </Label>
-          <div className="flex bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg overflow-hidden shadow-sm">
+          <div className="flex bg-[var(--color-input,var(--color-bg))] border border-[var(--color-border)] rounded-lg overflow-hidden shadow-sm">
             <button
               type="button"
               onClick={() => onModoCreacionChange('link')}

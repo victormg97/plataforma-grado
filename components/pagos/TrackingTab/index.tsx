@@ -444,7 +444,7 @@ export function TrackingTab({ año, mes }: TrackingTabProps) {
               onChange={(e) => setSearchText(e.target.value)}
               placeholder={t('buscar_placeholder')}
               className={cn(
-                'h-10 w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)]',
+                'h-10 w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))]',
                 'pl-9 pr-3 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]',
                 'focus:border-[var(--color-brand-gold)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-gold)]'
               )}

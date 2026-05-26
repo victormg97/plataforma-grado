@@ -70,7 +70,7 @@ export function AlumnoAssignmentSelector({
             value={alumnoSearch}
             onChange={(e) => setAlumnoSearch(e.target.value)}
             placeholder={t('buscar_alumno')}
-            className="w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-bg)] px-2.5 py-1.5 text-sm text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-brand-gold)]"
+            className="w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-2.5 py-1.5 text-sm text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-brand-gold)]"
           />
           {filteredAlumnos.map((a) => (
             <button
