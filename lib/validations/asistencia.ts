@@ -13,6 +13,10 @@ export interface ValidateEstadoChangeParams {
   newEstado: EstadoAsistencia;
   claseTerminada: boolean;
   solicitudAceptada: boolean;
+  /** Pre-computed by the API using server time. True when now >= classStart - deadlineHours. */
+  plazoVencido: boolean;
+  /** Hours before class start after which changes are blocked. 0 = block at class start (default). */
+  cancellationDeadlineHours: number;
 }
 
 export interface ValidateEstadoChangeResult {
@@ -26,7 +30,7 @@ export interface ValidateEstadoChangeResult {
  * No tiene side effects — no importa Supabase ni Next.js.
  */
 export function validateEstadoChange(params: ValidateEstadoChangeParams): ValidateEstadoChangeResult {
-  const { userRol, newEstado, claseTerminada, solicitudAceptada } = params;
+  const { userRol, newEstado, claseTerminada, solicitudAceptada, plazoVencido } = params;
 
   // Profesor y Admin: siempre permitido
   if (userRol === 'profesor' || userRol === 'admin') {
@@ -44,7 +48,16 @@ export function validateEstadoChange(params: ValidateEstadoChangeParams): Valida
     };
   }
 
-  // b. Clase terminada bloquea cualquier cambio
+  // b. Plazo vencido bloquea cualquier cambio (antes de verificar si la clase terminó)
+  if (plazoVencido) {
+    return {
+      allowed: false,
+      errorMessage: 'El plazo para modificar la asistencia ha vencido.',
+      httpStatus: 403,
+    };
+  }
+
+  // c. Clase terminada bloquea cualquier cambio
   if (claseTerminada) {
     return {
       allowed: false,
@@ -53,7 +66,7 @@ export function validateEstadoChange(params: ValidateEstadoChangeParams): Valida
     };
   }
 
-  // c. Solo estados permitidos para alumno
+  // d. Solo estados permitidos para alumno
   if (!ALUMNO_ALLOWED_ESTADOS.includes(newEstado)) {
     return {
       allowed: false,
@@ -62,6 +75,14 @@ export function validateEstadoChange(params: ValidateEstadoChangeParams): Valida
     };
   }
 
-  // d. Todo OK
+  // e. Todo OK
   return { allowed: true };
+}
+
+/**
+ * Pure helper to validate cancellation_deadline_hours range.
+ * Used by PATCH /api/perfil and extractable for testing.
+ */
+export function isValidCancellationDeadline(val: number): boolean {
+  return Number.isInteger(val) && val >= 0 && val <= 168;
 }

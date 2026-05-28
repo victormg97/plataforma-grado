@@ -52,12 +52,20 @@ export function toChileTime(utcIso: string) {
 /**
  * Hook to check if a class is currently in progress or has already passed.
  * Uses server time instead of client time.
+ *
+ * @param cancellationDeadlineHours - Hours before class start after which changes are blocked.
+ *   When 0 (default), plazoVencido equals (now >= hora_inicio), preserving current behavior.
  */
-export function useClaseTimeStatus(fecha: string, horaInicio: string, horaFin: string) {
+export function useClaseTimeStatus(
+  fecha: string,
+  horaInicio: string,
+  horaFin: string,
+  cancellationDeadlineHours: number = 0,
+) {
   const { serverTime, isLoading } = useServerTime();
 
   if (!serverTime || isLoading) {
-    return { enCurso: false, yaPaso: false, esFuturo: true, isLoading: true };
+    return { enCurso: false, yaPaso: false, esFuturo: true, plazoVencido: false, isLoading: true };
   }
 
   const todayChile = toChileDate(serverTime);
@@ -67,5 +75,12 @@ export function useClaseTimeStatus(fecha: string, horaInicio: string, horaFin: s
   const enCurso = fecha === todayChile && horaInicio <= nowChile && horaFin >= nowChile;
   const yaPaso = fecha < todayChile || (fecha === todayChile && horaFin < nowChile);
 
-  return { enCurso, yaPaso, esFuturo, isLoading: false };
+  // Deadline: classStart - deadlineHours * 3600000 ms
+  // When cancellationDeadlineHours = 0, plazoVencido = (now >= hora_inicio) — same as current behavior
+  const classStartMs = new Date(`${fecha}T${horaInicio}`).getTime();
+  const nowMs = new Date(serverTime).getTime();
+  const deadlineMs = cancellationDeadlineHours * 3600 * 1000;
+  const plazoVencido = nowMs >= classStartMs - deadlineMs;
+
+  return { enCurso, yaPaso, esFuturo, plazoVencido, isLoading: false };
 }

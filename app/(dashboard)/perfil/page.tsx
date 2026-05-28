@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
@@ -12,7 +12,7 @@ import { LanguageSelector } from '@/components/common/LanguageSelector';
 import { cn } from '@/lib/utils';
 import {
   User, Lock, Eye, EyeOff, Globe,
-  ArrowLeft, Save, Loader2, ClipboardCheck,
+  ArrowLeft, Save, Loader2, ClipboardCheck, Settings2,
 } from 'lucide-react';
 import type { Profile, AlumnoExtra } from '@/lib/supabase/types';
 
@@ -21,6 +21,7 @@ import type { Profile, AlumnoExtra } from '@/lib/supabase/types';
 type PerfilResponse = Profile & {
   apellido_materno?: string | null;
   duracion_clase_default_min?: number;
+  cancellation_deadline_hours?: number;
   alumno_extra: Pick<AlumnoExtra, 'universidad' | 'año_ingreso' | 'ha_dado_examen' | 'intentos_prueba'> | null;
 };
 
@@ -51,10 +52,13 @@ function SectionTitle({ icon: Icon, title }: { icon: React.ElementType; title: s
   );
 }
 
-function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+function Field({ label, hint, children, inline }: { label: string; hint?: string; children: React.ReactNode; inline?: boolean }) {
   return (
-    <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-[220px_1fr] sm:items-start sm:gap-6">
-      <div className="pt-2.5">
+    <div className={cn(
+      'grid grid-cols-1 gap-1.5 sm:grid-cols-[220px_1fr] sm:gap-6',
+      inline ? 'sm:items-center' : 'sm:items-start',
+    )}>
+      <div className={inline ? undefined : 'pt-2.5'}>
         <span className="text-sm font-medium text-[var(--color-text-primary)]">{label}</span>
         {hint && <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{hint}</p>}
       </div>
@@ -107,6 +111,14 @@ export default function PerfilPage() {
   const [haDadoExamen, setHaDadoExamen] = useState(false);
   const [intentosPrueba, setIntentosPrueba] = useState('');
   const [duracionClase, setDuracionClase] = useState('60');
+  const [cancellationDeadline, setCancellationDeadline] = useState('0');
+
+  // Saved snapshots for dirty detection
+  const [savedInfo, setSavedInfo] = useState({
+    nombre: '', apellidos: '', telefono: '',
+    universidad: '', añoIngreso: '', haDadoExamen: false, intentosPrueba: '',
+  });
+  const [savedConfig, setSavedConfig] = useState({ duracionClase: '60', cancellationDeadline: '0' });
 
   // Avatar
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -121,20 +133,36 @@ export default function PerfilPage() {
 
   // Loading states
   const [savingInfo, setSavingInfo] = useState(false);
+  const [savingConfig, setSavingConfig] = useState(false);
   const [savingPass, setSavingPass] = useState(false);
   const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
     if (perfilData && !initialized) {
-      setNombre(perfilData.nombre ?? '');
-      setApellidos(getApellidosDisplay(perfilData));
-      setTelefono(perfilData.telefono ?? '');
-      setUniversidad(perfilData.alumno_extra?.universidad ?? '');
-      setAñoIngreso(perfilData.alumno_extra?.año_ingreso ?? '');
-      setHaDadoExamen(perfilData.alumno_extra?.ha_dado_examen ?? false);
+      const initNombre = perfilData.nombre ?? '';
+      const initApellidos = getApellidosDisplay(perfilData);
+      const initTelefono = perfilData.telefono ?? '';
+      const initUniversidad = perfilData.alumno_extra?.universidad ?? '';
+      const initAñoIngreso = perfilData.alumno_extra?.año_ingreso ?? '';
+      const initHaDadoExamen = perfilData.alumno_extra?.ha_dado_examen ?? false;
       const intentos = perfilData.alumno_extra?.intentos_prueba;
-      setIntentosPrueba(intentos != null && intentos > 0 ? String(intentos) : '');
-      setDuracionClase(String(perfilData.duracion_clase_default_min ?? 60));
+      const initIntentosPrueba = intentos != null && intentos > 0 ? String(intentos) : '';
+      const initDuracion = String(perfilData.duracion_clase_default_min ?? 60);
+      const initDeadline = String(perfilData.cancellation_deadline_hours ?? 0);
+
+      setNombre(initNombre);
+      setApellidos(initApellidos);
+      setTelefono(initTelefono);
+      setUniversidad(initUniversidad);
+      setAñoIngreso(initAñoIngreso);
+      setHaDadoExamen(initHaDadoExamen);
+      setIntentosPrueba(initIntentosPrueba);
+      setDuracionClase(initDuracion);
+      setCancellationDeadline(initDeadline);
+
+      setSavedInfo({ nombre: initNombre, apellidos: initApellidos, telefono: initTelefono, universidad: initUniversidad, añoIngreso: initAñoIngreso, haDadoExamen: initHaDadoExamen, intentosPrueba: initIntentosPrueba });
+      setSavedConfig({ duracionClase: initDuracion, cancellationDeadline: initDeadline });
+
       setInitialized(true);
     }
   }, [perfilData, initialized]);
@@ -149,6 +177,27 @@ export default function PerfilPage() {
 
   // Display name in header: nombre + apellidos from form state
   const displayName = [nombre || user.nombre, apellidos || getApellidosDisplay({ ...user, alumno_extra: null } as PerfilResponse)].filter(Boolean).join(' ');
+
+  // ── Dirty detection ───────────────────────────────────────────────────────
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const isDirtyInfo = useMemo(() => {
+    if (!initialized) return false;
+    const avatarChanged = !!pendingBlob || pendingDelete;
+    const fieldsChanged =
+      nombre !== savedInfo.nombre ||
+      apellidos !== savedInfo.apellidos ||
+      (telefono.trim() || null) !== (savedInfo.telefono.trim() || null) ||
+      (isAlumno && universidad !== savedInfo.universidad) ||
+      (isAlumno && añoIngreso !== savedInfo.añoIngreso) ||
+      (isAlumno && haDadoExamen !== savedInfo.haDadoExamen) ||
+      (isAlumno && intentosPrueba !== savedInfo.intentosPrueba);
+    return avatarChanged || fieldsChanged;
+  }, [initialized, pendingBlob, pendingDelete, nombre, apellidos, telefono, universidad, añoIngreso, haDadoExamen, intentosPrueba, savedInfo, isAlumno]);
+
+  const isDirtyConfig = useMemo(() => {
+    if (!initialized) return false;
+    return duracionClase !== savedConfig.duracionClase || cancellationDeadline !== savedConfig.cancellationDeadline;
+  }, [initialized, duracionClase, cancellationDeadline, savedConfig]);
 
   // ── Save profile info ─────────────────────────────────────────────────────
   async function handleSaveInfo(e: React.FormEvent) {
@@ -184,7 +233,6 @@ export default function PerfilPage() {
         ...(isAlumno && { año_ingreso: añoIngreso.trim() || null }),
         ...(isAlumno && { ha_dado_examen: haDadoExamen }),
         ...(isAlumno && { intentos_prueba: haDadoExamen && intentosPruebaNum ? intentosPruebaNum : null }),
-        ...(isProfesorOrAdmin && { duracion_clase_default_min: Number(duracionClase) }),
       };
       if (avatarUrl !== undefined) body.avatar_url = avatarUrl;
 
@@ -206,11 +254,44 @@ export default function PerfilPage() {
       setPendingBlob(null);
       setPreviewUrl(null);
       setPendingDelete(false);
+      // Reset dirty snapshot
+      setSavedInfo({ nombre: nombre.trim(), apellidos: apellidos.trim(), telefono: telefono.trim(), universidad: universidad.trim(), añoIngreso: añoIngreso.trim(), haDadoExamen, intentosPrueba });
       toast.success(t('exito_perfil'));
     } catch {
       toast.error(t('error_perfil'));
     } finally {
       setSavingInfo(false);
+    }
+  }
+
+  // ── Save class configuration (profesor/admin only) ───────────────────────
+  async function handleSaveConfig(e: React.FormEvent) {
+    e.preventDefault();
+    setSavingConfig(true);
+    try {
+      const res = await fetch('/api/perfil', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          duracion_clase_default_min: Number(duracionClase),
+          cancellation_deadline_hours: Number(cancellationDeadline),
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        toast.error(err.error ?? t('error_perfil'));
+        return;
+      }
+      const updated: Profile = await res.json();
+      setUser(updated);
+      queryClient.invalidateQueries({ queryKey: ['perfil'] });
+      // Reset dirty snapshot
+      setSavedConfig({ duracionClase, cancellationDeadline });
+      toast.success(t('exito_perfil'));
+    } catch {
+      toast.error(t('error_perfil'));
+    } finally {
+      setSavingConfig(false);
     }
   }
 
@@ -390,8 +471,15 @@ export default function PerfilPage() {
               </>
             )}
 
-            {isProfesorOrAdmin && (
-              <Field label={t('duracion_clase')} hint={t('duracion_clase_hint')}>
+            <SaveBar saving={savingInfo} label={savingInfo ? tc('cargando') : t('guardar')} disabled={!isDirtyInfo} />
+          </form>
+
+          {/* ── Configuración de clases (solo profesor/admin) ─────────────── */}
+          {isProfesorOrAdmin && (
+            <form onSubmit={handleSaveConfig} className="space-y-6 pb-8 border-b border-[var(--color-border)]">
+              <SectionTitle icon={Settings2} title={t('configuracion_clases')} />
+
+              <Field label={t('duracion_clase')} hint={t('duracion_clase_hint')} inline>
                 <div className="flex items-center gap-3">
                   <input
                     type="number"
@@ -405,10 +493,25 @@ export default function PerfilPage() {
                   <span className="text-sm text-[var(--color-text-muted)]">{t('minutos')}</span>
                 </div>
               </Field>
-            )}
 
-            <SaveBar saving={savingInfo} label={savingInfo ? tc('cargando') : t('guardar')} />
-          </form>
+              <Field label={t('cancellation_deadline')} hint={t('cancellation_deadline_hint')} inline>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="number"
+                    min={0}
+                    max={168}
+                    step={1}
+                    value={cancellationDeadline}
+                    onChange={(e) => setCancellationDeadline(e.target.value)}
+                    className={cn(inputCls, 'w-28')}
+                  />
+                  <span className="text-sm text-[var(--color-text-muted)]">{t('horas')}</span>
+                </div>
+              </Field>
+
+              <SaveBar saving={savingConfig} label={savingConfig ? tc('cargando') : t('guardar')} disabled={!isDirtyConfig} />
+            </form>
+          )}
 
           {/* ── Preferencias ─────────────────────────────────────────────── */}
           <div className="space-y-6 pb-8 border-b border-[var(--color-border)]">

@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
 
   const horarioId = request.nextUrl.searchParams.get('horario_id');
 
-  let query = supabase.from('asistencia').select('*, horario:horarios(*)');
+  let query = supabase.from('asistencia').select('*, horario:horarios(*, profesor:profiles!horarios_profesor_id_fkey(cancellation_deadline_hours))');
 
   if (horarioId) {
     query = query.eq('horario_id', horarioId);

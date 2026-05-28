@@ -22,7 +22,7 @@ describe('validateEstadoChange - Property-Based Tests', () => {
    *
    * For any currentEstado ∈ {pendiente, confirmado, cancelado},
    * newEstado ∈ {confirmado, cancelado}, claseTerminada = false,
-   * solicitudAceptada = false, userRol = 'alumno':
+   * solicitudAceptada = false, plazoVencido = false, userRol = 'alumno':
    * validateEstadoChange returns { allowed: true }
    */
   it('Property 1: Alumno valid state transitions before class ends', () => {
@@ -37,6 +37,8 @@ describe('validateEstadoChange - Property-Based Tests', () => {
             newEstado,
             claseTerminada: false,
             solicitudAceptada: false,
+            plazoVencido: false,
+            cancellationDeadlineHours: 0,
           });
 
           expect(result).toEqual({ allowed: true });
@@ -51,7 +53,7 @@ describe('validateEstadoChange - Property-Based Tests', () => {
    * Validates: Requirements 2.1, 2.2, 5.1, 5.3
    *
    * For any newEstado from full enum, claseTerminada = true,
-   * userRol = 'alumno', solicitudAceptada = false:
+   * userRol = 'alumno', solicitudAceptada = false, plazoVencido = false:
    * validateEstadoChange returns { allowed: false } with httpStatus: 403
    */
   it('Property 2: Alumno blocked after class ends', () => {
@@ -66,6 +68,8 @@ describe('validateEstadoChange - Property-Based Tests', () => {
             newEstado,
             claseTerminada: true,
             solicitudAceptada: false,
+            plazoVencido: false,
+            cancellationDeadlineHours: 0,
           });
 
           expect(result.allowed).toBe(false);
@@ -81,7 +85,7 @@ describe('validateEstadoChange - Property-Based Tests', () => {
    * Validates: Requirements 3.1, 3.2, 3.3, 3.4, 5.4
    *
    * For any userRol ∈ {profesor, admin}, any newEstado, any claseTerminada,
-   * any solicitudAceptada:
+   * any solicitudAceptada, any plazoVencido:
    * validateEstadoChange returns { allowed: true }
    */
   it('Property 3: Profesor and Admin unrestricted', () => {
@@ -92,13 +96,17 @@ describe('validateEstadoChange - Property-Based Tests', () => {
         fc.constantFrom(...ALL_ESTADOS),
         fc.boolean(),
         fc.boolean(),
-        (userRol, currentEstado, newEstado, claseTerminada, solicitudAceptada) => {
+        fc.boolean(),
+        fc.integer({ min: 0, max: 168 }),
+        (userRol, currentEstado, newEstado, claseTerminada, solicitudAceptada, plazoVencido, cancellationDeadlineHours) => {
           const result = validateEstadoChange({
             userRol,
             currentEstado,
             newEstado,
             claseTerminada,
             solicitudAceptada,
+            plazoVencido,
+            cancellationDeadlineHours,
           });
 
           expect(result).toEqual({ allowed: true });
@@ -113,7 +121,8 @@ describe('validateEstadoChange - Property-Based Tests', () => {
    * Validates: Requirements 4.1, 4.2, 4.3, 5.2
    *
    * For any newEstado ∈ {pendiente, cambiado, no_asistio},
-   * claseTerminada = false, userRol = 'alumno', solicitudAceptada = false:
+   * claseTerminada = false, userRol = 'alumno', solicitudAceptada = false,
+   * plazoVencido = false:
    * validateEstadoChange returns { allowed: false } with httpStatus: 403
    */
   it('Property 4: Alumno restricted to confirmado and cancelado', () => {
@@ -128,6 +137,8 @@ describe('validateEstadoChange - Property-Based Tests', () => {
             newEstado,
             claseTerminada: false,
             solicitudAceptada: false,
+            plazoVencido: false,
+            cancellationDeadlineHours: 0,
           });
 
           expect(result.allowed).toBe(false);
@@ -141,38 +152,23 @@ describe('validateEstadoChange - Property-Based Tests', () => {
   /**
    * Property 5: Confirming attendance auto-cancels pending solicitud
    * Validates: Requirements 6.1
-   *
-   * The auto-cancel logic is a side effect in the API endpoint (PATCH /api/asistencia/[id]).
-   * This test verifies the PREREQUISITE: that the validation layer allows an alumno to
-   * confirm attendance (which triggers the auto-cancel in the API).
-   *
-   * The actual behavior: when userRol = 'alumno' and newEstado = 'confirmado',
-   * the API updates all solicitudes_cambio_horario with estado = 'pendiente'
-   * for the same alumno_id and horario_original_id, setting their estado to 'rechazada'
-   * with motivo_rechazo = 'Cancelada por el alumno al confirmar asistencia'.
    */
   it('Property 5: Confirming attendance is allowed (prerequisite for auto-cancel of pending solicitud)', () => {
     fc.assert(
       fc.property(
         fc.constantFrom(...ALUMNO_CURRENT_ESTADOS),
         (currentEstado) => {
-          // When an alumno confirms attendance with a pending solicitud (not accepted),
-          // the validation must allow it so the API can proceed to auto-cancel the solicitud
           const result = validateEstadoChange({
             userRol: 'alumno',
             currentEstado,
             newEstado: 'confirmado',
             claseTerminada: false,
-            solicitudAceptada: false, // pending, not accepted
+            solicitudAceptada: false,
+            plazoVencido: false,
+            cancellationDeadlineHours: 0,
           });
 
-          // The validation allows the confirmation
           expect(result).toEqual({ allowed: true });
-
-          // After this validation passes, the API endpoint handles:
-          // 1. Updating asistencia.estado to 'confirmado'
-          // 2. Auto-cancelling all pending solicitudes for the same horario
-          //    (setting estado='rechazada', motivo_rechazo='Cancelada por el alumno al confirmar asistencia')
         }
       ),
       { numRuns: 100 }
@@ -182,10 +178,6 @@ describe('validateEstadoChange - Property-Based Tests', () => {
   /**
    * Property 6: Accepted solicitud blocks alumno state changes
    * Validates: Requirements 6.2
-   *
-   * For any newEstado ∈ {confirmado, cancelado}, solicitudAceptada = true,
-   * userRol = 'alumno', claseTerminada = false:
-   * validateEstadoChange returns { allowed: false } with httpStatus: 403
    */
   it('Property 6: Accepted solicitud blocks alumno', () => {
     fc.assert(
@@ -199,6 +191,8 @@ describe('validateEstadoChange - Property-Based Tests', () => {
             newEstado,
             claseTerminada: false,
             solicitudAceptada: true,
+            plazoVencido: false,
+            cancellationDeadlineHours: 0,
           });
 
           expect(result.allowed).toBe(false);

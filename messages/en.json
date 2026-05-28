@@ -163,6 +163,7 @@
     "clase_en_curso": "This class is currently in progress.",
     "clase_ya_paso": "This class has already ended.",
     "clase_finalizo_solo_profesor": "The class has ended. Only a teacher can modify the status.",
+    "plazo_vencido_mensaje": "The deadline to modify attendance has passed.",
     "ver_detalle_completo": "View full detail",
     "ver_detalle_desc": "Notes, attendance and more information",
     "tab_proximas": "Upcoming",
@@ -445,7 +446,11 @@
     "idioma": "Language",
     "duracion_clase": "Default class duration",
     "duracion_clase_hint": "Default time when creating new classes",
-    "minutos": "minutes"
+    "minutos": "minutes",
+    "cancellation_deadline": "Cancellation deadline",
+    "cancellation_deadline_hint": "Hours before class start after which students can no longer change their attendance (0 = until class starts)",
+    "horas": "hours",
+    "configuracion_clases": "Class settings"
   },
   "notificaciones": {
     "titulo": "Notifications",
@@ -1069,7 +1074,10 @@
     "guardar_cambios": "Save changes",
     "exito_editado": "Changes saved",
     "error_editar": "Error saving changes",
-    "sin_alumnos": "No students available"
+    "sin_alumnos": "No students available",
+    "bloquear_descarga": "Block download",
+    "bloquear_descarga_desc": "Students can preview the file but cannot download it",
+    "acciones": "Actions"
   },
   "pagos": {
     "titulo": "Payments",

@@ -62,27 +62,37 @@ export async function PATCH(
   if (estado) {
     let claseTerminada = false;
     let solicitudAceptada = false;
+    let plazoVencido = false;
 
     if (userRol === 'alumno') {
-      // Fetch horario fecha and hora_fin to determine if class has ended
+      // Fetch horario with hora_inicio, hora_fin, and professor's cancellation_deadline_hours
       const { data: horario } = await supabase
         .from('horarios')
-        .select('fecha, hora_fin')
+        .select('fecha, hora_inicio, hora_fin, profesor:profiles!horarios_profesor_id_fkey(cancellation_deadline_hours)')
         .eq('id', existing.horario_id)
         .single();
 
-      if (horario && horario.fecha && horario.hora_fin) {
-        // Get server time in Chile timezone
-        const { data: serverTime } = await supabase.rpc('get_server_time');
+      const cancellationDeadlineHours =
+        (horario?.profesor as { cancellation_deadline_hours: number } | null)
+          ?.cancellation_deadline_hours ?? 0;
 
-        if (serverTime) {
-          // serverTime is ISO string in Chile timezone
-          const now = new Date(serverTime);
-          // Combine fecha + hora_fin into a Date for comparison
-          const claseFinStr = `${horario.fecha}T${horario.hora_fin}`;
-          const claseFin = new Date(claseFinStr);
-          claseTerminada = now >= claseFin;
-        }
+      // Get server time once — reused for both plazoVencido and claseTerminada
+      const { data: serverTime } = await supabase.rpc('get_server_time');
+      if (!serverTime) {
+        return NextResponse.json({ error: 'No se pudo obtener la hora del servidor' }, { status: 500 });
+      }
+
+      const now = new Date(serverTime);
+
+      if (horario && horario.fecha && horario.hora_inicio && horario.hora_fin) {
+        // Compute plazoVencido: now >= classStart - deadlineHours
+        const classStart = new Date(`${horario.fecha}T${horario.hora_inicio}`);
+        const deadlineMs = cancellationDeadlineHours * 3600 * 1000;
+        plazoVencido = now.getTime() >= classStart.getTime() - deadlineMs;
+
+        // Compute claseTerminada using the same server time
+        const claseFin = new Date(`${horario.fecha}T${horario.hora_fin}`);
+        claseTerminada = now >= claseFin;
       }
 
       // Check if there's an accepted solicitud for this horario + alumno
@@ -96,23 +106,26 @@ export async function PATCH(
         .maybeSingle();
 
       solicitudAceptada = !!solicitudAceptadaData;
-    }
 
-    // Validate the estado change
-    const validation = validateEstadoChange({
-      userRol,
-      currentEstado: existing.estado,
-      newEstado: estado,
-      claseTerminada,
-      solicitudAceptada,
-    });
+      // Validate the estado change
+      const validation = validateEstadoChange({
+        userRol,
+        currentEstado: existing.estado,
+        newEstado: estado,
+        claseTerminada,
+        solicitudAceptada,
+        plazoVencido,
+        cancellationDeadlineHours,
+      });
 
-    if (!validation.allowed) {
-      return NextResponse.json(
-        { error: validation.errorMessage },
-        { status: validation.httpStatus || 403 }
-      );
+      if (!validation.allowed) {
+        return NextResponse.json(
+          { error: validation.errorMessage },
+          { status: validation.httpStatus || 403 }
+        );
+      }
     }
+    // Profesor and admin: validateEstadoChange always returns allowed: true — no check needed
   }
 
   // Build update payload

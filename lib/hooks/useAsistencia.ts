@@ -24,6 +24,8 @@ export type ClaseAlumno = {
       nombre: string;
       apellido: string;
       avatar_url: string | null;
+      /** Hours before class start after which attendance changes are blocked. 0 = block at class start. */
+      cancellation_deadline_hours: number;
     } | null;
   };
 };

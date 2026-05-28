@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { isValidCancellationDeadline } from '@/lib/validations/asistencia';
 
 export async function GET() {
   const supabase = await createClient();
@@ -90,18 +91,32 @@ export async function PATCH(request: NextRequest) {
       if (tema === 'light' || tema === 'dark') profileUpdate.tema = tema;
     }
 
-    if (body.duracion_clase_default_min !== undefined) {
+    if (body.duracion_clase_default_min !== undefined || body.cancellation_deadline_hours !== undefined) {
       const { data: currentProfile } = await supabase
         .from('profiles')
         .select('rol')
         .eq('id', user.id)
         .single();
-      if (currentProfile?.rol === 'profesor' || currentProfile?.rol === 'admin') {
-        const val = Number(body.duracion_clase_default_min);
-        if (!Number.isInteger(val) || val < 15 || val > 480) {
-          return NextResponse.json({ error: 'duracion_clase_default_min debe ser un entero entre 15 y 480' }, { status: 400 });
+      const rolActual = currentProfile?.rol;
+
+      if (body.duracion_clase_default_min !== undefined) {
+        if (rolActual === 'profesor' || rolActual === 'admin') {
+          const val = Number(body.duracion_clase_default_min);
+          if (!Number.isInteger(val) || val < 15 || val > 480) {
+            return NextResponse.json({ error: 'duracion_clase_default_min debe ser un entero entre 15 y 480' }, { status: 400 });
+          }
+          profileUpdate.duracion_clase_default_min = val;
         }
-        profileUpdate.duracion_clase_default_min = val;
+      }
+
+      if (body.cancellation_deadline_hours !== undefined) {
+        if (rolActual === 'profesor' || rolActual === 'admin') {
+          const val = Number(body.cancellation_deadline_hours);
+          if (!isValidCancellationDeadline(val)) {
+            return NextResponse.json({ error: 'cancellation_deadline_hours debe ser un entero entre 0 y 168' }, { status: 400 });
+          }
+          profileUpdate.cancellation_deadline_hours = val;
+        }
       }
     }
 

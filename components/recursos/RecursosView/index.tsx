@@ -114,7 +114,7 @@ export function RecursosView({ rol }: RecursosViewProps) {
       data,
     }: {
       id: string;
-      data: { titulo: string; descripcion: string | null; para_todos: boolean; alumno_ids: string[] };
+      data: { titulo: string; descripcion: string | null; para_todos: boolean; alumno_ids: string[]; bloquear_descarga: boolean };
     }) => {
       // Update the resource metadata
       const { error: updateErr } = await supabase
@@ -123,6 +123,7 @@ export function RecursosView({ rol }: RecursosViewProps) {
           titulo: data.titulo,
           descripcion: data.descripcion,
           para_todos: data.para_todos,
+          bloquear_descarga: data.bloquear_descarga,
         })
         .eq('id', id);
       if (updateErr) throw updateErr;

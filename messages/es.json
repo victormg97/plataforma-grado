@@ -163,6 +163,7 @@
     "clase_en_curso": "Esta clase está en curso.",
     "clase_ya_paso": "Esta clase ya finalizó.",
     "clase_finalizo_solo_profesor": "La clase ya finalizó. Solo un profesor puede modificar el estado.",
+    "plazo_vencido_mensaje": "El plazo para modificar la asistencia ha vencido.",
     "ver_detalle_completo": "Ver detalle completo",
     "ver_detalle_desc": "Notas, asistencia y más información",
     "tab_proximas": "Próximas",
@@ -445,7 +446,11 @@
     "idioma": "Idioma",
     "duracion_clase": "Duración de clase por defecto",
     "duracion_clase_hint": "Tiempo predeterminado al crear nuevas clases",
-    "minutos": "minutos"
+    "minutos": "minutos",
+    "cancellation_deadline": "Límite de cancelación",
+    "cancellation_deadline_hint": "Horas antes del inicio en que los alumnos ya no pueden cambiar su asistencia (0 = hasta el inicio)",
+    "horas": "horas",
+    "configuracion_clases": "Configuración de clases"
   },
   "notificaciones": {
     "titulo": "Notificaciones",
@@ -1069,7 +1074,10 @@
     "guardar_cambios": "Guardar cambios",
     "exito_editado": "Cambios guardados",
     "error_editar": "Error al guardar los cambios",
-    "sin_alumnos": "No hay alumnos disponibles"
+    "sin_alumnos": "No hay alumnos disponibles",
+    "bloquear_descarga": "Bloquear descarga",
+    "bloquear_descarga_desc": "Los alumnos podrán visualizar el archivo pero no descargarlo",
+    "acciones": "Acciones"
   },
   "pagos": {
     "titulo": "Pagos",

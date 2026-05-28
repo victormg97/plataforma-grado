@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Download, ExternalLink, Loader2 } from 'lucide-react';
+import { X, Download, ExternalLink, Loader2, Play } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useQuery } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
@@ -13,12 +13,61 @@ import type { RecursoItem } from '@/components/recursos/RecursoCard';
 const SIGNED_URL_STALE_MS = 50 * 60 * 1000;
 const SIGNED_URL_GC_MS    = 55 * 60 * 1000;
 
+// ── Embed URL helpers ─────────────────────────────────────────────────────────
+
+/**
+ * Attempts to convert a video URL into an embeddable iframe src.
+ * Returns null if the URL is not a known embeddable platform.
+ *
+ * Supported: YouTube (watch, youtu.be, shorts), Vimeo
+ */
+function getEmbedUrl(url: string): string | null {
+  try {
+    const u = new URL(url);
+
+    // YouTube: https://www.youtube.com/watch?v=ID
+    //          https://youtu.be/ID
+    //          https://www.youtube.com/shorts/ID
+    //          https://www.youtube.com/embed/ID (already embed)
+    if (u.hostname === 'www.youtube.com' || u.hostname === 'youtube.com') {
+      if (u.pathname.startsWith('/embed/')) return url;
+      if (u.pathname.startsWith('/shorts/')) {
+        const id = u.pathname.split('/shorts/')[1]?.split('/')[0];
+        if (id) return `https://www.youtube.com/embed/${id}`;
+      }
+      const v = u.searchParams.get('v');
+      if (v) return `https://www.youtube.com/embed/${v}`;
+    }
+    if (u.hostname === 'youtu.be') {
+      const id = u.pathname.slice(1).split('/')[0];
+      if (id) return `https://www.youtube.com/embed/${id}`;
+    }
+
+    // Vimeo: https://vimeo.com/ID
+    //        https://player.vimeo.com/video/ID (already embed)
+    if (u.hostname === 'vimeo.com' || u.hostname === 'www.vimeo.com') {
+      const id = u.pathname.split('/').filter(Boolean)[0];
+      if (id && /^\d+$/.test(id)) return `https://player.vimeo.com/video/${id}`;
+    }
+    if (u.hostname === 'player.vimeo.com') return url;
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+// ── Types ─────────────────────────────────────────────────────────────────────
+
 interface RecursoPreviewModalProps {
   recurso: RecursoItem;
   onClose: () => void;
+  canDownload?: boolean;
 }
 
-export function RecursoPreviewModal({ recurso, onClose }: RecursoPreviewModalProps) {
+// ── Main component ────────────────────────────────────────────────────────────
+
+export function RecursoPreviewModal({ recurso, onClose, canDownload = true }: RecursoPreviewModalProps) {
   const t = useTranslations('recursos');
   const overlayRef = useRef<HTMLDivElement>(null);
 
@@ -27,8 +76,6 @@ export function RecursoPreviewModal({ recurso, onClose }: RecursoPreviewModalPro
   const ext       = recurso.storage_path ? getExtension(recurso.storage_path) : '';
 
   // ── Cached signed URL ─────────────────────────────────────────────────────
-  // queryKey is stable per recurso — React Query deduplicates concurrent fetches
-  // and re-uses cached results across modal opens (up to 50 min)
   const {
     data: signedUrl,
     isLoading,
@@ -81,13 +128,33 @@ export function RecursoPreviewModal({ recurso, onClose }: RecursoPreviewModalPro
       if (isError)   return <ErrorState t={t} />;
       if (isLoading) return <LoadingState />;
     }
-    if (!url)        return <LoadingState />;
+    if (!url) return <LoadingState />;
 
-    if (recurso.tipo === 'enlace' || (recurso.tipo === 'video' && !recurso.storage_path)) {
+    // External video — try to embed, fall back to link
+    if (recurso.tipo === 'video' && !recurso.storage_path) {
+      const embedUrl = getEmbedUrl(url);
+      if (embedUrl) {
+        return (
+          <div className="flex h-full items-center justify-center bg-black p-0">
+            <iframe
+              src={embedUrl}
+              className="h-full w-full border-0"
+              title={recurso.titulo}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+            />
+          </div>
+        );
+      }
       return <ExternalLinkPreview url={url} titulo={recurso.titulo} t={t} />;
     }
 
-    if (!fileInfo) return <DownloadPrompt titulo={recurso.titulo} onDownload={handleDownload} t={t} />;
+    // External link (non-video)
+    if (recurso.tipo === 'enlace') {
+      return <ExternalLinkPreview url={url} titulo={recurso.titulo} t={t} />;
+    }
+
+    if (!fileInfo) return <DownloadPrompt titulo={recurso.titulo} onDownload={handleDownload} canDownload={canDownload} t={t} />;
 
     switch (fileInfo.previewType) {
       case 'pdf':
@@ -111,11 +178,11 @@ export function RecursoPreviewModal({ recurso, onClose }: RecursoPreviewModalPro
         );
       case 'video':
         return (
-          <div className="flex h-full items-center justify-center p-4">
+          <div className="flex h-full items-center justify-center bg-black p-0">
             <video
               src={url}
               controls
-              className="max-h-full max-w-full rounded-[var(--radius-md)] shadow-[var(--shadow-lg)]"
+              className="max-h-full max-w-full"
             />
           </div>
         );
@@ -130,9 +197,12 @@ export function RecursoPreviewModal({ recurso, onClose }: RecursoPreviewModalPro
           </div>
         );
       default:
-        return <DownloadPrompt titulo={recurso.titulo} onDownload={handleDownload} t={t} />;
+        return <DownloadPrompt titulo={recurso.titulo} onDownload={handleDownload} canDownload={canDownload} t={t} />;
     }
   };
+
+  // ── Detect embed for header icon ──────────────────────────────────────────
+  const isEmbeddableVideo = recurso.tipo === 'video' && !recurso.storage_path && url && !!getEmbedUrl(url);
 
   if (typeof window === 'undefined') return null;
 
@@ -141,7 +211,7 @@ export function RecursoPreviewModal({ recurso, onClose }: RecursoPreviewModalPro
       ref={overlayRef}
       role="presentation"
       onClick={handleOverlayClick}
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-2 backdrop-blur-sm"
       style={{ animation: 'fadeInOverlay 0.15s ease' }}
     >
       <style>{`
@@ -150,7 +220,7 @@ export function RecursoPreviewModal({ recurso, onClose }: RecursoPreviewModalPro
       `}</style>
 
       <div
-        className="relative flex h-[90dvh] w-full max-w-4xl flex-col overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-bg)] shadow-[var(--shadow-lg)]"
+        className="relative flex h-[95dvh] w-full max-w-6xl flex-col overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-bg)] shadow-[var(--shadow-lg)]"
         style={{ animation: 'slideInModal 0.18s ease' }}
         role="dialog"
         aria-modal="true"
@@ -158,11 +228,16 @@ export function RecursoPreviewModal({ recurso, onClose }: RecursoPreviewModalPro
       >
         {/* Header */}
         <div className="flex items-center gap-3 border-b border-[var(--color-border)] px-4 py-3">
-          {fileInfo && (
+          {fileInfo ? (
             <div className={cn('flex size-7 flex-shrink-0 items-center justify-center rounded-[var(--radius-sm)]', fileInfo.iconBg)}>
               <fileInfo.Icon className={cn('size-4', fileInfo.iconColor)} />
             </div>
-          )}
+          ) : isEmbeddableVideo ? (
+            <div className="flex size-7 flex-shrink-0 items-center justify-center rounded-[var(--radius-sm)] bg-[rgba(192,57,43,0.1)]">
+              <Play className="size-4 text-[var(--color-error)]" />
+            </div>
+          ) : null}
+
           <div className="flex min-w-0 flex-1 items-center gap-2">
             <p className="truncate text-sm font-semibold text-[var(--color-text-primary)]">
               {recurso.titulo}
@@ -178,8 +253,7 @@ export function RecursoPreviewModal({ recurso, onClose }: RecursoPreviewModalPro
           </div>
 
           <div className="ml-auto flex items-center gap-1">
-            {/* Download trigger */}
-            {recurso.tipo === 'archivo' && (
+            {recurso.tipo === 'archivo' && canDownload && (
               <button
                 type="button"
                 title={t('descargar')}
@@ -242,23 +316,27 @@ function ErrorState({ t }: { t: ReturnType<typeof useTranslations> }) {
 function DownloadPrompt({
   titulo: _titulo,
   onDownload,
+  canDownload,
   t,
 }: {
   titulo: string;
   onDownload: () => void;
+  canDownload: boolean;
   t: ReturnType<typeof useTranslations>;
 }) {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-4 p-8 text-center">
       <p className="text-sm text-[var(--color-text-muted)]">{t('sin_preview')}</p>
-      <button
-        type="button"
-        onClick={onDownload}
-        className="flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-brand-gold)] px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
-      >
-        <Download className="size-4" />
-        {t('descargar')}
-      </button>
+      {canDownload && (
+        <button
+          type="button"
+          onClick={onDownload}
+          className="flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-brand-gold)] px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+        >
+          <Download className="size-4" />
+          {t('descargar')}
+        </button>
+      )}
     </div>
   );
 }

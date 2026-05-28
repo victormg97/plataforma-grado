@@ -629,6 +629,7 @@ export type Database = {
           apellido: string
           apellido_materno: string | null
           avatar_url: string | null
+          cancellation_deadline_hours: number
           created_at: string
           duracion_clase_default_min: number
           email: string
@@ -646,6 +647,7 @@ export type Database = {
           apellido: string
           apellido_materno?: string | null
           avatar_url?: string | null
+          cancellation_deadline_hours?: number
           created_at?: string
           duracion_clase_default_min?: number
           email: string
@@ -663,6 +665,7 @@ export type Database = {
           apellido?: string
           apellido_materno?: string | null
           avatar_url?: string | null
+          cancellation_deadline_hours?: number
           created_at?: string
           duracion_clase_default_min?: number
           email?: string
@@ -876,6 +879,7 @@ export type Database = {
       }
       recursos_compartidos: {
         Row: {
+          bloquear_descarga: boolean
           created_at: string
           descripcion: string | null
           id: string
@@ -888,6 +892,7 @@ export type Database = {
           url: string | null
         }
         Insert: {
+          bloquear_descarga?: boolean
           created_at?: string
           descripcion?: string | null
           id?: string
@@ -900,6 +905,7 @@ export type Database = {
           url?: string | null
         }
         Update: {
+          bloquear_descarga?: boolean
           created_at?: string
           descripcion?: string | null
           id?: string

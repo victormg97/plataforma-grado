@@ -34,6 +34,7 @@ export function RecursoUploader({ alumnos, onSuccess }: UploaderProps) {
   const [descripcion, setDescripcion] = useState('');
   const [paraToodos, setParaTodos] = useState(true);
   const [selectedAlumnos, setSelectedAlumnos] = useState<string[]>([]);
+  const [bloquearDescarga, setBloquearDescarga] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
 
@@ -86,7 +87,14 @@ export function RecursoUploader({ alumnos, onSuccess }: UploaderProps) {
       if (tipo === 'archivo') {
         for (const entry of files) {
           const ext = entry.file.name.split('.').pop();
-          const path = `${user.id}/${Date.now()}-${entry.displayName}.${ext}`;
+          // Sanitize filename: remove special chars, replace spaces with dashes
+          const safeName = entry.displayName
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '') // strip accents
+            .replace(/[^a-zA-Z0-9._-]/g, '-') // replace special chars with dash
+            .replace(/-+/g, '-')              // collapse multiple dashes
+            .replace(/^-|-$/g, '');           // trim leading/trailing dashes
+          const path = `${user.id}/${Date.now()}-${safeName}.${ext}`;
 
           const { error: storageError } = await supabase.storage
             .from('recursos')
@@ -105,6 +113,7 @@ export function RecursoUploader({ alumnos, onSuccess }: UploaderProps) {
               storage_path: path,
               subido_por: user.id,
               para_todos: paraToodos,
+              bloquear_descarga: bloquearDescarga,
             })
             .select('id')
             .single();
@@ -129,6 +138,7 @@ export function RecursoUploader({ alumnos, onSuccess }: UploaderProps) {
             url: url.trim(),
             subido_por: user.id,
             para_todos: paraToodos,
+            bloquear_descarga: bloquearDescarga,
           })
           .select('id')
           .single();
@@ -149,6 +159,7 @@ export function RecursoUploader({ alumnos, onSuccess }: UploaderProps) {
       setDescripcion('');
       setParaTodos(true);
       setSelectedAlumnos([]);
+      setBloquearDescarga(false);
       setUploadProgress({});
       onSuccess();
     } catch {
@@ -245,6 +256,32 @@ export function RecursoUploader({ alumnos, onSuccess }: UploaderProps) {
           className="w-full resize-none rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2.5 text-sm text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-brand-gold)] focus:ring-2 focus:ring-[var(--color-brand-gold-muted)]"
         />
       </div>
+
+      {/* Block download toggle — only relevant for files */}
+      {tipo === 'archivo' && (
+        <label className="flex cursor-pointer items-center gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-4 py-3 transition-colors hover:bg-[var(--color-bg-elevated)]">
+          <div className="relative flex-shrink-0">
+            <input
+              type="checkbox"
+              checked={bloquearDescarga}
+              onChange={(e) => setBloquearDescarga(e.target.checked)}
+              className="sr-only"
+            />
+            <div className={cn(
+              'h-5 w-9 rounded-full transition-colors',
+              bloquearDescarga ? 'bg-[var(--color-brand-gold)]' : 'bg-[var(--color-border)]',
+            )} />
+            <div className={cn(
+              'absolute top-0.5 size-4 rounded-full bg-white shadow transition-transform',
+              bloquearDescarga ? 'translate-x-4' : 'translate-x-0.5',
+            )} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-[var(--color-text-primary)]">{t('bloquear_descarga')}</p>
+            <p className="text-xs text-[var(--color-text-muted)]">{t('bloquear_descarga_desc')}</p>
+          </div>
+        </label>
+      )}
 
       {/* Assignment */}
       {alumnos.length > 0 && (

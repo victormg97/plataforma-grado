@@ -27,7 +27,7 @@ interface RecursoEditModalProps {
   /** Called after a successful save */
   onSave: (
     id: string,
-    data: { titulo: string; descripcion: string | null; para_todos: boolean; alumno_ids: string[] }
+    data: { titulo: string; descripcion: string | null; para_todos: boolean; alumno_ids: string[]; bloquear_descarga: boolean }
   ) => Promise<void>;
   saving: boolean;
 }
@@ -46,6 +46,7 @@ export function RecursoEditModal({
   const [titulo, setTitulo] = useState(recurso.titulo);
   const [descripcion, setDescripcion] = useState(recurso.descripcion ?? '');
   const [paraTodos, setParaTodos] = useState(recurso.para_todos);
+  const [bloquearDescarga, setBloquearDescarga] = useState(recurso.bloquear_descarga ?? false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [alumnoSearch, setAlumnoSearch] = useState('');
 
@@ -91,6 +92,7 @@ export function RecursoEditModal({
       descripcion: descripcion.trim() || null,
       para_todos: paraTodos,
       alumno_ids: paraTodos ? [] : selectedIds,
+      bloquear_descarga: bloquearDescarga,
     });
   };
 
@@ -153,6 +155,34 @@ export function RecursoEditModal({
             className={cn(inputCls, 'resize-none')}
           />
         </div>
+
+        {/* Block download toggle — only relevant for files */}
+        {recurso.tipo === 'archivo' && (
+          <div>
+            <label className="flex cursor-pointer items-center gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-4 py-3 transition-colors hover:bg-[var(--color-bg-elevated)]">
+              <div className="relative flex-shrink-0">
+                <input
+                  type="checkbox"
+                  checked={bloquearDescarga}
+                  onChange={(e) => setBloquearDescarga(e.target.checked)}
+                  className="sr-only"
+                />
+                <div className={cn(
+                  'h-5 w-9 rounded-full transition-colors',
+                  bloquearDescarga ? 'bg-[var(--color-brand-gold)]' : 'bg-[var(--color-border)]',
+                )} />
+                <div className={cn(
+                  'absolute top-0.5 size-4 rounded-full bg-white shadow transition-transform',
+                  bloquearDescarga ? 'translate-x-4' : 'translate-x-0.5',
+                )} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-[var(--color-text-primary)]">{t('bloquear_descarga')}</p>
+                <p className="text-xs text-[var(--color-text-muted)]">{t('bloquear_descarga_desc')}</p>
+              </div>
+            </label>
+          </div>
+        )}
 
         {/* Assignment — only for admin/profesor uploaders */}
         {showAlumnoSelector && (

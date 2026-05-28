@@ -546,10 +546,11 @@ function HorarioDetailView({ clase, user, confirmar, cancelar, pedirCambio: _ped
   });
   const hasPendingSolicitud = solicitudesPendientes.length > 0;
 
-  const { enCurso, yaPaso } = useClaseTimeStatus(
+  const { enCurso, yaPaso, plazoVencido } = useClaseTimeStatus(
     clase.horario.fecha,
     clase.horario.hora_inicio,
-    clase.horario.hora_fin
+    clase.horario.hora_fin,
+    clase.horario.profesor?.cancellation_deadline_hours ?? 0,
   );
 
   // Show "en_curso" badge when class is confirmed and currently happening
@@ -558,9 +559,8 @@ function HorarioDetailView({ clase, user, confirmar, cancelar, pedirCambio: _ped
   // Notes are visible for confirmed/no_asistio classes that are in progress or past
   const showNotas = (clase.estado === 'confirmado' || clase.estado === 'no_asistio') && (enCurso || yaPaso);
 
-  // Per design: alumno can change status as long as hora_fin hasn't passed
-  // (during the class is still allowed since Momento_Actual < Hora_Fin_Clase)
-  const canChangeStatus = !yaPaso && clase.estado !== 'cambiado';
+  // Alumno can change status only if the deadline hasn't passed and the class hasn't ended
+  const canChangeStatus = !yaPaso && !plazoVencido && clase.estado !== 'cambiado';
 
   const borderColor = () => {
     if (enCurso && clase.estado === 'confirmado') return 'border-emerald-500';
@@ -670,6 +670,15 @@ function HorarioDetailView({ clase, user, confirmar, cancelar, pedirCambio: _ped
         {/* Acciones */}
         <Card padding="lg">
           <h3 className="text-sm font-semibold uppercase text-[var(--color-text-muted)] mb-3">{t('acciones')}</h3>
+
+          {/* Informative message when deadline has passed but class hasn't ended yet */}
+          {plazoVencido && !yaPaso && clase.estado !== 'cambiado' && (
+            <div className="mb-3 rounded-[var(--radius-md)] bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 px-4 py-3">
+              <p className="text-sm text-amber-700 dark:text-amber-400">
+                {t('plazo_vencido_mensaje')}
+              </p>
+            </div>
+          )}
 
           {/* Informative message when class has ended */}
           {yaPaso && clase.estado !== 'cambiado' && (
