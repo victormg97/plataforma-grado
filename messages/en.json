@@ -1243,6 +1243,7 @@
       "nombre_destinatario": "Name of the person receiving the email",
       "nombre_alumno": "Name of the student associated with the class",
       "titulo_clase": "Class title",
+      "descripcion_clase": "Class description",
       "fecha": "Class date",
       "hora_inicio": "Class start time",
       "hora_fin": "Class end time",

@@ -75,6 +75,8 @@ export interface VariablesCorreo {
   nombre_alumno?: string;
   /** Título de la clase referenciada (`{titulo_clase}`). */
   titulo_clase?: string;
+  /** Descripción de la clase referenciada (`{descripcion_clase}`). */
+  descripcion_clase?: string;
   /** Fecha de la clase (`{fecha}`). */
   fecha?: string;
   /** Hora de inicio de la clase (`{hora_inicio}`). */

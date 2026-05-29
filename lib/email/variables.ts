@@ -50,6 +50,7 @@ const CLAVES_COMUNES = [
   'nombre_destinatario',
   'nombre_alumno',
   'titulo_clase',
+  'descripcion_clase',
   'fecha',
   'hora_inicio',
   'hora_fin',

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { sendNotificationEmail } from '@/lib/email/emailService';
+import { buildEnlaceClase } from '@/lib/email/classLink';
 import type { SolicitudCorreo } from '@/lib/email/types';
 
 export async function POST(request: NextRequest) {
@@ -156,7 +157,7 @@ export async function POST(request: NextRequest) {
 
     const { data: profesorProfile } = await admin
       .from('profiles')
-      .select('email, idioma, nombre, apellido')
+      .select('email, idioma, nombre, apellido, rol')
       .eq('id', profesorId)
       .single();
 
@@ -165,10 +166,10 @@ export async function POST(request: NextRequest) {
       return;
     }
 
-    // Datos del horario original para {fecha},{hora_inicio},{hora_fin},{titulo_clase}.
+    // Datos del horario original para {fecha},{hora_inicio},{hora_fin},{titulo_clase},{descripcion_clase}.
     const { data: horarioData } = await admin
       .from('horarios')
-      .select('titulo, fecha, hora_inicio, hora_fin')
+      .select('titulo, descripcion, fecha, hora_inicio, hora_fin')
       .eq('id', horario_original_id)
       .single();
 
@@ -176,6 +177,9 @@ export async function POST(request: NextRequest) {
       .filter(Boolean)
       .join(' ')
       .trim();
+
+    // El destinatario es el profesor propietario (o admin) → enlace a su vista de clase.
+    const rolDestinatario = profesorProfile.rol === 'admin' ? 'admin' : 'profesor';
 
     const solicitudCorreo: SolicitudCorreo = {
       tipo: 'solicitud_cambio_horario',
@@ -190,6 +194,7 @@ export async function POST(request: NextRequest) {
         nombre_destinatario: nombreProfesor,
         nombre_alumno: alumnoNombre,
         titulo_clase: horarioData?.titulo ?? horarioOriginal.titulo,
+        descripcion_clase: horarioData?.descripcion ?? '',
         fecha: horarioData?.fecha ?? '',
         hora_inicio: horarioData?.hora_inicio ?? '',
         hora_fin: horarioData?.hora_fin ?? '',
@@ -197,7 +202,7 @@ export async function POST(request: NextRequest) {
         hora_inicio_propuesta: solicitud.hora_inicio_propuesta,
         hora_fin_propuesta: solicitud.hora_fin_propuesta,
         nota_alumno: solicitud.nota_alumno ?? '',
-        enlace_clase: `${process.env.NEXT_PUBLIC_APP_URL}/horarios/${horario_original_id}`,
+        enlace_clase: buildEnlaceClase(horario_original_id, rolDestinatario),
       },
       horarioId: horario_original_id,
       eventoId: `solicitud:${solicitud.id}`,

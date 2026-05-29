@@ -13,7 +13,7 @@
  */
 
 import type { ContenidoPlantilla, IdiomaCorreo } from '../types';
-import { renderLayout } from './layout';
+import { renderLayout, renderBoton } from './layout';
 
 const cuerpoEs = renderLayout({
   idioma: 'es',
@@ -26,9 +26,7 @@ const cuerpoEs = renderLayout({
 <tr><td style="padding:6px 0;color:#7b8794;">Fecha</td><td style="padding:6px 0;">{fecha}</td></tr>
 <tr><td style="padding:6px 0;color:#7b8794;">Horario</td><td style="padding:6px 0;">{hora_inicio} - {hora_fin}</td></tr>
 </table>
-<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 8px 0;"><tr><td style="border-radius:6px;background-color:#1f2933;">
-<a href="{enlace_clase}" style="display:inline-block;padding:12px 24px;font-size:14px;font-weight:bold;color:#ffffff;text-decoration:none;">Ver mi programa</a>
-</td></tr></table>
+${renderBoton({ href: '{enlace_clase}', texto: 'Ver mi programa' })}
 `,
 });
 
@@ -43,9 +41,7 @@ const cuerpoEn = renderLayout({
 <tr><td style="padding:6px 0;color:#7b8794;">Date</td><td style="padding:6px 0;">{fecha}</td></tr>
 <tr><td style="padding:6px 0;color:#7b8794;">Time</td><td style="padding:6px 0;">{hora_inicio} - {hora_fin}</td></tr>
 </table>
-<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 8px 0;"><tr><td style="border-radius:6px;background-color:#1f2933;">
-<a href="{enlace_clase}" style="display:inline-block;padding:12px 24px;font-size:14px;font-weight:bold;color:#ffffff;text-decoration:none;">View my program</a>
-</td></tr></table>
+${renderBoton({ href: '{enlace_clase}', texto: 'View my program' })}
 `,
 });
 

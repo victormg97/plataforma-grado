@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { validateEstadoChange } from '@/lib/validations/asistencia';
 import { sendNotificationEmail } from '@/lib/email/emailService';
+import { buildEnlaceClase } from '@/lib/email/classLink';
 import type { SolicitudCorreo, TipoCorreo } from '@/lib/email/types';
 
 export async function PATCH(
@@ -185,7 +186,7 @@ export async function PATCH(
         // Datos del profesor (destinatario): el alumno no puede leerlos por RLS.
         const { data: profesor } = await admin
           .from('profiles')
-          .select('email, idioma, nombre, apellido')
+          .select('email, idioma, nombre, apellido, rol')
           .eq('id', profesorId)
           .single();
 
@@ -201,7 +202,7 @@ export async function PATCH(
         // Datos del horario para las variables de la clase (Requisito 9.1).
         const { data: horarioData } = await admin
           .from('horarios')
-          .select('titulo, fecha, hora_inicio, hora_fin')
+          .select('titulo, descripcion, fecha, hora_inicio, hora_fin')
           .eq('id', existing.horario_id)
           .single();
 
@@ -214,6 +215,9 @@ export async function PATCH(
           .join(' ')
           .trim();
 
+        // El destinatario es el profesor propietario (o admin) → su vista de clase.
+        const rolDestinatario = profesor.rol === 'admin' ? 'admin' : 'profesor';
+
         const solicitud: SolicitudCorreo = {
           tipo,
           originadorId: user.id,
@@ -224,10 +228,11 @@ export async function PATCH(
             nombre_destinatario: nombreProfesor,
             nombre_alumno: nombreAlumno,
             titulo_clase: horarioData?.titulo ?? horario?.titulo ?? '',
+            descripcion_clase: horarioData?.descripcion ?? '',
             fecha: horarioData?.fecha ?? '',
             hora_inicio: horarioData?.hora_inicio ?? '',
             hora_fin: horarioData?.hora_fin ?? '',
-            enlace_clase: `${process.env.NEXT_PUBLIC_APP_URL}/horarios/${existing.horario_id}`,
+            enlace_clase: buildEnlaceClase(existing.horario_id, rolDestinatario),
           },
           horarioId: existing.horario_id,
           eventoId: `asistencia:${id}:${estado}`,

@@ -17,7 +17,7 @@
  */
 
 import type { ContenidoPlantilla, IdiomaCorreo } from '../types';
-import { renderLayout } from './layout';
+import { renderLayout, renderBoton } from './layout';
 
 const cuerpoEs = renderLayout({
   idioma: 'es',
@@ -30,9 +30,7 @@ const cuerpoEs = renderLayout({
 <tr><td style="padding:6px 0;color:#7b8794;width:160px;">Correo de acceso</td><td style="padding:6px 0;font-weight:bold;">{email_acceso}</td></tr>
 </table>
 <p style="margin:0 0 24px 0;">Haz clic en el siguiente botón para establecer tu contraseña y acceder a la plataforma:</p>
-<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 16px 0;"><tr><td style="border-radius:6px;background-color:#1f2933;">
-<a href="{enlace_acceso}" style="display:inline-block;padding:12px 24px;font-size:14px;font-weight:bold;color:#ffffff;text-decoration:none;">Configurar mi acceso</a>
-</td></tr></table>
+${renderBoton({ href: '{enlace_acceso}', texto: 'Configurar mi acceso' })}
 <p style="margin:0 0 8px 0;font-size:13px;color:#7b8794;">Si el botón no funciona, copia y pega este enlace en tu navegador:</p>
 <p style="margin:0 0 8px 0;font-size:13px;word-break:break-all;"><a href="{enlace_acceso}" style="color:#1f2933;">{enlace_acceso}</a></p>
 `,
@@ -49,9 +47,7 @@ const cuerpoEn = renderLayout({
 <tr><td style="padding:6px 0;color:#7b8794;width:160px;">Access email</td><td style="padding:6px 0;font-weight:bold;">{email_acceso}</td></tr>
 </table>
 <p style="margin:0 0 24px 0;">Click the button below to set your password and access the platform:</p>
-<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 16px 0;"><tr><td style="border-radius:6px;background-color:#1f2933;">
-<a href="{enlace_acceso}" style="display:inline-block;padding:12px 24px;font-size:14px;font-weight:bold;color:#ffffff;text-decoration:none;">Set up my access</a>
-</td></tr></table>
+${renderBoton({ href: '{enlace_acceso}', texto: 'Set up my access' })}
 <p style="margin:0 0 8px 0;font-size:13px;color:#7b8794;">If the button does not work, copy and paste this link into your browser:</p>
 <p style="margin:0 0 8px 0;font-size:13px;word-break:break-all;"><a href="{enlace_acceso}" style="color:#1f2933;">{enlace_acceso}</a></p>
 `,

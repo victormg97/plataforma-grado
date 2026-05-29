@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { sendNotificationEmail } from '@/lib/email/emailService';
+import { buildEnlaceClase } from '@/lib/email/classLink';
 import type { SolicitudCorreo } from '@/lib/email/types';
 
 export async function GET(request: NextRequest) {
@@ -132,10 +133,12 @@ export async function POST(request: NextRequest) {
         nombre_destinatario: nombreAlumno,
         nombre_alumno: nombreAlumno,
         titulo_clase: horario.titulo,
+        descripcion_clase: horario.descripcion ?? '',
         fecha: horario.fecha,
         hora_inicio: horario.hora_inicio,
         hora_fin: horario.hora_fin,
-        enlace_clase: `${process.env.NEXT_PUBLIC_APP_URL}/horarios/${horario.id}`,
+        // El destinatario es el alumno → enlace a la vista de la clase del alumno.
+        enlace_clase: buildEnlaceClase(horario.id, 'alumno'),
       },
       horarioId: horario.id,
       eventoId: `nueva_clase:${horario.id}`,

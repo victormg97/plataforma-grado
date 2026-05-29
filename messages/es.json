@@ -1243,6 +1243,7 @@
       "nombre_destinatario": "Nombre de la persona que recibe el correo",
       "nombre_alumno": "Nombre del alumno asociado a la clase",
       "titulo_clase": "Título de la clase",
+      "descripcion_clase": "Descripción de la clase",
       "fecha": "Fecha de la clase",
       "hora_inicio": "Hora de inicio de la clase",
       "hora_fin": "Hora de término de la clase",
