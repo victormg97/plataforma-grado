@@ -15,7 +15,7 @@ import { Button } from '@/components/common/Button';
 import { HorarioForm } from '@/components/horarios/HorarioForm';
 import { ViewDetailButton } from '@/components/horarios/ViewDetailButton';
 import { useTranslations, useLocale } from 'next-intl';
-import { Pencil, User } from 'lucide-react';
+import { Calendar, Clock, FileText, Lock, Pencil, User } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { buildProfesorColorMap, buildProfesorHexMap } from '@/lib/utils/profesorColors';
 import { buildClaseDetailHref } from '@/lib/utils/horarioNavigation';
@@ -23,7 +23,14 @@ import { CalendarioDownloadButton, type CalendarioExportEvent } from '@/componen
 import { CalendarioStyles } from '@/components/calendario/CalendarioStyles';
 import { EventDetailModal } from '@/components/calendario/EventDetailModal';
 import { CalendarEventPopover, useCalendarPopover, type PopoverEventData } from '@/components/calendario/CalendarEventPopover';
+import { Modal } from '@/components/common/Modal';
+import { useBloqueos, type BloqueHorario } from '@/lib/hooks/useBloqueos';
+import { format } from 'date-fns';
+import { es as esDateFns, enUS } from 'date-fns/locale';
+import { toast } from 'sonner';
 import type { EstadoAsistencia } from '@/lib/supabase/types';
+
+const BLOQUEO_PREFIX = 'bloqueo::';
 
 type HorarioGlobal = {
   id: string;
@@ -65,6 +72,9 @@ export function CalendarioAdmin() {
   });
   const [selectedHorario, setSelectedHorario] = useState<HorarioGlobal | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [selectedBloqueo, setSelectedBloqueo] = useState<BloqueHorario | null>(null);
+  const [bloqueoDetailOpen, setBloqueoDetailOpen] = useState(false);
+  const [deletingBloqueo, setDeletingBloqueo] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [editingHorario, setEditingHorario] = useState<HorarioGlobal | null>(null);
   const [defaultDate, setDefaultDate] = useState<string | undefined>(undefined);
@@ -81,6 +91,9 @@ export function CalendarioAdmin() {
     },
     staleTime: 60_000,
   });
+
+  // Bloqueos de todos los profesores (admin ve todos)
+  const { bloqueos } = useBloqueos();
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -201,14 +214,50 @@ export function CalendarioAdmin() {
     queueMicrotask(() => {
       api.removeAllEvents();
       events.forEach((e) => api.addEvent(e));
+      // Add bloqueo events with a distinct style
+      bloqueos.forEach((b) => {
+        api.addEvent({
+          id: `${BLOQUEO_PREFIX}${b.id}`,
+          title: b.motivo ? `🔒 ${b.motivo}` : '🔒 No disponible',
+          start: `${b.fecha}T${b.hora_inicio}`,
+          end: `${b.fecha}T${b.hora_fin}`,
+          backgroundColor: 'var(--color-bg-elevated, #e5e7eb)',
+          borderColor: 'var(--color-border, #d1d5db)',
+          textColor: 'var(--color-text-muted, #6b7280)',
+          display: 'block',
+          extendedProps: { bloqueo: b },
+        });
+      });
     });
-  }, [events]);
+  }, [events, bloqueos]);
 
   function handleEventClick(info: EventClickArg) {
-    const horario = info.event.extendedProps.horario as HorarioGlobal;
     closePopover();
+    if (info.event.id.startsWith(BLOQUEO_PREFIX)) {
+      const bloqueo = info.event.extendedProps.bloqueo as BloqueHorario;
+      setSelectedBloqueo(bloqueo);
+      setBloqueoDetailOpen(true);
+      return;
+    }
+    const horario = info.event.extendedProps.horario as HorarioGlobal;
     setSelectedHorario(horario);
     setDetailOpen(true);
+  }
+
+  async function handleDeleteBloqueo() {
+    if (!selectedBloqueo) return;
+    setDeletingBloqueo(true);
+    try {
+      const res = await fetch(`/api/bloqueos-horario/${selectedBloqueo.id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error();
+      toast.success(t('bloqueo_eliminado'));
+      setBloqueoDetailOpen(false);
+      setSelectedBloqueo(null);
+    } catch {
+      toast.error(t('error_eliminar'));
+    } finally {
+      setDeletingBloqueo(false);
+    }
   }
 
   function handleEditFromDetail() {
@@ -291,6 +340,19 @@ export function CalendarioAdmin() {
           editable={false}
           eventClick={handleEventClick}
           eventMouseEnter={(info) => {
+            // Bloqueo event — show lock popover
+            if (info.event.id.startsWith(BLOQUEO_PREFIX)) {
+              const b = info.event.extendedProps.bloqueo as BloqueHorario;
+              handleMouseEnter({
+                titulo: t('bloqueo_titulo'),
+                hora_inicio: b.hora_inicio,
+                hora_fin: b.hora_fin,
+                estado: 'pendiente' as EstadoAsistencia,
+                descripcion: b.motivo ?? null,
+                esBloqueo: true,
+              }, info.el);
+              return;
+            }
             const h = info.event.extendedProps.horario as HorarioGlobal;
             const prueba = h.pruebas?.[0];
             const data: PopoverEventData = {
@@ -412,6 +474,50 @@ export function CalendarioAdmin() {
         rol="admin"
         onClose={closePopover}
       />
+
+      {/* Bloqueo detail modal */}
+      <Modal
+        open={bloqueoDetailOpen}
+        onClose={() => setBloqueoDetailOpen(false)}
+        title={t('bloqueo_titulo')}
+        footer={
+          <div className="flex w-full items-center justify-between">
+            <Button variant="danger" size="sm" onClick={handleDeleteBloqueo} loading={deletingBloqueo}>
+              {tc('eliminar')}
+            </Button>
+            <Button variant="ghost" onClick={() => setBloqueoDetailOpen(false)}>{tc('cerrar')}</Button>
+          </div>
+        }
+      >
+        {selectedBloqueo && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-brand-gold)]/30 bg-[var(--color-brand-gold-muted)] px-3 py-2.5">
+              <Lock className="size-4 shrink-0 text-[var(--color-brand-gold)]" />
+              <p className="text-sm font-medium text-[var(--color-brand-gold)]">{t('bloqueo_badge')}</p>
+            </div>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-bg-secondary)] px-2.5 py-1 text-xs text-[var(--color-text-secondary)]">
+                <Calendar className="size-3.5" style={{ color: 'var(--color-brand-gold)' }} />
+                <span className="capitalize">
+                  {format(new Date(selectedBloqueo.fecha + 'T12:00:00'), locale === 'en' ? "EEEE, MMMM d" : "EEEE d 'de' MMMM", { locale: locale === 'en' ? enUS : esDateFns })}
+                </span>
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-bg-secondary)] px-2.5 py-1 text-xs text-[var(--color-text-secondary)]">
+                <Clock className="size-3.5" style={{ color: 'var(--color-brand-gold)' }} />
+                {selectedBloqueo.hora_inicio.slice(0, 5)} – {selectedBloqueo.hora_fin.slice(0, 5)}
+              </span>
+            </div>
+            {selectedBloqueo.motivo ? (
+              <div className="flex items-start gap-2 text-sm text-[var(--color-text-secondary)]">
+                <FileText className="mt-0.5 size-4 shrink-0" />
+                <p>{selectedBloqueo.motivo}</p>
+              </div>
+            ) : (
+              <p className="text-sm text-[var(--color-text-muted)]">{t('bloqueo_sin_motivo')}</p>
+            )}
+          </div>
+        )}
+      </Modal>
     </>
   );
 }

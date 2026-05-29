@@ -493,12 +493,17 @@ function HistorialClaseCard({
 
 /* ─────────────────────────── Main component ── */
 
+export type HorariosTabValue = 'proximas' | 'historial';
+
 export type HorariosProfesorViewProps = {
   profesorId: string;
   role: 'profesor' | 'admin';
+  /** Controlled tab — when provided the parent owns the active tab state */
+  activeTab?: HorariosTabValue;
+  onTabChange?: (tab: HorariosTabValue) => void;
 };
 
-export function HorariosProfesorView({ profesorId, role }: HorariosProfesorViewProps) {
+export function HorariosProfesorView({ profesorId, role, activeTab: activeTabProp, onTabChange }: HorariosProfesorViewProps) {
   const t = useTranslations('horarios');
   const te = useTranslations('asistencia.estados');
   const tc = useTranslations('common');
@@ -518,6 +523,17 @@ export function HorariosProfesorView({ profesorId, role }: HorariosProfesorViewP
   );
 
   const filters = useHorariosFilters({ rawData, pruebaHorarioIds, dateFnsLocale });
+
+  // When controlled from outside, sync the internal filter tab
+  const isControlled = activeTabProp !== undefined;
+  const resolvedTab = isControlled ? activeTabProp : filters.activeTab;
+  const handleTabChange = (tab: HorariosTabValue) => {
+    if (isControlled) {
+      onTabChange?.(tab);
+    } else {
+      filters.setActiveTab(tab);
+    }
+  };
 
   const [editHorarioId, setEditHorarioId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -557,20 +573,21 @@ export function HorariosProfesorView({ profesorId, role }: HorariosProfesorViewP
 
   return (
     <div className="mt-[var(--space-lg)]">
-      {/* Tab bar + Nueva clase button */}
+      {/* Tab bar + Nueva clase button — solo se muestra en modo no controlado (standalone) */}
+      {!isControlled && (
       <div className="flex items-end justify-between border-b border-[var(--color-border)] mb-5">
         <div className="flex gap-1">
           <TabButton
-            active={filters.activeTab === 'proximas'}
-            onClick={() => filters.setActiveTab('proximas')}
+            active={resolvedTab === 'proximas'}
+            onClick={() => handleTabChange('proximas')}
             count={filters.upcoming.length}
           >
             <BookOpen className="size-4" />
             {t('tab_proximas')}
           </TabButton>
           <TabButton
-            active={filters.activeTab === 'historial'}
-            onClick={() => filters.setActiveTab('historial')}
+            active={resolvedTab === 'historial'}
+            onClick={() => handleTabChange('historial')}
             count={filters.past.length}
           >
             <History className="size-4" />
@@ -585,9 +602,23 @@ export function HorariosProfesorView({ profesorId, role }: HorariosProfesorViewP
           {t('nueva_clase')}
         </button>
       </div>
+      )}
+
+      {/* En modo controlado, el botón "Nueva clase" va aquí arriba sin tab bar */}
+      {isControlled && (
+        <div className="flex justify-end mb-5 mt-[var(--space-lg)]">
+          <button
+            onClick={() => setEditHorarioId('new')}
+            className="inline-flex items-center gap-1.5 rounded-[var(--radius-md)] bg-[var(--color-brand-gold)] px-3 py-1.5 text-sm font-medium text-white hover:opacity-90 transition-opacity"
+          >
+            <Plus className="size-3.5" />
+            {t('nueva_clase')}
+          </button>
+        </div>
+      )}
 
       {/* ── Tab: Próximas ── */}
-      {filters.activeTab === 'proximas' && (
+      {resolvedTab === 'proximas' && (
         <div className="space-y-4">
           <div className="flex flex-col gap-2">
             <SearchInput
@@ -685,7 +716,7 @@ export function HorariosProfesorView({ profesorId, role }: HorariosProfesorViewP
       )}
 
       {/* ── Tab: Historial ── */}
-      {filters.activeTab === 'historial' && (
+      {resolvedTab === 'historial' && (
         <div className="space-y-4">
           <div className="flex flex-col gap-2">
             <SearchInput

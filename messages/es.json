@@ -102,7 +102,22 @@
     "titulo": "Horarios",
     "nueva_clase": "Nueva clase",
     "tab_clases": "Clases",
+    "tab_proximas": "Próximas",
+    "tab_historial": "Historial",
     "tab_agenda": "Agenda",
+    "bloqueo_titulo": "Bloqueo de horario",
+    "bloqueo_descripcion": "Bloquea un rango de tiempo para indicar que no estás disponible",
+    "bloqueo_switch": "Bloquear horario",
+    "bloqueo_motivo": "Motivo",
+    "bloqueo_motivo_placeholder": "Ej: Reunión, viaje, descanso…",
+    "bloqueo_info": "Este bloqueo aparecerá en tu agenda y en la del administrador como horario no disponible.",
+    "bloqueo_guardar": "Bloquear horario",
+    "bloqueo_creado": "Horario bloqueado",
+    "bloqueo_eliminado": "Bloqueo eliminado",
+    "bloqueo_badge": "Horario bloqueado — no disponible",
+    "bloqueo_sin_motivo": "Sin motivo especificado",
+    "bloqueo_campos_requeridos": "Completa la fecha y los horarios",
+    "error_hora_fin": "La hora de fin debe ser posterior a la hora de inicio",
     "nueva_descripcion": "Programa una nueva clase con un alumno",
     "editar_clase": "Editar clase",
     "editar_descripcion": "Modifica los datos de la clase",
@@ -201,7 +216,9 @@
     "popover": {
       "prueba": "{term}",
       "sin_graduar": "Sin graduar",
-      "reprobado": "Reprobado"
+      "reprobado": "Reprobado",
+      "bloqueo_badge": "No disponible",
+      "bloqueo_sin_motivo": "Sin motivo especificado"
     },
     "cambio": {
       "titulo": "Solicitar cambio de horario",
