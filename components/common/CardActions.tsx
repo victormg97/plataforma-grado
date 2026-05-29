@@ -29,11 +29,17 @@ interface CardActionsProps {
   actions: CardAction[];
   /** Extra class for the desktop button row wrapper */
   className?: string;
+  /**
+   * When true, only the ⋯ ellipsis trigger + popover are rendered (no desktop
+   * icon row). The caller is responsible for controlling visibility via wrapper
+   * classes (e.g. `sm:hidden`). Useful when the desktop layout is custom.
+   */
+  mobileOnly?: boolean;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function CardActions({ actions, className }: CardActionsProps) {
+export function CardActions({ actions, className, mobileOnly = false }: CardActionsProps) {
   const t = useTranslations('common');
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -75,31 +81,34 @@ export function CardActions({ actions, className }: CardActionsProps) {
 
   return (
     <>
-      {/* ── Desktop: icon buttons, fade in on group-hover ── */}
-      <div className={cn('hidden lg:flex flex-shrink-0 items-start gap-0.5 pt-0.5', className)}>
-        {actions.map((action) => (
-          <button
-            key={action.key}
-            type="button"
-            onClick={(e) => { e.stopPropagation(); action.onClick(); }}
-            aria-label={action.label}
-            title={action.label}
-            className={cn(
-              'flex size-9 items-center justify-center rounded-[var(--radius-sm)]',
-              'text-[var(--color-text-muted)] transition-colors',
-              'opacity-0 group-hover:opacity-100 transition-opacity',
-              action.danger
-                ? 'hover:bg-[rgba(192,57,43,0.1)] hover:text-[var(--color-error)]'
-                : 'hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]',
-            )}
-          >
-            {action.icon}
-          </button>
-        ))}
-      </div>
+      {/* ── Desktop: icon buttons, fade in on group-hover (skipped in mobileOnly) ── */}
+      {!mobileOnly && (
+        <div className={cn('hidden lg:flex flex-shrink-0 items-start gap-0.5 pt-0.5', className)}>
+          {actions.map((action) => (
+            <button
+              key={action.key}
+              type="button"
+              onClick={(e) => { e.stopPropagation(); action.onClick(); }}
+              aria-label={action.label}
+              title={action.label}
+              className={cn(
+                'flex size-9 items-center justify-center rounded-[var(--radius-sm)]',
+                'text-[var(--color-text-muted)] transition-colors',
+                'opacity-0 group-hover:opacity-100 transition-opacity',
+                action.danger
+                  ? 'hover:bg-[rgba(192,57,43,0.1)] hover:text-[var(--color-error)]'
+                  : 'hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]',
+              )}
+            >
+              {action.icon}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* ── Mobile: single ⋯ trigger ── */}
-      <div className="flex lg:hidden flex-shrink-0 items-start pt-0.5">
+      {/* In mobileOnly mode the caller controls visibility; otherwise hide on lg+ */}
+      <div className={cn('flex flex-shrink-0 items-start pt-0.5', !mobileOnly && 'lg:hidden')}>
         <button
           ref={triggerRef}
           type="button"
