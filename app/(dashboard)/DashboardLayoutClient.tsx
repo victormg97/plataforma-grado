@@ -47,7 +47,7 @@ export function DashboardLayoutClient({
   return (
     <HydrationBoundary state={dehydratedState}>
       <MotionProvider>
-        <div className="flex h-dvh overflow-hidden">
+        <div className="flex h-dvh overflow-hidden bg-[var(--color-bg)]">
           <Sidebar />
           <div className="flex min-w-0 flex-1 flex-col">
             <Navbar />
