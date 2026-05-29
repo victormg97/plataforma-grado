@@ -18,6 +18,7 @@ export type AlumnoAdmin = {
   profesor: { id: string; nombre: string; apellido: string } | null;
   universidad: string | null;
   año_ingreso: string | null;
+  año_egreso: string | null;
   notas: string | null;
   paso_prueba: boolean;
   fecha_prueba: string | null;

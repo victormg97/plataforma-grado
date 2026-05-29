@@ -14,12 +14,14 @@ import { toast } from 'sonner';
 import { m, AnimatePresence } from 'framer-motion';
 import { CreatedUserSuccess } from '@/components/usuarios/CreatedUserSuccess';
 import { CredentialsSection } from '@/components/usuarios/CredentialsSection';
+import { useTenant } from '@/config/client';
 
 export default function CrearProfesorPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const t = useTranslations('crear_usuario.profesor');
   const tc = useTranslations('common');
+  const tenant = useTenant();
   
   const [formData, setFormData] = useState({
     nombre: '',
@@ -29,7 +31,7 @@ export default function CrearProfesorPage() {
     telefono: '',
     useAppEmail: false,
     modo_creacion: 'link' as 'link' | 'default',
-    puede_crear_alumno: false,
+    puede_crear_alumno: true,
   });
 
   const [createdData, setCreatedData] = useState<{
@@ -176,6 +178,7 @@ export default function CrearProfesorPage() {
                         onTelefonoChange={(v) => setFormData(prev => ({ ...prev, telefono: v }))}
                         modoCreacion={formData.modo_creacion}
                         onModoCreacionChange={(v) => setFormData(prev => ({ ...prev, modo_creacion: v }))}
+                        emailDomain={tenant.emailDomain}
                       />
                     </div>
                   </Card>

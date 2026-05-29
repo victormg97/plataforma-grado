@@ -59,6 +59,7 @@ export type Database = {
       alumnos_extra: {
         Row: {
           alumno_id: string
+          año_egreso: string | null
           año_ingreso: string | null
           created_at: string
           fecha_ingreso: string | null
@@ -74,6 +75,7 @@ export type Database = {
         }
         Insert: {
           alumno_id: string
+          año_egreso?: string | null
           año_ingreso?: string | null
           created_at?: string
           fecha_ingreso?: string | null
@@ -89,6 +91,7 @@ export type Database = {
         }
         Update: {
           alumno_id?: string
+          año_egreso?: string | null
           año_ingreso?: string | null
           created_at?: string
           fecha_ingreso?: string | null

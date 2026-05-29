@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { nombre, apellido, email, telefono, universidad, año_ingreso, useAppEmail, modo_creacion } = body;
+  const { nombre, apellido, email, telefono, universidad, año_ingreso, año_egreso, useAppEmail, modo_creacion } = body;
 
   if (!nombre || !apellido) {
     return NextResponse.json({ error: 'Nombre y apellido son requeridos' }, { status: 400 });
@@ -86,6 +86,7 @@ export async function POST(request: NextRequest) {
     profesor_id: user.id,
     universidad: universidad || null,
     ['año_ingreso']: año_ingreso || null,
+    ['año_egreso']: año_egreso || null,
     notas: null,
     paso_prueba: false,
     fecha_prueba: null,

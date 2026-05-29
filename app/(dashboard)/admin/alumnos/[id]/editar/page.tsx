@@ -55,6 +55,7 @@ export default function EditarAlumnoPage({ params }: { params: Promise<{ id: str
     profesor_id: '',
     universidad: '',
     año_ingreso: '',
+    año_egreso: '',
     fecha_ingreso: '',
     notas: ''
   });
@@ -75,6 +76,7 @@ export default function EditarAlumnoPage({ params }: { params: Promise<{ id: str
         profesor_id: alumno.profesor_id || '',
         universidad: alumno.universidad || '',
         año_ingreso: alumno.año_ingreso || '',
+        año_egreso: alumno.año_egreso || '',
         fecha_ingreso: alumno.fecha_ingreso || '',
         notas: alumno.notas || ''
       });
@@ -93,6 +95,7 @@ export default function EditarAlumnoPage({ params }: { params: Promise<{ id: str
           telefono: data.telefono || null,
           universidad: data.universidad || null,
           año_ingreso: data.año_ingreso || null,
+          año_egreso: data.año_egreso || null,
           fecha_ingreso: data.fecha_ingreso || null,
           notas: data.notas || null
         }),
@@ -336,6 +339,15 @@ export default function EditarAlumnoPage({ params }: { params: Promise<{ id: str
                       type="number"
                       value={formData.año_ingreso}
                       onChange={(e) => setFormData(prev => ({ ...prev, año_ingreso: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="año_egreso">{t('año_egreso')}</Label>
+                    <Input
+                      id="año_egreso"
+                      type="number"
+                      value={formData.año_egreso}
+                      onChange={(e) => setFormData(prev => ({ ...prev, año_egreso: e.target.value }))}
                     />
                   </div>
                   <div className="space-y-2">

@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { tenantConfig } from '@/config';
 
 export async function generateAppEmail(nombre: string, apellido: string): Promise<string> {
   const supabase = await createClient();
@@ -7,7 +8,8 @@ export async function generateAppEmail(nombre: string, apellido: string): Promis
   const cleanNombre = nombre.toLowerCase().trim().replace(/\s+/g, '').normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   const cleanApellido = apellido.toLowerCase().trim().replace(/\s+/g, '').normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   
-  const baseEmail = `${cleanNombre}.${cleanApellido}@ctagraduados.cl`;
+  const domain = tenantConfig.emailDomain;
+  const baseEmail = `${cleanNombre}.${cleanApellido}@${domain}`;
   let candidateEmail = baseEmail;
   let counter = 1;
 
@@ -23,7 +25,7 @@ export async function generateAppEmail(nombre: string, apellido: string): Promis
     }
     
     counter++;
-    candidateEmail = `${cleanNombre}.${cleanApellido}${counter}@ctagraduados.cl`;
+    candidateEmail = `${cleanNombre}.${cleanApellido}${counter}@${domain}`;
   }
 }
 

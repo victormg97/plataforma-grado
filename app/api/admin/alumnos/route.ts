@@ -49,6 +49,7 @@ export async function GET(request: NextRequest) {
     profesor: r.profesor_id ? { id: r.profesor_id, nombre: r.profesor_nombre, apellido: r.profesor_apellido } : null,
     universidad: r.universidad,
     año_ingreso: r.año_ingreso,
+    año_egreso: r.año_egreso,
     fecha_ingreso: r.fecha_ingreso,
     notas: r.notas,
     paso_prueba: r.paso_prueba ?? false,
@@ -77,7 +78,7 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { nombre, apellido, apellido_materno, email, telefono, profesor_id, universidad, año_ingreso, useAppEmail, modo_creacion } = body;
+  const { nombre, apellido, apellido_materno, email, telefono, profesor_id, universidad, año_ingreso, año_egreso, useAppEmail, modo_creacion } = body;
 
   if (!nombre || !apellido) {
     return NextResponse.json({ error: 'Nombre y apellido son requeridos' }, { status: 400 });
@@ -147,6 +148,7 @@ export async function POST(request: NextRequest) {
     profesor_id: profesor_id || null,
     universidad: universidad || null,
     ['año_ingreso']: año_ingreso || null,
+    ['año_egreso']: año_egreso || null,
     notas: null,
     paso_prueba: false,
     fecha_prueba: null,

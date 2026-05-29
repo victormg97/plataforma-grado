@@ -20,12 +20,14 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { CreatedUserSuccess } from '@/components/usuarios/CreatedUserSuccess';
 import { CredentialsSection } from '@/components/usuarios/CredentialsSection';
+import { useTenant } from '@/config/client';
 
 export default function CrearAlumnoPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const t = useTranslations('crear_usuario.alumno');
   const tc = useTranslations('common');
+  const tenant = useTenant();
   
   const [formData, setFormData] = useState({
     nombre: '',
@@ -36,6 +38,7 @@ export default function CrearAlumnoPage() {
     profesor_id: '',
     universidad: '',
     año_ingreso: '',
+    año_egreso: '',
     useAppEmail: false,
     modo_creacion: 'link' as 'link' | 'default',
   });
@@ -201,6 +204,19 @@ export default function CrearAlumnoPage() {
                             />
                           </div>
                         </div>
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 mt-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="año_egreso">{t('año_egreso')}</Label>
+                            <Input
+                              id="año_egreso"
+                              type="number"
+                              placeholder={t('año_egreso_placeholder')}
+                              autoComplete="off"
+                              value={formData.año_egreso}
+                              onChange={(e) => setFormData(prev => ({ ...prev, año_egreso: e.target.value }))}
+                            />
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </Card>
@@ -228,6 +244,7 @@ export default function CrearAlumnoPage() {
                         onTelefonoChange={(v) => setFormData(prev => ({ ...prev, telefono: v }))}
                         modoCreacion={formData.modo_creacion}
                         onModoCreacionChange={(v) => setFormData(prev => ({ ...prev, modo_creacion: v }))}
+                        emailDomain={tenant.emailDomain}
                       />
                     </div>
                   </Card>

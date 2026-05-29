@@ -72,6 +72,7 @@ export const tenantConfigSchema = z.object({
   id: kebabCaseSchema,
   nombre: z.string().min(1, 'Nombre de la aplicación es requerido'),
   descripcion: z.string().min(1, 'Descripción es requerida'),
+  emailDomain: z.string().min(1, 'Dominio de correo es requerido'),
   logoLight: relativePathSchema,
   logoDark: relativePathSchema,
   propietarios: z.array(ownerSchema).min(1, 'Se requiere al menos un propietario'),

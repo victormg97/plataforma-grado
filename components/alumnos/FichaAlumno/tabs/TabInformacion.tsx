@@ -36,6 +36,7 @@ interface TabInformacionProps {
     alumnos_extra?: {
       universidad?: string | null;
       año_ingreso?: string | null;
+      año_egreso?: string | null;
       fecha_prueba?: string | null;
       ha_dado_examen?: boolean | null;
       intentos_prueba?: number | null;
@@ -116,6 +117,9 @@ export function TabInformacion({ alumnoId, data, role = 'profesor' }: TabInforma
           )}
           {extra?.año_ingreso && (
             <InfoRow icon={<BookOpen className="size-4" />} label={t('año_ingreso')} value={extra.año_ingreso} />
+          )}
+          {extra?.año_egreso && (
+            <InfoRow icon={<BookOpen className="size-4" />} label={t('año_egreso')} value={extra.año_egreso} />
           )}
           {extra?.fecha_prueba && (
             <InfoRow

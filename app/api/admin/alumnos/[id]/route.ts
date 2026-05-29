@@ -57,6 +57,7 @@ export async function GET(
     profesor_id: extra?.profesor_id ?? null,
     universidad: extra?.universidad ?? null,
     año_ingreso: extra?.año_ingreso ?? null,
+    año_egreso: extra?.año_egreso ?? null,
     fecha_ingreso: extra?.fecha_ingreso ?? null,
     notas: extra?.notas ?? null,
     paso_prueba: extra?.paso_prueba ?? false,
@@ -192,6 +193,7 @@ export async function PATCH(
   if (body.profesor_id !== undefined) extraUpdates.profesor_id = body.profesor_id;
   if (body.universidad !== undefined) extraUpdates.universidad = body.universidad;
   if (body.año_ingreso !== undefined) extraUpdates.año_ingreso = body.año_ingreso;
+  if (body.año_egreso !== undefined) extraUpdates.año_egreso = body.año_egreso;
   if (body.fecha_ingreso !== undefined) extraUpdates.fecha_ingreso = body.fecha_ingreso || null;
   if (body.notas !== undefined) extraUpdates.notas = body.notas;
   if (typeof body.paso_prueba === 'boolean') {
