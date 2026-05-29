@@ -72,7 +72,14 @@ export const tenantConfigSchema = z.object({
   id: kebabCaseSchema,
   nombre: z.string().min(1, 'Nombre de la aplicación es requerido'),
   descripcion: z.string().min(1, 'Descripción es requerida'),
+  // Dominio de MARCA del tenant. Se usa para descartar correos institucionales
+  // autogenerados (xxxx@emailDomain) que no tienen buzón real. NO es el dominio
+  // de envío de Resend (ver emailFrom).
   emailDomain: z.string().min(1, 'Dominio de correo es requerido'),
+  // Dirección remitente de los correos transaccionales (Resend). Debe pertenecer
+  // a un dominio VERIFICADO en Resend (puede ser un subdominio, ej.
+  // no-reply@contacto.midominio.cl). Si se omite, se deriva no-reply@emailDomain.
+  emailFrom: z.email('emailFrom debe ser un correo válido').optional(),
   terminoPrueba: z.object({
     singular: z.string().min(1),
     plural: z.string().min(1),

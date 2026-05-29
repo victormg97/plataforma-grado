@@ -203,8 +203,11 @@ export async function sendNotificationEmail(
     const cuerpoSustituido = sustituirVariables(contenido.cuerpoHtml, solicitud.variables);
 
     // Remitente derivado del tenant activo (Requisito 3.7, 12.1): sin ids de
-    // tenant codificados, todo proviene de `tenantConfig`.
-    const from = `${tenantConfig.nombre} <no-reply@${tenantConfig.emailDomain}>`;
+    // tenant codificados, todo proviene de `tenantConfig`. Se usa `emailFrom`
+    // (dominio verificado en Resend, p. ej. un subdominio) cuando está definido;
+    // en su defecto se deriva `no-reply@${emailDomain}`.
+    const direccionRemitente = tenantConfig.emailFrom ?? `no-reply@${tenantConfig.emailDomain}`;
+    const from = `${tenantConfig.nombre} <${direccionRemitente}>`;
 
     // ── 6. Envío vía Resend con timeout de 10 s (Requisito 4.5) ──────────────
     const client = getResendClient();
