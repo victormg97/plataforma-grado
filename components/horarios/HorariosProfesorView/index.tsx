@@ -250,6 +250,7 @@ function ProximaClaseCard({
   const t = useTranslations('horarios');
   const tc = useTranslations('common');
   const ta = useTranslations('alumnos');
+  const pruebaTerm = usePruebaTerm();
   const estado = horario.asistencia?.[0]?.estado ?? 'pendiente';
 
   return (

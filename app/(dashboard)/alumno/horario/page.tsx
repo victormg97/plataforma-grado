@@ -101,6 +101,7 @@ function UpcomingClaseCard({ clase, locale, dateFnsLocale, t, isFirst, isExamen 
   isFirst: boolean;
   isExamen?: boolean;
 }) {
+  const pruebaTerm = usePruebaTerm();
   return (
     <Link href={buildAlumnoHorarioDetailHref(clase.horario.id, '/alumno/horario')} className="block group">
       <div className={`relative rounded-[var(--radius-lg)] border bg-[var(--color-bg)] shadow-[var(--shadow-sm)] overflow-hidden transition-all group-hover:shadow-[var(--shadow-md)] group-hover:-translate-y-0.5 ${
@@ -537,6 +538,7 @@ function HorarioDetailView({ clase, user, confirmar, cancelar, pedirCambio: _ped
 }) {
   const [modal, setModal] = useState<{ type: 'confirmar' | 'cancelar' | 'cambio'; clase: ClaseAlumno } | null>(null);
   const t = useTranslations('horarios');
+  const pruebaTerm = usePruebaTerm();
   const tCambio = useTranslations('cambioHorario.estado');
   const locale = useLocale();
   const dateFnsLocale = locale === 'en' ? enUS : es;
