@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { isValidCancellationDeadline } from '@/lib/validations/asistencia';
+import { isEmailEnabled } from '@/lib/email/resendClient';
 
 export async function GET() {
   const supabase = await createClient();
@@ -24,10 +25,10 @@ export async function GET() {
         .eq('alumno_id', user.id)
         .maybeSingle() as unknown as { data: Record<string, unknown> | null };
 
-      return NextResponse.json({ ...profile, alumno_extra: extra ?? null });
+      return NextResponse.json({ ...profile, alumno_extra: extra ?? null, email_disponible: isEmailEnabled() });
     }
 
-    return NextResponse.json({ ...profile, alumno_extra: null });
+    return NextResponse.json({ ...profile, alumno_extra: null, email_disponible: isEmailEnabled() });
   } catch {
     return NextResponse.json({ error: 'Error al obtener perfil' }, { status: 500 });
   }

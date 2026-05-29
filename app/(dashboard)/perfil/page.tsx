@@ -12,7 +12,7 @@ import { LanguageSelector } from '@/components/common/LanguageSelector';
 import { cn } from '@/lib/utils';
 import {
   User, Lock, Eye, EyeOff, Globe,
-  ArrowLeft, Save, Loader2, ClipboardCheck, Settings2,
+  ArrowLeft, Save, Loader2, ClipboardCheck, Settings2, Mail,
 } from 'lucide-react';
 import type { Profile, AlumnoExtra } from '@/lib/supabase/types';
 
@@ -22,6 +22,7 @@ type PerfilResponse = Profile & {
   apellido_materno?: string | null;
   duracion_clase_default_min?: number;
   cancellation_deadline_hours?: number;
+  email_disponible?: boolean;
   alumno_extra: Pick<AlumnoExtra, 'universidad' | 'año_ingreso' | 'ha_dado_examen' | 'intentos_prueba'> | null;
 };
 
@@ -89,6 +90,7 @@ export default function PerfilPage() {
   const queryClient = useQueryClient();
   const t = useTranslations('perfil');
   const tc = useTranslations('common');
+  const tp = useTranslations('plantillasCorreo');
   const currentLocale = useLocale();
   const router = useRouter();
 
@@ -508,6 +510,19 @@ export default function PerfilPage() {
                   <span className="text-sm text-[var(--color-text-muted)]">{t('horas')}</span>
                 </div>
               </Field>
+
+              {perfilData?.email_disponible && (
+                <Field label={tp('titulo')} hint={tp('subtitulo')}>
+                  <button
+                    type="button"
+                    onClick={() => router.push('/perfil/plantillas-correo')}
+                    className="flex items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] hover:border-[var(--color-brand-gold)] hover:text-[var(--color-brand-gold)] transition-colors"
+                  >
+                    <Mail className="size-4" />
+                    {tp('boton_acceso')}
+                  </button>
+                </Field>
+              )}
 
               <SaveBar saving={savingConfig} label={savingConfig ? tc('cargando') : t('guardar')} disabled={!isDirtyConfig} />
             </form>

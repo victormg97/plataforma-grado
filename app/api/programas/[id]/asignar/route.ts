@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { asignarProgramaSchema } from '@/lib/validations/programa.schema';
+import { sendNotificationEmail } from '@/lib/email/emailService';
+import type { SolicitudCorreo } from '@/lib/email/types';
 
 export async function POST(
   request: NextRequest,
@@ -152,6 +155,49 @@ export async function POST(
           programa_id: programaId,
         });
       } catch { /* notification failure is non-fatal */ }
+
+      // 7. Disparo de correo NO bloqueante al ALUMNO (Requisito 5.1, 5.2, 5.3).
+      //    El destinatario es el alumno; el originador es el profesor/admin que
+      //    asigna (user.id). El envío es fire-and-forget: no retrasa la respuesta
+      //    (Requisito 5.4) ni interrumpe el loop, y cada alumno es independiente
+      //    (Requisito 5.6). Un fallo nunca revierte la asignación ya persistida
+      //    ni afecta a los demás alumnos. La notificación realtime se mantiene
+      //    intacta (Requisito 5.5).
+      void (async () => {
+        const admin = createAdminClient();
+
+        // Datos del alumno destinatario (email/idioma/nombre).
+        const { data: alumno } = await admin
+          .from('profiles')
+          .select('email, idioma, nombre, apellido')
+          .eq('id', alumno_id)
+          .single();
+
+        if (!alumno?.email) return;
+
+        const nombreAlumno = [alumno.nombre, alumno.apellido]
+          .filter(Boolean)
+          .join(' ')
+          .trim();
+
+        const solicitud: SolicitudCorreo = {
+          tipo: 'programa_asignado',
+          originadorId: user.id,
+          destinatarioId: alumno_id,
+          destinatarioEmail: alumno.email,
+          destinatarioIdioma: alumno.idioma ?? null,
+          variables: {
+            nombre_destinatario: nombreAlumno,
+            nombre_alumno: nombreAlumno,
+            titulo_clase: programa.nombre,
+            enlace_clase: `${process.env.NEXT_PUBLIC_APP_URL}/alumno`,
+          },
+          horarioId: null,
+          eventoId: `asignacion:${programaId}:${alumno_id}`,
+        };
+
+        await sendNotificationEmail(solicitud);
+      })().catch(() => {});
     } catch (err) {
       errors.push(`Error procesando alumno ${alumno_id}: ${String(err)}`);
     }

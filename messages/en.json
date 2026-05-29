@@ -1218,5 +1218,46 @@
       "11": "Nov",
       "12": "Dec"
     }
+  },
+  "plantillasCorreo": {
+    "titulo": "Email templates",
+    "subtitulo": "Customize the subject and body of the emails sent to your students and other users.",
+    "boton_acceso": "Edit email templates",
+    "tipo_label": "Email type",
+    "tipos": {
+      "confirmacion": "Attendance confirmation",
+      "cancelacion": "Attendance cancellation",
+      "solicitud_cambio_horario": "Schedule change request",
+      "programa_asignado": "Program assignment"
+    },
+    "asunto_label": "Subject",
+    "asunto_placeholder": "Write the email subject…",
+    "cuerpo_label": "Email body",
+    "cuerpo_placeholder": "Write the email content…",
+    "variables_titulo": "Available variables",
+    "variables_instruccion": "Click a variable to insert it into the active field.",
+    "variables": {
+      "nombre_destinatario": "Name of the person receiving the email",
+      "nombre_alumno": "Name of the student associated with the class",
+      "titulo_clase": "Class title",
+      "fecha": "Class date",
+      "hora_inicio": "Class start time",
+      "hora_fin": "Class end time",
+      "enlace_clase": "Direct link to the class",
+      "fecha_propuesta": "Proposed date for the schedule change",
+      "hora_inicio_propuesta": "Proposed start time for the change",
+      "hora_fin_propuesta": "Proposed end time for the change",
+      "nota_alumno": "Message left by the student"
+    },
+    "guardar": "Save template",
+    "restablecer": "Reset to default template",
+    "volver": "Back",
+    "toast_guardado": "Template saved successfully",
+    "toast_restablecido": "Template reset to its default value",
+    "toast_error": "An error occurred. Please try again.",
+    "validacion_asunto_vacio": "The subject cannot be empty",
+    "validacion_cuerpo_vacio": "The email body cannot be empty",
+    "cargando": "Loading templates…",
+    "sin_acceso": "You do not have access to this section"
   }
 }

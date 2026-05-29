@@ -1103,6 +1103,102 @@ export type Database = {
           },
         ]
       }
+      email_plantillas: {
+        Row: {
+          id: string
+          user_id: string
+          tipo: Database["public"]["Enums"]["tipo_notificacion"]
+          asunto: string
+          cuerpo_html: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          tipo: Database["public"]["Enums"]["tipo_notificacion"]
+          asunto: string
+          cuerpo_html: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          tipo?: Database["public"]["Enums"]["tipo_notificacion"]
+          asunto?: string
+          cuerpo_html?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_plantillas_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_envios: {
+        Row: {
+          id: string
+          originador_id: string
+          destinatario_id: string
+          tipo: Database["public"]["Enums"]["tipo_notificacion"]
+          resultado: string
+          motivo: string | null
+          horario_id: string | null
+          evento_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          originador_id: string
+          destinatario_id: string
+          tipo: Database["public"]["Enums"]["tipo_notificacion"]
+          resultado: string
+          motivo?: string | null
+          horario_id?: string | null
+          evento_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          originador_id?: string
+          destinatario_id?: string
+          tipo?: Database["public"]["Enums"]["tipo_notificacion"]
+          resultado?: string
+          motivo?: string | null
+          horario_id?: string | null
+          evento_id?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_envios_originador_id_fkey"
+            columns: ["originador_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_envios_destinatario_id_fkey"
+            columns: ["destinatario_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_envios_horario_id_fkey"
+            columns: ["horario_id"]
+            isOneToOne: false
+            referencedRelation: "horarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -1409,6 +1505,9 @@ export type AlumnoExtra = Tables<'alumnos_extra'>;
 export type Horario = Tables<'horarios'>;
 export type Prueba = Tables<'pruebas'>;
 export type ProgramaClase = Tables<'programas_clases'>;
+
+export type EmailPlantilla = Tables<'email_plantillas'>;
+export type EmailEnvio = Tables<'email_envios'>;
 
 export type EstadoPrograma = 'activo' | 'eliminado';
 export type EstadoPrueba = 'pendiente' | 'calificada' | 'en_curso';

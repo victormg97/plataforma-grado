@@ -11,11 +11,11 @@ const config: TenantConfigInput = {
   propietarios: [
     {
       nombre: 'Estefanía Montalbán Pino',
-      email: 'contacto@preguntaestrategica.cl',
+      email: 'Preguntaestrategica@gmail.com',
     },
     {
       nombre: 'Camila Ogalde Fonck',
-      email: 'contacto@preguntaestrategica.cl',
+      email: 'Preguntaestrategica@gmail.com',
     },
   ],
   theme: {

@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { sendNotificationEmail } from '@/lib/email/emailService';
+import type { SolicitudCorreo } from '@/lib/email/types';
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -140,6 +143,68 @@ export async function POST(request: NextRequest) {
     horario_id: horario_original_id,
     solicitud_id: solicitud.id,
   });
+
+  // Disparo de correo `solicitud_cambio_horario` NO bloqueante (Requisito 15.1,
+  // 15.2, 15.7): la respuesta de creación NO espera al correo, la notificación
+  // realtime ya creada arriba se mantiene intacta, y cualquier fallo del correo
+  // no revierte la solicitud (Requisito 15.6).
+  void (async () => {
+    // `createAdminClient()` (bypass RLS) para leer el email/idioma/nombre del
+    // profesor destinatario, que el alumno no puede leer por RLS, y la
+    // fecha/horas del horario original.
+    const admin = createAdminClient();
+
+    const { data: profesorProfile } = await admin
+      .from('profiles')
+      .select('email, idioma, nombre, apellido')
+      .eq('id', profesorId)
+      .single();
+
+    // Sin email del profesor no hay nada que enviar (Requisito 2).
+    if (!profesorProfile?.email) {
+      return;
+    }
+
+    // Datos del horario original para {fecha},{hora_inicio},{hora_fin},{titulo_clase}.
+    const { data: horarioData } = await admin
+      .from('horarios')
+      .select('titulo, fecha, hora_inicio, hora_fin')
+      .eq('id', horario_original_id)
+      .single();
+
+    const nombreProfesor = [profesorProfile.nombre, profesorProfile.apellido]
+      .filter(Boolean)
+      .join(' ')
+      .trim();
+
+    const solicitudCorreo: SolicitudCorreo = {
+      tipo: 'solicitud_cambio_horario',
+      // El originador es el alumno; el destinatario y propietario de la plantilla
+      // es el profesor propietario del horario (Requisito 15.3, 15.4).
+      originadorId: user.id,
+      destinatarioId: profesorId,
+      destinatarioEmail: profesorProfile.email,
+      destinatarioIdioma: profesorProfile.idioma,
+      plantillaOwnerId: profesorId,
+      variables: {
+        nombre_destinatario: nombreProfesor,
+        nombre_alumno: alumnoNombre,
+        titulo_clase: horarioData?.titulo ?? horarioOriginal.titulo,
+        fecha: horarioData?.fecha ?? '',
+        hora_inicio: horarioData?.hora_inicio ?? '',
+        hora_fin: horarioData?.hora_fin ?? '',
+        fecha_propuesta: solicitud.fecha_propuesta,
+        hora_inicio_propuesta: solicitud.hora_inicio_propuesta,
+        hora_fin_propuesta: solicitud.hora_fin_propuesta,
+        nota_alumno: solicitud.nota_alumno ?? '',
+        enlace_clase: `${process.env.NEXT_PUBLIC_APP_URL}/horarios/${horario_original_id}`,
+      },
+      horarioId: horario_original_id,
+      eventoId: `solicitud:${solicitud.id}`,
+    };
+
+    await sendNotificationEmail(solicitudCorreo);
+  })().catch(() => {});
 
   return NextResponse.json(solicitud, { status: 201 });
 }

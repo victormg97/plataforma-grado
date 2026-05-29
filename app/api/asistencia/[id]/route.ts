@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { validateEstadoChange } from '@/lib/validations/asistencia';
+import { sendNotificationEmail } from '@/lib/email/emailService';
+import type { SolicitudCorreo, TipoCorreo } from '@/lib/email/types';
 
 export async function PATCH(
   request: NextRequest,
@@ -160,6 +163,80 @@ export async function PATCH(
 
   // Notification is created automatically by the DB trigger
   // (asistencia_on_estado_change in migration 003_notification_trigger.sql)
+
+  // Disparo de correo NO bloqueante (Requisito 4.1, 4.2, 4.3, 4.4, 4.7).
+  // Solo cuando un Alumno lleva la asistencia a 'confirmado' o 'cancelado'
+  // (los cambios de profesor/admin no disparan correo, Requisito 4.3).
+  // El envío es fire-and-forget: la respuesta HTTP NO espera al correo
+  // (Requisito 4.4) y un fallo nunca revierte el cambio ya persistido
+  // (Requisito 4.6). La notificación realtime la mantiene el trigger DB.
+  if (userRol === 'alumno' && (estado === 'confirmado' || estado === 'cancelado')) {
+    const tipo: TipoCorreo = estado === 'confirmado' ? 'confirmacion' : 'cancelacion';
+    const horario = data.horario as { titulo: string | null; profesor_id: string | null } | null;
+    const profesorId = horario?.profesor_id ?? null;
+
+    if (profesorId) {
+      // Toda la preparación (lecturas con admin client para sortear RLS) y el
+      // envío se ejecutan en una IIFE async fire-and-forget para no retrasar la
+      // respuesta (Requisito 4.4). `.catch()` defensivo: nunca propaga errores.
+      void (async () => {
+        const admin = createAdminClient();
+
+        // Datos del profesor (destinatario): el alumno no puede leerlos por RLS.
+        const { data: profesor } = await admin
+          .from('profiles')
+          .select('email, idioma, nombre, apellido')
+          .eq('id', profesorId)
+          .single();
+
+        if (!profesor?.email) return;
+
+        // Datos del alumno (originador) para la variable {nombre_alumno}.
+        const { data: alumno } = await admin
+          .from('profiles')
+          .select('nombre, apellido')
+          .eq('id', user.id)
+          .single();
+
+        // Datos del horario para las variables de la clase (Requisito 9.1).
+        const { data: horarioData } = await admin
+          .from('horarios')
+          .select('titulo, fecha, hora_inicio, hora_fin')
+          .eq('id', existing.horario_id)
+          .single();
+
+        const nombreProfesor = [profesor.nombre, profesor.apellido]
+          .filter(Boolean)
+          .join(' ')
+          .trim();
+        const nombreAlumno = [alumno?.nombre, alumno?.apellido]
+          .filter(Boolean)
+          .join(' ')
+          .trim();
+
+        const solicitud: SolicitudCorreo = {
+          tipo,
+          originadorId: user.id,
+          destinatarioId: profesorId,
+          destinatarioEmail: profesor.email,
+          destinatarioIdioma: profesor.idioma ?? null,
+          variables: {
+            nombre_destinatario: nombreProfesor,
+            nombre_alumno: nombreAlumno,
+            titulo_clase: horarioData?.titulo ?? horario?.titulo ?? '',
+            fecha: horarioData?.fecha ?? '',
+            hora_inicio: horarioData?.hora_inicio ?? '',
+            hora_fin: horarioData?.hora_fin ?? '',
+            enlace_clase: `${process.env.NEXT_PUBLIC_APP_URL}/horarios/${existing.horario_id}`,
+          },
+          horarioId: existing.horario_id,
+          eventoId: `asistencia:${id}:${estado}`,
+        };
+
+        await sendNotificationEmail(solicitud);
+      })().catch(() => {});
+    }
+  }
 
   return NextResponse.json(data);
 }

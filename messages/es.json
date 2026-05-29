@@ -1218,5 +1218,46 @@
       "11": "Nov",
       "12": "Dic"
     }
+  },
+  "plantillasCorreo": {
+    "titulo": "Plantillas de correo",
+    "subtitulo": "Personaliza el asunto y el cuerpo de los correos que se envían a tus alumnos y a otros usuarios.",
+    "boton_acceso": "Editar plantillas de correo",
+    "tipo_label": "Tipo de correo",
+    "tipos": {
+      "confirmacion": "Confirmación de asistencia",
+      "cancelacion": "Cancelación de asistencia",
+      "solicitud_cambio_horario": "Solicitud de cambio de horario",
+      "programa_asignado": "Asignación de programa"
+    },
+    "asunto_label": "Asunto",
+    "asunto_placeholder": "Escribe el asunto del correo…",
+    "cuerpo_label": "Cuerpo del correo",
+    "cuerpo_placeholder": "Escribe el contenido del correo…",
+    "variables_titulo": "Variables disponibles",
+    "variables_instruccion": "Haz clic en una variable para insertarla en el campo activo.",
+    "variables": {
+      "nombre_destinatario": "Nombre de la persona que recibe el correo",
+      "nombre_alumno": "Nombre del alumno asociado a la clase",
+      "titulo_clase": "Título de la clase",
+      "fecha": "Fecha de la clase",
+      "hora_inicio": "Hora de inicio de la clase",
+      "hora_fin": "Hora de término de la clase",
+      "enlace_clase": "Enlace directo a la clase",
+      "fecha_propuesta": "Fecha propuesta para el cambio de horario",
+      "hora_inicio_propuesta": "Hora de inicio propuesta para el cambio",
+      "hora_fin_propuesta": "Hora de término propuesta para el cambio",
+      "nota_alumno": "Mensaje que dejó el alumno"
+    },
+    "guardar": "Guardar plantilla",
+    "restablecer": "Restablecer plantilla por defecto",
+    "volver": "Volver",
+    "toast_guardado": "Plantilla guardada correctamente",
+    "toast_restablecido": "Plantilla restablecida a su valor por defecto",
+    "toast_error": "Ocurrió un error. Intenta nuevamente.",
+    "validacion_asunto_vacio": "El asunto no puede estar vacío",
+    "validacion_cuerpo_vacio": "El cuerpo del correo no puede estar vacío",
+    "cargando": "Cargando plantillas…",
+    "sin_acceso": "No tienes acceso a esta sección"
   }
 }
