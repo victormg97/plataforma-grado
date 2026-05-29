@@ -2,14 +2,14 @@
 
 import { Suspense, useState } from 'react';
 import { use } from 'react';
-import { ArrowLeft, BookOpen, CalendarDays } from 'lucide-react';
+import { ArrowLeft, BookOpen, History, CalendarDays } from 'lucide-react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
 import { PageHeader } from '@/components/common/PageHeader';
-import { HorariosProfesorView } from '@/components/horarios/HorariosProfesorView';
+import { HorariosProfesorView, type HorariosTabValue } from '@/components/horarios/HorariosProfesorView';
 import { CalendarioProfesor } from '@/components/calendario/CalendarioProfesor';
 
 type Profesor = {
@@ -18,16 +18,18 @@ type Profesor = {
   apellido: string;
 };
 
-type ActiveTab = 'clases' | 'agenda';
+type ActiveTab = HorariosTabValue | 'agenda';
 
 function TabButton({
   active,
   onClick,
   children,
+  count,
 }: {
   active: boolean;
   onClick: () => void;
   children: React.ReactNode;
+  count?: number;
 }) {
   return (
     <button
@@ -39,6 +41,15 @@ function TabButton({
       }`}
     >
       {children}
+      {count !== undefined && count > 0 && (
+        <span className={`inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded-full text-[10px] font-bold transition-colors ${
+          active
+            ? 'bg-[var(--color-brand-gold)] text-white'
+            : 'bg-[var(--color-bg-elevated)] text-[var(--color-text-muted)]'
+        }`}>
+          {count}
+        </span>
+      )}
     </button>
   );
 }
@@ -50,14 +61,18 @@ function ProfesorHorariosContent({ profesorId }: { profesorId: string }) {
   const router = useRouter();
   const pathname = usePathname();
 
+  const rawTab = searchParams.get('tab');
   const initialTab: ActiveTab =
-    searchParams.get('tab') === 'agenda' ? 'agenda' : 'clases';
+    rawTab === 'historial' ? 'historial' :
+    rawTab === 'agenda' ? 'agenda' :
+    'proximas';
+
   const [activeTab, setActiveTab] = useState<ActiveTab>(initialTab);
 
   const handleTabChange = (tab: ActiveTab) => {
     setActiveTab(tab);
     const params = new URLSearchParams(searchParams.toString());
-    if (tab === 'clases') {
+    if (tab === 'proximas') {
       params.delete('tab');
     } else {
       params.set('tab', tab);
@@ -96,14 +111,21 @@ function ProfesorHorariosContent({ profesorId }: { profesorId: string }) {
         subtitle={tp('ver_clases_subtitulo')}
       />
 
-      {/* Tab bar */}
+      {/* Tab bar — 3 pestañas planas */}
       <div className="flex items-end border-b border-[var(--color-border)] mt-[var(--space-lg)] mb-0">
         <TabButton
-          active={activeTab === 'clases'}
-          onClick={() => handleTabChange('clases')}
+          active={activeTab === 'proximas'}
+          onClick={() => handleTabChange('proximas')}
         >
           <BookOpen className="size-4" />
-          {th('tab_clases')}
+          {th('tab_proximas')}
+        </TabButton>
+        <TabButton
+          active={activeTab === 'historial'}
+          onClick={() => handleTabChange('historial')}
+        >
+          <History className="size-4" />
+          {th('tab_historial')}
         </TabButton>
         <TabButton
           active={activeTab === 'agenda'}
@@ -115,8 +137,13 @@ function ProfesorHorariosContent({ profesorId }: { profesorId: string }) {
       </div>
 
       {/* Tab content */}
-      {activeTab === 'clases' && (
-        <HorariosProfesorView profesorId={profesorId} role="admin" />
+      {(activeTab === 'proximas' || activeTab === 'historial') && (
+        <HorariosProfesorView
+          profesorId={profesorId}
+          role="admin"
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+        />
       )}
       {activeTab === 'agenda' && (
         <div className="mt-[var(--space-lg)]">

@@ -11,13 +11,14 @@ import esLocale from '@fullcalendar/core/locales/es';
 import type { EventClickArg } from '@fullcalendar/core';
 import type { DateClickArg } from '@fullcalendar/interaction';
 import { useHorarios, type HorarioConAsistencia } from '@/lib/hooks/useHorarios';
+import { useBloqueos, type BloqueHorario } from '@/lib/hooks/useBloqueos';
 import { Modal } from '@/components/common/Modal';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { Avatar } from '@/components/common/Avatar';
 import { Button } from '@/components/common/Button';
 import { HorarioForm } from '@/components/horarios/HorarioForm';
 import { useTranslations, useLocale } from 'next-intl';
-import { Calendar, Clock, FileText, MessageSquare, Pencil, UserX, GraduationCap } from 'lucide-react';
+import { Calendar, Clock, FileText, Lock, MessageSquare, Pencil, UserX, GraduationCap } from 'lucide-react';
 import { usePruebaTerm } from '@/lib/hooks/usePruebaTerm';
 import { CalendarioDownloadButton, type CalendarioExportEvent } from '@/components/calendario/CalendarioDownloadButton';
 import { CalendarioStyles } from '@/components/calendario/CalendarioStyles';
@@ -34,6 +35,9 @@ import { usePruebas } from '@/lib/hooks/usePruebas';
 import { CalendarEventPopover, useCalendarPopover, type PopoverEventData } from '@/components/calendario/CalendarEventPopover';
 import type { EstadoAsistencia } from '@/lib/supabase/types';
 
+// Prefix used to distinguish bloqueo events from horario events in FullCalendar
+const BLOQUEO_PREFIX = 'bloqueo::';
+
 interface CalendarioProfesorProps {
   profesorId: string;
   openNewClassTrigger?: number; // increment to trigger new class form from parent
@@ -48,8 +52,12 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
   const pruebaTerm = usePruebaTerm();
   const locale = useLocale();
   const { events, alumnos, rawData, refetch } = useHorarios(profesorId);
+  const { bloqueos, isLoading: loadingBloqueos } = useBloqueos(profesorId);
   const [selectedHorario, setSelectedHorario] = useState<HorarioConAsistencia | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [selectedBloqueo, setSelectedBloqueo] = useState<BloqueHorario | null>(null);
+  const [bloqueoDetailOpen, setBloqueoDetailOpen] = useState(false);
+  const [deletingBloqueo, setDeletingBloqueo] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [editingHorario, setEditingHorario] = useState<HorarioConAsistencia | null>(null);
   const [defaultDate, setDefaultDate] = useState<string | undefined>(undefined);
@@ -134,8 +142,22 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
     queueMicrotask(() => {
       api.removeAllEvents();
       (events as CalendarEvent[]).forEach((e) => api.addEvent(e));
+      // Add bloqueo events with a distinct style
+      bloqueos.forEach((b) => {
+        api.addEvent({
+          id: `${BLOQUEO_PREFIX}${b.id}`,
+          title: b.motivo ? `🔒 ${b.motivo}` : '🔒 No disponible',
+          start: `${b.fecha}T${b.hora_inicio}`,
+          end: `${b.fecha}T${b.hora_fin}`,
+          backgroundColor: 'var(--color-bg-elevated, #e5e7eb)',
+          borderColor: 'var(--color-border, #d1d5db)',
+          textColor: 'var(--color-text-muted, #6b7280)',
+          display: 'block',
+          extendedProps: { bloqueo: b },
+        });
+      });
     });
-  }, [events]);
+  }, [events, bloqueos]);
 
   // External trigger: open detail modal for a specific horario (e.g. from a direct URL link).
   // onHorarioOpened clears the URL param immediately so the same link works a second time.
@@ -159,8 +181,15 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
   }, [openNewClassTrigger]);
 
   function handleEventClick(info: EventClickArg) {
-    const horario = info.event.extendedProps.horario as HorarioConAsistencia;
     closePopover();
+    // Check if it's a bloqueo event
+    if (info.event.id.startsWith(BLOQUEO_PREFIX)) {
+      const bloqueo = info.event.extendedProps.bloqueo as BloqueHorario;
+      setSelectedBloqueo(bloqueo);
+      setBloqueoDetailOpen(true);
+      return;
+    }
+    const horario = info.event.extendedProps.horario as HorarioConAsistencia;
     setSelectedHorario(horario);
     setDetailOpen(true);
   }
@@ -208,6 +237,22 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
     }
   }
 
+  async function handleDeleteBloqueo() {
+    if (!selectedBloqueo) return;
+    setDeletingBloqueo(true);
+    try {
+      const res = await fetch(`/api/bloqueos-horario/${selectedBloqueo.id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error();
+      toast.success(t('bloqueo_eliminado'));
+      setBloqueoDetailOpen(false);
+      setSelectedBloqueo(null);
+    } catch {
+      toast.error(t('error_eliminar'));
+    } finally {
+      setDeletingBloqueo(false);
+    }
+  }
+
   return (
     <>
       {/* Download button: desktop injects into FC toolbar, mobile shows popup on view-button tap */}
@@ -241,6 +286,19 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
           editable={false}
           eventClick={handleEventClick}
           eventMouseEnter={(info) => {
+            // Bloqueo event — show lock popover
+            if (info.event.id.startsWith(BLOQUEO_PREFIX)) {
+              const b = info.event.extendedProps.bloqueo as BloqueHorario;
+              handleMouseEnter({
+                titulo: t('bloqueo_titulo'),
+                hora_inicio: b.hora_inicio,
+                hora_fin: b.hora_fin,
+                estado: 'pendiente' as EstadoAsistencia,
+                descripcion: b.motivo ?? null,
+                esBloqueo: true,
+              }, info.el);
+              return;
+            }
             const h = info.event.extendedProps.horario as HorarioConAsistencia;
             const isPrueba = pruebaHorarioIds.has(h.id);
             const prueba = isPrueba ? pruebas.find((p) => p.horario_id === h.id) : null;
@@ -435,6 +493,50 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
         rol={userRol}
         onClose={closePopover}
       />
+
+      {/* Bloqueo detail modal */}
+      <Modal
+        open={bloqueoDetailOpen}
+        onClose={() => setBloqueoDetailOpen(false)}
+        title={t('bloqueo_titulo')}
+        footer={
+          <div className="flex w-full items-center justify-between">
+            <Button variant="danger" size="sm" onClick={handleDeleteBloqueo} loading={deletingBloqueo}>
+              {tc('eliminar')}
+            </Button>
+            <Button variant="ghost" onClick={() => setBloqueoDetailOpen(false)}>{tc('cerrar')}</Button>
+          </div>
+        }
+      >
+        {selectedBloqueo && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-brand-gold)]/30 bg-[var(--color-brand-gold-muted)] px-3 py-2.5">
+              <Lock className="size-4 shrink-0 text-[var(--color-brand-gold)]" />
+              <p className="text-sm font-medium text-[var(--color-brand-gold)]">{t('bloqueo_badge')}</p>
+            </div>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-bg-secondary)] px-2.5 py-1 text-xs text-[var(--color-text-secondary)]">
+                <Calendar className="size-3.5" style={{ color: 'var(--color-brand-gold)' }} />
+                <span className="capitalize">
+                  {format(new Date(selectedBloqueo.fecha + 'T12:00:00'), locale === 'en' ? "EEEE, MMMM d" : "EEEE d 'de' MMMM", { locale: locale === 'en' ? enUS : esDateFns })}
+                </span>
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-bg-secondary)] px-2.5 py-1 text-xs text-[var(--color-text-secondary)]">
+                <Clock className="size-3.5" style={{ color: 'var(--color-brand-gold)' }} />
+                {selectedBloqueo.hora_inicio.slice(0, 5)} – {selectedBloqueo.hora_fin.slice(0, 5)}
+              </span>
+            </div>
+            {selectedBloqueo.motivo ? (
+              <div className="flex items-start gap-2 text-sm text-[var(--color-text-secondary)]">
+                <FileText className="mt-0.5 size-4 shrink-0" />
+                <p>{selectedBloqueo.motivo}</p>
+              </div>
+            ) : (
+              <p className="text-sm text-[var(--color-text-muted)]">{t('bloqueo_sin_motivo')}</p>
+            )}
+          </div>
+        )}
+      </Modal>
     </>
   );
 }

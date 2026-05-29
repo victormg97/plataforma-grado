@@ -102,7 +102,22 @@
     "titulo": "Schedules",
     "nueva_clase": "New class",
     "tab_clases": "Classes",
+    "tab_proximas": "Upcoming",
+    "tab_historial": "History",
     "tab_agenda": "Schedule",
+    "bloqueo_titulo": "Schedule block",
+    "bloqueo_descripcion": "Block a time range to indicate you are unavailable",
+    "bloqueo_switch": "Block time",
+    "bloqueo_motivo": "Reason",
+    "bloqueo_motivo_placeholder": "E.g. Meeting, travel, break…",
+    "bloqueo_info": "This block will appear on your schedule and the admin's calendar as unavailable time.",
+    "bloqueo_guardar": "Block time",
+    "bloqueo_creado": "Time blocked",
+    "bloqueo_eliminado": "Block removed",
+    "bloqueo_badge": "Blocked — unavailable",
+    "bloqueo_sin_motivo": "No reason specified",
+    "bloqueo_campos_requeridos": "Please fill in the date and times",
+    "error_hora_fin": "End time must be after start time",
     "nueva_descripcion": "Schedule a new class with a student",
     "editar_clase": "Edit class",
     "editar_descripcion": "Modify the class details",
@@ -201,7 +216,9 @@
     "popover": {
       "prueba": "{term}",
       "sin_graduar": "Not graded",
-      "reprobado": "Failed"
+      "reprobado": "Failed",
+      "bloqueo_badge": "Unavailable",
+      "bloqueo_sin_motivo": "No reason specified"
     },
     "cambio": {
       "titulo": "Request schedule change",

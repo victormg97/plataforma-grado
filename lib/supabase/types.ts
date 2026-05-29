@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      bloqueos_horario: {
+        Row: {
+          id: string
+          profesor_id: string
+          fecha: string
+          hora_inicio: string
+          hora_fin: string
+          motivo: string | null
+          activo: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          profesor_id: string
+          fecha: string
+          hora_inicio: string
+          hora_fin: string
+          motivo?: string | null
+          activo?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          profesor_id?: string
+          fecha?: string
+          hora_inicio?: string
+          hora_fin?: string
+          motivo?: string | null
+          activo?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bloqueos_horario_profesor_id_fkey"
+            columns: ["profesor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       alumno_bloqueos: {
         Row: {
           accion: string

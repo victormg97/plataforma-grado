@@ -2,10 +2,11 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { Clock, GraduationCap, User, FileText } from 'lucide-react';
+import { Clock, GraduationCap, Lock, User, FileText } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import { StatusBadge } from '@/components/common/StatusBadge';
+import { usePruebaTerm } from '@/lib/hooks/usePruebaTerm';
 import type { EstadoAsistencia } from '@/lib/supabase/types';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -21,6 +22,8 @@ export interface PopoverEventData {
   /** Numeric nota for prueba (null = not graded yet) */
   notaPrueba?: number | null;
   descripcion?: string | null;
+  /** True when this event is a bloqueo de horario (not a class) */
+  esBloqueo?: boolean;
 }
 
 interface CalendarEventPopoverProps {
@@ -66,6 +69,7 @@ function computePosition(anchor: HTMLElement): { top: number; left: number; arro
 
 export function CalendarEventPopover({ data, anchorEl, rol, onClose }: CalendarEventPopoverProps) {
   const t = useTranslations('horarios.popover');
+  const pruebaTerm = usePruebaTerm();
   const popoverRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<{ top: number; left: number; arrowLeft: number; placement: 'top' | 'bottom' } | null>(null);
 
@@ -154,7 +158,14 @@ export function CalendarEventPopover({ data, anchorEl, rol, onClose }: CalendarE
         <p className="text-sm font-semibold text-[var(--color-text-primary)] leading-tight line-clamp-2">
           {data.titulo}
         </p>
-        <StatusBadge status={data.estado} />
+        {data.esBloqueo ? (
+          <span className="inline-flex items-center gap-1 shrink-0 rounded-full border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-2 py-0.5 text-[10px] font-medium text-[var(--color-text-muted)]">
+            <Lock className="size-2.5" />
+            {t('bloqueo_badge')}
+          </span>
+        ) : (
+          <StatusBadge status={data.estado} />
+        )}
       </div>
 
       {/* Time badges */}
@@ -170,39 +181,53 @@ export function CalendarEventPopover({ data, anchorEl, rol, onClose }: CalendarE
         </span>
       </div>
 
-      {/* Alumno (visible to admin and profesor) */}
-      {(rol === 'admin' || rol === 'profesor') && data.alumno && (
-        <div className="flex items-center gap-1.5 text-xs text-[var(--color-text-secondary)] mb-1.5">
-          <User className="size-3 shrink-0" />
-          <span>{data.alumno.nombre} {data.alumno.apellido}</span>
-        </div>
-      )}
+      {/* Bloqueo: show motivo if present, otherwise a note */}
+      {data.esBloqueo ? (
+        data.descripcion ? (
+          <div className="flex items-start gap-1.5 text-xs text-[var(--color-text-muted)]">
+            <FileText className="size-3 shrink-0 mt-0.5" />
+            <span className="line-clamp-2">{data.descripcion}</span>
+          </div>
+        ) : (
+          <p className="text-xs text-[var(--color-text-muted)] italic">{t('bloqueo_sin_motivo')}</p>
+        )
+      ) : (
+        <>
+          {/* Alumno (visible to admin and profesor) */}
+          {(rol === 'admin' || rol === 'profesor') && data.alumno && (
+            <div className="flex items-center gap-1.5 text-xs text-[var(--color-text-secondary)] mb-1.5">
+              <User className="size-3 shrink-0" />
+              <span>{data.alumno.nombre} {data.alumno.apellido}</span>
+            </div>
+          )}
 
-      {/* Profesor (visible to admin and alumno) */}
-      {(rol === 'admin' || rol === 'alumno') && data.profesor && (
-        <div className="flex items-center gap-1.5 text-xs text-[var(--color-text-secondary)] mb-1.5">
-          <User className="size-3 shrink-0 text-[var(--color-brand-gold)]" />
-          <span>Prof. {data.profesor.nombre} {data.profesor.apellido}</span>
-        </div>
-      )}
+          {/* Profesor (visible to admin and alumno) */}
+          {(rol === 'admin' || rol === 'alumno') && data.profesor && (
+            <div className="flex items-center gap-1.5 text-xs text-[var(--color-text-secondary)] mb-1.5">
+              <User className="size-3 shrink-0 text-[var(--color-brand-gold)]" />
+              <span>Prof. {data.profesor.nombre} {data.profesor.apellido}</span>
+            </div>
+          )}
 
-      {/* Descripcion (truncated) */}
-      {data.descripcion && (
-        <div className="flex items-start gap-1.5 text-xs text-[var(--color-text-muted)] mb-1.5">
-          <FileText className="size-3 shrink-0 mt-0.5" />
-          <span className="line-clamp-1">{data.descripcion}</span>
-        </div>
-      )}
+          {/* Descripcion (truncated) */}
+          {data.descripcion && (
+            <div className="flex items-start gap-1.5 text-xs text-[var(--color-text-muted)] mb-1.5">
+              <FileText className="size-3 shrink-0 mt-0.5" />
+              <span className="line-clamp-1">{data.descripcion}</span>
+            </div>
+          )}
 
-      {/* Prueba badge + nota */}
-      {data.esPrueba && (
-        <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-[var(--color-border)]">
-          <GraduationCap className="size-3.5 text-[var(--color-brand-gold)]" />
-          <span className="text-xs font-medium text-[var(--color-brand-gold)]">
-            {t('prueba')}
-          </span>
-          {renderNotaPrueba()}
-        </div>
+          {/* Prueba badge + nota */}
+          {data.esPrueba && (
+            <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-[var(--color-border)]">
+              <GraduationCap className="size-3.5 text-[var(--color-brand-gold)]" />
+              <span className="text-xs font-medium text-[var(--color-brand-gold)]">
+                {t('prueba', { term: pruebaTerm.singular })}
+              </span>
+              {renderNotaPrueba()}
+            </div>
+          )}
+        </>
       )}
     </div>,
     document.body,

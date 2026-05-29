@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
+import { Lock } from 'lucide-react';
 import { horarioSchema, type HorarioFormData } from '@/lib/validations/horario.schema';
 import { createClient } from '@/lib/supabase/client';
 import { Modal } from '@/components/common/Modal';
@@ -68,6 +69,14 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
   // In admin mode, track which professor will teach this class
   const [activeProfId, setActiveProfId] = useState(profesorId);
   const [esExamen, setEsExamen] = useState(false);
+  // Bloqueo de horario mode — only available when creating (not editing)
+  const [esBloqueo, setEsBloqueo] = useState(false);
+  // Bloqueo form state — fully independent from the horario RHF form
+  const [bloqueoFecha, setBloqueoFecha] = useState('');
+  const [bloqueoHoraInicio, setBloqueoHoraInicio] = useState('');
+  const [bloqueoHoraFin, setBloqueoHoraFin] = useState('');
+  const [motivoBloqueo, setMotivoBloqueo] = useState('');
+  const [submittingBloqueo, setSubmittingBloqueo] = useState(false);
   const isEditing = !!horario;
 
   const { register, handleSubmit, reset, watch, setValue, formState: { errors, isSubmitting } } = useForm<HorarioFormData>({
@@ -82,21 +91,47 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
     },
   });
 
+  // Register fields that use value+onChange pattern instead of register spread
+  // This ensures handleSubmit picks them up correctly
+  useEffect(() => {
+    register('titulo');
+    register('descripcion');
+    register('fecha');
+    register('hora_inicio');
+    register('hora_fin');
+  }, [register]);
+
   const selectedAlumnoId = watch('alumno_id');
-  const horaInicio = watch('hora_inicio');
+  // Watch all fields to guarantee controlled inputs (never undefined)
+  const watchedTitulo = watch('titulo') ?? '';
+  const watchedDescripcion = watch('descripcion') ?? '';
+  const watchedFecha = watch('fecha') ?? '';
+  const watchedHoraInicio = watch('hora_inicio') ?? '';
+  const watchedHoraFin = watch('hora_fin') ?? '';
 
   // Auto-fill hora_fin = hora_inicio + 1h (only when creating)
   useEffect(() => {
-    if (horaInicio && !isEditing) {
-      const [h, m] = horaInicio.split(':').map(Number);
+    if (watchedHoraInicio && !isEditing) {
+      const [h, m] = watchedHoraInicio.split(':').map(Number);
       const endH = Math.min(h + 1, 23);
       setValue('hora_fin', `${String(endH).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
     }
-  }, [horaInicio, isEditing, setValue]);
+  }, [watchedHoraInicio, isEditing, setValue]);
 
   // Reset form when horario or open changes
   useEffect(() => {
     if (!open) return;
+    // Reset bloqueo mode when opening
+    setEsBloqueo(false);
+    setMotivoBloqueo('');
+    // Pre-fill bloqueo date/time from defaults (same as the class form)
+    setBloqueoFecha(defaultDate || '');
+    setBloqueoHoraInicio(defaultTime || '');
+    setBloqueoHoraFin(
+      defaultTime
+        ? `${String(Math.min(Number(defaultTime.split(':')[0]) + 1, 23)).padStart(2, '0')}:${defaultTime.split(':')[1]}`
+        : ''
+    );
     // Admin mode: init activeProfId from edited horario or prop
     if (adminProfesores) {
       setActiveProfId((horario?.profesor_id as string) || profesorId || '');
@@ -188,6 +223,44 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
     );
   }, [alumnos, alumnoSearch, selectedAlumnoId]);
 
+  async function onSubmitBloqueo() {
+    if (!bloqueoFecha || !bloqueoHoraInicio || !bloqueoHoraFin) {
+      toast.error(t('bloqueo_campos_requeridos'));
+      return;
+    }
+    if (bloqueoHoraFin <= bloqueoHoraInicio) {
+      toast.error(t('error_hora_fin'));
+      return;
+    }
+
+    setSubmittingBloqueo(true);
+    try {
+      const res = await fetch('/api/bloqueos-horario', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fecha: bloqueoFecha,
+          hora_inicio: bloqueoHoraInicio,
+          hora_fin: bloqueoHoraFin,
+          motivo: motivoBloqueo.trim() || null,
+          ...(adminProfesores && activeProfId ? { profesor_id: activeProfId } : {}),
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || t('error_guardar'));
+      }
+      toast.success(t('bloqueo_creado'));
+      queryClient.invalidateQueries({ queryKey: ['bloqueos-horario'] });
+      onSuccess();
+      onClose();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t('error_guardar'));
+    } finally {
+      setSubmittingBloqueo(false);
+    }
+  }
+
   async function onSubmit(formData: HorarioFormData) {
     try {
       const url = isEditing ? `/api/horarios/${horario.id}` : '/api/horarios';
@@ -250,22 +323,66 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
     <Modal
       open={open}
       onClose={onClose}
-      title={isEditing ? t('editar_clase') : t('nueva_clase')}
-      description={isEditing ? t('editar_descripcion') : t('nueva_descripcion')}
+      title={
+        isEditing
+          ? t('editar_clase')
+          : esBloqueo
+            ? t('bloqueo_titulo')
+            : t('nueva_clase')
+      }
+      description={
+        isEditing
+          ? t('editar_descripcion')
+          : esBloqueo
+            ? t('bloqueo_descripcion')
+            : t('nueva_descripcion')
+      }
       footer={
-        <div className="flex w-full items-center justify-between">
+        <div className="flex w-full items-center justify-between gap-3">
+          {/* Izquierda: eliminar (editing) | switch bloqueo (creating) */}
           {isEditing ? (
             <Button variant="danger" size="sm" onClick={handleDelete} loading={deleting}>
               {tc('eliminar')}
             </Button>
           ) : (
-            <div />
+            <button
+              type="button"
+              onClick={() => setEsBloqueo((v) => !v)}
+              className={`inline-flex items-center gap-2 rounded-[var(--radius-md)] border px-3 py-1.5 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-gold)] ${
+                esBloqueo
+                  ? 'border-[var(--color-brand-gold)] bg-[var(--color-brand-gold-muted)] text-[var(--color-brand-gold)]'
+                  : 'border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text-muted)] hover:border-[var(--color-border-strong)] hover:text-[var(--color-text-primary)]'
+              }`}
+            >
+              <Lock className="size-3.5 shrink-0" />
+              {t('bloqueo_switch')}
+              {/* Toggle pill */}
+              <span
+                className={`relative inline-flex h-4 w-7 shrink-0 items-center rounded-full transition-colors ${
+                  esBloqueo ? 'bg-[var(--color-brand-gold)]' : 'bg-[var(--color-border)]'
+                }`}
+              >
+                <span
+                  className={`inline-block h-3 w-3 rounded-full bg-white shadow transition-transform ${
+                    esBloqueo ? 'translate-x-3.5' : 'translate-x-0.5'
+                  }`}
+                />
+              </span>
+            </button>
           )}
+
+          {/* Derecha: cancelar + guardar */}
           <div className="flex gap-2">
             <Button variant="ghost" onClick={onClose}>{tc('cancelar')}</Button>
-            <Button onClick={handleSubmit(onSubmit)} loading={isSubmitting}>
-              {isEditing ? t('guardar_cambios') : t('crear_clase')}
-            </Button>
+            {esBloqueo ? (
+              <Button onClick={onSubmitBloqueo} loading={submittingBloqueo}>
+                {t('bloqueo_guardar')}
+              </Button>
+            ) : (
+              <Button onClick={handleSubmit(onSubmit)} loading={isSubmitting}>
+                {isEditing ? t('guardar_cambios') : t('crear_clase')}
+              </Button>
+            )}
           </div>
         </div>
       }
@@ -293,96 +410,173 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
           </div>
         )}
 
-        {/* Alumno — searchable combo dropdown */}
-        <div>
-          <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">{t('campo_alumno')}</label>
-          <AlumnoCombobox
-            alumnos={alumnos}
-            loading={loadingAlumnos}
-            selectedId={selectedAlumnoId}
-            searchText={alumnoSearch}
-            onSearchChange={(text) => {
-              setAlumnoSearch(text);
-              if (!text) setValue('alumno_id', '');
-            }}
-            onSelect={(id, displayName) => {
-              setValue('alumno_id', id, { shouldValidate: true });
-              setAlumnoSearch(displayName);
-            }}
-            placeholder={t('buscar_alumno_placeholder')}
-            emptyMessage={ta('sin_alumnos')}
-            noResultsMessage={t('no_alumnos_encontrados')}
-            loadingMessage={tc('cargando')}
-            inputClassName={inputClass}
-            filteredAlumnos={filteredAlumnos}
-          />
-          {errors.alumno_id && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.alumno_id.message}</p>}
-        </div>
+        {/* ── Modo bloqueo: solo fecha, horas y motivo ── */}
+        {esBloqueo && !isEditing ? (
+          <>
+            {/* Banner informativo */}
+            <div className="flex items-start gap-2 rounded-[var(--radius-md)] border border-[var(--color-brand-gold)]/30 bg-[var(--color-brand-gold-muted)] px-3 py-2.5">
+              <Lock className="mt-0.5 size-3.5 shrink-0 text-[var(--color-brand-gold)]" />
+              <p className="text-xs text-[var(--color-brand-gold)]">{t('bloqueo_info')}</p>
+            </div>
 
-        {/* Titulo */}
-        <div>
-          <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">{t('titulo_clase')}</label>
-          <input
-            type="text"
-            {...register('titulo')}
-            placeholder={t('titulo_placeholder')}
-            className={inputClass}
-          />
-          {errors.titulo && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.titulo.message}</p>}
-        </div>
+            {/* Fecha */}
+            <div>
+              <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">{t('fecha')}</label>
+              <input
+                type="date"
+                value={bloqueoFecha}
+                onChange={(e) => setBloqueoFecha(e.target.value)}
+                className={inputClass}
+              />
+            </div>
 
-        {/* Descripcion */}
-        <div>
-          <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">{t('descripcion')} <span className="text-[var(--color-text-muted)]">{t('opcional')}</span></label>
-          <textarea
-            {...register('descripcion')}
-            rows={3}
-            placeholder={t('descripcion_placeholder')}
-            className={inputClass}
-          />
-          {errors.descripcion && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.descripcion.message}</p>}
-        </div>
+            {/* Horas */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">{t('hora_inicio')}</label>
+                <input
+                  type="time"
+                  value={bloqueoHoraInicio}
+                  onChange={(e) => {
+                    setBloqueoHoraInicio(e.target.value);
+                    // Auto-fill hora_fin = hora_inicio + 1h
+                    if (e.target.value) {
+                      const [h, m] = e.target.value.split(':').map(Number);
+                      const endH = Math.min(h + 1, 23);
+                      setBloqueoHoraFin(`${String(endH).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
+                    }
+                  }}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">{t('hora_fin')}</label>
+                <input
+                  type="time"
+                  value={bloqueoHoraFin}
+                  onChange={(e) => setBloqueoHoraFin(e.target.value)}
+                  className={inputClass}
+                />
+              </div>
+            </div>
 
-        {/* Fecha */}
-        <div>
-          <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">{t('fecha')}</label>
-          <input
-            type="date"
-            {...register('fecha')}
-            className={inputClass}
-          />
-          {errors.fecha && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.fecha.message}</p>}
-        </div>
+            {/* Motivo (opcional) */}
+            <div>
+              <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">
+                {t('bloqueo_motivo')} <span className="text-[var(--color-text-muted)]">{t('opcional')}</span>
+              </label>
+              <input
+                type="text"
+                value={motivoBloqueo}
+                onChange={(e) => setMotivoBloqueo(e.target.value)}
+                placeholder={t('bloqueo_motivo_placeholder')}
+                className={inputClass}
+                maxLength={200}
+              />
+            </div>
+          </>
+        ) : (
+          <>
+            {/* ── Modo clase normal ── */}
 
-        {/* Horas */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">{t('hora_inicio')}</label>
-            <input
-              type="time"
-              {...register('hora_inicio')}
-              className={inputClass}
+            {/* Alumno — searchable combo dropdown */}
+            <div>
+              <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">{t('campo_alumno')}</label>
+              <AlumnoCombobox
+                alumnos={alumnos}
+                loading={loadingAlumnos}
+                selectedId={selectedAlumnoId}
+                searchText={alumnoSearch}
+                onSearchChange={(text) => {
+                  setAlumnoSearch(text);
+                  if (!text) setValue('alumno_id', '');
+                }}
+                onSelect={(id, displayName) => {
+                  setValue('alumno_id', id, { shouldValidate: true });
+                  setAlumnoSearch(displayName);
+                }}
+                placeholder={t('buscar_alumno_placeholder')}
+                emptyMessage={ta('sin_alumnos')}
+                noResultsMessage={t('no_alumnos_encontrados')}
+                loadingMessage={tc('cargando')}
+                inputClassName={inputClass}
+                filteredAlumnos={filteredAlumnos}
+              />
+              {errors.alumno_id && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.alumno_id.message}</p>}
+            </div>
+
+            {/* Titulo */}
+            <div>
+              <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">{t('titulo_clase')}</label>
+              <input
+                type="text"
+                value={watchedTitulo}
+                onChange={(e) => setValue('titulo', e.target.value, { shouldValidate: !!errors.titulo })}
+                onBlur={() => setValue('titulo', watchedTitulo, { shouldValidate: true })}
+                placeholder={t('titulo_placeholder')}
+                className={inputClass}
+              />
+              {errors.titulo && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.titulo.message}</p>}
+            </div>
+
+            {/* Descripcion */}
+            <div>
+              <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">{t('descripcion')} <span className="text-[var(--color-text-muted)]">{t('opcional')}</span></label>
+              <textarea
+                value={watchedDescripcion}
+                onChange={(e) => setValue('descripcion', e.target.value)}
+                rows={3}
+                placeholder={t('descripcion_placeholder')}
+                className={inputClass}
+              />
+              {errors.descripcion && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.descripcion.message}</p>}
+            </div>
+
+            {/* Fecha */}
+            <div>
+              <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">{t('fecha')}</label>
+              <input
+                type="date"
+                value={watchedFecha}
+                onChange={(e) => setValue('fecha', e.target.value, { shouldValidate: !!errors.fecha })}
+                className={inputClass}
+              />
+              {errors.fecha && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.fecha.message}</p>}
+            </div>
+
+            {/* Horas */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">{t('hora_inicio')}</label>
+                <input
+                  type="time"
+                  value={watchedHoraInicio}
+                  onChange={(e) => setValue('hora_inicio', e.target.value, { shouldValidate: !!errors.hora_inicio })}
+                  className={inputClass}
+                />
+                {errors.hora_inicio && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.hora_inicio.message}</p>}
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">{t('hora_fin')}</label>
+                <input
+                  type="time"
+                  value={watchedHoraFin}
+                  onChange={(e) => setValue('hora_fin', e.target.value, { shouldValidate: !!errors.hora_fin })}
+                  className={inputClass}
+                />
+                {errors.hora_fin && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.hora_fin.message}</p>}
+              </div>
+            </div>
+
+            {/* Es Examen toggle */}
+            <ExamenToggle
+              checked={esExamen}
+              onChange={setEsExamen}
+              label={t('es_examen', { term: pruebaTerm.singular })}
+              description={t('es_examen_desc', { term: pruebaTerm.singular })}
             />
-            {errors.hora_inicio && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.hora_inicio.message}</p>}
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">{t('hora_fin')}</label>
-            <input
-              type="time"
-              {...register('hora_fin')}
-              className={inputClass}
-            />
-            {errors.hora_fin && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.hora_fin.message}</p>}
-          </div>
-        </div>
-
-        {/* Es Examen toggle */}
-        <ExamenToggle
-          checked={esExamen}
-          onChange={setEsExamen}
-          label={t('es_examen', { term: pruebaTerm.singular })}
-          description={t('es_examen_desc', { term: pruebaTerm.singular })}
-        />
+          </>
+        )}
       </form>
     </Modal>
   );
