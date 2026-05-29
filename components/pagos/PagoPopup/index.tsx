@@ -34,7 +34,7 @@ export interface PagoPopupProps {
   alumnoNombre: string;
   mesLabel: string;
   /** Called with the selected action */
-  onSave: (estado: 'pagado' | 'pendiente', monto?: number) => void;
+  onSave: (estado: 'pagado' | 'parcial' | 'pendiente', monto?: number) => void;
   onClose: () => void;
   /** When set, popup works in "mark entire column" mode */
   columnMode?: { alumnosCount: number };
@@ -109,6 +109,11 @@ export function PagoPopup({
   const handleSavePagado = () => {
     const montoNum = monto ? parseInt(monto, 10) : undefined;
     onSave('pagado', montoNum && montoNum > 0 ? montoNum : undefined);
+  };
+
+  const handleSaveParcial = () => {
+    const montoNum = monto ? parseInt(monto, 10) : undefined;
+    onSave('parcial', montoNum && montoNum > 0 ? montoNum : undefined);
   };
 
   const handleUnmark = () => {
@@ -230,29 +235,53 @@ export function PagoPopup({
             </button>
           </div>
         ) : (
-          <div className="flex gap-2">
+          <div className="space-y-2">
             {!isPaid ? (
-              <button
-                onClick={handleSavePagado}
-                className={cn(
-                  'flex flex-1 items-center justify-center gap-1.5 rounded-[var(--radius-md)] py-2 text-sm font-semibold transition-colors',
-                  'bg-[var(--color-success)] text-white hover:opacity-90 active:scale-95'
-                )}
-              >
-                <Check className="size-4" />
-                {t('marcar_pagado')}
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleSavePagado}
+                  className={cn(
+                    'flex flex-1 items-center justify-center gap-1.5 rounded-[var(--radius-md)] py-2 text-sm font-semibold transition-colors',
+                    'bg-[var(--color-success)] text-white hover:opacity-90 active:scale-95'
+                  )}
+                >
+                  <Check className="size-4" />
+                  {t('marcar_pagado')}
+                </button>
+                <button
+                  onClick={handleSaveParcial}
+                  className={cn(
+                    'flex items-center justify-center gap-1.5 rounded-[var(--radius-md)] px-3 py-2 text-sm font-semibold transition-colors',
+                    'bg-[var(--color-partial-muted)] text-[var(--color-partial)] hover:opacity-80 active:scale-95'
+                  )}
+                >
+                  {t('marcar_parcial')}
+                </button>
+              </div>
             ) : (
-              <button
-                onClick={handleUnmark}
-                className={cn(
-                  'flex flex-1 items-center justify-center gap-1.5 rounded-[var(--radius-md)] py-2 text-sm font-semibold transition-colors',
-                  'border border-[var(--color-error)] text-[var(--color-error)] hover:bg-[var(--color-error)] hover:text-white active:scale-95'
-                )}
-              >
-                <X className="size-4" />
-                {t('desmarcar')}
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={estado === 'pagado' ? handleSaveParcial : handleSavePagado}
+                  className={cn(
+                    'flex flex-1 items-center justify-center gap-1.5 rounded-[var(--radius-md)] py-2 text-sm font-semibold transition-colors active:scale-95',
+                    estado === 'pagado'
+                      ? 'bg-[var(--color-partial-muted)] text-[var(--color-partial)] hover:opacity-80'
+                      : 'bg-[var(--color-success)] text-white hover:opacity-90'
+                  )}
+                >
+                  {estado === 'pagado' ? t('marcar_parcial') : (<><Check className="size-4" /> {t('marcar_pagado')}</>)}
+                </button>
+                <button
+                  onClick={handleUnmark}
+                  className={cn(
+                    'flex items-center justify-center gap-1.5 rounded-[var(--radius-md)] px-3 py-2 text-sm font-semibold transition-colors',
+                    'border border-[var(--color-error)] text-[var(--color-error)] hover:bg-[var(--color-error)] hover:text-white active:scale-95'
+                  )}
+                  aria-label={t('desmarcar')}
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
             )}
           </div>
         )}

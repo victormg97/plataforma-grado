@@ -19,13 +19,15 @@ import type { TipoNotificacion } from '@/lib/supabase/types';
  * usar `Extract` garantiza en tiempo de compilación que cada valor existe en el
  * enum, de modo que un cambio incompatible en el enum rompa la compilación aquí.
  *
- * _Requisito 3.1_: define los cuatro tipos para los que existe una
- * Plantilla_Default (`confirmacion`, `cancelacion`, `solicitud_cambio_horario`,
+ * _Requisito 3.1_: define los tipos para los que existe una Plantilla_Default
+ * (`confirmacion`, `cancelacion`, `solicitud_cambio_horario`,
  * `programa_asignado`).
+ * _Requisitos 18.9, 19.4_: añade `nueva_clase` (aviso de clase recién creada) e
+ * `invitacion_acceso` (invitación de acceso a un usuario recién creado).
  */
 export type TipoCorreo = Extract<
   TipoNotificacion,
-  'confirmacion' | 'cancelacion' | 'solicitud_cambio_horario' | 'programa_asignado'
+  'confirmacion' | 'cancelacion' | 'solicitud_cambio_horario' | 'programa_asignado' | 'nueva_clase' | 'invitacion_acceso'
 >;
 
 /**
@@ -91,6 +93,12 @@ export interface VariablesCorreo {
   hora_fin_propuesta?: string;
   /** Nota o comentario del alumno en la solicitud (`{nota_alumno}`). */
   nota_alumno?: string;
+
+  // Variables específicas de `invitacion_acceso` (Requisito 19.4):
+  /** Enlace_Acceso absoluto `${NEXT_PUBLIC_APP_URL}/setup/${code}` (`{enlace_acceso}`) — Requisito 19.4 */
+  enlace_acceso?: string;
+  /** Correo con el que el usuario recién creado accederá (`{email_acceso}`) — Requisito 19.4 */
+  email_acceso?: string;
 }
 
 /**

@@ -58,6 +58,10 @@ const config: TenantConfig = {
   descripcion: 'Preparación para exámenes de grado',
   logoLight: '/tenants/mi-academia/logo-light.png',
   logoDark: '/tenants/mi-academia/logo-dark.png',
+  // Opcional: logos propios para el sidebar (variaciones del logo).
+  // Si se omiten, el sidebar usa logoLight/logoDark.
+  sidebarLight: '/tenants/mi-academia/sidebar-light.png',
+  sidebarDark: '/tenants/mi-academia/sidebar-dark.png',
   propietarios: [
     {
       nombre: 'Juan Pérez',
@@ -82,6 +86,8 @@ export default config;
 Coloca los archivos en `public/tenants/mi-academia/`:
 - `logo-light.png` — Logo para tema claro (fondo transparente, ~200x60px)
 - `logo-dark.png` — Logo para tema oscuro (fondo transparente, ~200x60px)
+- `sidebar-light.png` — Logo del sidebar para tema claro (opcional, variación del logo)
+- `sidebar-dark.png` — Logo del sidebar para tema oscuro (opcional, variación del logo)
 - `favicon.ico` — Favicon (opcional)
 - `og-image.png` — Imagen para redes sociales (opcional, 1200x630px)
 

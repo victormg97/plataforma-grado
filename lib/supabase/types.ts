@@ -1341,6 +1341,7 @@ export type Database = {
         | "solicitud_cambio_horario"
         | "cambio_horario_aceptado"
         | "cambio_horario_rechazado"
+        | "invitacion_acceso"
       user_rol: "admin" | "profesor" | "alumno"
     }
     CompositeTypes: {
@@ -1487,6 +1488,7 @@ export const Constants = {
         "solicitud_cambio_horario",
         "cambio_horario_aceptado",
         "cambio_horario_rechazado",
+        "invitacion_acceso",
       ],
       user_rol: ["admin", "profesor", "alumno"],
     },

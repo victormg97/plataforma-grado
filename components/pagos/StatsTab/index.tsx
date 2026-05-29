@@ -17,6 +17,7 @@ import {
 import { useTranslations, useLocale } from 'next-intl';
 import { format, subMonths } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
+import { TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { AlumnoPago } from '@/components/pagos/TrackingTab';
 import type { AlumnoResumenAnual } from '@/app/api/admin/pagos/resumen/route';
@@ -67,7 +68,12 @@ export function StatsTab({ año, mes }: StatsTabProps) {
       if (a.pago?.estado === 'parcial' && a.pago.monto_pagado) return acc + a.pago.monto_pagado;
       return acc;
     }, 0);
-    return { total, pagados, parciales, pendientes, tasaPago, totalParciales };
+    // Ganancia del mes: suma de los montos registrados (pagados + parciales)
+    const gananciaMes = active.reduce((acc, a) => {
+      if (a.pago?.monto_pagado) return acc + a.pago.monto_pagado;
+      return acc;
+    }, 0);
+    return { total, pagados, parciales, pendientes, tasaPago, totalParciales, gananciaMes };
   }, [alumnos]);
 
   // Monthly trend: build last 6 months from annual data
@@ -108,8 +114,31 @@ export function StatsTab({ año, mes }: StatsTabProps) {
 
   const hasTrendData = trendData.some((d) => d.pagados + d.parciales + d.pendientes > 0);
 
+  const mesLabel = useMemo(
+    () => format(new Date(año, mes - 1, 1), 'MMMM yyyy', { locale: dateLocale }),
+    [año, mes, dateLocale]
+  );
+
   return (
     <div className="space-y-4">
+      {/* Monthly revenue banner */}
+      <div className="flex items-center justify-between gap-4 rounded-[var(--radius-md)] border border-[var(--color-brand-gold-muted)] bg-[var(--color-brand-gold-muted)] p-4">
+        <div className="flex items-center gap-3">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[var(--color-brand-gold)]/15">
+            <TrendingUp className="size-5 text-[var(--color-brand-gold)]" />
+          </div>
+          <div>
+            <p className="text-[11px] font-medium uppercase tracking-wider text-[var(--color-text-muted)]">
+              {t('stats_ganancia_mes')}
+            </p>
+            <p className="text-sm capitalize text-[var(--color-text-secondary)]">{mesLabel}</p>
+          </div>
+        </div>
+        <p className="text-2xl font-bold leading-none text-[var(--color-brand-gold)] sm:text-3xl">
+          {formatCLP(stats.gananciaMes)}
+        </p>
+      </div>
+
       {/* Summary cards */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatCard

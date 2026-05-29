@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { sendNotificationEmail } from '@/lib/email/emailService';
+import type { SolicitudCorreo } from '@/lib/email/types';
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
@@ -104,6 +107,42 @@ export async function POST(request: NextRequest) {
       estado: 'pendiente',
     });
   }
+
+  // Dispara el correo `nueva_clase` al alumno de forma NO bloqueante
+  // (fire-and-forget). La respuesta de creación no espera al correo y un fallo
+  // de envío no revierte el horario ya persistido (Requisito 18.1, 18.6, 18.7).
+  void (async () => {
+    const admin = createAdminClient();
+    const { data: alumno } = await admin
+      .from('profiles')
+      .select('email, idioma, nombre, apellido')
+      .eq('id', body.alumno_id)
+      .single();
+    if (!alumno?.email) return;
+
+    const nombreAlumno = `${alumno.nombre ?? ''} ${alumno.apellido ?? ''}`.trim();
+
+    const solicitud: SolicitudCorreo = {
+      tipo: 'nueva_clase',
+      originadorId: profesorId,
+      destinatarioId: body.alumno_id,
+      destinatarioEmail: alumno.email,
+      destinatarioIdioma: alumno.idioma,
+      variables: {
+        nombre_destinatario: nombreAlumno,
+        nombre_alumno: nombreAlumno,
+        titulo_clase: horario.titulo,
+        fecha: horario.fecha,
+        hora_inicio: horario.hora_inicio,
+        hora_fin: horario.hora_fin,
+        enlace_clase: `${process.env.NEXT_PUBLIC_APP_URL}/horarios/${horario.id}`,
+      },
+      horarioId: horario.id,
+      eventoId: `nueva_clase:${horario.id}`,
+    };
+
+    await sendNotificationEmail(solicitud);
+  })().catch(() => {});
 
   return NextResponse.json(horario, { status: 201 });
 }

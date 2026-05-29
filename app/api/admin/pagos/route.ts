@@ -111,7 +111,9 @@ export async function POST(request: Request) {
         anio: año,
         mes,
         estado,
-        monto_pagado: estado === 'parcial' ? (monto_pagado ?? null) : null,
+        // Persistimos el monto tanto para 'parcial' como para 'pagado'
+        // (permite calcular la ganancia mensual). Si no se entrega, queda null.
+        monto_pagado: monto_pagado ?? null,
         fecha_pago: new Date().toISOString(),
       },
       { onConflict: 'alumno_id,anio,mes' }

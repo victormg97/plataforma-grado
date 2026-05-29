@@ -1190,6 +1190,7 @@
     "error_cargar": "Error al cargar los pagos",
     "stats_tasa_pago": "Tasa de pago",
     "stats_total_recaudado": "Recaudado (parciales)",
+    "stats_ganancia_mes": "Ganancia del mes",
     "stats_tendencia": "Ingresos últimos 6 meses",
     "stats_distribucion": "Distribución del mes",
     "stats_sin_datos": "Sin datos suficientes",
@@ -1228,7 +1229,9 @@
       "confirmacion": "Confirmación de asistencia",
       "cancelacion": "Cancelación de asistencia",
       "solicitud_cambio_horario": "Solicitud de cambio de horario",
-      "programa_asignado": "Asignación de programa"
+      "programa_asignado": "Asignación de programa",
+      "nueva_clase": "Nueva clase agendada",
+      "invitacion_acceso": "Invitación de acceso"
     },
     "asunto_label": "Asunto",
     "asunto_placeholder": "Escribe el asunto del correo…",
@@ -1247,7 +1250,14 @@
       "fecha_propuesta": "Fecha propuesta para el cambio de horario",
       "hora_inicio_propuesta": "Hora de inicio propuesta para el cambio",
       "hora_fin_propuesta": "Hora de término propuesta para el cambio",
-      "nota_alumno": "Mensaje que dejó el alumno"
+      "nota_alumno": "Mensaje que dejó el alumno",
+      "enlace_acceso": "Enlace para configurar el acceso del usuario",
+      "email_acceso": "Correo con el que el usuario accederá"
+    },
+    "cuerpo": {
+      "modoLabel": "Modo de edición del cuerpo",
+      "modoEditor": "Editar",
+      "modoPreview": "Vista previa"
     },
     "guardar": "Guardar plantilla",
     "restablecer": "Restablecer plantilla por defecto",

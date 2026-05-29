@@ -1190,6 +1190,7 @@
     "error_cargar": "Error loading payments",
     "stats_tasa_pago": "Payment rate",
     "stats_total_recaudado": "Collected (partial)",
+    "stats_ganancia_mes": "Monthly revenue",
     "stats_tendencia": "Revenue last 6 months",
     "stats_distribucion": "Month distribution",
     "stats_sin_datos": "Not enough data",
@@ -1228,7 +1229,9 @@
       "confirmacion": "Attendance confirmation",
       "cancelacion": "Attendance cancellation",
       "solicitud_cambio_horario": "Schedule change request",
-      "programa_asignado": "Program assignment"
+      "programa_asignado": "Program assignment",
+      "nueva_clase": "New class scheduled",
+      "invitacion_acceso": "Access invitation"
     },
     "asunto_label": "Subject",
     "asunto_placeholder": "Write the email subject…",
@@ -1247,7 +1250,14 @@
       "fecha_propuesta": "Proposed date for the schedule change",
       "hora_inicio_propuesta": "Proposed start time for the change",
       "hora_fin_propuesta": "Proposed end time for the change",
-      "nota_alumno": "Message left by the student"
+      "nota_alumno": "Message left by the student",
+      "enlace_acceso": "Link for the user to set up their access",
+      "email_acceso": "Email the user will sign in with"
+    },
+    "cuerpo": {
+      "modoLabel": "Body editing mode",
+      "modoEditor": "Edit",
+      "modoPreview": "Preview"
     },
     "guardar": "Save template",
     "restablecer": "Reset to default template",

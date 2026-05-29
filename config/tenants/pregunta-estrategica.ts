@@ -8,6 +8,8 @@ const config: TenantConfigInput = {
   terminoPrueba: { singular: 'Interrogación', plural: 'Interrogaciones' },
   logoLight: '/tenants/pregunta-estrategica/logo-light.png',
   logoDark: '/tenants/pregunta-estrategica/logo-dark.png',
+  sidebarLight: '/tenants/pregunta-estrategica/sidebar-light.png',
+  sidebarDark: '/tenants/pregunta-estrategica/sidebar-dark.png',
   propietarios: [
     {
       nombre: 'Estefanía Montalbán Pino',

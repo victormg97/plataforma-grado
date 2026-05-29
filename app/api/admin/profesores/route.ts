@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { sendNotificationEmail } from '@/lib/email/emailService';
 
 export async function GET() {
   const supabase = await createClient();
@@ -128,6 +129,24 @@ export async function POST(request: NextRequest) {
     if (modo === 'link') {
       codeLink = code;
     }
+
+    // Correo de invitación de acceso al usuario recién creado (Requisito 19).
+    // Fire-and-forget: la respuesta no espera al correo; un fallo no revierte la creación.
+    // El Verificador_Destinatario descarta automáticamente los correos del dominio de marca (useAppEmail).
+    void sendNotificationEmail({
+      tipo: 'invitacion_acceso',
+      originadorId: user.id,
+      destinatarioId: newUser.user.id,
+      destinatarioEmail: finalEmail,
+      destinatarioIdioma: null,
+      variables: {
+        nombre_destinatario: `${nombre} ${apellido}`.trim(),
+        enlace_acceso: `${process.env.NEXT_PUBLIC_APP_URL}/setup/${code}`,
+        email_acceso: finalEmail,
+      },
+      horarioId: null,
+      eventoId: `invitacion:${newUser.user.id}`,
+    }).catch(() => {});
   }
 
   return NextResponse.json({

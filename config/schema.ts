@@ -79,6 +79,10 @@ export const tenantConfigSchema = z.object({
   }).optional().default({ singular: 'Prueba', plural: 'Pruebas' }),
   logoLight: relativePathSchema,
   logoDark: relativePathSchema,
+  // Logos opcionales específicos del sidebar (variaciones del logo principal).
+  // Si no se definen, el sidebar usa logoLight/logoDark.
+  sidebarLight: relativePathSchema.optional(),
+  sidebarDark: relativePathSchema.optional(),
   propietarios: z.array(ownerSchema).min(1, 'Se requiere al menos un propietario'),
   theme: themeSchema,
   fonts: fontsSchema.optional().default({ display: 'Playfair Display', body: 'DM Sans' }),

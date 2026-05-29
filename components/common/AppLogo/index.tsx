@@ -21,9 +21,19 @@ export function AppLogo({ variant = 'sidebar', className, style }: AppLogoProps)
   const tenant = useTenant();
 
   // resolvedTheme is undefined during SSR; falls back to light safely.
-  const logoSrc = resolvedTheme === 'dark'
-    ? tenant.logoDark
-    : tenant.logoLight;
+  const isDark = resolvedTheme === 'dark';
+
+  // En el sidebar se prefiere el logo específico del sidebar si el tenant lo
+  // define; si no, cae al logo principal. En login siempre se usa el principal.
+  const sidebarSrc = isDark
+    ? tenant.sidebarDark ?? tenant.logoDark
+    : tenant.sidebarLight ?? tenant.logoLight;
+
+  const logoSrc = variant === 'sidebar'
+    ? sidebarSrc
+    : isDark
+      ? tenant.logoDark
+      : tenant.logoLight;
 
   if (variant === 'login') {
     if (imgError) {

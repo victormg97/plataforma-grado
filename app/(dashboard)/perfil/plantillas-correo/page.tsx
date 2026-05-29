@@ -10,7 +10,7 @@ import { variablesDisponibles } from '@/lib/email/variables';
 import { TIPOS_CORREO, type TipoCorreo } from '@/lib/validations/emailPlantilla.schema';
 import { cn } from '@/lib/utils';
 import {
-  ArrowLeft, Save, Loader2, RotateCcw, Braces, Lock,
+  ArrowLeft, Save, Loader2, RotateCcw, Braces, Lock, Code, Eye,
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -83,6 +83,8 @@ export default function PlantillasCorreoPage() {
   const [tipoSeleccionado, setTipoSeleccionado] = useState<TipoCorreo>(TIPOS_CORREO[0]);
   const [asunto, setAsunto] = useState('');
   const [cuerpoHtml, setCuerpoHtml] = useState('');
+  // Modo del campo de cuerpo: inicia en edición (Requisito 17.2). Alternar no muta `cuerpoHtml` (Requisito 17.4).
+  const [modoCuerpo, setModoCuerpo] = useState<'editor' | 'preview'>('editor');
 
   // ── Seguimiento del campo activo para insertar variables en el cursor ─────
   const asuntoRef = useRef<HTMLInputElement>(null);
@@ -273,19 +275,63 @@ export default function PlantillasCorreoPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor="plantilla-cuerpo" className="text-sm font-medium text-[var(--color-text-primary)]">
-              {tp('cuerpo_label')}
-            </label>
-            <textarea
-              id="plantilla-cuerpo"
-              ref={cuerpoRef}
-              value={cuerpoHtml}
-              onChange={(e) => setCuerpoHtml(e.target.value)}
-              onFocus={() => { activeFieldRef.current = 'cuerpo'; }}
-              placeholder={tp('cuerpo_placeholder')}
-              rows={14}
-              className={cn(inputCls, 'resize-y font-mono leading-relaxed')}
-            />
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <label htmlFor="plantilla-cuerpo" className="text-sm font-medium text-[var(--color-text-primary)]">
+                {tp('cuerpo_label')}
+              </label>
+              {/* Toggle Modo_Edicion / Modo_Vista_Previa (Requisito 17.1, 17.5) */}
+              <div role="group" aria-label={tp('cuerpo.modoLabel')} className="flex gap-1">
+                <button
+                  type="button"
+                  aria-pressed={modoCuerpo === 'editor'}
+                  onClick={() => setModoCuerpo('editor')}
+                  className={cn(
+                    'flex items-center gap-1.5 rounded-[var(--radius-sm)] border px-3 py-1 text-xs font-medium transition-colors',
+                    modoCuerpo === 'editor'
+                      ? 'border-[var(--color-brand-gold)] bg-[color-mix(in_srgb,var(--color-brand-gold)_12%,transparent)] text-[var(--color-text-primary)]'
+                      : 'border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]',
+                  )}
+                >
+                  <Code className="size-3.5" />
+                  {tp('cuerpo.modoEditor')}
+                </button>
+                <button
+                  type="button"
+                  aria-pressed={modoCuerpo === 'preview'}
+                  onClick={() => setModoCuerpo('preview')}
+                  className={cn(
+                    'flex items-center gap-1.5 rounded-[var(--radius-sm)] border px-3 py-1 text-xs font-medium transition-colors',
+                    modoCuerpo === 'preview'
+                      ? 'border-[var(--color-brand-gold)] bg-[color-mix(in_srgb,var(--color-brand-gold)_12%,transparent)] text-[var(--color-text-primary)]'
+                      : 'border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]',
+                  )}
+                >
+                  <Eye className="size-3.5" />
+                  {tp('cuerpo.modoPreview')}
+                </button>
+              </div>
+            </div>
+            {modoCuerpo === 'editor' ? (
+              <textarea
+                id="plantilla-cuerpo"
+                ref={cuerpoRef}
+                value={cuerpoHtml}
+                onChange={(e) => setCuerpoHtml(e.target.value)}
+                onFocus={() => { activeFieldRef.current = 'cuerpo'; }}
+                placeholder={tp('cuerpo_placeholder')}
+                rows={14}
+                className={cn(inputCls, 'resize-y font-mono leading-relaxed')}
+              />
+            ) : (
+              // Modo_Vista_Previa: renderiza el mismo HTML que se enviará (Requisito 17.3).
+              <div
+                className={cn(
+                  'w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-white px-4 py-3 overflow-auto',
+                  'min-h-[20rem]',
+                )}
+                dangerouslySetInnerHTML={{ __html: cuerpoHtml }}
+              />
+            )}
           </div>
 
           {/* ── Acciones ─────────────────────────────────────────────────── */}

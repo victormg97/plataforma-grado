@@ -66,6 +66,10 @@ const config: TenantConfigInput = {
   descripcion: 'Descripción breve de tu academia',
   logoLight: '/tenants/${tenantId}/logo-light.png',
   logoDark: '/tenants/${tenantId}/logo-dark.png',
+  // Opcional: logos específicos para el sidebar (variaciones del logo).
+  // Si se omiten, el sidebar usa logoLight/logoDark.
+  // sidebarLight: '/tenants/${tenantId}/sidebar-light.png',
+  // sidebarDark: '/tenants/${tenantId}/sidebar-dark.png',
   propietarios: [
     {
       nombre: 'Nombre del Propietario',
@@ -95,6 +99,8 @@ Coloca aquí los archivos estáticos del tenant:
 
 - \`logo-light.png\` — Logo para tema claro (recomendado: 200x60px, fondo transparente)
 - \`logo-dark.png\` — Logo para tema oscuro (recomendado: 200x60px, fondo transparente)
+- \`sidebar-light.png\` — Logo del sidebar para tema claro (opcional, variación del logo)
+- \`sidebar-dark.png\` — Logo del sidebar para tema oscuro (opcional, variación del logo)
 - \`favicon.ico\` — Favicon (opcional)
 - \`og-image.png\` — Imagen para Open Graph / redes sociales (opcional, 1200x630px)
 

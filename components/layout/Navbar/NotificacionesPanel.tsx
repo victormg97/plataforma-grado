@@ -7,7 +7,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Bell, CheckCheck, CheckCircle2, XCircle, ArrowLeftRight,
   CalendarPlus, CalendarClock, CalendarOff, ClipboardList,
-  Calendar, Clock, Trash2,
+  Calendar, Clock, Trash2, Mail,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
@@ -60,6 +60,7 @@ const TIPO_ICON: Record<TipoNotificacion, { icon: React.ElementType; color: stri
   solicitud_cambio_horario: { icon: CalendarClock, color: 'var(--color-info)' },
   cambio_horario_aceptado:  { icon: CheckCircle2,  color: 'var(--color-success)' },
   cambio_horario_rechazado: { icon: XCircle,       color: 'var(--color-error)' },
+  invitacion_acceso:  { icon: Mail,          color: 'var(--color-brand-gold)' },
 };
 
 type TranslateFn = (key: string, values?: Record<string, string | number>) => string;

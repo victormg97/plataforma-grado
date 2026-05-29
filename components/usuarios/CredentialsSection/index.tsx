@@ -41,7 +41,7 @@ export function CredentialsSection({
         </h3>
       )}
 
-      <div className="space-y-4 bg-[var(--color-bg-secondary)]/50 p-4 rounded-lg border border-[var(--color-border)]">
+      <div className="space-y-4">
         <div className="flex items-center space-x-2 mb-2">
           <input
             type="checkbox"

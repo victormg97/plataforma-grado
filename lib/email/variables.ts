@@ -71,7 +71,20 @@ const CLAVES_SOLICITUD_CAMBIO = [
 ] as const satisfies readonly (keyof VariablesCorreo)[];
 
 /**
- * Conjunto completo de claves conocidas por el motor (las 11 claves de
+ * Claves base de las Variables_Dinamicas específicas del tipo
+ * `invitacion_acceso`, añadidas al nombre del destinatario para ese tipo.
+ *
+ * _Requisito 19.4_: enlace de acceso (`${NEXT_PUBLIC_APP_URL}/setup/${code}`) y
+ * correo con el que el usuario recién creado accederá. Este tipo NO incluye las
+ * variables de clase comunes.
+ */
+const CLAVES_INVITACION = [
+  'enlace_acceso',
+  'email_acceso',
+] as const satisfies readonly (keyof VariablesCorreo)[];
+
+/**
+ * Conjunto completo de claves conocidas por el motor (las 13 claves de
  * `VariablesCorreo`).
  *
  * Es la única fuente de verdad para `sustituirVariables`: garantiza que la
@@ -82,6 +95,7 @@ const CLAVES_SOLICITUD_CAMBIO = [
 const CLAVES_CONOCIDAS = [
   ...CLAVES_COMUNES,
   ...CLAVES_SOLICITUD_CAMBIO,
+  ...CLAVES_INVITACION,
 ] as const satisfies readonly (keyof VariablesCorreo)[];
 
 /** Construye el token insertable (`{clave}`) a partir de una clave base. */
@@ -100,18 +114,32 @@ function definicion(clave: keyof VariablesCorreo): DefinicionVariable {
 /**
  * Devuelve las Variables_Dinamicas disponibles para un tipo de correo.
  *
- * Todos los tipos incluyen las variables comunes (Requisito 8.4). El tipo
+ * La mayoría de los tipos incluyen las variables comunes (Requisito 8.4). El tipo
  * `solicitud_cambio_horario` añade además las variables de la propuesta de cambio
- * (Requisito 15.5).
+ * (Requisito 15.5). El tipo `invitacion_acceso` no se refiere a una clase, por lo
+ * que ofrece solo el nombre del destinatario y las variables de acceso
+ * (Requisito 19.4). El tipo `nueva_clase` usa las variables comunes (Requisito 18.9).
  *
  * @param tipo Tipo de correo cuya plantilla se está editando.
  * @returns Lista de definiciones (token + clave i18n de descripción).
  */
 export function variablesDisponibles(tipo: TipoCorreo): DefinicionVariable[] {
-  const claves: readonly (keyof VariablesCorreo)[] =
-    tipo === 'solicitud_cambio_horario'
-      ? [...CLAVES_COMUNES, ...CLAVES_SOLICITUD_CAMBIO]
-      : CLAVES_COMUNES;
+  let claves: readonly (keyof VariablesCorreo)[];
+
+  switch (tipo) {
+    case 'solicitud_cambio_horario':
+      claves = [...CLAVES_COMUNES, ...CLAVES_SOLICITUD_CAMBIO];
+      break;
+    case 'invitacion_acceso':
+      claves = ['nombre_destinatario', ...CLAVES_INVITACION];
+      break;
+    case 'nueva_clase':
+      claves = CLAVES_COMUNES;
+      break;
+    default:
+      claves = CLAVES_COMUNES;
+      break;
+  }
 
   return claves.map(definicion);
 }

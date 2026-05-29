@@ -18,6 +18,8 @@ import { plantilla as confirmacion } from './confirmacion';
 import { plantilla as cancelacion } from './cancelacion';
 import { plantilla as solicitudCambioHorario } from './solicitudCambioHorario';
 import { plantilla as programaAsignado } from './programaAsignado';
+import { plantilla as nuevaClase } from './nuevaClase';
+import { plantilla as invitacionAcceso } from './invitacionAcceso';
 
 /**
  * Normaliza el idioma del perfil del destinatario a un `IdiomaCorreo` soportado.
@@ -47,6 +49,8 @@ const PLANTILLAS: Record<TipoCorreo, Record<IdiomaCorreo, ContenidoPlantilla>> =
   cancelacion,
   solicitud_cambio_horario: solicitudCambioHorario,
   programa_asignado: programaAsignado,
+  nueva_clase: nuevaClase,
+  invitacion_acceso: invitacionAcceso,
 };
 
 /**

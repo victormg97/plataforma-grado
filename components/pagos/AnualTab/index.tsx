@@ -77,7 +77,7 @@ export function AnualTab({ año }: AnualTabProps) {
       alumno_id: string;
       año: number;
       mes: number;
-      estado: 'pagado' | 'pendiente';
+      estado: 'pagado' | 'parcial' | 'pendiente';
       monto_pagado?: number;
     }) => {
       const r = await fetch('/api/admin/pagos', {
@@ -128,7 +128,7 @@ export function AnualTab({ año }: AnualTabProps) {
   });
 
   const { mutate: saveColumna } = useMutation({
-    mutationFn: async (payload: { año: number; mes: number; estado: 'pagado' | 'pendiente'; monto_pagado?: number }) => {
+    mutationFn: async (payload: { año: number; mes: number; estado: 'pagado' | 'parcial' | 'pendiente'; monto_pagado?: number }) => {
       const r = await fetch('/api/admin/pagos/columna', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -217,7 +217,7 @@ export function AnualTab({ año }: AnualTabProps) {
     setOpenColPopup((prev) => (prev === mes ? null : mes));
   };
 
-  const handlePopupSave = (estado: 'pagado' | 'pendiente', monto?: number) => {
+  const handlePopupSave = (estado: 'pagado' | 'parcial' | 'pendiente', monto?: number) => {
     if (!openPopup) return;
     savePago({ alumno_id: openPopup.alumnoId, año, mes: openPopup.mes, estado, monto_pagado: monto });
     setOpenPopup(null);
