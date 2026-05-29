@@ -1199,6 +1199,45 @@ export type Database = {
           },
         ]
       }
+      tenant_contact_info: {
+        Row: {
+          id: string
+          tenant_slug: string
+          type: 'whatsapp' | 'email' | 'social'
+          label: string
+          value: string
+          url: string
+          icon_key: string | null
+          sort_order: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          tenant_slug: string
+          type: 'whatsapp' | 'email' | 'social'
+          label: string
+          value: string
+          url: string
+          icon_key?: string | null
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          tenant_slug?: string
+          type?: 'whatsapp' | 'email' | 'social'
+          label?: string
+          value?: string
+          url?: string
+          icon_key?: string | null
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -1566,3 +1605,5 @@ export type NotaClaseConAutor = {
     rol: UserRol;
   };
 };
+
+export type TenantContactInfo = Tables<'tenant_contact_info'>;
