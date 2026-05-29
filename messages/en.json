@@ -1126,7 +1126,18 @@
     "ubicacion_actual": "Current location",
     "exito_movido": "Resource moved",
     "error_mover": "Error moving resource",
-    "sin_recursos_filtro": "No resources of this type in this folder"
+    "sin_recursos_filtro": "No resources of this type in this folder",
+    "editar_permisos_carpeta": "Edit permissions",
+    "carpeta_permisos_actuales": "Current permissions (inherited from files)",
+    "carpeta_hereda_todos": "At least one file inside is visible to all students, so this folder is also visible to everyone.",
+    "carpeta_hereda_especificos": "The files inside are visible to {count, plural, one {# specific student} other {# specific students}}. The folder inherits that visibility.",
+    "carpeta_sin_recursos_permisos": "This folder has no files yet. The permissions you set will apply to files you upload here.",
+    "carpeta_sin_permisos": "No access assigned",
+    "carpeta_propagacion_titulo": "Changes will apply to all files",
+    "carpeta_propagacion_desc": "When saved, the permissions of {count, plural, one {# file} other {# files}} inside this folder will be updated to match this configuration.",
+    "carpeta_permisos_guardados": "Folder permissions updated",
+    "error_guardar_permisos_carpeta": "Error updating permissions",
+    "tenia_acceso": "had access"
   },
   "pagos": {
     "titulo": "Payments",

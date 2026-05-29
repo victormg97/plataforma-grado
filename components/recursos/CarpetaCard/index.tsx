@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Folder, Pencil, Trash2, MoreHorizontal } from 'lucide-react';
+import { Folder, Pencil, Trash2, MoreHorizontal, Globe, Users, Settings2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 
@@ -15,6 +15,10 @@ export interface CarpetaItem {
   creador_nombre?: string;
   /** Count of resources inside (computed client-side) */
   recursos_count?: number;
+  /** True if ANY resource inside has para_todos=true (from RPC) */
+  para_todos_efectivo?: boolean;
+  /** Union of all alumno_ids from recursos_acceso for resources in this folder (from RPC) */
+  alumno_ids_efectivos?: string[];
 }
 
 interface CarpetaCardProps {
@@ -23,11 +27,16 @@ interface CarpetaCardProps {
   onClick: () => void;
   onRename: (carpeta: CarpetaItem) => void;
   onDelete: (carpeta: CarpetaItem) => void;
+  onEditPermisos: (carpeta: CarpetaItem) => void;
 }
 
-export function CarpetaCard({ carpeta, canManage, onClick, onRename, onDelete }: CarpetaCardProps) {
+export function CarpetaCard({ carpeta, canManage, onClick, onRename, onDelete, onEditPermisos }: CarpetaCardProps) {
   const t = useTranslations('recursos');
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const tieneRecursos = (carpeta.recursos_count ?? 0) > 0;
+  const paraTodos = carpeta.para_todos_efectivo ?? false;
+  const alumnosCount = carpeta.alumno_ids_efectivos?.length ?? 0;
 
   return (
     <div
@@ -42,14 +51,33 @@ export function CarpetaCard({ carpeta, canManage, onClick, onRename, onDelete }:
         <Folder className="size-5 text-[var(--color-brand-gold)]" />
       </div>
 
-      {/* Name + count */}
+      {/* Name + meta */}
       <div className="flex-1 min-w-0">
         <p className="truncate text-sm font-semibold text-[var(--color-text-primary)]">{carpeta.nombre}</p>
-        {carpeta.recursos_count !== undefined && (
-          <p className="text-xs text-[var(--color-text-muted)]">
-            {t('carpeta_recursos_count', { count: carpeta.recursos_count })}
-          </p>
-        )}
+        <div className="flex items-center gap-2 mt-0.5">
+          {carpeta.recursos_count !== undefined && (
+            <span className="text-xs text-[var(--color-text-muted)]">
+              {t('carpeta_recursos_count', { count: carpeta.recursos_count })}
+            </span>
+          )}
+          {/* Visibility badge — only shown when there are resources */}
+          {tieneRecursos && (
+            <span className={cn(
+              'inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium',
+              paraTodos
+                ? 'bg-[var(--color-success)]/10 text-[var(--color-success)]'
+                : alumnosCount > 0
+                  ? 'bg-[var(--color-bg-elevated)] text-[var(--color-text-muted)]'
+                  : 'bg-[var(--color-bg-elevated)] text-[var(--color-text-muted)]',
+            )}>
+              {paraTodos
+                ? <><Globe className="size-2.5" />{t('para_todos')}</>
+                : alumnosCount > 0
+                  ? <><Users className="size-2.5" />{t('solo_asignados', { count: alumnosCount })}</>
+                  : <><Users className="size-2.5" />{t('carpeta_sin_permisos')}</>}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Actions — only for managers */}
@@ -60,6 +88,14 @@ export function CarpetaCard({ carpeta, canManage, onClick, onRename, onDelete }:
         >
           {/* Desktop: icon buttons on hover */}
           <div className="hidden lg:flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button
+              type="button"
+              title={t('editar_permisos_carpeta')}
+              onClick={() => onEditPermisos(carpeta)}
+              className="flex size-8 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+            >
+              <Settings2 className="size-3.5" />
+            </button>
             <button
               type="button"
               title={t('renombrar_carpeta')}
@@ -92,7 +128,15 @@ export function CarpetaCard({ carpeta, canManage, onClick, onRename, onDelete }:
               <MoreHorizontal className="size-4" />
             </button>
             {menuOpen && (
-              <div className="absolute right-0 top-full z-50 mt-1 min-w-[140px] rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg)] py-1 shadow-[var(--shadow-lg)]">
+              <div className="absolute right-0 top-full z-50 mt-1 min-w-[160px] rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg)] py-1 shadow-[var(--shadow-lg)]">
+                <button
+                  type="button"
+                  onClick={() => { setMenuOpen(false); onEditPermisos(carpeta); }}
+                  className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)]"
+                >
+                  <Settings2 className="size-4" />
+                  {t('editar_permisos_carpeta')}
+                </button>
                 <button
                   type="button"
                   onClick={() => { setMenuOpen(false); onRename(carpeta); }}

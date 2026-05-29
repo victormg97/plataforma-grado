@@ -1126,7 +1126,18 @@
     "ubicacion_actual": "Ubicación actual",
     "exito_movido": "Recurso movido",
     "error_mover": "Error al mover el recurso",
-    "sin_recursos_filtro": "No hay recursos de este tipo en esta carpeta"
+    "sin_recursos_filtro": "No hay recursos de este tipo en esta carpeta",
+    "editar_permisos_carpeta": "Editar permisos",
+    "carpeta_permisos_actuales": "Permisos actuales (heredados de los archivos)",
+    "carpeta_hereda_todos": "Al menos un archivo dentro está visible para todos los alumnos, por lo que esta carpeta también es visible para todos.",
+    "carpeta_hereda_especificos": "Los archivos dentro son visibles para {count, plural, one {# alumno específico} other {# alumnos específicos}}. La carpeta hereda esa visibilidad.",
+    "carpeta_sin_recursos_permisos": "Esta carpeta no tiene archivos aún. Los permisos que configures se aplicarán a los archivos que subas.",
+    "carpeta_sin_permisos": "Sin acceso asignado",
+    "carpeta_propagacion_titulo": "Los cambios se aplicarán a todos los archivos",
+    "carpeta_propagacion_desc": "Al guardar, los permisos de {count, plural, one {# archivo} other {# archivos}} dentro de esta carpeta serán actualizados para coincidir con esta configuración.",
+    "carpeta_permisos_guardados": "Permisos de carpeta actualizados",
+    "error_guardar_permisos_carpeta": "Error al actualizar los permisos",
+    "tenia_acceso": "tenía acceso"
   },
   "pagos": {
     "titulo": "Pagos",

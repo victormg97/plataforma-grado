@@ -13,6 +13,7 @@ import { ConfirmModal } from '@/components/common/ConfirmModal';
 import { RecursoCard, type RecursoItem } from '@/components/recursos/RecursoCard';
 import { CarpetaCard, type CarpetaItem } from '@/components/recursos/CarpetaCard';
 import { CarpetaModal } from '@/components/recursos/CarpetaModal';
+import { CarpetaPermisosModal } from '@/components/recursos/CarpetaPermisosModal';
 import { MoverRecursoModal } from '@/components/recursos/MoverRecursoModal';
 import { RecursoUploader } from '@/components/recursos/RecursoUploader';
 import { RecursoEditModal } from '@/components/recursos/RecursoEditModal';
@@ -52,6 +53,7 @@ export function RecursosView({ rol }: RecursosViewProps) {
   const [carpetaModalMode, setCarpetaModalMode] = useState<'create' | 'rename' | null>(null);
   const [renamingCarpeta, setRenamingCarpeta] = useState<CarpetaItem | null>(null);
   const [deleteCarpetaTarget, setDeleteCarpetaTarget] = useState<CarpetaItem | null>(null);
+  const [editPermisosCarpeta, setEditPermisosCarpeta] = useState<CarpetaItem | null>(null);
 
   const canUpload = rol === 'admin' || rol === 'profesor';
 
@@ -263,6 +265,60 @@ export function RecursosView({ rol }: RecursosViewProps) {
     onError: () => toast.error(t('error_eliminar_carpeta')),
   });
 
+  // ── Mutation: propagate folder permissions to all resources inside ──
+  const propagarPermisosMutation = useMutation({
+    mutationFn: async ({
+      carpetaId,
+      para_todos,
+      alumno_ids,
+    }: {
+      carpetaId: string;
+      para_todos: boolean;
+      alumno_ids: string[];
+    }) => {
+      // 1. Get all resource IDs in this folder
+      const { data: recursos, error: fetchErr } = await supabase
+        .from('recursos_compartidos')
+        .select('id')
+        .eq('carpeta_id', carpetaId);
+      if (fetchErr) throw fetchErr;
+      if (!recursos || recursos.length === 0) return;
+
+      const ids = recursos.map((r) => r.id);
+
+      // 2. Update para_todos on all resources
+      const { error: updateErr } = await supabase
+        .from('recursos_compartidos')
+        .update({ para_todos })
+        .in('id', ids);
+      if (updateErr) throw updateErr;
+
+      // 3. Delete all existing acceso records for these resources
+      const { error: deleteErr } = await supabase
+        .from('recursos_acceso')
+        .delete()
+        .in('recurso_id', ids);
+      if (deleteErr) throw deleteErr;
+
+      // 4. Re-insert acceso records if specific alumnos chosen
+      if (!para_todos && alumno_ids.length > 0) {
+        const rows = ids.flatMap((recurso_id) =>
+          alumno_ids.map((alumno_id) => ({ recurso_id, alumno_id }))
+        );
+        const { error: insertErr } = await supabase
+          .from('recursos_acceso')
+          .insert(rows);
+        if (insertErr) throw insertErr;
+      }
+    },
+    onSuccess: () => {
+      toast.success(t('carpeta_permisos_guardados'));
+      queryClient.invalidateQueries({ queryKey: ['recursos'] });
+      setEditPermisosCarpeta(null);
+    },
+    onError: () => toast.error(t('error_guardar_permisos_carpeta')),
+  });
+
   // ── Download ──────────────────────────────────────────────────────
   const handleDownload = async (recurso: RecursoItem): Promise<void> => {
     if (!recurso.storage_path) return;
@@ -429,6 +485,7 @@ export function RecursosView({ rol }: RecursosViewProps) {
                   onClick={() => setCurrentCarpetaId(c.id)}
                   onRename={(carpeta) => { setRenamingCarpeta(carpeta); setCarpetaModalMode('rename'); }}
                   onDelete={(carpeta) => setDeleteCarpetaTarget(carpeta)}
+                  onEditPermisos={(carpeta) => setEditPermisosCarpeta(carpeta)}
                 />
               ))}
             </div>
@@ -533,6 +590,24 @@ export function RecursosView({ rol }: RecursosViewProps) {
           onClose={() => setEditTarget(null)}
           onSave={async (id, data) => {
             await editMutation.mutateAsync({ id, data });
+          }}
+        />
+      )}
+
+      {/* Edit folder permissions */}
+      {editPermisosCarpeta && canUpload && (
+        <CarpetaPermisosModal
+          carpeta={editPermisosCarpeta}
+          recursosEnCarpeta={allRecursos.filter((r) => r.carpeta_id === editPermisosCarpeta.id)}
+          alumnos={alumnos}
+          saving={propagarPermisosMutation.isPending}
+          onClose={() => setEditPermisosCarpeta(null)}
+          onSave={async ({ para_todos, alumno_ids }) => {
+            await propagarPermisosMutation.mutateAsync({
+              carpetaId: editPermisosCarpeta.id,
+              para_todos,
+              alumno_ids,
+            });
           }}
         />
       )}
