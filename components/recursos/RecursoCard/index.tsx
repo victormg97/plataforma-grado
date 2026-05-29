@@ -9,15 +9,15 @@ import { es } from 'date-fns/locale';
 import { getFileInfo, getExtension } from '@/lib/utils/fileInfo';
 import { RecursoPreviewModal } from '@/components/recursos/RecursoPreviewModal';
 import {
-  RecursoCardActions,
+  CardActions as RecursoCardActions,
   Eye,
   Download,
   ExternalLink,
   Play,
   Pencil,
   Trash2,
-  type RecursoCardAction,
-} from './RecursoCardActions';
+  type CardAction as RecursoCardAction,
+} from '@/components/common/CardActions';
 import type { UserRol } from '@/lib/supabase/types';
 
 export interface RecursoItem {

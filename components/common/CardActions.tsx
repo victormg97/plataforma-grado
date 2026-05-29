@@ -1,0 +1,163 @@
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import {
+  MoreHorizontal,
+  Eye,
+  Download,
+  ExternalLink,
+  Play,
+  Pencil,
+  Trash2,
+} from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { cn } from '@/lib/utils';
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+export interface CardAction {
+  key: string;
+  label: string;
+  icon: React.ReactNode;
+  onClick: () => void;
+  danger?: boolean;
+}
+
+interface CardActionsProps {
+  /** Actions to show in the popover (mobile) and as icon buttons (desktop) */
+  actions: CardAction[];
+  /** Extra class for the desktop button row wrapper */
+  className?: string;
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
+export function CardActions({ actions, className }: CardActionsProps) {
+  const t = useTranslations('common');
+  const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState({ top: 0, right: 0 });
+
+  // Close on outside click or Escape
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+    const onClick = (e: MouseEvent) => {
+      if (
+        popoverRef.current && !popoverRef.current.contains(e.target as Node) &&
+        triggerRef.current && !triggerRef.current.contains(e.target as Node)
+      ) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    document.addEventListener('mousedown', onClick);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('mousedown', onClick);
+    };
+  }, [open]);
+
+  const handleTrigger = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!triggerRef.current) return;
+    const rect = triggerRef.current.getBoundingClientRect();
+    setPos({
+      top: rect.bottom + window.scrollY + 6,
+      right: window.innerWidth - rect.right,
+    });
+    setOpen((v) => !v);
+  };
+
+  if (actions.length === 0) return null;
+
+  return (
+    <>
+      {/* ── Desktop: icon buttons, fade in on group-hover ── */}
+      <div className={cn('hidden lg:flex flex-shrink-0 items-start gap-0.5 pt-0.5', className)}>
+        {actions.map((action) => (
+          <button
+            key={action.key}
+            type="button"
+            onClick={(e) => { e.stopPropagation(); action.onClick(); }}
+            aria-label={action.label}
+            title={action.label}
+            className={cn(
+              'flex size-9 items-center justify-center rounded-[var(--radius-sm)]',
+              'text-[var(--color-text-muted)] transition-colors',
+              'opacity-0 group-hover:opacity-100 transition-opacity',
+              action.danger
+                ? 'hover:bg-[rgba(192,57,43,0.1)] hover:text-[var(--color-error)]'
+                : 'hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]',
+            )}
+          >
+            {action.icon}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Mobile: single ⋯ trigger ── */}
+      <div className="flex lg:hidden flex-shrink-0 items-start pt-0.5">
+        <button
+          ref={triggerRef}
+          type="button"
+          onClick={handleTrigger}
+          aria-label={t('acciones')}
+          aria-expanded={open}
+          className={cn(
+            'flex size-9 items-center justify-center rounded-[var(--radius-sm)]',
+            'text-[var(--color-text-muted)] transition-colors',
+            'hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]',
+            open && 'bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)]',
+          )}
+        >
+          <MoreHorizontal className="size-4" />
+        </button>
+      </div>
+
+      {/* ── Popover (portal, mobile only) ── */}
+      {open && typeof window !== 'undefined' && createPortal(
+        <div
+          ref={popoverRef}
+          role="menu"
+          style={{ top: pos.top, right: pos.right }}
+          className={cn(
+            'fixed z-[70] min-w-[160px] rounded-[var(--radius-lg)]',
+            'border border-[var(--color-border)] bg-[var(--color-bg)]',
+            'shadow-[var(--shadow-lg)] py-1',
+            'animate-in fade-in-0 zoom-in-95 duration-100',
+          )}
+        >
+          {actions.map((action) => (
+            <button
+              key={action.key}
+              type="button"
+              role="menuitem"
+              onClick={(e) => {
+                e.stopPropagation();
+                setOpen(false);
+                action.onClick();
+              }}
+              className={cn(
+                'flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors text-left',
+                action.danger
+                  ? 'text-[var(--color-error)] hover:bg-[rgba(192,57,43,0.08)]'
+                  : 'text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)]',
+              )}
+            >
+              <span className="size-4 flex-shrink-0">{action.icon}</span>
+              {action.label}
+            </button>
+          ))}
+        </div>,
+        document.body,
+      )}
+    </>
+  );
+}
+
+// ─── Icon helpers (re-exported for convenience) ───────────────────────────────
+
+export { Eye, Download, ExternalLink, Play, Pencil, Trash2 };

@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, UserCheck, UserX, Eye, Pencil, CalendarDays } from 'lucide-react';
+import { Plus, UserCheck, UserX, Eye, Pencil, CalendarDays, BookOpen, CalendarRange } from 'lucide-react';
 import { toast } from 'sonner';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card } from '@/components/common/Card';
@@ -10,10 +10,10 @@ import { Button } from '@/components/common/Button';
 import { Avatar } from '@/components/common/Avatar';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { Modal } from '@/components/common/Modal';
+import { CardActions, type CardAction } from '@/components/common/CardActions';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Tooltip } from '@/components/common/Tooltip';
 
 type Profesor = {
   id: string;
@@ -96,7 +96,7 @@ export default function ProfesoresPage() {
           </Card>
         ) : (
           sortedProfesores.map((p) => (
-            <Card key={p.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <Card key={p.id} className="group flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex items-center gap-3">
                 <Avatar nombre={p.nombre} apellido={p.apellido} avatarUrl={p.avatar_url} size="md" />
                 <div>
@@ -112,57 +112,42 @@ export default function ProfesoresPage() {
                   <p className="text-xs text-[var(--color-text-muted)]">{tp('alumnos_asignados', { count: p.alumnos_count })}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2 ml-auto sm:ml-0">
-                <Tooltip content={tc('editar')}>
-                  <button
-                    onClick={() => router.push(`/admin/profesores/${p.id}/editar`)}
-                    className="rounded p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)]"
-                  >
-                    <Pencil className="size-4" />
-                  </button>
-                </Tooltip>
-                {p.rol !== 'admin' && (
-                  <Tooltip content={p.activo ? tp('deshabilitar') : tp('habilitar')}>
-                    <button
-                      onClick={() => setConfirmAction({ id: p.id, nombre: `${p.nombre} ${p.apellido}`, activo: p.activo })}
-                      className={`flex items-center gap-1 rounded-[var(--radius-md)] border px-3 py-1.5 text-xs font-medium transition-colors ${
-                        p.activo
-                          ? 'border-[var(--color-error)] text-[var(--color-error)] hover:bg-red-50 dark:hover:bg-red-950/20'
-                          : 'border-[var(--color-success)] text-[var(--color-success)] hover:bg-green-50 dark:hover:bg-green-950/20'
-                      }`}
-                    >
-                      {p.activo ? <UserX className="size-3.5" /> : <UserCheck className="size-3.5" />}
-                      {p.activo ? tp('deshabilitar') : tp('habilitar')}
-                    </button>
-                  </Tooltip>
-                )}
-                <Tooltip content={tp('ver_alumnos')}>
-                  <Link
-                    href={`/admin/alumnos?profesor_id=${p.id}`}
-                    className="flex items-center gap-1 rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 py-1.5 text-xs font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)]"
-                  >
-                    <Eye className="size-3.5" />
-                    {tp('ver_alumnos')}
-                  </Link>
-                </Tooltip>
-                <Tooltip content={tp('ver_clases')}>
-                  <Link
-                    href={`/admin/profesores/${p.id}/horarios`}
-                    className="flex items-center gap-1 rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 py-1.5 text-xs font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)]"
-                  >
-                    <CalendarDays className="size-3.5" />
-                    {tp('ver_clases')}
-                  </Link>
-                </Tooltip>
-                <Tooltip content={tp('ver_agenda')}>
-                  <Link
-                    href={`/admin/profesores/${p.id}/horarios?tab=agenda`}
-                    className="flex items-center gap-1 rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 py-1.5 text-xs font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)]"
-                  >
-                    <CalendarDays className="size-3.5" />
-                    {tp('ver_agenda')}
-                  </Link>
-                </Tooltip>
+              <div className="flex items-center ml-auto sm:ml-0">
+                <CardActions
+                  actions={[
+                    {
+                      key: 'editar',
+                      label: tc('editar'),
+                      icon: <Pencil className="size-4" />,
+                      onClick: () => router.push(`/admin/profesores/${p.id}/editar`),
+                    },
+                    ...(p.rol !== 'admin' ? [{
+                      key: 'toggle',
+                      label: p.activo ? tp('deshabilitar') : tp('habilitar'),
+                      icon: p.activo ? <UserX className="size-4" /> : <UserCheck className="size-4" />,
+                      onClick: () => setConfirmAction({ id: p.id, nombre: `${p.nombre} ${p.apellido}`, activo: p.activo }),
+                      danger: p.activo,
+                    } as CardAction] : []),
+                    {
+                      key: 'ver_alumnos',
+                      label: tp('ver_alumnos'),
+                      icon: <Eye className="size-4" />,
+                      onClick: () => router.push(`/admin/alumnos?profesor_id=${p.id}`),
+                    },
+                    {
+                      key: 'ver_clases',
+                      label: tp('ver_clases'),
+                      icon: <BookOpen className="size-4" />,
+                      onClick: () => router.push(`/admin/profesores/${p.id}/horarios`),
+                    },
+                    {
+                      key: 'ver_agenda',
+                      label: tp('ver_agenda'),
+                      icon: <CalendarRange className="size-4" />,
+                      onClick: () => router.push(`/admin/profesores/${p.id}/horarios?tab=agenda`),
+                    },
+                  ]}
+                />
               </div>
             </Card>
           ))
