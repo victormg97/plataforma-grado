@@ -1,3 +1,5 @@
+import { existsSync, readFileSync } from 'fs';
+import { join } from 'path';
 import type { TenantConfig } from '@/config/schema';
 
 type Owner = TenantConfig['propietarios'][number];

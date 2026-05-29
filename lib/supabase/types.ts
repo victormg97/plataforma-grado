@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      carpetas_recursos: {
+        Row: {
+          id: string
+          nombre: string
+          parent_id: string | null
+          creada_por: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          nombre: string
+          parent_id?: string | null
+          creada_por: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          nombre?: string
+          parent_id?: string | null
+          creada_por?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "carpetas_recursos_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "carpetas_recursos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "carpetas_recursos_creada_por_fkey"
+            columns: ["creada_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bloqueos_horario: {
         Row: {
           id: string
@@ -927,6 +969,7 @@ export type Database = {
       recursos_compartidos: {
         Row: {
           bloquear_descarga: boolean
+          carpeta_id: string | null
           created_at: string
           descripcion: string | null
           id: string
@@ -940,6 +983,7 @@ export type Database = {
         }
         Insert: {
           bloquear_descarga?: boolean
+          carpeta_id?: string | null
           created_at?: string
           descripcion?: string | null
           id?: string
@@ -953,6 +997,7 @@ export type Database = {
         }
         Update: {
           bloquear_descarga?: boolean
+          carpeta_id?: string | null
           created_at?: string
           descripcion?: string | null
           id?: string
@@ -970,6 +1015,13 @@ export type Database = {
             columns: ["subido_por"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recursos_compartidos_carpeta_id_fkey"
+            columns: ["carpeta_id"]
+            isOneToOne: false
+            referencedRelation: "carpetas_recursos"
             referencedColumns: ["id"]
           },
         ]

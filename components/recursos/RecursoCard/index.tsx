@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Link2, Video, Users, Globe } from 'lucide-react';
+import { Link2, Video, Users, Globe, FolderInput } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -29,6 +29,7 @@ export interface RecursoItem {
   storage_path?: string | null;
   para_todos: boolean;
   bloquear_descarga?: boolean;
+  carpeta_id?: string | null;
   created_at: string;
   uploader_nombre: string;
   subido_por?: string;
@@ -43,6 +44,7 @@ interface RecursoCardProps {
   onDelete?: (id: string) => void;
   onEdit?: (recurso: RecursoItem) => void;
   onDownload?: (recurso: RecursoItem) => Promise<void> | void;
+  onMove?: (recurso: RecursoItem) => void;
 }
 
 const TIPO_FALLBACK = {
@@ -57,6 +59,7 @@ export function RecursoCard({
   onDelete,
   onEdit,
   onDownload,
+  onMove,
 }: RecursoCardProps) {
   const t = useTranslations('recursos');
   const [showPreview, setShowPreview] = useState(false);
@@ -127,6 +130,16 @@ export function RecursoCard({
       label: t('descargar'),
       icon: <Download className="size-4" />,
       onClick: () => onDownload(recurso),
+    });
+  }
+
+  // Move to folder
+  if (canManage && onMove) {
+    actions.push({
+      key: 'mover',
+      label: t('mover_a_carpeta'),
+      icon: <FolderInput className="size-4" />,
+      onClick: () => onMove(recurso),
     });
   }
 

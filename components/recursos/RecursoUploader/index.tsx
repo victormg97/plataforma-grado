@@ -18,11 +18,13 @@ type Tipo = 'archivo' | 'enlace' | 'video';
 interface UploaderProps {
   alumnos: { id: string; nombre: string; apellido: string }[];
   onSuccess: () => void;
+  /** Pre-select this folder when uploading */
+  defaultCarpetaId?: string | null;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function RecursoUploader({ alumnos, onSuccess }: UploaderProps) {
+export function RecursoUploader({ alumnos, onSuccess, defaultCarpetaId }: UploaderProps) {
   const t = useTranslations('recursos');
   const { user } = useUserStore();
   const supabase = createClient();
@@ -114,6 +116,7 @@ export function RecursoUploader({ alumnos, onSuccess }: UploaderProps) {
               subido_por: user.id,
               para_todos: paraToodos,
               bloquear_descarga: bloquearDescarga,
+              carpeta_id: defaultCarpetaId ?? null,
             })
             .select('id')
             .single();
@@ -139,6 +142,7 @@ export function RecursoUploader({ alumnos, onSuccess }: UploaderProps) {
             subido_por: user.id,
             para_todos: paraToodos,
             bloquear_descarga: bloquearDescarga,
+            carpeta_id: defaultCarpetaId ?? null,
           })
           .select('id')
           .single();
