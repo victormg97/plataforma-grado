@@ -97,7 +97,7 @@ export default function ProfesoresPage() {
           </Card>
         ) : (
           sortedProfesores.map((p) => (
-            <Card key={p.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <Card key={p.id} className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
               <div className="flex items-center gap-3">
                 <Avatar nombre={p.nombre} apellido={p.apellido} avatarUrl={p.avatar_url} size="md" />
                 <div>
@@ -115,7 +115,7 @@ export default function ProfesoresPage() {
               </div>
 
               {/* ── Desktop: full button row (unchanged design) ── */}
-              <div className="hidden sm:flex items-center gap-2 ml-auto sm:ml-0">
+              <div className="hidden lg:flex items-center gap-2 ml-auto lg:ml-0">
                 <Tooltip content={tc('editar')}>
                   <button
                     onClick={() => router.push(`/admin/profesores/${p.id}/editar`)}
@@ -169,7 +169,7 @@ export default function ProfesoresPage() {
               </div>
 
               {/* ── Mobile: ellipsis menu ── */}
-              <div className="flex sm:hidden items-center ml-auto">
+              <div className="flex lg:hidden items-center ml-auto">
                 <CardActions
                   mobileOnly
                   actions={[
