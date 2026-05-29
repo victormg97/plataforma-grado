@@ -10,15 +10,17 @@ import { Button } from '@/components/common/Button';
 import { AppLogo } from '@/components/common/AppLogo';
 import { Eye, EyeOff, CheckCircle2, AlertCircle, LinkIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
 
 export default function SetupPasswordPage({ params }: { params: Promise<{ code: string }> }) {
   const resolvedParams = use(params);
   const router = useRouter();
   const t = useTranslations('setup');
-  
+
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -52,6 +54,10 @@ export default function SetupPasswordPage({ params }: { params: Promise<{ code: 
       setFormError(t('no_coinciden'));
       return;
     }
+    if (!acceptedTerms) {
+      setFormError(t('terminos_requerido'));
+      return;
+    }
 
     setIsLoading(true);
 
@@ -72,7 +78,7 @@ export default function SetupPasswordPage({ params }: { params: Promise<{ code: 
       setTimeout(() => {
         router.push('/login');
       }, 3000);
-      
+
     } catch (err: unknown) {
       if (err instanceof Error) {
         setFormError(err.message);
@@ -221,12 +227,53 @@ export default function SetupPasswordPage({ params }: { params: Promise<{ code: 
                   </div>
                 </div>
 
-                <div className="pt-4">
+                {/* ── Checkbox de Términos y Condiciones ── */}
+                <div className="pt-2">
+                  <label
+                    htmlFor="accept-terms"
+                    className={`flex items-start gap-3 cursor-pointer rounded-[var(--radius-md)] border p-3 transition-colors ${
+                      acceptedTerms
+                        ? 'border-[var(--color-brand-gold)] bg-[var(--color-brand-gold-muted)]'
+                        : 'border-[var(--color-border)] bg-[var(--color-bg-secondary)]/50 hover:border-[var(--color-brand-gold)]/50'
+                    }`}
+                  >
+                    <input
+                      id="accept-terms"
+                      type="checkbox"
+                      checked={acceptedTerms}
+                      onChange={(e) => {
+                        setAcceptedTerms(e.target.checked);
+                        if (formError === t('terminos_requerido')) setFormError(null);
+                      }}
+                      className="mt-0.5 size-4 shrink-0 rounded border-[var(--color-border)] accent-[var(--color-brand-gold)] cursor-pointer"
+                    />
+                    <span className="text-sm text-[var(--color-text-secondary)] leading-snug">
+                      {t('terminos_label')}{' '}
+                      <Link
+                        href="/terminos"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-medium text-[var(--color-brand-gold)] underline underline-offset-2 hover:opacity-80 transition-opacity"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {t('terminos_link')}
+                      </Link>
+                    </span>
+                  </label>
+                </div>
+
+                <div className="pt-2">
                   <Button
                     type="submit"
                     fullWidth
                     loading={isLoading}
-                    disabled={isLoading || !password || !confirmPassword || password !== confirmPassword}
+                    disabled={
+                      isLoading ||
+                      !password ||
+                      !confirmPassword ||
+                      password !== confirmPassword ||
+                      !acceptedTerms
+                    }
                   >
                     {t('boton')}
                   </Button>

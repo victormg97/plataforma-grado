@@ -925,7 +925,10 @@
     "error_invalido_titulo": "Invalid link",
     "error_invalido_desc": "This link is not valid or has already been used. If you are a student or professor, contact the person who sent it to you to generate a new one.",
     "error_invalido_boton": "Go to login",
-    "error_min_chars": "Password must be at least 6 characters"
+    "error_min_chars": "Password must be at least 6 characters",
+    "terminos_label": "I have read and accept the",
+    "terminos_link": "Terms and Conditions",
+    "terminos_requerido": "You must accept the Terms and Conditions to continue"
   },
   "crear_usuario": {
     "alumno": {

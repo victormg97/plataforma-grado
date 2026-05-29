@@ -925,7 +925,10 @@
     "error_invalido_titulo": "Enlace no válido",
     "error_invalido_desc": "Este enlace no es válido o ya fue utilizado. Si eres alumno o profesor, contacta a quien te lo envió para que genere uno nuevo.",
     "error_invalido_boton": "Ir al inicio de sesión",
-    "error_min_chars": "La contraseña debe tener al menos 6 caracteres"
+    "error_min_chars": "La contraseña debe tener al menos 6 caracteres",
+    "terminos_label": "He leído y acepto los",
+    "terminos_link": "Términos y Condiciones",
+    "terminos_requerido": "Debes aceptar los Términos y Condiciones para continuar"
   },
   "crear_usuario": {
     "alumno": {
