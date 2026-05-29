@@ -8,6 +8,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { getFileInfo, getExtension } from '@/lib/utils/fileInfo';
 import { RecursoPreviewModal } from '@/components/recursos/RecursoPreviewModal';
+import { ExternalLinkModal } from '@/components/common/ExternalLinkModal';
 import {
   CardActions as RecursoCardActions,
   Eye,
@@ -63,6 +64,7 @@ export function RecursoCard({
 }: RecursoCardProps) {
   const t = useTranslations('recursos');
   const [showPreview, setShowPreview] = useState(false);
+  const [showLinkModal, setShowLinkModal] = useState(false);
 
   // ── Icon resolution ──────────────────────────────────────────────────────
   const fileName = recurso.storage_path ?? recurso.titulo;
@@ -91,8 +93,9 @@ export function RecursoCard({
       else if (canDownload) onDownload?.(recurso);
     } else if (recurso.tipo === 'video') {
       setShowPreview(true);
-    } else if (recurso.url) {
-      window.open(recurso.url, '_blank', 'noopener,noreferrer');
+    } else if (recurso.tipo === 'enlace') {
+      // Always intercept external links with the confirmation modal
+      setShowLinkModal(true);
     }
   };
 
@@ -112,7 +115,7 @@ export function RecursoCard({
       key: 'abrir',
       label: t('abrir'),
       icon: <ExternalLink className="size-4" />,
-      onClick: handlePrimaryAction,
+      onClick: () => setShowLinkModal(true),
     });
   } else if (canDownload) {
     actions.push({
@@ -239,6 +242,18 @@ export function RecursoCard({
           recurso={recurso}
           canDownload={canDownload}
           onClose={() => setShowPreview(false)}
+        />
+      )}
+
+      {showLinkModal && recurso.url && (
+        <ExternalLinkModal
+          url={recurso.url}
+          title={recurso.titulo}
+          onConfirm={() => {
+            window.open(recurso.url!, '_blank', 'noopener,noreferrer');
+            setShowLinkModal(false);
+          }}
+          onCancel={() => setShowLinkModal(false)}
         />
       )}
     </>
