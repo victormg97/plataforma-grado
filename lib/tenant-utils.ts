@@ -30,3 +30,43 @@ export function formatOwnerEmails(propietarios: Owner[]): string {
   const uniqueEmails = [...new Set(propietarios.map((p) => p.email))];
   return uniqueEmails.join(' / ');
 }
+
+// ─── Carga de documentos legales con fallback por tenant ─────────────────────
+
+export type LegalDocType = 'privacidad' | 'terminos';
+
+/**
+ * Carga un documento legal con lógica de fallback:
+ *
+ * 1. Busca en `content/tenants/{tenantId}/{locale}/{doc}.md`  (documento propio del tenant)
+ * 2. Si no existe, cae al global `content/{locale}/{doc}.md`
+ *
+ * La política de privacidad global representa la plataforma (desarrollador).
+ * Los términos y condiciones globales son el fallback genérico para tenants
+ * que aún no han subido los suyos.
+ *
+ * @returns { content: string; isCustom: boolean }
+ *   - content: texto Markdown listo para reemplazar placeholders
+ *   - isCustom: true si se usó el documento propio del tenant
+ */
+export function loadLegalDocument(
+  doc: LegalDocType,
+  tenantId: string,
+  locale: string
+): { content: string; isCustom: boolean } {
+  const tenantPath = join(
+    process.cwd(),
+    'content',
+    'tenants',
+    tenantId,
+    locale,
+    `${doc}.md`
+  );
+
+  if (existsSync(tenantPath)) {
+    return { content: readFileSync(tenantPath, 'utf-8'), isCustom: true };
+  }
+
+  const globalPath = join(process.cwd(), 'content', locale, `${doc}.md`);
+  return { content: readFileSync(globalPath, 'utf-8'), isCustom: false };
+}

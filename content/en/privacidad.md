@@ -1,23 +1,27 @@
-# Privacy Policy
+# Platform Privacy Policy
 
-**Last updated:** April 30, 2026
+**Last updated:** May 29, 2026
 
-At **{{APP_NAME}}** we take your privacy seriously. This Policy describes what information we collect, how we use it, and how we protect it.
+This Privacy Policy describes how personal data is collected, used, and protected for users accessing platforms developed and operated under the **{{APP_NAME}}** infrastructure.
 
 ---
 
-## 1. Data Controller
+## 1. Platform Technical Responsible
 
-The controller responsible for processing your personal data is:
+The person responsible for the development, maintenance, and technical operation of this platform is:
 
-**{{OWNER_NAME}}**  
-{{APP_NAME}} Platform  
-Email: {{OWNER_EMAIL}}  
+**Víctor Maldonado García**  
+Computer Engineer — Universidad de La Serena  
+Email: contacto@victormaldonado.dev  
 Country: Chile
+
+The **{{APP_NAME}}** platform is operated by **{{OWNER_NAME}}**, who acts as the service responsible party toward its users. For inquiries related to the use of the service, please contact **{{OWNER_EMAIL}}**.
+
+---
 
 ## 2. Data We Collect
 
-When using our platform, we may collect the following data:
+When using the platform, the following data may be collected:
 
 ### 2.1 Data provided by the user
 - First and last name
@@ -37,6 +41,8 @@ When using our platform, we may collect the following data:
 - Browser type and version
 - Operating system
 
+---
+
 ## 3. Purpose of Processing
 
 Your data is used exclusively to:
@@ -48,6 +54,8 @@ Your data is used exclusively to:
 
 **We do not sell, market, or transfer your data to third parties** for marketing or advertising purposes.
 
+---
+
 ## 4. Legal Basis
 
 The processing of your data is based on:
@@ -56,15 +64,21 @@ The processing of your data is based on:
 - **Consent:** for the processing of optional data.
 - **Legitimate interest:** for system security and integrity.
 
+---
+
 ## 5. Storage and Security
 
 - Data is stored on **Supabase** servers (cloud PostgreSQL) with encryption in transit (TLS) and at rest.
-- We apply technical and organizational measures to protect your data against unauthorized access, loss, or destruction.
+- Technical and organizational measures are applied to protect data against unauthorized access, loss, or destruction.
 - Access to data is restricted solely to authorized personnel and to users themselves according to their role on the platform.
+
+---
 
 ## 6. Data Retention
 
 Your data will be retained for as long as your account is active or as necessary to provide the service. Following an account deletion request, your data will be deleted or anonymized within a maximum of **30 business days**, unless otherwise required by law.
+
+---
 
 ## 7. Your Rights
 
@@ -77,9 +91,13 @@ In accordance with applicable Chilean legislation (Law No. 19,628 on Protection 
 
 To exercise these rights, write to us at **{{OWNER_EMAIL}}**.
 
+---
+
 ## 8. Cookies and Similar Technologies
 
 The platform uses strictly necessary session cookies for service operation (authentication). We do not use third-party tracking or advertising cookies.
+
+---
 
 ## 9. Third-Party Services
 
@@ -90,13 +108,17 @@ The platform uses the following external services:
 | Supabase | Database and authentication | [supabase.com/privacy](https://supabase.com/privacy) |
 | Vercel | Application hosting | [vercel.com/legal/privacy-policy](https://vercel.com/legal/privacy-policy) |
 
+---
+
 ## 10. Changes to This Policy
 
 We may update this Policy periodically. We will notify significant changes through a notice on the platform. The current version will always be available on this page.
 
+---
+
 ## 11. Contact
 
-If you have questions or concerns about this Policy, contact us at:
+For questions about this Privacy Policy:
 
-**{{APP_NAME}}**  
+**{{APP_NAME}}** — operated by **{{OWNER_NAME}}**  
 Email: {{OWNER_EMAIL}}

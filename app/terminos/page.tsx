@@ -1,10 +1,12 @@
-import { readFileSync } from "fs";
-import { join } from "path";
 import { getTranslations, getLocale } from "next-intl/server";
 import { MarkdownRenderer } from "@/components/common/MarkdownRenderer";
 import { BackButton } from "@/components/common/BackButton";
 import { tenantConfig } from "@/config";
-import { formatOwnerNames, formatOwnerEmails } from "@/lib/tenant-utils";
+import {
+  formatOwnerNames,
+  formatOwnerEmails,
+  loadLegalDocument,
+} from "@/lib/tenant-utils";
 
 export async function generateMetadata() {
   const t = await getTranslations("terminos");
@@ -16,9 +18,11 @@ export async function generateMetadata() {
 
 export default async function TerminosPage() {
   const locale = await getLocale();
-  const raw = readFileSync(
-    join(process.cwd(), "content", locale, "terminos.md"),
-    "utf-8"
+
+  const { content: raw } = loadLegalDocument(
+    "terminos",
+    tenantConfig.id,
+    locale
   );
 
   const content = raw

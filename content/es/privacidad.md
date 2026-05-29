@@ -1,23 +1,27 @@
-# Política de Privacidad
+# Política de Privacidad de la Plataforma
 
-**Última actualización:** 30 de abril de 2026
+**Última actualización:** 29 de mayo de 2026
 
-En **{{APP_NAME}}** nos tomamos muy en serio la privacidad de nuestros usuarios. Esta Política describe qué información recopilamos, cómo la utilizamos y cómo la protegemos.
+Esta Política de Privacidad describe cómo se recopilan, utilizan y protegen los datos personales de los usuarios que acceden a las plataformas desarrolladas y operadas bajo la infraestructura de **{{APP_NAME}}**.
 
 ---
 
-## 1. Responsable del Tratamiento
+## 1. Responsable Técnico de la Plataforma
 
-El responsable del tratamiento de sus datos personales es:
+El responsable del desarrollo, mantenimiento y operación técnica de esta plataforma es:
 
-**{{OWNER_NAME}}**  
-Plataforma {{APP_NAME}}  
-Email: {{OWNER_EMAIL}}  
+**Víctor Maldonado García**  
+Ingeniero en Computación — Universidad de La Serena  
+Email: contacto@victormaldonado.dev  
 País: Chile
+
+La plataforma **{{APP_NAME}}** es operada por **{{OWNER_NAME}}**, quien actúa como responsable del servicio frente a sus usuarios. Para consultas relacionadas con el uso del servicio, diríjase a **{{OWNER_EMAIL}}**.
+
+---
 
 ## 2. Datos que Recopilamos
 
-Al utilizar nuestra plataforma, podemos recopilar los siguientes datos:
+Al utilizar la plataforma, se pueden recopilar los siguientes datos:
 
 ### 2.1 Datos proporcionados por el usuario
 - Nombre y apellido
@@ -37,6 +41,8 @@ Al utilizar nuestra plataforma, podemos recopilar los siguientes datos:
 - Tipo y versión de navegador
 - Sistema operativo
 
+---
+
 ## 3. Finalidad del Tratamiento
 
 Sus datos son utilizados exclusivamente para:
@@ -48,6 +54,8 @@ Sus datos son utilizados exclusivamente para:
 
 **No comercializamos, vendemos ni cedemos sus datos a terceros** con fines de marketing o publicidad.
 
+---
+
 ## 4. Base Legal
 
 El tratamiento de sus datos se basa en:
@@ -56,19 +64,25 @@ El tratamiento de sus datos se basa en:
 - **Consentimiento:** para el tratamiento de datos opcionales.
 - **Interés legítimo:** para la seguridad e integridad del sistema.
 
+---
+
 ## 5. Almacenamiento y Seguridad
 
 - Los datos se almacenan en servidores de **Supabase** (PostgreSQL en la nube), con cifrado en tránsito (TLS) y en reposo.
-- Aplicamos medidas técnicas y organizativas para proteger sus datos contra acceso no autorizado, pérdida o destrucción.
+- Se aplican medidas técnicas y organizativas para proteger los datos contra acceso no autorizado, pérdida o destrucción.
 - El acceso a los datos está restringido únicamente al personal autorizado y a los propios usuarios según su rol en la plataforma.
+
+---
 
 ## 6. Conservación de los Datos
 
 Sus datos se conservarán mientras su cuenta esté activa o mientras sea necesario para prestar el servicio. Tras la solicitud de eliminación de cuenta, sus datos serán eliminados o anonimizados en un plazo máximo de **30 días hábiles**, salvo obligación legal en contrario.
 
+---
+
 ## 7. Sus Derechos
 
-De acuerdo con la legislación chilena vigiente (Ley N° 19.628 sobre Protección de la Vida Privada), usted tiene derecho a:
+De acuerdo con la legislación chilena vigente (Ley N° 19.628 sobre Protección de la Vida Privada), usted tiene derecho a:
 
 - **Acceso:** conocer qué datos tenemos sobre usted.
 - **Rectificación:** corregir datos inexactos o incompletos.
@@ -77,9 +91,13 @@ De acuerdo con la legislación chilena vigiente (Ley N° 19.628 sobre Protecció
 
 Para ejercer estos derechos, escríbanos a **{{OWNER_EMAIL}}**.
 
+---
+
 ## 8. Cookies y Tecnologías Similares
 
 La plataforma utiliza cookies de sesión estrictamente necesarias para el funcionamiento del servicio (autenticación). No utilizamos cookies de seguimiento ni de publicidad de terceros.
+
+---
 
 ## 9. Servicios de Terceros
 
@@ -90,13 +108,17 @@ La plataforma utiliza los siguientes servicios externos:
 | Supabase | Base de datos y autenticación | [supabase.com/privacy](https://supabase.com/privacy) |
 | Vercel | Alojamiento de la aplicación | [vercel.com/legal/privacy-policy](https://vercel.com/legal/privacy-policy) |
 
+---
+
 ## 10. Cambios en esta Política
 
 Podemos actualizar esta Política periódicamente. Notificaremos los cambios relevantes mediante un aviso en la plataforma. La versión vigente estará siempre disponible en esta página.
 
+---
+
 ## 11. Contacto
 
-Si tiene preguntas o inquietudes sobre esta Política, contáctenos en:
+Para consultas sobre esta Política de Privacidad:
 
-**{{APP_NAME}}**  
+**{{APP_NAME}}** — operado por **{{OWNER_NAME}}**  
 Email: {{OWNER_EMAIL}}
