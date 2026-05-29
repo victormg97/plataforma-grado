@@ -101,6 +101,8 @@
   "horarios": {
     "titulo": "Horarios",
     "nueva_clase": "Nueva clase",
+    "tab_clases": "Clases",
+    "tab_agenda": "Agenda",
     "nueva_descripcion": "Programa una nueva clase con un alumno",
     "editar_clase": "Editar clase",
     "editar_descripcion": "Modifica los datos de la clase",
@@ -364,6 +366,7 @@
     "subtitulo": "Gestión de profesores",
     "ver_alumnos": "Ver alumnos",
     "ver_clases": "Ver clases",
+    "ver_agenda": "Ver agenda",
     "ver_clases_subtitulo": "Historial de clases del profesor",
     "clases_de": "Clases de {nombre}",
     "alumnos_asignados": "{count} alumnos asignados",

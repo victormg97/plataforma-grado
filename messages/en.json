@@ -101,6 +101,8 @@
   "horarios": {
     "titulo": "Schedules",
     "nueva_clase": "New class",
+    "tab_clases": "Classes",
+    "tab_agenda": "Schedule",
     "nueva_descripcion": "Schedule a new class with a student",
     "editar_clase": "Edit class",
     "editar_descripcion": "Modify the class details",
@@ -364,6 +366,7 @@
     "subtitulo": "Professor management",
     "ver_alumnos": "View students",
     "ver_clases": "View classes",
+    "ver_agenda": "View schedule",
     "ver_clases_subtitulo": "Professor's class history",
     "clases_de": "Classes for {nombre}",
     "alumnos_asignados": "{count} students assigned",

@@ -171,7 +171,7 @@ export default async function RootLayout({
               <TenantProvider config={tenantConfig}>
                 {children}
               </TenantProvider>
-              <Toaster position="top-right" richColors />
+              <Toaster position="top-right" richColors closeButton />
               <SpeedInsights />
               <Analytics />
             </NextIntlClientProvider>
