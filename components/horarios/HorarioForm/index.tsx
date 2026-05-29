@@ -14,6 +14,7 @@ import type { Profile } from '@/lib/supabase/types';
 import type { HorarioConAsistencia } from '@/lib/hooks/useHorarios';
 import { AlumnoCombobox } from './components/AlumnoCombobox';
 import { ExamenToggle } from './components/ExamenToggle';
+import { usePruebaTerm } from '@/lib/hooks/usePruebaTerm';
 
 interface HorarioFormProps {
   open: boolean;
@@ -60,6 +61,7 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
   const t = useTranslations('horarios');
   const tc = useTranslations('common');
   const ta = useTranslations('alumnos');
+  const pruebaTerm = usePruebaTerm();
   const queryClient = useQueryClient();
   const [deleting, setDeleting] = useState(false);
   const [alumnoSearch, setAlumnoSearch] = useState('');
@@ -378,8 +380,8 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
         <ExamenToggle
           checked={esExamen}
           onChange={setEsExamen}
-          label={t('es_examen')}
-          description={t('es_examen_desc')}
+          label={t('es_examen', { term: pruebaTerm.singular })}
+          description={t('es_examen_desc', { term: pruebaTerm.singular })}
         />
       </form>
     </Modal>

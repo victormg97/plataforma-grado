@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/common/Button';
 import { Tooltip } from '@/components/common/Tooltip';
 import type { ClaseItem } from '@/lib/supabase/types';
+import { usePruebaTerm } from '@/lib/hooks/usePruebaTerm';
 
 interface ClasesEditorProps {
   clases: ClaseItem[];
@@ -30,13 +31,14 @@ export function ClasesEditor({
 }: ClasesEditorProps) {
   const t = useTranslations('programas');
   const [focusedKey, setFocusedKey] = useState<string | null>(null);
+  const pruebaTerm = usePruebaTerm();
 
   const addClase = (tipo: 'materia' | 'prueba') => {
     const maxOrden = Math.max(0, ...clases.map((c) => c.orden));
     const newClase: ClaseItem = {
       tempId: `temp-${Date.now()}`,
       id: '',
-      nombre: tipo === 'materia' ? t('editor.nueva_clase') : t('editor.nueva_prueba'),
+      nombre: tipo === 'materia' ? t('editor.nueva_clase') : t('editor.nueva_prueba', { term: pruebaTerm.singular }),
       tipo,
       orden: maxOrden + 1,
       duracion_min: duracionDefault,
@@ -154,7 +156,7 @@ export function ClasesEditor({
                       onFocus={(e) => {
                         const isDefault =
                           clase.nombre === t('editor.nueva_clase') ||
-                          clase.nombre === t('editor.nueva_prueba');
+                          clase.nombre === t('editor.nueva_prueba', { term: pruebaTerm.singular });
                         if (isDefault) e.target.select();
                       }}
                       className={cn(
@@ -262,14 +264,14 @@ export function ClasesEditor({
             </button>
           </Tooltip>
 
-          <Tooltip content={t('editor.agregar_prueba_tooltip')} position="bottom">
+          <Tooltip content={t('editor.agregar_prueba_tooltip', { term: pruebaTerm.singular })} position="bottom">
             <button
               type="button"
               onClick={() => addClase('prueba')}
               className="flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-dashed border-[var(--color-brand-gold)] px-3 py-1.5 text-sm font-medium text-[var(--color-brand-gold)] hover:bg-[var(--color-brand-gold)]/10 active:scale-[0.98] transition-all"
             >
               <Plus className="size-3.5" />
-              {t('editor.agregar_prueba')}
+              {t('editor.agregar_prueba', { term: pruebaTerm.singular })}
             </button>
           </Tooltip>
 

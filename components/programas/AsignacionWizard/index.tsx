@@ -6,6 +6,7 @@ import { Check, ChevronRight } from 'lucide-react';
 import { Modal } from '@/components/common/Modal';
 import { Button } from '@/components/common/Button';
 import type { ClaseItem } from '@/lib/supabase/types';
+import { usePruebaTerm } from '@/lib/hooks/usePruebaTerm';
 
 import { StepIndicator, type Step } from './components/StepIndicator';
 import { StepAlumnos } from './components/StepAlumnos';
@@ -59,6 +60,7 @@ export function AsignacionWizard({
   loading = false,
 }: AsignacionWizardProps) {
   const t = useTranslations('programas');
+  const pruebaTerm = usePruebaTerm();
   const [step, setStep] = useState<Step>('alumnos');
   const [selectedAlumnos, setSelectedAlumnos] = useState<string[]>([]);
   const [currentAlumnoIdx, setCurrentAlumnoIdx] = useState(0);
@@ -234,6 +236,7 @@ export function AsignacionWizard({
             updateHorario(currentAlumnoHorario.alumno_id, claseId, field, value)
           }
           t={t}
+          pruebaTerm={pruebaTerm.singular}
         />
       )}
 

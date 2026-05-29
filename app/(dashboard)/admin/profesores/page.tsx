@@ -154,6 +154,15 @@ export default function ProfesoresPage() {
                     {tp('ver_clases')}
                   </Link>
                 </Tooltip>
+                <Tooltip content={tp('ver_agenda')}>
+                  <Link
+                    href={`/admin/profesores/${p.id}/horarios?tab=agenda`}
+                    className="flex items-center gap-1 rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 py-1.5 text-xs font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)]"
+                  >
+                    <CalendarDays className="size-3.5" />
+                    {tp('ver_agenda')}
+                  </Link>
+                </Tooltip>
               </div>
             </Card>
           ))

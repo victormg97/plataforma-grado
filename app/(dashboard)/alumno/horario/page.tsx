@@ -28,6 +28,7 @@ import { useClaseTimeStatus } from '@/lib/hooks/useServerTime';
 import { useQueryParam } from '@/lib/hooks/useQueryParam';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { usePruebas } from '@/lib/hooks/usePruebas';
+import { usePruebaTerm } from '@/lib/hooks/usePruebaTerm';
 import { useSolicitudesCambio } from '@/lib/hooks/useSolicitudesCambio';
 import { buildAlumnoHorarioDetailHref, getAlumnoHorarioBackHref } from '@/lib/utils/horarioNavigation';
 import { useUserStore } from '@/stores/useUserStore';
@@ -120,7 +121,7 @@ function UpcomingClaseCard({ clase, locale, dateFnsLocale, t, isFirst, isExamen 
                 <span className="inline-flex items-center gap-0.5 rounded-full border px-1.5 py-0.5 text-[10px] font-semibold"
                   style={{ backgroundColor: 'var(--color-brand-gold-muted)', borderColor: 'color-mix(in srgb, var(--color-brand-gold) 40%, transparent)', color: 'var(--color-brand-gold)' }}>
                   <GraduationCap className="size-2.5" />
-                  {t('badge_examen')}
+                  {t('badge_examen', { term: pruebaTerm.singular })}
                 </span>
               )}
             </div>
@@ -162,6 +163,7 @@ function HistorialClaseCard({ clase, locale, dateFnsLocale, notasCount, isExamen
   isExamen?: boolean;
 }) {
   const t = useTranslations('horarios');
+  const pruebaTerm = usePruebaTerm();
   return (
     <Link href={buildAlumnoHorarioDetailHref(clase.horario.id, '/alumno/horario')} className="block group">
       <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg)] shadow-[var(--shadow-sm)] overflow-hidden transition-all group-hover:shadow-[var(--shadow-md)] group-hover:border-[var(--color-border-strong)]">
@@ -173,7 +175,7 @@ function HistorialClaseCard({ clase, locale, dateFnsLocale, notasCount, isExamen
                 <span className="inline-flex items-center gap-0.5 rounded-full border px-1.5 py-0.5 text-[10px] font-semibold shrink-0"
                   style={{ backgroundColor: 'var(--color-brand-gold-muted)', borderColor: 'color-mix(in srgb, var(--color-brand-gold) 40%, transparent)', color: 'var(--color-brand-gold)' }}>
                   <GraduationCap className="size-2.5" />
-                  {t('badge_examen')}
+                  {t('badge_examen', { term: pruebaTerm.singular })}
                 </span>
               )}
             </div>
@@ -259,6 +261,7 @@ function HorarioListView({ clases, loading }: { clases: ClaseAlumno[]; loading: 
   const dateFnsLocale = locale === 'en' ? enUS : es;
   const today = new Date().toISOString().split('T')[0];
   const { user } = useUserStore();
+  const pruebaTerm = usePruebaTerm();
 
   /* Fetch pruebas to detect exam classes */
   const { data: pruebas = [] } = usePruebas(user?.id);
@@ -583,7 +586,7 @@ function HorarioDetailView({ clase, user, confirmar, cancelar, pedirCambio: _ped
               <div className="flex items-center gap-2 rounded-[var(--radius-md)] px-3 py-2.5"
                 style={{ backgroundColor: 'var(--color-brand-gold-muted)', border: '1px solid color-mix(in srgb, var(--color-brand-gold) 40%, transparent)' }}>
                 <GraduationCap className="size-4 shrink-0" style={{ color: 'var(--color-brand-gold)' }} />
-                <span className="text-sm font-medium" style={{ color: 'var(--color-brand-gold)' }}>{t('es_examen')}</span>
+                <span className="text-sm font-medium" style={{ color: 'var(--color-brand-gold)' }}>{t('es_examen', { term: pruebaTerm.singular })}</span>
               </div>
             )}
             <div className="flex items-start justify-between">
@@ -643,7 +646,7 @@ function HorarioDetailView({ clase, user, confirmar, cancelar, pedirCambio: _ped
               <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] p-4 flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-[var(--color-text-primary)]">
-                    {t('nota_prueba')}
+                    {t('nota_prueba', { term: pruebaTerm.singular })}
                   </p>
                   <p className="text-sm text-[var(--color-text-muted)] mt-0.5">
                     {t(pruebaData.nota >= 4.0 ? 'aprobado' : 'reprobado')}
@@ -807,6 +810,7 @@ function AlumnoHorarioContent() {
   const { clases, loading, confirmar, cancelar, pedirCambio } = useAsistencia();
   const { data: pruebas = [] } = usePruebas(user?.id);
   const t = useTranslations('horarios');
+  const pruebaTerm = usePruebaTerm();
   const tc = useTranslations('common');
   const backHref = getAlumnoHorarioBackHref(from);
 

@@ -5,6 +5,7 @@ const config: TenantConfigInput = {
   nombre: 'Pregunta Estratégica',
   descripcion: 'Preparación para el Examen de Grado',
   emailDomain: 'preguntaestrategica.cl',
+  terminoPrueba: { singular: 'Interrogación', plural: 'Interrogaciones' },
   logoLight: '/tenants/pregunta-estrategica/logo-light.png',
   logoDark: '/tenants/pregunta-estrategica/logo-dark.png',
   propietarios: [

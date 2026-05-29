@@ -3,6 +3,7 @@
 import { User } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { ClaseItem } from '@/lib/supabase/types';
+import { usePruebaTerm } from '@/lib/hooks/usePruebaTerm';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -33,6 +34,7 @@ export interface StepHorarioProps {
   totalAlumnos: number;
   onUpdateHorario: (claseId: string, field: keyof HorarioClase, value: string) => void;
   t: ReturnType<typeof useTranslations<'programas'>>;
+  pruebaTerm: string;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -45,6 +47,7 @@ export function StepHorario({
   totalAlumnos,
   onUpdateHorario,
   t,
+  pruebaTerm,
 }: StepHorarioProps) {
   return (
     <div className="flex flex-col gap-4">
@@ -70,7 +73,7 @@ export function StepHorario({
                 <span className="text-sm font-medium text-[var(--color-text-primary)]">{clase.nombre}</span>
                 {clase.tipo === 'prueba' && (
                   <span className="ml-auto rounded-full bg-[var(--color-brand-gold-muted)] px-2 py-0.5 text-xs text-[var(--color-brand-gold)]">
-                    {t('editor.prueba')}
+                    {t('editor.prueba', { term: pruebaTerm })}
                   </span>
                 )}
               </div>

@@ -7,6 +7,7 @@ import { Avatar } from '@/components/common/Avatar';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import type { EstadoAsistencia } from '@/lib/supabase/types';
 import type { ReactNode } from 'react';
+import { usePruebaTerm } from '@/lib/hooks/usePruebaTerm';
 
 interface EventDetailHorario {
   id: string;
@@ -49,6 +50,7 @@ export function EventDetailModal({
 }: EventDetailModalProps) {
   const t = useTranslations('horarios');
   const ta = useTranslations('asistencia');
+  const pruebaTerm = usePruebaTerm();
 
   return (
     <Modal
@@ -94,7 +96,7 @@ export function EventDetailModal({
                 }}
               >
                 <GraduationCap className="size-3" />
-                {t('badge_examen')}
+                {t('badge_examen', { term: pruebaTerm.singular })}
               </span>
             )}
             {afterEstadoSlot}

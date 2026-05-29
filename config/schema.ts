@@ -73,6 +73,10 @@ export const tenantConfigSchema = z.object({
   nombre: z.string().min(1, 'Nombre de la aplicación es requerido'),
   descripcion: z.string().min(1, 'Descripción es requerida'),
   emailDomain: z.string().min(1, 'Dominio de correo es requerido'),
+  terminoPrueba: z.object({
+    singular: z.string().min(1),
+    plural: z.string().min(1),
+  }).optional().default({ singular: 'Prueba', plural: 'Pruebas' }),
   logoLight: relativePathSchema,
   logoDark: relativePathSchema,
   propietarios: z.array(ownerSchema).min(1, 'Se requiere al menos un propietario'),

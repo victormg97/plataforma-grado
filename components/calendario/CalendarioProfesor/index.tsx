@@ -18,6 +18,7 @@ import { Button } from '@/components/common/Button';
 import { HorarioForm } from '@/components/horarios/HorarioForm';
 import { useTranslations, useLocale } from 'next-intl';
 import { Calendar, Clock, FileText, MessageSquare, Pencil, UserX, GraduationCap } from 'lucide-react';
+import { usePruebaTerm } from '@/lib/hooks/usePruebaTerm';
 import { CalendarioDownloadButton, type CalendarioExportEvent } from '@/components/calendario/CalendarioDownloadButton';
 import { CalendarioStyles } from '@/components/calendario/CalendarioStyles';
 import { resolveCssVar } from '@/lib/utils/cssTokens';
@@ -44,6 +45,7 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
   const t = useTranslations('horarios');
   const tc = useTranslations('common');
   const ta = useTranslations('asistencia');
+  const pruebaTerm = usePruebaTerm();
   const locale = useLocale();
   const { events, alumnos, rawData, refetch } = useHorarios(profesorId);
   const [selectedHorario, setSelectedHorario] = useState<HorarioConAsistencia | null>(null);
@@ -365,7 +367,7 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
                 <span className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium"
                   style={{ backgroundColor: 'var(--color-brand-gold-muted)', borderColor: 'color-mix(in srgb, var(--color-brand-gold) 40%, transparent)', color: 'var(--color-brand-gold)' }}>
                   <GraduationCap className="size-3" />
-                  {t('badge_examen')}
+                  {t('badge_examen', { term: pruebaTerm.singular })}
                 </span>
               )}
             </div>

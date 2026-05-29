@@ -13,6 +13,7 @@ import { useUserStore } from '@/stores/useUserStore';
 import { Modal } from '@/components/common/Modal';
 import { Avatar } from '@/components/common/Avatar';
 import { StatusBadge } from '@/components/common/StatusBadge';
+import { usePruebaTerm } from '@/lib/hooks/usePruebaTerm';
 import { NotasIndicator } from '@/components/notas/NotasIndicator';
 import { AppSelect } from '@/components/common/AppSelect';
 import { Button } from '@/components/common/Button';
@@ -27,6 +28,7 @@ export function HorarioDetailGlobal() {
   const t = useTranslations('horarios');
   const tc = useTranslations('common');
   const ta = useTranslations('asistencia');
+  const pruebaTerm = usePruebaTerm();
   const pathname = usePathname();
   const queryClient = useQueryClient();
   const userRol: 'profesor' | 'admin' = user?.rol === 'admin' ? 'admin' : 'profesor';
@@ -96,7 +98,7 @@ export function HorarioDetailGlobal() {
               <span className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium"
                 style={{ backgroundColor: 'var(--color-brand-gold-muted)', borderColor: 'color-mix(in srgb, var(--color-brand-gold) 40%, transparent)', color: 'var(--color-brand-gold)' }}>
                 <GraduationCap className="size-3" />
-                {t('badge_examen')}
+                {t('badge_examen', { term: pruebaTerm.singular })}
               </span>
             )}
           </div>

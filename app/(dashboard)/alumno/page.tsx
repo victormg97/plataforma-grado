@@ -18,6 +18,7 @@ import { usePruebas } from '@/lib/hooks/usePruebas';
 import { useSolicitudesCambio } from '@/lib/hooks/useSolicitudesCambio';
 import { buildAlumnoHorarioDetailHref } from '@/lib/utils/horarioNavigation';
 import { useUserStore } from '@/stores/useUserStore';
+import { usePruebaTerm } from '@/lib/hooks/usePruebaTerm';
 import type { ClaseAlumno } from '@/lib/hooks/useAsistencia';
 import Link from 'next/link';
 import { useTranslations, useLocale } from 'next-intl';
@@ -27,6 +28,7 @@ function AlumnoDashboardContent() {
   const { proximas, historial, proximaClase, loading, confirmar, cancelar } = useAsistencia();
   const { data: pruebas = [] } = usePruebas(user?.id);
   const t = useTranslations('horarios');
+  const pruebaTerm = usePruebaTerm();
   const tCambio = useTranslations('cambioHorario.estado');
   const td = useTranslations('dashboard.alumno');
   const locale = useLocale();
@@ -107,7 +109,7 @@ function AlumnoDashboardContent() {
                         <span className="inline-flex items-center gap-0.5 rounded-full border px-1.5 py-0.5 text-[10px] font-semibold"
                           style={{ backgroundColor: 'var(--color-brand-gold-muted)', borderColor: 'color-mix(in srgb, var(--color-brand-gold) 40%, transparent)', color: 'var(--color-brand-gold)' }}>
                           <GraduationCap className="size-2.5" />
-                          {t('badge_examen')}
+                          {t('badge_examen', { term: pruebaTerm.singular })}
                         </span>
                       )}
                     </div>
@@ -237,7 +239,7 @@ function AlumnoDashboardContent() {
                           <span className="inline-flex items-center gap-0.5 rounded-full border px-1.5 py-0.5 text-[10px] font-semibold shrink-0"
                             style={{ backgroundColor: 'var(--color-brand-gold-muted)', borderColor: 'color-mix(in srgb, var(--color-brand-gold) 40%, transparent)', color: 'var(--color-brand-gold)' }}>
                             <GraduationCap className="size-2.5" />
-                            {t('badge_examen')}
+                            {t('badge_examen', { term: pruebaTerm.singular })}
                           </span>
                         )}
                       </div>

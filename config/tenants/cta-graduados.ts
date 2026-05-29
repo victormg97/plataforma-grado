@@ -5,6 +5,7 @@ const config: TenantConfigInput = {
   nombre: 'CTA Graduados',
   descripcion: 'Preparación para el Examen de Grado',
   emailDomain: 'ctagraduados.cl',
+  terminoPrueba: { singular: 'Prueba', plural: 'Pruebas' },
   logoLight: '/tenants/cta-graduados/logo-light.png',
   logoDark: '/tenants/cta-graduados/logo-dark.png',
   propietarios: [

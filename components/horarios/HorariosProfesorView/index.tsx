@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { useTranslations, useLocale } from 'next-intl';
 
 import { StatusBadge } from '@/components/common/StatusBadge';
+import { usePruebaTerm } from '@/lib/hooks/usePruebaTerm';
 import { NotasIndicator } from '@/components/notas/NotasIndicator';
 import { HorarioForm } from '@/components/horarios/HorarioForm';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
@@ -301,7 +302,7 @@ function ProximaClaseCard({
               }}
             >
               <GraduationCap className="size-2.5" />
-              {t('badge_examen')}
+              {t('badge_examen', { term: pruebaTerm.singular })}
             </span>
           )}
         </div>
@@ -385,6 +386,7 @@ function HistorialClaseCard({
   const t = useTranslations('horarios');
   const tc = useTranslations('common');
   const ta = useTranslations('alumnos');
+  const pruebaTerm = usePruebaTerm();
   const estado = horario.asistencia?.[0]?.estado ?? 'pendiente';
 
   return (
@@ -432,7 +434,7 @@ function HistorialClaseCard({
               }}
             >
               <GraduationCap className="size-2.5" />
-              {t('badge_examen')}
+              {t('badge_examen', { term: pruebaTerm.singular })}
             </span>
           )}
         </div>

@@ -13,6 +13,7 @@ import { Card } from '@/components/common/Card';
 import { Avatar } from '@/components/common/Avatar';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { NotasIndicator } from '@/components/notas/NotasIndicator';
+import { usePruebaTerm } from '@/lib/hooks/usePruebaTerm';
 import { NotasSection } from '@/components/notas/NotasSection';
 import { AppSelect } from '@/components/common/AppSelect';
 import { useNotasCount } from '@/lib/hooks/useNotasCount';
@@ -202,6 +203,7 @@ export function ClaseDetailView({ rol }: ClaseDetailViewProps) {
   const t = useTranslations('horarios');
   const tc = useTranslations('common');
   const ta = useTranslations('asistencia');
+  const pruebaTerm = usePruebaTerm();
   const locale = useLocale();
   const dateFnsLocale = locale === 'en' ? enUS : esDateFns;
   const backHref = getClaseDetailBackHref(from, rol);
@@ -317,7 +319,7 @@ export function ClaseDetailView({ rol }: ClaseDetailViewProps) {
               <div className="flex items-center gap-2 rounded-[var(--radius-md)] px-3 py-2.5"
                 style={{ backgroundColor: 'var(--color-brand-gold-muted)', border: '1px solid color-mix(in srgb, var(--color-brand-gold) 40%, transparent)' }}>
                 <GraduationCap className="size-4 shrink-0" style={{ color: 'var(--color-brand-gold)' }} />
-                <span className="text-sm font-medium" style={{ color: 'var(--color-brand-gold)' }}>{t('es_examen')}</span>
+                <span className="text-sm font-medium" style={{ color: 'var(--color-brand-gold)' }}>{t('es_examen', { term: pruebaTerm.singular })}</span>
               </div>
             )}
             {/* Student info */}
@@ -349,7 +351,7 @@ export function ClaseDetailView({ rol }: ClaseDetailViewProps) {
                 <span className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium"
                   style={{ backgroundColor: 'var(--color-brand-gold-muted)', borderColor: 'color-mix(in srgb, var(--color-brand-gold) 40%, transparent)', color: 'var(--color-brand-gold)' }}>
                   <GraduationCap className="size-3" />
-                  {t('badge_examen')}
+                  {t('badge_examen', { term: pruebaTerm.singular })}
                 </span>
               )}
             </div>
