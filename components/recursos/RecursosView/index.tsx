@@ -265,15 +265,15 @@ export function RecursosView({ rol }: RecursosViewProps) {
       data,
     }: {
       id: string;
-      data: { titulo: string; descripcion: string | null; para_todos: boolean; alumno_ids: string[]; bloquear_descarga: boolean };
+      data: { titulo: string; descripcion: string | null; para_todos: boolean; para_todos_app: boolean; alumno_ids: string[]; bloquear_descarga: boolean };
     }) => {
       const { error: updateErr } = await supabase
         .from('recursos_compartidos')
-        .update({ titulo: data.titulo, descripcion: data.descripcion, para_todos: data.para_todos, bloquear_descarga: data.bloquear_descarga })
+        .update({ titulo: data.titulo, descripcion: data.descripcion, para_todos: data.para_todos, para_todos_app: data.para_todos_app, bloquear_descarga: data.bloquear_descarga })
         .eq('id', id);
       if (updateErr) throw updateErr;
       await supabase.from('recursos_acceso').delete().eq('recurso_id', id);
-      if (!data.para_todos && data.alumno_ids.length > 0) {
+      if (!data.para_todos && !data.para_todos_app && data.alumno_ids.length > 0) {
         const { error: insertErr } = await supabase
           .from('recursos_acceso')
           .insert(data.alumno_ids.map((alumno_id) => ({ recurso_id: id, alumno_id })));
@@ -364,13 +364,14 @@ export function RecursosView({ rol }: RecursosViewProps) {
     mutationFn: async ({
       carpetaId,
       para_todos,
+      para_todos_app,
       alumno_ids,
     }: {
       carpetaId: string;
       para_todos: boolean;
+      para_todos_app: boolean;
       alumno_ids: string[];
     }) => {
-      // 1. Get all resource IDs in this folder
       const { data: recursos, error: fetchErr } = await supabase
         .from('recursos_compartidos')
         .select('id')
@@ -380,22 +381,19 @@ export function RecursosView({ rol }: RecursosViewProps) {
 
       const ids = recursos.map((r) => r.id);
 
-      // 2. Update para_todos on all resources
       const { error: updateErr } = await supabase
         .from('recursos_compartidos')
-        .update({ para_todos })
+        .update({ para_todos, para_todos_app })
         .in('id', ids);
       if (updateErr) throw updateErr;
 
-      // 3. Delete all existing acceso records for these resources
       const { error: deleteErr } = await supabase
         .from('recursos_acceso')
         .delete()
         .in('recurso_id', ids);
       if (deleteErr) throw deleteErr;
 
-      // 4. Re-insert acceso records if specific alumnos chosen
-      if (!para_todos && alumno_ids.length > 0) {
+      if (!para_todos && !para_todos_app && alumno_ids.length > 0) {
         const rows = ids.flatMap((recurso_id) =>
           alumno_ids.map((alumno_id) => ({ recurso_id, alumno_id }))
         );
@@ -470,6 +468,7 @@ export function RecursosView({ rol }: RecursosViewProps) {
         <RecursoUploader
           alumnos={alumnos}
           defaultCarpetaId={currentCarpetaId}
+          rol={rol as 'admin' | 'profesor'}
           onSuccess={() => {
             setShowUploader(false);
             queryClient.invalidateQueries({ queryKey: ['recursos'] });
@@ -526,25 +525,26 @@ export function RecursosView({ rol }: RecursosViewProps) {
 
         {/* Sort button */}
         <div className="relative shrink-0" ref={sortMenuRef}>
-          <button
-            type="button"
-            onClick={() => setShowSortMenu((v) => !v)}
-            title={t('ordenar')}
-            className={cn(
-              'flex items-center gap-2 rounded-[var(--radius-md)] border px-3 py-2 text-sm font-medium shadow-[var(--shadow-sm)] transition-all min-h-[36px]',
-              showSortMenu
-                ? 'border-[var(--color-brand-gold)] bg-[var(--color-brand-gold-muted)] text-[var(--color-brand-gold)]'
-                : 'border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]',
-            )}
-          >
-            {/* Classic funnel/filter icon with 3 horizontal lines of decreasing width */}
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <line x1="2" y1="4" x2="14" y2="4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-              <line x1="4" y1="8" x2="12" y2="8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-              <line x1="6" y1="12" x2="10" y2="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-            </svg>
-            <span className="hidden sm:inline">{t('ordenar')}</span>
-          </button>
+          <Tooltip content={t('ordenar')} position="bottom">
+            <button
+              type="button"
+              onClick={() => setShowSortMenu((v) => !v)}
+              className={cn(
+                'flex items-center gap-2 rounded-[var(--radius-md)] border px-3 py-2 text-sm font-medium shadow-[var(--shadow-sm)] transition-all min-h-[36px]',
+                showSortMenu
+                  ? 'border-[var(--color-brand-gold)] bg-[var(--color-brand-gold-muted)] text-[var(--color-brand-gold)]'
+                  : 'border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]',
+              )}
+            >
+              {/* Classic funnel/filter icon with 3 horizontal lines of decreasing width */}
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <line x1="2" y1="4" x2="14" y2="4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                <line x1="4" y1="8" x2="12" y2="8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                <line x1="6" y1="12" x2="10" y2="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+              <span className="hidden sm:inline">{t('ordenar')}</span>
+            </button>
+          </Tooltip>
 
           {showSortMenu && (
             <div className="absolute right-0 top-full z-50 mt-1.5 min-w-[200px] rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg)] py-1 shadow-[var(--shadow-lg)]">
@@ -772,10 +772,11 @@ export function RecursosView({ rol }: RecursosViewProps) {
           alumnos={alumnos}
           saving={propagarPermisosMutation.isPending}
           onClose={() => setEditPermisosCarpeta(null)}
-          onSave={async ({ para_todos, alumno_ids }) => {
+          onSave={async ({ para_todos, para_todos_app, alumno_ids }) => {
             await propagarPermisosMutation.mutateAsync({
               carpetaId: editPermisosCarpeta.id,
               para_todos,
+              para_todos_app,
               alumno_ids,
             });
           }}

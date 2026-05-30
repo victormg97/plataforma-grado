@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Check, Save, Loader2, Globe, Users, AlertTriangle, Info } from 'lucide-react';
+import { Check, Save, Loader2, Globe, Users, Building2, AlertTriangle, Info } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import { Modal } from '@/components/common/Modal';
 import type { CarpetaItem } from '@/components/recursos/CarpetaCard';
 import type { RecursoItem } from '@/components/recursos/RecursoCard';
+import type { VisibilidadMode } from '@/components/recursos/RecursoUploader/components/AlumnoAssignmentSelector';
 
 const labelCls = 'mb-1.5 block text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]';
 
@@ -18,12 +19,19 @@ interface Alumno {
 
 interface CarpetaPermisosModalProps {
   carpeta: CarpetaItem;
-  /** All resources inside this folder */
   recursosEnCarpeta: RecursoItem[];
   alumnos: Alumno[];
   onClose: () => void;
-  onSave: (data: { para_todos: boolean; alumno_ids: string[] }) => Promise<void>;
+  onSave: (data: { para_todos: boolean; para_todos_app: boolean; alumno_ids: string[] }) => Promise<void>;
   saving: boolean;
+}
+
+function getInitialMode(carpeta: CarpetaItem): VisibilidadMode {
+  // para_todos_efectivo covers both para_todos and para_todos_app from the RPC
+  // We can't distinguish them from the folder level, so default to mis_alumnos when true
+  if (carpeta.para_todos_efectivo) return 'mis_alumnos';
+  if ((carpeta.alumno_ids_efectivos?.length ?? 0) > 0) return 'especificos';
+  return 'mis_alumnos';
 }
 
 export function CarpetaPermisosModal({
@@ -36,41 +44,33 @@ export function CarpetaPermisosModal({
 }: CarpetaPermisosModalProps) {
   const t = useTranslations('recursos');
 
-  // Derive current effective state from resources
-  const currentParaTodos = carpeta.para_todos_efectivo ?? false;
   const currentAlumnoIds = carpeta.alumno_ids_efectivos ?? [];
 
-  // Form state — start from current effective permissions
-  const [paraTodos, setParaTodos] = useState(currentParaTodos);
+  const [visibilidad, setVisibilidad] = useState<VisibilidadMode>(getInitialMode(carpeta));
   const [selectedIds, setSelectedIds] = useState<string[]>(currentAlumnoIds);
   const [alumnoSearch, setAlumnoSearch] = useState('');
 
   const hasResources = recursosEnCarpeta.length > 0;
 
-  // Compute what the current inherited state looks like for the info banner
+  const currentParaTodos = carpeta.para_todos_efectivo ?? false;
+
   const inheritedInfo = useMemo(() => {
     if (!hasResources) return null;
     if (currentParaTodos) return { type: 'todos' as const };
     if (currentAlumnoIds.length > 0) {
-      const names = currentAlumnoIds
-        .map((id) => alumnos.find((a) => a.id === id))
-        .filter(Boolean)
-        .map((a) => `${a!.nombre} ${a!.apellido}`);
-      return { type: 'especificos' as const, count: currentAlumnoIds.length, names };
+      return { type: 'especificos' as const, count: currentAlumnoIds.length };
     }
     return { type: 'ninguno' as const };
-  }, [hasResources, currentParaTodos, currentAlumnoIds, alumnos]);
+  }, [hasResources, currentParaTodos, currentAlumnoIds]);
 
-  // Detect if the user is changing permissions (to show propagation warning)
   const isChanging = useMemo(() => {
-    if (paraTodos !== currentParaTodos) return true;
-    if (!paraTodos) {
-      const sortedNew = [...selectedIds].sort();
-      const sortedOld = [...currentAlumnoIds].sort();
-      return JSON.stringify(sortedNew) !== JSON.stringify(sortedOld);
+    const initialMode = getInitialMode(carpeta);
+    if (visibilidad !== initialMode) return true;
+    if (visibilidad === 'especificos') {
+      return JSON.stringify([...selectedIds].sort()) !== JSON.stringify([...currentAlumnoIds].sort());
     }
     return false;
-  }, [paraTodos, currentParaTodos, selectedIds, currentAlumnoIds]);
+  }, [visibilidad, selectedIds, currentAlumnoIds, carpeta]);
 
   const filteredAlumnos = alumnos.filter((a) =>
     `${a.nombre} ${a.apellido}`.toLowerCase().includes(alumnoSearch.toLowerCase())
@@ -84,10 +84,17 @@ export function CarpetaPermisosModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await onSave({
-      para_todos: paraTodos,
-      alumno_ids: paraTodos ? [] : selectedIds,
+      para_todos: visibilidad === 'mis_alumnos',
+      para_todos_app: visibilidad === 'todos_app',
+      alumno_ids: visibilidad === 'especificos' ? selectedIds : [],
     });
   };
+
+  const visOptions: { value: VisibilidadMode; Icon: React.ElementType; label: string }[] = [
+    { value: 'mis_alumnos', Icon: Users,     label: t('todos_mis_alumnos') },
+    { value: 'todos_app',   Icon: Globe,     label: t('todos_app') },
+    { value: 'especificos', Icon: Building2, label: t('alumnos_especificos') },
+  ];
 
   return (
     <Modal
@@ -109,7 +116,7 @@ export function CarpetaPermisosModal({
           <button
             type="submit"
             form="carpeta-permisos-form"
-            disabled={saving || (!paraTodos && selectedIds.length === 0 && hasResources)}
+            disabled={saving || (visibilidad === 'especificos' && selectedIds.length === 0 && hasResources)}
             className="flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-brand-gold)] px-5 py-2.5 text-sm font-semibold text-white shadow-[var(--shadow-gold)] transition-all hover:opacity-90 disabled:opacity-50 min-h-[44px]"
           >
             {saving
@@ -121,7 +128,7 @@ export function CarpetaPermisosModal({
     >
       <form id="carpeta-permisos-form" onSubmit={handleSubmit} className="space-y-5">
 
-        {/* ── Info banner: current inherited state ── */}
+        {/* Info banner */}
         {inheritedInfo && (
           <div className={cn(
             'flex items-start gap-2.5 rounded-[var(--radius-md)] border px-3 py-2.5 text-xs',
@@ -134,20 +141,16 @@ export function CarpetaPermisosModal({
               <p className="font-medium text-[var(--color-text-primary)] mb-0.5">
                 {t('carpeta_permisos_actuales')}
               </p>
-              {inheritedInfo.type === 'todos' && (
-                <p>{t('carpeta_hereda_todos')}</p>
-              )}
+              {inheritedInfo.type === 'todos' && <p>{t('carpeta_hereda_todos')}</p>}
               {inheritedInfo.type === 'especificos' && (
                 <p>{t('carpeta_hereda_especificos', { count: inheritedInfo.count })}</p>
               )}
-              {inheritedInfo.type === 'ninguno' && (
-                <p>{t('carpeta_sin_recursos_permisos')}</p>
-              )}
+              {inheritedInfo.type === 'ninguno' && <p>{t('carpeta_sin_recursos_permisos')}</p>}
             </div>
           </div>
         )}
 
-        {/* ── Propagation warning ── */}
+        {/* Propagation warning */}
         {isChanging && hasResources && (
           <div className="flex items-start gap-2.5 rounded-[var(--radius-md)] border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs dark:border-amber-800/40 dark:bg-amber-950/20">
             <AlertTriangle className="size-3.5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
@@ -158,41 +161,37 @@ export function CarpetaPermisosModal({
           </div>
         )}
 
-        {/* ── Permission selector ── */}
+        {/* Visibility selector */}
         <div className="space-y-2">
           <label className={labelCls}>{t('asignar_a')}</label>
 
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setParaTodos(true)}
-              className={cn(
-                'flex flex-1 items-center justify-center gap-2 rounded-[var(--radius-md)] border px-3 py-2.5 text-sm font-medium transition-colors',
-                paraTodos
-                  ? 'border-[var(--color-brand-gold)] bg-[var(--color-brand-gold-muted)] text-[var(--color-brand-gold)]'
-                  : 'border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]',
-              )}
-            >
-              <Globe className="size-4" />
-              {t('todos_alumnos')}
-            </button>
-            <button
-              type="button"
-              onClick={() => setParaTodos(false)}
-              className={cn(
-                'flex flex-1 items-center justify-center gap-2 rounded-[var(--radius-md)] border px-3 py-2.5 text-sm font-medium transition-colors',
-                !paraTodos
-                  ? 'border-[var(--color-brand-gold)] bg-[var(--color-brand-gold-muted)] text-[var(--color-brand-gold)]'
-                  : 'border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]',
-              )}
-            >
-              <Users className="size-4" />
-              {t('alumnos_especificos')}
-            </button>
+          <div className="grid grid-cols-3 gap-1.5">
+            {visOptions.map(({ value, Icon, label }) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => {
+                  setVisibilidad(value);
+                  if (value !== 'especificos') setSelectedIds([]);
+                }}
+                className={cn(
+                  'flex flex-col items-center gap-1.5 rounded-[var(--radius-md)] border px-2 py-2.5 text-xs font-medium transition-colors text-center',
+                  visibilidad === value
+                    ? 'border-[var(--color-brand-gold)] bg-[var(--color-brand-gold-muted)] text-[var(--color-brand-gold)]'
+                    : 'border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]',
+                )}
+              >
+                <Icon className="size-4 shrink-0" />
+                <span className="leading-tight">{label}</span>
+              </button>
+            ))}
           </div>
 
-          {/* Alumno selector */}
-          {!paraTodos && alumnos.length > 0 && (
+          {visibilidad === 'todos_app' && (
+            <p className="text-xs text-[var(--color-text-muted)]">{t('todos_app_desc')}</p>
+          )}
+
+          {visibilidad === 'especificos' && alumnos.length > 0 && (
             <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-2 space-y-1.5 max-h-52 overflow-y-auto">
               <input
                 type="text"
@@ -225,7 +224,6 @@ export function CarpetaPermisosModal({
                       {selectedIds.includes(a.id) && <Check className="size-2.5 text-white" />}
                     </span>
                     {a.nombre} {a.apellido}
-                    {/* Show if this alumno already has access via existing resources */}
                     {currentAlumnoIds.includes(a.id) && !selectedIds.includes(a.id) && (
                       <span className="ml-auto text-[10px] text-[var(--color-text-muted)]">{t('tenia_acceso')}</span>
                     )}
@@ -235,7 +233,7 @@ export function CarpetaPermisosModal({
             </div>
           )}
 
-          {!paraTodos && selectedIds.length > 0 && (
+          {visibilidad === 'especificos' && selectedIds.length > 0 && (
             <p className="text-xs text-[var(--color-text-muted)]">
               {t('solo_asignados', { count: selectedIds.length })}
             </p>

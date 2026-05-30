@@ -29,6 +29,7 @@ export interface RecursoItem {
   url?: string | null;
   storage_path?: string | null;
   para_todos: boolean;
+  para_todos_app?: boolean;
   bloquear_descarga?: boolean;
   carpeta_id?: string | null;
   created_at: string;
@@ -219,11 +220,15 @@ export function RecursoCard({
             {(rol === 'admin' || rol === 'profesor') && (
               <span className={cn(
                 'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium',
-                recurso.para_todos
+                recurso.para_todos_app
+                  ? 'bg-[var(--color-brand-gold-muted)] text-[var(--color-brand-gold)]'
+                  : recurso.para_todos
                   ? 'bg-[var(--color-success)]/10 text-[var(--color-success)]'
                   : 'bg-[var(--color-bg-elevated)] text-[var(--color-text-muted)]',
               )}>
-                {recurso.para_todos
+                {recurso.para_todos_app
+                  ? <><Globe className="size-2.5" />{t('todos_app')}</>
+                  : recurso.para_todos
                   ? <><Globe className="size-2.5" />{t('para_todos')}</>
                   : <><Users className="size-2.5" />{t('solo_asignados', { count: recurso.acceso_count ?? 0 })}</>}
               </span>

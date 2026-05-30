@@ -1152,7 +1152,10 @@
     "sort_nombre_az": "Nombre A → Z",
     "sort_nombre_za": "Nombre Z → A",
     "sort_tipo": "Por tipo",
-    "volver_carpeta": "Volver a la carpeta anterior"
+    "volver_carpeta": "Volver a la carpeta anterior",
+    "todos_mis_alumnos": "Todos mis alumnos",
+    "todos_app": "Toda la app",
+    "todos_app_desc": "Todos los alumnos de la plataforma podrán ver este recurso, sin importar a qué profesor estén asignados."
   },
   "pagos": {
     "titulo": "Pagos",

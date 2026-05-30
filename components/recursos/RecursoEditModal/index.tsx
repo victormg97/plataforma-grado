@@ -1,13 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Check, Save, Loader2 } from 'lucide-react';
+import { Check, Save, Loader2, Globe, Users, Building2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useQuery } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
 import { Modal } from '@/components/common/Modal';
 import type { RecursoItem } from '@/components/recursos/RecursoCard';
+import type { VisibilidadMode } from '@/components/recursos/RecursoUploader/components/AlumnoAssignmentSelector';
 
 const inputCls =
   'w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2.5 text-sm text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-brand-gold)] focus:ring-2 focus:ring-[var(--color-brand-gold-muted)] transition-colors';
@@ -24,13 +25,27 @@ interface RecursoEditModalProps {
   recurso: RecursoItem;
   alumnos: Alumno[];
   onClose: () => void;
-  /** Called after a successful save */
   onSave: (
     id: string,
-    data: { titulo: string; descripcion: string | null; para_todos: boolean; alumno_ids: string[]; bloquear_descarga: boolean }
+    data: { titulo: string; descripcion: string | null; para_todos: boolean; para_todos_app: boolean; alumno_ids: string[]; bloquear_descarga: boolean }
   ) => Promise<void>;
   saving: boolean;
 }
+
+// ── Helper: derive VisibilidadMode from resource flags ────────────────────────
+function getInitialMode(recurso: RecursoItem): VisibilidadMode {
+  if (recurso.para_todos_app) return 'todos_app';
+  if (recurso.para_todos)     return 'mis_alumnos';
+  return 'especificos';
+}
+
+function modeToDbFields(mode: VisibilidadMode): { para_todos: boolean; para_todos_app: boolean } {
+  if (mode === 'todos_app')   return { para_todos: false, para_todos_app: true };
+  if (mode === 'mis_alumnos') return { para_todos: true,  para_todos_app: false };
+  return { para_todos: false, para_todos_app: false };
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export function RecursoEditModal({
   recurso,
@@ -42,15 +57,14 @@ export function RecursoEditModal({
   const t = useTranslations('recursos');
   const supabase = createClient();
 
-  // ── Form state initialised from the resource ──────────────────────
   const [titulo, setTitulo] = useState(recurso.titulo);
   const [descripcion, setDescripcion] = useState(recurso.descripcion ?? '');
-  const [paraTodos, setParaTodos] = useState(recurso.para_todos);
+  const [visibilidad, setVisibilidad] = useState<VisibilidadMode>(getInitialMode(recurso));
   const [bloquearDescarga, setBloquearDescarga] = useState(recurso.bloquear_descarga ?? false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [alumnoSearch, setAlumnoSearch] = useState('');
 
-  // ── Load current acceso records (once on open) ────────────────────
+  // Load current acceso records
   const { data: accesoIds, isLoading: loadingAcceso } = useQuery<string[]>({
     queryKey: ['recurso-acceso', recurso.id],
     queryFn: async () => {
@@ -61,19 +75,13 @@ export function RecursoEditModal({
       if (error) throw error;
       return data?.map((r) => r.alumno_id) ?? [];
     },
-    staleTime: 0,  // always fresh when modal opens
-    enabled: !recurso.para_todos, // no need to load if currently para_todos
+    staleTime: 0,
+    enabled: visibilidad === 'especificos',
   });
 
-  // Initialise selectedIds once acceso records arrive
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (accesoIds) setSelectedIds(accesoIds);
   }, [accesoIds]);
-
-  // Note: selectedIds is intentionally kept in state when switching to paraTodos=true,
-  // so toggling back to "alumnos específicos" restores the previous selection.
-  // The submit handler ignores alumno_ids when para_todos is true.
 
   const filteredAlumnos = alumnos.filter((a) =>
     `${a.nombre} ${a.apellido}`.toLowerCase().includes(alumnoSearch.toLowerCase())
@@ -87,16 +95,23 @@ export function RecursoEditModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!titulo.trim()) return;
+    const dbFields = modeToDbFields(visibilidad);
     await onSave(recurso.id, {
       titulo: titulo.trim(),
       descripcion: descripcion.trim() || null,
-      para_todos: paraTodos,
-      alumno_ids: paraTodos ? [] : selectedIds,
+      ...dbFields,
+      alumno_ids: visibilidad === 'especificos' ? selectedIds : [],
       bloquear_descarga: bloquearDescarga,
     });
   };
 
   const showAlumnoSelector = alumnos.length > 0;
+
+  const visOptions: { value: VisibilidadMode; Icon: React.ElementType; label: string }[] = [
+    { value: 'mis_alumnos', Icon: Users,     label: t('todos_mis_alumnos') },
+    { value: 'todos_app',   Icon: Globe,     label: t('todos_app') },
+    { value: 'especificos', Icon: Building2, label: t('alumnos_especificos') },
+  ];
 
   return (
     <Modal
@@ -156,7 +171,7 @@ export function RecursoEditModal({
           />
         </div>
 
-        {/* Block download toggle — only relevant for files */}
+        {/* Block download toggle */}
         {recurso.tipo === 'archivo' && (
           <div>
             <label className="flex cursor-pointer items-center gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-4 py-3 transition-colors hover:bg-[var(--color-bg-elevated)]">
@@ -184,39 +199,38 @@ export function RecursoEditModal({
           </div>
         )}
 
-        {/* Assignment — only for admin/profesor uploaders */}
+        {/* Visibility selector */}
         {showAlumnoSelector && (
           <div className="space-y-2">
             <label className={labelCls}>{t('asignar_a')}</label>
 
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setParaTodos(true)}
-                className={cn(
-                  'flex-1 rounded-[var(--radius-md)] border px-3 py-2 text-sm font-medium transition-colors',
-                  paraTodos
-                    ? 'border-[var(--color-brand-gold)] bg-[var(--color-brand-gold-muted)] text-[var(--color-brand-gold)]'
-                    : 'border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]',
-                )}
-              >
-                {t('todos_alumnos')}
-              </button>
-              <button
-                type="button"
-                onClick={() => setParaTodos(false)}
-                className={cn(
-                  'flex-1 rounded-[var(--radius-md)] border px-3 py-2 text-sm font-medium transition-colors',
-                  !paraTodos
-                    ? 'border-[var(--color-brand-gold)] bg-[var(--color-brand-gold-muted)] text-[var(--color-brand-gold)]'
-                    : 'border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]',
-                )}
-              >
-                {t('alumnos_especificos')}
-              </button>
+            <div className="grid grid-cols-3 gap-1.5">
+              {visOptions.map(({ value, Icon, label }) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => {
+                    setVisibilidad(value);
+                    if (value !== 'especificos') setSelectedIds([]);
+                  }}
+                  className={cn(
+                    'flex flex-col items-center gap-1.5 rounded-[var(--radius-md)] border px-2 py-2.5 text-xs font-medium transition-colors text-center',
+                    visibilidad === value
+                      ? 'border-[var(--color-brand-gold)] bg-[var(--color-brand-gold-muted)] text-[var(--color-brand-gold)]'
+                      : 'border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]',
+                  )}
+                >
+                  <Icon className="size-4 shrink-0" />
+                  <span className="leading-tight">{label}</span>
+                </button>
+              ))}
             </div>
 
-            {!paraTodos && (
+            {visibilidad === 'todos_app' && (
+              <p className="text-xs text-[var(--color-text-muted)]">{t('todos_app_desc')}</p>
+            )}
+
+            {visibilidad === 'especificos' && (
               <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-2 space-y-1.5 max-h-52 overflow-y-auto">
                 <input
                   type="text"
@@ -230,9 +244,7 @@ export function RecursoEditModal({
                     <Loader2 className="size-5 animate-spin text-[var(--color-brand-gold)]" />
                   </div>
                 ) : filteredAlumnos.length === 0 ? (
-                  <p className="py-3 text-center text-xs text-[var(--color-text-muted)]">
-                    {t('sin_alumnos')}
-                  </p>
+                  <p className="py-3 text-center text-xs text-[var(--color-text-muted)]">{t('sin_alumnos')}</p>
                 ) : (
                   filteredAlumnos.map((a) => (
                     <button
@@ -261,7 +273,7 @@ export function RecursoEditModal({
               </div>
             )}
 
-            {!paraTodos && selectedIds.length > 0 && (
+            {visibilidad === 'especificos' && selectedIds.length > 0 && (
               <p className="text-xs text-[var(--color-text-muted)]">
                 {t('solo_asignados', { count: selectedIds.length })}
               </p>

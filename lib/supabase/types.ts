@@ -974,6 +974,7 @@ export type Database = {
           descripcion: string | null
           id: string
           para_todos: boolean
+          para_todos_app: boolean
           storage_path: string | null
           subido_por: string
           tipo: string
@@ -988,6 +989,7 @@ export type Database = {
           descripcion?: string | null
           id?: string
           para_todos?: boolean
+          para_todos_app?: boolean
           storage_path?: string | null
           subido_por: string
           tipo: string
@@ -1002,6 +1004,7 @@ export type Database = {
           descripcion?: string | null
           id?: string
           para_todos?: boolean
+          para_todos_app?: boolean
           storage_path?: string | null
           subido_por?: string
           tipo?: string

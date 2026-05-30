@@ -9,7 +9,7 @@ import { useUserStore } from '@/stores/useUserStore';
 import { toast } from 'sonner';
 
 import { FileDropZone, type FileEntry } from './components/FileDropZone';
-import { AlumnoAssignmentSelector } from './components/AlumnoAssignmentSelector';
+import { AlumnoAssignmentSelector, type VisibilidadMode } from './components/AlumnoAssignmentSelector';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -20,11 +20,21 @@ interface UploaderProps {
   onSuccess: () => void;
   /** Pre-select this folder when uploading */
   defaultCarpetaId?: string | null;
+  /** Role of the uploader — determines label copy */
+  rol?: 'admin' | 'profesor';
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function modeToDbFields(mode: VisibilidadMode): { para_todos: boolean; para_todos_app: boolean } {
+  if (mode === 'todos_app')   return { para_todos: false, para_todos_app: true };
+  if (mode === 'mis_alumnos') return { para_todos: true,  para_todos_app: false };
+  return { para_todos: false, para_todos_app: false }; // especificos
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function RecursoUploader({ alumnos, onSuccess, defaultCarpetaId }: UploaderProps) {
+export function RecursoUploader({ alumnos, onSuccess, defaultCarpetaId, rol = 'profesor' }: UploaderProps) {
   const t = useTranslations('recursos');
   const { user } = useUserStore();
   const supabase = createClient();
@@ -34,7 +44,7 @@ export function RecursoUploader({ alumnos, onSuccess, defaultCarpetaId }: Upload
   const [url, setUrl] = useState('');
   const [linkTitle, setLinkTitle] = useState('');
   const [descripcion, setDescripcion] = useState('');
-  const [paraToodos, setParaTodos] = useState(true);
+  const [visibilidad, setVisibilidad] = useState<VisibilidadMode>('mis_alumnos');
   const [selectedAlumnos, setSelectedAlumnos] = useState<string[]>([]);
   const [bloquearDescarga, setBloquearDescarga] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -56,7 +66,6 @@ export function RecursoUploader({ alumnos, onSuccess, defaultCarpetaId }: Upload
   const updateDisplayName = (idx: number, name: string) =>
     setFiles((prev) => prev.map((f, i) => (i === idx ? { ...f, displayName: name } : f)));
 
-  // ── Alumno toggle ────────────────────────────────────────────────
   const toggleAlumno = (id: string) =>
     setSelectedAlumnos((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
@@ -79,29 +88,29 @@ export function RecursoUploader({ alumnos, onSuccess, defaultCarpetaId }: Upload
       toast.error(t('error_nombre'));
       return;
     }
-    if (!paraToodos && selectedAlumnos.length === 0) {
+    if (visibilidad === 'especificos' && selectedAlumnos.length === 0) {
       toast.error(t('error_sin_alumnos'));
       return;
     }
+
+    const dbFields = modeToDbFields(visibilidad);
 
     setSubmitting(true);
     try {
       if (tipo === 'archivo') {
         for (const entry of files) {
           const ext = entry.file.name.split('.').pop();
-          // Sanitize filename: remove special chars, replace spaces with dashes
           const safeName = entry.displayName
             .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '') // strip accents
-            .replace(/[^a-zA-Z0-9._-]/g, '-') // replace special chars with dash
-            .replace(/-+/g, '-')              // collapse multiple dashes
-            .replace(/^-|-$/g, '');           // trim leading/trailing dashes
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-zA-Z0-9._-]/g, '-')
+            .replace(/-+/g, '-')
+            .replace(/^-|-$/g, '');
           const path = `${user.id}/${Date.now()}-${safeName}.${ext}`;
 
           const { error: storageError } = await supabase.storage
             .from('recursos')
             .upload(path, entry.file, { upsert: false });
-
           if (storageError) throw storageError;
 
           setUploadProgress((p) => ({ ...p, [entry.displayName]: 50 }));
@@ -114,16 +123,15 @@ export function RecursoUploader({ alumnos, onSuccess, defaultCarpetaId }: Upload
               tipo: 'archivo',
               storage_path: path,
               subido_por: user.id,
-              para_todos: paraToodos,
+              ...dbFields,
               bloquear_descarga: bloquearDescarga,
               carpeta_id: defaultCarpetaId ?? null,
             })
             .select('id')
             .single();
-
           if (dbError) throw dbError;
 
-          if (!paraToodos && selectedAlumnos.length > 0 && rec) {
+          if (visibilidad === 'especificos' && selectedAlumnos.length > 0 && rec) {
             await supabase.from('recursos_acceso').insert(
               selectedAlumnos.map((aid) => ({ recurso_id: rec.id, alumno_id: aid }))
             );
@@ -140,16 +148,15 @@ export function RecursoUploader({ alumnos, onSuccess, defaultCarpetaId }: Upload
             tipo,
             url: url.trim(),
             subido_por: user.id,
-            para_todos: paraToodos,
+            ...dbFields,
             bloquear_descarga: bloquearDescarga,
             carpeta_id: defaultCarpetaId ?? null,
           })
           .select('id')
           .single();
-
         if (dbError) throw dbError;
 
-        if (!paraToodos && selectedAlumnos.length > 0 && rec) {
+        if (visibilidad === 'especificos' && selectedAlumnos.length > 0 && rec) {
           await supabase.from('recursos_acceso').insert(
             selectedAlumnos.map((aid) => ({ recurso_id: rec.id, alumno_id: aid }))
           );
@@ -161,7 +168,7 @@ export function RecursoUploader({ alumnos, onSuccess, defaultCarpetaId }: Upload
       setUrl('');
       setLinkTitle('');
       setDescripcion('');
-      setParaTodos(true);
+      setVisibilidad('mis_alumnos');
       setSelectedAlumnos([]);
       setBloquearDescarga(false);
       setUploadProgress({});
@@ -194,7 +201,7 @@ export function RecursoUploader({ alumnos, onSuccess, defaultCarpetaId }: Upload
               'flex flex-1 items-center justify-center gap-2 rounded-[var(--radius-sm)] px-3 py-2 text-sm font-medium transition-all',
               tipo === value
                 ? 'bg-[var(--color-bg)] text-[var(--color-brand-gold)] shadow-[var(--shadow-sm)] ring-1 ring-[var(--color-border)]'
-                : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]'
+                : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]',
             )}
           >
             <Icon className="size-3.5" />
@@ -291,13 +298,14 @@ export function RecursoUploader({ alumnos, onSuccess, defaultCarpetaId }: Upload
       {alumnos.length > 0 && (
         <AlumnoAssignmentSelector
           alumnos={alumnos}
-          paraTodos={paraToodos}
-          onParaTodosChange={(value) => {
-            setParaTodos(value);
-            if (value) setSelectedAlumnos([]);
+          mode={visibilidad}
+          onModeChange={(m) => {
+            setVisibilidad(m);
+            if (m !== 'especificos') setSelectedAlumnos([]);
           }}
           selectedAlumnos={selectedAlumnos}
           onToggleAlumno={toggleAlumno}
+          showMisAlumnos={rol === 'profesor'}
         />
       )}
 
