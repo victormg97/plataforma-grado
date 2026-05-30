@@ -100,7 +100,7 @@ export function WhoWeAreModal({ tenantSlug, markdown, onClose }: WhoWeAreModalPr
               </div>
             </div>
 
-            {/* Mobile toggle button */}
+            {/* Mobile toggle button — always says "Ver contacto", chevron direction shows action */}
             <div className="absolute bottom-0 left-0 right-0 z-10 border-t border-[var(--color-border)] bg-[var(--color-bg)]">
               <button
                 type="button"
@@ -108,16 +108,11 @@ export function WhoWeAreModal({ tenantSlug, markdown, onClose }: WhoWeAreModalPr
                 className="w-full flex items-center justify-center gap-2 py-3 text-sm font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] transition-colors"
               >
                 {contactOpen ? (
-                  <>
-                    <ChevronDown className="size-4" />
-                    {t('contacto_toggle_cerrar')}
-                  </>
+                  <ChevronDown className="size-4" />
                 ) : (
-                  <>
-                    <ChevronUp className="size-4" />
-                    {t('contacto_toggle_abrir')}
-                  </>
+                  <ChevronUp className="size-4" />
                 )}
+                {t('contacto_toggle_abrir')}
               </button>
             </div>
 
@@ -133,10 +128,7 @@ export function WhoWeAreModal({ tenantSlug, markdown, onClose }: WhoWeAreModalPr
                   transition={{ duration: 0.25, ease: 'easeInOut' }}
                 >
                   <div className="px-4 py-4">
-                    <ContactColumn
-                      entries={entries}
-                      onClose={() => setContactOpen(false)}
-                    />
+                    <ContactColumn entries={entries} />
                   </div>
                 </m.div>
               )}
