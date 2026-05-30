@@ -176,17 +176,20 @@ export function AppInfoPopover() {
           )
         : null}
 
-      {/* WhoWeAre modal — mounted at body level */}
-      <AnimatePresence>
-        {whoWeAreOpen && whoWeAreMarkdown && (
-          <WhoWeAreModal
-            tenantSlug={tenant.id}
-            locale={locale}
-            markdown={whoWeAreMarkdown}
-            onClose={() => setWhoWeAreOpen(false)}
-          />
-        )}
-      </AnimatePresence>
+      {/* WhoWeAre modal — rendered via portal at body level to escape sidebar overflow */}
+      {mounted && typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {whoWeAreOpen && whoWeAreMarkdown && (
+            <WhoWeAreModal
+              tenantSlug={tenant.id}
+              locale={locale}
+              markdown={whoWeAreMarkdown}
+              onClose={() => setWhoWeAreOpen(false)}
+            />
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </>
   );
 }
