@@ -755,7 +755,20 @@ export function RecursosView({ rol }: RecursosViewProps) {
       {editPermisosCarpeta && canUpload && (
         <CarpetaPermisosModal
           carpeta={editPermisosCarpeta}
-          recursosCount={editPermisosCarpeta.recursive_recursos_count ?? allRecursos.filter((r) => r.carpeta_id === editPermisosCarpeta.id).length}
+          recursosCount={
+            // Prefer recursive count from RPC; fall back to client-side recursive count
+            editPermisosCarpeta.recursive_recursos_count != null
+              ? Number(editPermisosCarpeta.recursive_recursos_count)
+              : (() => {
+                  // Build full subtree of folder IDs client-side
+                  const getAllSubfolderIds = (parentId: string): string[] => {
+                    const children = allCarpetas.filter((c) => c.parent_id === parentId);
+                    return [parentId, ...children.flatMap((c) => getAllSubfolderIds(c.id))];
+                  };
+                  const ids = getAllSubfolderIds(editPermisosCarpeta.id);
+                  return allRecursos.filter((r) => r.carpeta_id != null && ids.includes(r.carpeta_id)).length;
+                })()
+          }
           alumnos={alumnos}
           saving={propagarPermisosMutation.isPending}
           onClose={() => setEditPermisosCarpeta(null)}
