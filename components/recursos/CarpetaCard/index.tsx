@@ -29,13 +29,15 @@ export interface CarpetaItem {
 interface CarpetaCardProps {
   carpeta: CarpetaItem;
   canManage: boolean;
+  /** When false, hides the visibility badge (e.g. for alumno role) */
+  showPermisoBadge?: boolean;
   onClick: () => void;
   onRename: (carpeta: CarpetaItem) => void;
   onDelete: (carpeta: CarpetaItem) => void;
   onEditPermisos: (carpeta: CarpetaItem) => void;
 }
 
-export function CarpetaCard({ carpeta, canManage, onClick, onRename, onDelete, onEditPermisos }: CarpetaCardProps) {
+export function CarpetaCard({ carpeta, canManage, showPermisoBadge = true, onClick, onRename, onDelete, onEditPermisos }: CarpetaCardProps) {
   const t = useTranslations('recursos');
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -68,8 +70,8 @@ export function CarpetaCard({ carpeta, canManage, onClick, onRename, onDelete, o
               {t('carpeta_recursos_count', { count: displayCount })}
             </span>
           )}
-          {/* Visibility badge — only shown when there are resources */}
-          {tieneRecursos && (
+          {/* Visibility badge — only shown when there are resources AND showPermisoBadge is true */}
+          {tieneRecursos && showPermisoBadge && (
             <span className={cn(
               'inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium',
               paraTodosApp

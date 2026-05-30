@@ -90,12 +90,16 @@ export function RecursosView({ rol }: RecursosViewProps) {
     enabled: !!user,
     staleTime: Infinity,
     queryFn: async () => {
-      const { data } = await supabase
-        .from('user_recursos_preferences')
-        .select('sort_by')
-        .eq('user_id', user!.id)
-        .maybeSingle();
-      return (data?.sort_by as SortBy) ?? 'created_at_desc';
+      try {
+        const { data } = await supabase
+          .from('user_recursos_preferences')
+          .select('sort_by')
+          .eq('user_id', user!.id)
+          .maybeSingle();
+        return (data?.sort_by as SortBy) ?? 'created_at_desc';
+      } catch {
+        return 'created_at_desc';
+      }
     },
   });
 
@@ -225,10 +229,15 @@ export function RecursosView({ rol }: RecursosViewProps) {
   // ── Mutation: save sort preference ───────────────────────────────
   const saveSortPrefMutation = useMutation({
     mutationFn: async (newSort: SortBy) => {
-      const { error } = await supabase
-        .from('user_recursos_preferences')
-        .upsert({ user_id: user!.id, sort_by: newSort, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
-      if (error) throw error;
+      // Silently ignore if table doesn't exist in this tenant's DB
+      try {
+        const { error } = await supabase
+          .from('user_recursos_preferences')
+          .upsert({ user_id: user!.id, sort_by: newSort, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+        if (error) throw error;
+      } catch {
+        // Non-critical — sort preference just won't persist
+      }
     },
     onSuccess: (_, newSort) => {
       queryClient.setQueryData(['recursos_sort_pref', user?.id], newSort);
@@ -629,6 +638,7 @@ export function RecursosView({ rol }: RecursosViewProps) {
                   key={c.id}
                   carpeta={c}
                   canManage={canUpload && (rol === 'admin' || c.creada_por === user?.id)}
+                  showPermisoBadge={rol !== 'alumno'}
                   onClick={() => setCurrentCarpetaId(c.id)}
                   onRename={(carpeta) => { setRenamingCarpeta(carpeta); setCarpetaModalMode('rename'); }}
                   onDelete={(carpeta) => setDeleteCarpetaTarget(carpeta)}

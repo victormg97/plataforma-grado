@@ -143,7 +143,8 @@ export async function prefetchDashboardData(userId: string, rol: UserRol) {
         queryKey: ['recursos', userId],
         queryFn: async () => {
           const { data } = await supabase.rpc('get_recursos_for_user');
-          return data ?? [];
+          const result = data as { recursos: unknown[]; carpetas: unknown[] } | null;
+          return { recursos: result?.recursos ?? [], carpetas: result?.carpetas ?? [] };
         },
         staleTime: 30_000,
       }),
@@ -211,7 +212,8 @@ export async function prefetchDashboardData(userId: string, rol: UserRol) {
         queryKey: ['recursos', userId],
         queryFn: async () => {
           const { data } = await supabase.rpc('get_recursos_for_user');
-          return data ?? [];
+          const result = data as { recursos: unknown[]; carpetas: unknown[] } | null;
+          return { recursos: result?.recursos ?? [], carpetas: result?.carpetas ?? [] };
         },
         staleTime: 30_000,
       }),
@@ -235,7 +237,8 @@ export async function prefetchDashboardData(userId: string, rol: UserRol) {
         queryKey: ['recursos', userId],
         queryFn: async () => {
           const { data } = await supabase.rpc('get_recursos_for_user');
-          return data ?? [];
+          const result = data as { recursos: unknown[]; carpetas: unknown[] } | null;
+          return { recursos: result?.recursos ?? [], carpetas: result?.carpetas ?? [] };
         },
         staleTime: 30_000,
       }),
