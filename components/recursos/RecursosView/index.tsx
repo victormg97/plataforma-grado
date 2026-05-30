@@ -3,7 +3,8 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
-import { Plus, FolderOpen, X, FolderPlus, ChevronRight, Home, ArrowLeft, ListFilter, Check } from 'lucide-react';
+import { Plus, FolderOpen, X, FolderPlus, ChevronRight, Home, ArrowLeft, Check } from 'lucide-react';
+import { Tooltip } from '@/components/common/Tooltip';
 import { createClient } from '@/lib/supabase/client';
 import { useUserStore } from '@/stores/useUserStore';
 import { toast } from 'sonner';
@@ -156,16 +157,29 @@ export function RecursosView({ rol }: RecursosViewProps) {
     [allRecursos, currentCarpetaId]
   );
 
-  // Enrich carpetas with resource count (prefer recursive count from RPC)
-  const carpetasWithCount = useMemo(
-    () => currentCarpetas.map((c) => ({
+  // Enrich carpetas with resource count and apply sort
+  const carpetasWithCount = useMemo(() => {
+    const enriched = currentCarpetas.map((c) => ({
       ...c,
-      // recursos_count is the direct count (fallback), recursive_recursos_count is the full tree count
       recursos_count: allRecursos.filter((r) => r.carpeta_id === c.id).length,
-      // recursive_recursos_count comes from the RPC; keep it as-is
-    })),
-    [currentCarpetas, allRecursos]
-  );
+    }));
+    return [...enriched].sort((a, b) => {
+      switch (sortBy) {
+        case 'created_at_asc':
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        case 'created_at_desc':
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        case 'nombre_desc':
+          return b.nombre.localeCompare(a.nombre, 'es');
+        case 'tipo_asc':
+          // folders have no tipo, fall back to name
+          return a.nombre.localeCompare(b.nombre, 'es');
+        case 'nombre_asc':
+        default:
+          return a.nombre.localeCompare(b.nombre, 'es');
+      }
+    });
+  }, [currentCarpetas, allRecursos, sortBy]);
 
   // Breadcrumb path
   const breadcrumb = useMemo(() => {
@@ -492,51 +506,23 @@ export function RecursosView({ rol }: RecursosViewProps) {
         </nav>
       )}
 
-      {/* Action bar: back arrow + breadcrumb + sort button */}
+      {/* Action bar: back arrow + breadcrumb (only when inside folder) + sort button */}
       <div className="flex items-center gap-2">
         {/* Back arrow — only shown when inside a folder */}
         {currentCarpetaId && (
-          <button
-            type="button"
-            onClick={() => setCurrentCarpetaId(parentCarpetaId)}
-            title={t('volver_carpeta')}
-            className="flex size-9 shrink-0 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text-secondary)] shadow-[var(--shadow-sm)] transition-all hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]"
-          >
-            <ArrowLeft className="size-4" />
-          </button>
-        )}
-
-        {/* Breadcrumb — fills remaining space */}
-        {(breadcrumb.length > 0 || currentCarpetaId) && (
-          <nav className="flex flex-1 items-center gap-1 text-sm min-w-0">
+          <Tooltip content={t('volver_carpeta')} position="bottom">
             <button
-              onClick={() => setCurrentCarpetaId(null)}
-              className="flex shrink-0 items-center gap-1 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
+              type="button"
+              onClick={() => setCurrentCarpetaId(parentCarpetaId)}
+              className="flex size-9 shrink-0 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text-secondary)] shadow-[var(--shadow-sm)] transition-all hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]"
             >
-              <Home className="size-3.5" />
-              <span className="hidden sm:inline">{t('titulo')}</span>
+              <ArrowLeft className="size-4" />
             </button>
-            {breadcrumb.map((c) => (
-              <span key={c.id} className="flex items-center gap-1 min-w-0">
-                <ChevronRight className="size-3.5 shrink-0 text-[var(--color-text-muted)]" />
-                <button
-                  onClick={() => setCurrentCarpetaId(c.id)}
-                  className={cn(
-                    'truncate transition-colors',
-                    c.id === currentCarpetaId
-                      ? 'font-semibold text-[var(--color-text-primary)]'
-                      : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]',
-                  )}
-                >
-                  {c.nombre}
-                </button>
-              </span>
-            ))}
-          </nav>
+          </Tooltip>
         )}
 
-        {/* Spacer when not in a folder */}
-        {!currentCarpetaId && <div className="flex-1" />}
+        {/* Spacer — pushes sort button to the right */}
+        <div className="flex-1" />
 
         {/* Sort button */}
         <div className="relative shrink-0" ref={sortMenuRef}>

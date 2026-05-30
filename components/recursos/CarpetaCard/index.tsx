@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Folder, Pencil, Trash2, MoreHorizontal, Globe, Users, Settings2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
+import { Tooltip } from '@/components/common/Tooltip';
 
 export interface CarpetaItem {
   id: string;
@@ -92,30 +93,33 @@ export function CarpetaCard({ carpeta, canManage, onClick, onRename, onDelete, o
         >
           {/* Desktop: icon buttons on hover */}
           <div className="hidden lg:flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button
-              type="button"
-              title={t('editar_permisos_carpeta')}
-              onClick={() => onEditPermisos(carpeta)}
-              className="flex size-8 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
-            >
-              <Settings2 className="size-3.5" />
-            </button>
-            <button
-              type="button"
-              title={t('renombrar_carpeta')}
-              onClick={() => onRename(carpeta)}
-              className="flex size-8 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
-            >
-              <Pencil className="size-3.5" />
-            </button>
-            <button
-              type="button"
-              title={t('eliminar_carpeta')}
-              onClick={() => onDelete(carpeta)}
-              className="flex size-8 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:bg-red-50 hover:text-[var(--color-error)] transition-colors"
-            >
-              <Trash2 className="size-3.5" />
-            </button>
+            <Tooltip content={t('editar_permisos_carpeta')} position="top">
+              <button
+                type="button"
+                onClick={() => onEditPermisos(carpeta)}
+                className="flex size-8 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+              >
+                <Settings2 className="size-3.5" />
+              </button>
+            </Tooltip>
+            <Tooltip content={t('renombrar_carpeta')} position="top">
+              <button
+                type="button"
+                onClick={() => onRename(carpeta)}
+                className="flex size-8 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+              >
+                <Pencil className="size-3.5" />
+              </button>
+            </Tooltip>
+            <Tooltip content={t('eliminar_carpeta')} position="top">
+              <button
+                type="button"
+                onClick={() => onDelete(carpeta)}
+                className="flex size-8 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:bg-red-50 hover:text-[var(--color-error)] transition-colors"
+              >
+                <Trash2 className="size-3.5" />
+              </button>
+            </Tooltip>
           </div>
 
           {/* Mobile: ⋯ menu */}

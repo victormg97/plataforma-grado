@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
+import { Tooltip } from '@/components/common/Tooltip';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -85,23 +86,23 @@ export function CardActions({ actions, className, mobileOnly = false }: CardActi
       {!mobileOnly && (
         <div className={cn('hidden lg:flex flex-shrink-0 items-start gap-0.5 pt-0.5', className)}>
           {actions.map((action) => (
-            <button
-              key={action.key}
-              type="button"
-              onClick={(e) => { e.stopPropagation(); action.onClick(); }}
-              aria-label={action.label}
-              title={action.label}
-              className={cn(
-                'flex size-9 items-center justify-center rounded-[var(--radius-sm)]',
-                'text-[var(--color-text-muted)] transition-colors',
-                'opacity-0 group-hover:opacity-100 transition-opacity',
-                action.danger
-                  ? 'hover:bg-[rgba(192,57,43,0.1)] hover:text-[var(--color-error)]'
-                  : 'hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]',
-              )}
-            >
-              {action.icon}
-            </button>
+            <Tooltip key={action.key} content={action.label} position="top">
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); action.onClick(); }}
+                aria-label={action.label}
+                className={cn(
+                  'flex size-9 items-center justify-center rounded-[var(--radius-sm)]',
+                  'text-[var(--color-text-muted)] transition-colors',
+                  'opacity-0 group-hover:opacity-100 transition-opacity',
+                  action.danger
+                    ? 'hover:bg-[rgba(192,57,43,0.1)] hover:text-[var(--color-error)]'
+                    : 'hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]',
+                )}
+              >
+                {action.icon}
+              </button>
+            </Tooltip>
           ))}
         </div>
       )}
