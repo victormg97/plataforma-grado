@@ -513,20 +513,16 @@ export default function PerfilPage() {
               </Field>
 
               {perfilData?.email_disponible && (
-                <div className="flex items-center justify-between gap-6 py-2">
-                  <div>
-                    <p className="text-sm font-medium text-[var(--color-text-primary)]">{tp('titulo')}</p>
-                    <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{tp('subtitulo')}</p>
-                  </div>
+                <Field label={tp('titulo')} hint={tp('subtitulo')}>
                   <button
                     type="button"
                     onClick={() => router.push('/perfil/plantillas-correo')}
-                    className="shrink-0 flex items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] hover:border-[var(--color-brand-gold)] hover:text-[var(--color-brand-gold)] transition-colors"
+                    className="flex items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] hover:border-[var(--color-brand-gold)] hover:text-[var(--color-brand-gold)] transition-colors"
                   >
                     <Mail className="size-4" />
                     {tp('boton_acceso')}
                   </button>
-                </div>
+                </Field>
               )}
 
               <SaveBar saving={savingConfig} label={savingConfig ? tc('cargando') : t('guardar')} disabled={!isDirtyConfig} />
@@ -537,20 +533,16 @@ export default function PerfilPage() {
           {(perfilData?.rol ?? user.rol) === 'admin' && (
             <div className="space-y-4 pb-8 border-b border-[var(--color-border)]">
               <SectionTitle icon={Users} title={tqs('perfil_titulo')} />
-              <div className="flex items-center justify-between gap-6 py-2">
-                <div>
-                  <p className="text-sm font-medium text-[var(--color-text-primary)]">{tqs('perfil_titulo')}</p>
-                  <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{tqs('perfil_subtitulo')}</p>
-                </div>
+              <Field label={tqs('perfil_titulo')} hint={tqs('perfil_subtitulo')}>
                 <button
                   type="button"
                   onClick={() => router.push('/perfil/quienes-somos')}
-                  className="shrink-0 flex items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] hover:border-[var(--color-brand-gold)] hover:text-[var(--color-brand-gold)] transition-colors"
+                  className="flex items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] hover:border-[var(--color-brand-gold)] hover:text-[var(--color-brand-gold)] transition-colors"
                 >
                   <Users className="size-4" />
                   {tqs('perfil_boton')}
                 </button>
-              </div>
+              </Field>
             </div>
           )}
 

@@ -23,7 +23,7 @@ async function checkWhoWeAreContent(tenantSlug: string, locale: string): Promise
     const supabase = await createClient();
 
     // Try locale-specific first
-    const localePath = `content/tenants/${tenantSlug}/${locale}/quienes-somos.md`;
+    const localePath = `tenants/${tenantSlug}/${locale}/quienes-somos.md`;
     const { data: localeData } = supabase.storage.from('content').getPublicUrl(localePath);
     if (localeData?.publicUrl) {
       const res = await fetch(localeData.publicUrl, { method: 'HEAD' });
@@ -32,7 +32,7 @@ async function checkWhoWeAreContent(tenantSlug: string, locale: string): Promise
 
     // Fall back to Spanish
     if (locale !== 'es') {
-      const esPath = `content/tenants/${tenantSlug}/es/quienes-somos.md`;
+      const esPath = `tenants/${tenantSlug}/es/quienes-somos.md`;
       const { data: esData } = supabase.storage.from('content').getPublicUrl(esPath);
       if (esData?.publicUrl) {
         const res = await fetch(esData.publicUrl, { method: 'HEAD' });

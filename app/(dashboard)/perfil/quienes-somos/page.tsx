@@ -52,7 +52,7 @@ function getIconKey(label: string): string {
 
 async function fetchMarkdownFromStorage(tenantSlug: string, locale: string): Promise<string | null> {
   const supabase = createClient();
-  const path = `content/tenants/${tenantSlug}/${locale}/quienes-somos.md`;
+  const path = `tenants/${tenantSlug}/${locale}/quienes-somos.md`;
   const { data } = supabase.storage.from('content').getPublicUrl(path);
   if (!data?.publicUrl) return null;
   try {
@@ -66,15 +66,21 @@ async function fetchMarkdownFromStorage(tenantSlug: string, locale: string): Pro
 
 async function probeExistingImage(tenantSlug: string): Promise<{ url: string; ext: string } | null> {
   const supabase = createClient();
-  for (const ext of IMAGE_EXTENSIONS) {
-    const path = `content/tenants/${tenantSlug}/quienes-somos-image.${ext}`;
-    const { data } = supabase.storage.from('content').getPublicUrl(path);
-    if (!data?.publicUrl) continue;
-    try {
-      const res = await fetch(data.publicUrl, { method: 'HEAD', cache: 'no-store' });
-      if (res.ok) return { url: data.publicUrl, ext };
-    } catch {
-      // continue
+  const folder = `tenants/${tenantSlug}`;
+  const { data: files, error } = await supabase.storage
+    .from('content')
+    .list(folder, { search: 'quienes-somos-image' });
+
+  if (error || !files || files.length === 0) return null;
+
+  const EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg'] as const;
+  for (const ext of EXTENSIONS) {
+    const match = files.find((f) => f.name === `quienes-somos-image.${ext}`);
+    if (match) {
+      const { data } = supabase.storage
+        .from('content')
+        .getPublicUrl(`${folder}/quienes-somos-image.${ext}`);
+      return { url: data.publicUrl, ext };
     }
   }
   return null;
@@ -125,7 +131,7 @@ export default function QuienesSomosEditorPage() {
     try {
       const markdown = turndown.turndown(editorHtml);
       const blob = new Blob([markdown], { type: 'text/markdown' });
-      const path = `content/tenants/${tenantConfig.id}/${locale}/quienes-somos.md`;
+      const path = `tenants/${tenantConfig.id}/${locale}/quienes-somos.md`;
       const { error } = await supabase.storage.from('content').upload(path, blob, {
         upsert: true,
         contentType: 'text/markdown',
@@ -173,10 +179,10 @@ export default function QuienesSomosEditorPage() {
     try {
       // Delete old file if extension differs
       if (existingImage && existingImage.ext !== ext) {
-        const oldPath = `content/tenants/${tenantConfig.id}/quienes-somos-image.${existingImage.ext}`;
+        const oldPath = `tenants/${tenantConfig.id}/quienes-somos-image.${existingImage.ext}`;
         await supabase.storage.from('content').remove([oldPath]);
       }
-      const newPath = `content/tenants/${tenantConfig.id}/quienes-somos-image.${ext}`;
+      const newPath = `tenants/${tenantConfig.id}/quienes-somos-image.${ext}`;
       const { error } = await supabase.storage.from('content').upload(newPath, file, {
         upsert: true,
         contentType: file.type,
@@ -242,6 +248,11 @@ export default function QuienesSomosEditorPage() {
         const updated = { ...c, [field]: value };
         if (field === 'label') {
           updated.icon_key = getIconKey(value);
+          // Auto-detect type from label
+          const lv = value.toLowerCase().trim();
+          if (lv === 'whatsapp') updated.type = 'whatsapp';
+          else if (lv === 'email' || lv === 'correo') updated.type = 'email';
+          else updated.type = 'social';
         }
         return updated;
       })
@@ -331,7 +342,7 @@ export default function QuienesSomosEditorPage() {
   const visibleContacts = contacts.filter((c) => !c._deleted);
 
   return (
-    <div className="space-y-8 max-w-3xl">
+    <div className="space-y-8">
       {/* Header */}
       <div className="flex items-center gap-4">
         <button
@@ -433,7 +444,12 @@ export default function QuienesSomosEditorPage() {
 
       {/* Contact info section */}
       <div className="space-y-4">
-        <h2 className="text-base font-semibold text-[var(--color-text-primary)]">{t('editor_contacto_titulo')}</h2>
+        <div>
+          <h2 className="text-base font-semibold text-[var(--color-text-primary)]">{t('editor_contacto_titulo')}</h2>
+          <p className="text-xs text-[var(--color-text-muted)] mt-1">
+            Agrega WhatsApp, correos e Instagram. El tipo se detecta automáticamente por el nombre.
+          </p>
+        </div>
         {contactLoading ? (
           <div className="flex justify-center py-8">
             <Loader2 className="size-6 animate-spin text-[var(--color-brand-gold)]" />
@@ -441,14 +457,16 @@ export default function QuienesSomosEditorPage() {
         ) : (
           <div className="space-y-3">
             {visibleContacts.map((entry, idx) => (
-              <div key={entry.id} className="rounded-[var(--radius-md)] border border-[var(--color-border)] p-4 space-y-3">
-                <div className="flex items-center justify-between gap-2">
+              <div key={entry.id} className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4">
+                {/* Row header: order controls + type badge + delete */}
+                <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-1">
                     <button
                       type="button"
                       onClick={() => moveContact(entry.id, 'up')}
                       disabled={idx === 0}
-                      className="flex size-7 items-center justify-center rounded text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] disabled:opacity-30 transition-colors"
+                      className="flex size-7 items-center justify-center rounded text-[var(--color-text-muted)] hover:bg-[var(--color-bg)] disabled:opacity-30 transition-colors"
+                      title="Mover arriba"
                     >
                       <ChevronUp className="size-4" />
                     </button>
@@ -456,63 +474,92 @@ export default function QuienesSomosEditorPage() {
                       type="button"
                       onClick={() => moveContact(entry.id, 'down')}
                       disabled={idx === visibleContacts.length - 1}
-                      className="flex size-7 items-center justify-center rounded text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] disabled:opacity-30 transition-colors"
+                      className="flex size-7 items-center justify-center rounded text-[var(--color-text-muted)] hover:bg-[var(--color-bg)] disabled:opacity-30 transition-colors"
+                      title="Mover abajo"
                     >
                       <ChevronDown className="size-4" />
                     </button>
+                    <span className="ml-1 text-xs text-[var(--color-text-muted)] capitalize px-2 py-0.5 rounded-full bg-[var(--color-bg)] border border-[var(--color-border)]">
+                      {entry.type}
+                    </span>
                   </div>
-                  <select
-                    value={entry.type}
-                    onChange={(e) => updateContact(entry.id, 'type', e.target.value)}
-                    className={cn(inputCls, 'w-32')}
-                  >
-                    <option value="social">social</option>
-                    <option value="whatsapp">whatsapp</option>
-                    <option value="email">email</option>
-                  </select>
                   <button
                     type="button"
                     onClick={() => deleteContact(entry.id)}
                     className="flex size-7 items-center justify-center rounded text-[var(--color-error)] hover:bg-[color-mix(in_srgb,var(--color-error)_10%,transparent)] transition-colors"
+                    title="Eliminar"
                   >
                     <Trash2 className="size-4" />
                   </button>
                 </div>
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                  <div>
+
+                {/* Fields */}
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {/* Label / Name */}
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-[var(--color-text-secondary)]">
+                      Nombre o red social
+                    </label>
                     <input
                       type="text"
                       value={entry.label}
                       onChange={(e) => updateContact(entry.id, 'label', e.target.value)}
-                      placeholder={t('editor_contacto_label')}
+                      placeholder="Ej: Instagram, WhatsApp, Correo, Estefanía…"
                       className={inputCls}
                     />
+                    <p className="text-xs text-[var(--color-text-muted)]">
+                      Escribe &quot;Instagram&quot;, &quot;WhatsApp&quot; o &quot;email&quot; para auto-detectar el ícono
+                    </p>
                     {fieldErrors[`${entry.id}-label`] && (
-                      <p className="text-xs text-[var(--color-error)] mt-1">{fieldErrors[`${entry.id}-label`]}</p>
+                      <p className="text-xs text-[var(--color-error)]">{fieldErrors[`${entry.id}-label`]}</p>
                     )}
                   </div>
-                  <div>
+
+                  {/* Value */}
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-[var(--color-text-secondary)]">
+                      {entry.type === 'whatsapp' ? 'Número de teléfono' : entry.type === 'email' ? 'Dirección de correo' : 'Usuario o handle'}
+                    </label>
                     <input
                       type="text"
                       value={entry.value}
                       onChange={(e) => updateContact(entry.id, 'value', e.target.value)}
-                      placeholder={t('editor_contacto_value')}
+                      placeholder={
+                        entry.type === 'whatsapp' ? '+56 9 1234 5678' :
+                        entry.type === 'email' ? 'correo@ejemplo.com' :
+                        '@usuario'
+                      }
                       className={inputCls}
                     />
+                    <p className="text-xs text-[var(--color-text-muted)]">
+                      Texto que se muestra al usuario
+                    </p>
                     {fieldErrors[`${entry.id}-value`] && (
-                      <p className="text-xs text-[var(--color-error)] mt-1">{fieldErrors[`${entry.id}-value`]}</p>
+                      <p className="text-xs text-[var(--color-error)]">{fieldErrors[`${entry.id}-value`]}</p>
                     )}
                   </div>
-                  <div>
+
+                  {/* URL */}
+                  <div className="space-y-1 sm:col-span-2">
+                    <label className="text-xs font-medium text-[var(--color-text-secondary)]">
+                      Enlace (URL)
+                    </label>
                     <input
                       type="text"
                       value={entry.url}
                       onChange={(e) => updateContact(entry.id, 'url', e.target.value)}
-                      placeholder={t('editor_contacto_url')}
+                      placeholder={
+                        entry.type === 'whatsapp' ? 'https://wa.me/56912345678' :
+                        entry.type === 'email' ? 'mailto:correo@ejemplo.com' :
+                        'https://instagram.com/usuario'
+                      }
                       className={inputCls}
                     />
+                    <p className="text-xs text-[var(--color-text-muted)]">
+                      Adónde lleva el clic. WhatsApp: https://wa.me/56… · Email: mailto:… · Redes: URL del perfil
+                    </p>
                     {fieldErrors[`${entry.id}-url`] && (
-                      <p className="text-xs text-[var(--color-error)] mt-1">{fieldErrors[`${entry.id}-url`]}</p>
+                      <p className="text-xs text-[var(--color-error)]">{fieldErrors[`${entry.id}-url`]}</p>
                     )}
                   </div>
                 </div>
@@ -521,7 +568,7 @@ export default function QuienesSomosEditorPage() {
             <button
               type="button"
               onClick={addContact}
-              className="flex items-center gap-2 rounded-[var(--radius-sm)] border border-dashed border-[var(--color-border-strong)] px-4 py-2 text-sm text-[var(--color-text-muted)] hover:border-[var(--color-brand-gold)] hover:text-[var(--color-brand-gold)] transition-colors w-full justify-center"
+              className="flex items-center gap-2 rounded-[var(--radius-sm)] border border-dashed border-[var(--color-border-strong)] px-4 py-3 text-sm text-[var(--color-text-muted)] hover:border-[var(--color-brand-gold)] hover:text-[var(--color-brand-gold)] transition-colors w-full justify-center"
             >
               <Plus className="size-4" />
               {t('editor_contacto_agregar')}

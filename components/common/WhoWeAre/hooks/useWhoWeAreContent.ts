@@ -16,7 +16,7 @@ async function fetchMarkdownFromStorage(
   signal: AbortSignal
 ): Promise<string | null> {
   const supabase = createClient();
-  const path = `content/tenants/${tenantSlug}/${locale}/quienes-somos.md`;
+  const path = `tenants/${tenantSlug}/${locale}/quienes-somos.md`;
 
   // Get the public URL
   const { data } = supabase.storage.from('content').getPublicUrl(path);
@@ -42,7 +42,6 @@ async function resolveContent(tenantSlug: string, locale: string): Promise<WhoWe
       return { markdown: localeContent, status: 'resolved' };
     }
 
-    // Fall back to Spanish if locale is not 'es'
     if (locale !== 'es') {
       const esContent = await fetchMarkdownFromStorage(tenantSlug, 'es', controller.signal);
       if (esContent !== null) {

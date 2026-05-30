@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { m, AnimatePresence } from 'framer-motion';
+import { LazyMotion, domAnimation, m, AnimatePresence } from 'framer-motion';
 import { X, ChevronUp, ChevronDown } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { MarkdownRenderer } from '@/components/common/MarkdownRenderer';
@@ -24,7 +24,7 @@ export function WhoWeAreModal({ tenantSlug, markdown, onClose }: WhoWeAreModalPr
   const [contactOpen, setContactOpen] = useState(false);
 
   return (
-    <>
+    <LazyMotion features={domAnimation}>
       {/* Backdrop */}
       <m.div
         className="fixed inset-0 z-40 bg-black/50 backdrop-blur-[2px]"
@@ -144,6 +144,6 @@ export function WhoWeAreModal({ tenantSlug, markdown, onClose }: WhoWeAreModalPr
           </div>
         </div>
       </m.div>
-    </>
+    </LazyMotion>
   );
 }
