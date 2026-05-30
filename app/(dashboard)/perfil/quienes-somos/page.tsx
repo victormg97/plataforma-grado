@@ -346,7 +346,7 @@ export default function QuienesSomosEditorPage() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <button
-          onClick={() => router.push('/perfil')}
+          onClick={() => router.back()}
           className="flex size-9 items-center justify-center rounded-full text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] transition-colors"
         >
           <ArrowLeft className="size-5" />

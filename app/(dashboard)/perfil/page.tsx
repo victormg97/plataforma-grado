@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import Link from 'next/link';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
@@ -534,14 +535,13 @@ export default function PerfilPage() {
             <div className="space-y-4 pb-8 border-b border-[var(--color-border)]">
               <SectionTitle icon={Users} title={tqs('perfil_titulo')} />
               <Field label={tqs('perfil_titulo')} hint={tqs('perfil_subtitulo')}>
-                <button
-                  type="button"
-                  onClick={() => router.push('/perfil/quienes-somos')}
-                  className="flex items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] hover:border-[var(--color-brand-gold)] hover:text-[var(--color-brand-gold)] transition-colors"
+                <Link
+                  href="/perfil/quienes-somos"
+                  className="inline-flex items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] hover:border-[var(--color-brand-gold)] hover:text-[var(--color-brand-gold)] transition-colors"
                 >
                   <Users className="size-4" />
                   {tqs('perfil_boton')}
-                </button>
+                </Link>
               </Field>
             </div>
           )}
