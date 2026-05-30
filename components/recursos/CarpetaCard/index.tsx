@@ -18,9 +18,11 @@ export interface CarpetaItem {
   recursos_count?: number;
   /** Recursive count of ALL resources inside this folder and all subfolders (from RPC) */
   recursive_recursos_count?: number;
-  /** True if ANY resource inside has para_todos=true (from RPC) */
+  /** True if ANY resource in the full tree has para_todos=true (from RPC) */
   para_todos_efectivo?: boolean;
-  /** Union of all alumno_ids from recursos_acceso for resources in this folder (from RPC) */
+  /** True if ANY resource in the full tree has para_todos_app=true (from RPC) */
+  para_todos_app_efectivo?: boolean;
+  /** Union of all alumno_ids from recursos_acceso for resources in the full tree (from RPC) */
   alumno_ids_efectivos?: string[];
 }
 
@@ -40,6 +42,7 @@ export function CarpetaCard({ carpeta, canManage, onClick, onRename, onDelete, o
   // Use recursive count (all subfolders) if available, fall back to direct count
   const displayCount = carpeta.recursive_recursos_count ?? carpeta.recursos_count ?? 0;
   const tieneRecursos = displayCount > 0;
+  const paraTodosApp = carpeta.para_todos_app_efectivo ?? false;
   const paraTodos = carpeta.para_todos_efectivo ?? false;
   const alumnosCount = carpeta.alumno_ids_efectivos?.length ?? 0;
 
@@ -69,17 +72,21 @@ export function CarpetaCard({ carpeta, canManage, onClick, onRename, onDelete, o
           {tieneRecursos && (
             <span className={cn(
               'inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium',
-              paraTodos
-                ? 'bg-[var(--color-success)]/10 text-[var(--color-success)]'
-                : alumnosCount > 0
-                  ? 'bg-[var(--color-bg-elevated)] text-[var(--color-text-muted)]'
-                  : 'bg-[var(--color-bg-elevated)] text-[var(--color-text-muted)]',
+              paraTodosApp
+                ? 'bg-[var(--color-brand-gold-muted)] text-[var(--color-brand-gold)]'
+                : paraTodos
+                  ? 'bg-[var(--color-success)]/10 text-[var(--color-success)]'
+                  : alumnosCount > 0
+                    ? 'bg-[var(--color-bg-elevated)] text-[var(--color-text-muted)]'
+                    : 'bg-[var(--color-bg-elevated)] text-[var(--color-text-muted)]',
             )}>
-              {paraTodos
-                ? <><Globe className="size-2.5" />{t('para_todos')}</>
-                : alumnosCount > 0
-                  ? <><Users className="size-2.5" />{t('solo_asignados', { count: alumnosCount })}</>
-                  : <><Users className="size-2.5" />{t('carpeta_sin_permisos')}</>}
+              {paraTodosApp
+                ? <><Globe className="size-2.5" />{t('todos_app')}</>
+                : paraTodos
+                  ? <><Globe className="size-2.5" />{t('para_todos')}</>
+                  : alumnosCount > 0
+                    ? <><Users className="size-2.5" />{t('solo_asignados', { count: alumnosCount })}</>
+                    : <><Users className="size-2.5" />{t('carpeta_sin_permisos')}</>}
             </span>
           )}
         </div>

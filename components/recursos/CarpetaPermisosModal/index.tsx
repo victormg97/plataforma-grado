@@ -27,9 +27,8 @@ interface CarpetaPermisosModalProps {
 }
 
 function getInitialMode(carpeta: CarpetaItem): VisibilidadMode {
-  // para_todos_efectivo covers both para_todos and para_todos_app from the RPC
-  // We can't distinguish them from the folder level, so default to mis_alumnos when true
-  if (carpeta.para_todos_efectivo) return 'mis_alumnos';
+  if (carpeta.para_todos_app_efectivo) return 'todos_app';
+  if (carpeta.para_todos_efectivo)     return 'mis_alumnos';
   if ((carpeta.alumno_ids_efectivos?.length ?? 0) > 0) return 'especificos';
   return 'mis_alumnos';
 }
