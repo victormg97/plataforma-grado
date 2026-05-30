@@ -1144,7 +1144,15 @@
     "carpeta_propagacion_desc": "Al guardar, los permisos de {count, plural, one {# archivo} other {# archivos}} dentro de esta carpeta serán actualizados para coincidir con esta configuración.",
     "carpeta_permisos_guardados": "Permisos de carpeta actualizados",
     "error_guardar_permisos_carpeta": "Error al actualizar los permisos",
-    "tenia_acceso": "tenía acceso"
+    "tenia_acceso": "tenía acceso",
+    "ordenar": "Ordenar",
+    "ordenar_por": "Ordenar por",
+    "sort_reciente": "Más reciente primero",
+    "sort_antiguo": "Más antiguo primero",
+    "sort_nombre_az": "Nombre A → Z",
+    "sort_nombre_za": "Nombre Z → A",
+    "sort_tipo": "Por tipo",
+    "volver_carpeta": "Volver a la carpeta anterior"
   },
   "pagos": {
     "titulo": "Pagos",

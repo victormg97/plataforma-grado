@@ -8,6 +8,7 @@ const config: TenantConfigInput = {
   // Dominio verificado en Resend (subdominio). El from de los correos sale desde aquí.
   emailFrom: 'no-reply@contacto.preguntaestrategica.cl',
   terminoPrueba: { singular: 'Interrogación', plural: 'Interrogaciones' },
+  quienesSomosLabel: 'Sobre Nosotras',
   logoLight: '/tenants/pregunta-estrategica/logo-light.png',
   logoDark: '/tenants/pregunta-estrategica/logo-dark.png',
   sidebarLight: '/tenants/pregunta-estrategica/sidebar-light.png',

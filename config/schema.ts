@@ -84,6 +84,9 @@ export const tenantConfigSchema = z.object({
     singular: z.string().min(1),
     plural: z.string().min(1),
   }).optional().default({ singular: 'Prueba', plural: 'Pruebas' }),
+  // Texto del botón/popover "¿Quiénes Somos?" — configurable por tenant.
+  // Ej: "Sobre Nosotras", "Sobre Nosotros", "Quiénes Somos", "About Us"
+  quienesSomosLabel: z.string().optional().default('¿Quiénes Somos?'),
   logoLight: relativePathSchema,
   logoDark: relativePathSchema,
   // Logos opcionales específicos del sidebar (variaciones del logo principal).

@@ -13,8 +13,10 @@ export interface CarpetaItem {
   created_at: string;
   updated_at: string;
   creador_nombre?: string;
-  /** Count of resources inside (computed client-side) */
+  /** Count of resources directly inside (computed client-side, kept for compat) */
   recursos_count?: number;
+  /** Recursive count of ALL resources inside this folder and all subfolders (from RPC) */
+  recursive_recursos_count?: number;
   /** True if ANY resource inside has para_todos=true (from RPC) */
   para_todos_efectivo?: boolean;
   /** Union of all alumno_ids from recursos_acceso for resources in this folder (from RPC) */
@@ -34,7 +36,9 @@ export function CarpetaCard({ carpeta, canManage, onClick, onRename, onDelete, o
   const t = useTranslations('recursos');
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const tieneRecursos = (carpeta.recursos_count ?? 0) > 0;
+  // Use recursive count (all subfolders) if available, fall back to direct count
+  const displayCount = carpeta.recursive_recursos_count ?? carpeta.recursos_count ?? 0;
+  const tieneRecursos = displayCount > 0;
   const paraTodos = carpeta.para_todos_efectivo ?? false;
   const alumnosCount = carpeta.alumno_ids_efectivos?.length ?? 0;
 
@@ -57,7 +61,7 @@ export function CarpetaCard({ carpeta, canManage, onClick, onRename, onDelete, o
         <div className="flex items-center gap-2 mt-0.5">
           {carpeta.recursos_count !== undefined && (
             <span className="text-xs text-[var(--color-text-muted)]">
-              {t('carpeta_recursos_count', { count: carpeta.recursos_count })}
+              {t('carpeta_recursos_count', { count: displayCount })}
             </span>
           )}
           {/* Visibility badge — only shown when there are resources */}

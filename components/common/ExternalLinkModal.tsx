@@ -1,6 +1,7 @@
 'use client';
 
-import { ExternalLink, X } from 'lucide-react';
+import { useState } from 'react';
+import { ExternalLink, X, Copy, Check } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 interface ExternalLinkModalProps {
@@ -22,9 +23,17 @@ export function ExternalLinkModal({
   children,
 }: ExternalLinkModalProps) {
   const t = useTranslations('common');
+  const [copied, setCopied] = useState(false);
 
   // Show full URL but break long ones gracefully
   const displayUrl = url.length > 80 ? url.slice(0, 77) + '…' : url;
+
+  function handleCopy() {
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
 
   return (
     <>
@@ -67,12 +76,32 @@ export function ExternalLinkModal({
               {t('enlace_externo_desc')}
             </p>
 
-            {/* URL box */}
-            <div className="flex items-start gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2">
-              <ExternalLink className="size-3.5 shrink-0 mt-0.5 text-[var(--color-text-muted)]" />
-              <span className="text-xs text-[var(--color-text-muted)] font-mono break-all">
+            {/* URL box with copy button */}
+            <div className="flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2">
+              <ExternalLink className="size-3.5 shrink-0 text-[var(--color-text-muted)]" />
+              <span className="text-xs text-[var(--color-text-muted)] font-mono break-all flex-1">
                 {displayUrl}
               </span>
+              {/* Copy button */}
+              <div className="relative shrink-0">
+                {copied && (
+                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-[var(--radius-sm)] bg-[var(--color-text-primary)] px-2 py-1 text-[10px] font-medium text-[var(--color-bg)] shadow-sm animate-in fade-in-0 zoom-in-95 duration-100">
+                    ¡Copiado!
+                    <div className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-[var(--color-text-primary)]" />
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={handleCopy}
+                  aria-label="Copiar enlace"
+                  className="flex size-6 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg)] hover:text-[var(--color-text-primary)] transition-colors"
+                >
+                  {copied
+                    ? <Check className="size-3.5 text-[var(--color-success)]" />
+                    : <Copy className="size-3.5" />
+                  }
+                </button>
+              </div>
             </div>
 
             {/* Slot for extra content (e.g. trust checkbox in notas) */}

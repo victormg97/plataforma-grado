@@ -1144,7 +1144,15 @@
     "carpeta_propagacion_desc": "When saved, the permissions of {count, plural, one {# file} other {# files}} inside this folder will be updated to match this configuration.",
     "carpeta_permisos_guardados": "Folder permissions updated",
     "error_guardar_permisos_carpeta": "Error updating permissions",
-    "tenia_acceso": "had access"
+    "tenia_acceso": "had access",
+    "ordenar": "Sort",
+    "ordenar_por": "Sort by",
+    "sort_reciente": "Newest first",
+    "sort_antiguo": "Oldest first",
+    "sort_nombre_az": "Name A → Z",
+    "sort_nombre_za": "Name Z → A",
+    "sort_tipo": "By type",
+    "volver_carpeta": "Go back to previous folder"
   },
   "pagos": {
     "titulo": "Payments",

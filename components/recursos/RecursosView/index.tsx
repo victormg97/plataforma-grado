@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
-import { Plus, FolderOpen, X, FolderPlus, ChevronRight, Home } from 'lucide-react';
+import { Plus, FolderOpen, X, FolderPlus, ChevronRight, Home, ArrowLeft, ListFilter, Check } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useUserStore } from '@/stores/useUserStore';
 import { toast } from 'sonner';
@@ -31,6 +31,8 @@ interface RecursosViewProps {
 
 type Tab = 'todos' | 'archivo' | 'enlace' | 'video';
 
+type SortBy = 'created_at_desc' | 'created_at_asc' | 'nombre_asc' | 'nombre_desc' | 'tipo_asc';
+
 interface RpcResult {
   recursos: RecursoItem[];
   carpetas: CarpetaItem[];
@@ -55,6 +57,11 @@ export function RecursosView({ rol }: RecursosViewProps) {
   const [deleteCarpetaTarget, setDeleteCarpetaTarget] = useState<CarpetaItem | null>(null);
   const [editPermisosCarpeta, setEditPermisosCarpeta] = useState<CarpetaItem | null>(null);
 
+  // Sort state
+  const [sortBy, setSortBy] = useState<SortBy>('created_at_desc');
+  const [showSortMenu, setShowSortMenu] = useState(false);
+  const sortMenuRef = useRef<HTMLDivElement>(null);
+
   const canUpload = rol === 'admin' || rol === 'profesor';
 
   // ── Data: resources + folders (via RPC) ───────────────────────────
@@ -75,6 +82,37 @@ export function RecursosView({ rol }: RecursosViewProps) {
 
   const allRecursos: RecursoItem[] = rpcData?.recursos ?? [];
   const allCarpetas: CarpetaItem[] = rpcData?.carpetas ?? [];
+
+  // ── Data: sort preference (from DB) ──────────────────────────────
+  const { data: sortPref } = useQuery<SortBy>({
+    queryKey: ['recursos_sort_pref', user?.id],
+    enabled: !!user,
+    staleTime: Infinity,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('user_recursos_preferences')
+        .select('sort_by')
+        .eq('user_id', user!.id)
+        .maybeSingle();
+      return (data?.sort_by as SortBy) ?? 'created_at_desc';
+    },
+  });
+
+  // Sync DB preference into local state once loaded
+  useEffect(() => {
+    if (sortPref) setSortBy(sortPref);
+  }, [sortPref]);
+
+  // Close sort menu on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (sortMenuRef.current && !sortMenuRef.current.contains(e.target as Node)) {
+        setShowSortMenu(false);
+      }
+    };
+    if (showSortMenu) document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showSortMenu]);
 
   // ── Data: alumnos list ────────────────────────────────────────────
   const { data: alumnos = [] } = useQuery<Alumno[]>({
@@ -118,11 +156,13 @@ export function RecursosView({ rol }: RecursosViewProps) {
     [allRecursos, currentCarpetaId]
   );
 
-  // Enrich carpetas with resource count
+  // Enrich carpetas with resource count (prefer recursive count from RPC)
   const carpetasWithCount = useMemo(
     () => currentCarpetas.map((c) => ({
       ...c,
+      // recursos_count is the direct count (fallback), recursive_recursos_count is the full tree count
       recursos_count: allRecursos.filter((r) => r.carpeta_id === c.id).length,
+      // recursive_recursos_count comes from the RPC; keep it as-is
     })),
     [currentCarpetas, allRecursos]
   );
@@ -141,11 +181,51 @@ export function RecursosView({ rol }: RecursosViewProps) {
     return path;
   }, [currentCarpetaId, allCarpetas]);
 
-  // Tab filter applied to current folder's resources
-  const filteredRecursos = useMemo(
-    () => activeTab === 'todos' ? currentRecursos : currentRecursos.filter((r) => r.tipo === activeTab),
-    [currentRecursos, activeTab]
-  );
+  // Parent folder id for back navigation
+  const parentCarpetaId = useMemo(() => {
+    if (!currentCarpetaId) return null;
+    const current = allCarpetas.find((c) => c.id === currentCarpetaId);
+    return current?.parent_id ?? null;
+  }, [currentCarpetaId, allCarpetas]);
+
+  // Sort + tab filter applied to current folder's resources
+  const filteredRecursos = useMemo(() => {
+    const filtered = activeTab === 'todos' ? currentRecursos : currentRecursos.filter((r) => r.tipo === activeTab);
+    return [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case 'created_at_asc':
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        case 'nombre_asc':
+          return a.titulo.localeCompare(b.titulo, 'es');
+        case 'nombre_desc':
+          return b.titulo.localeCompare(a.titulo, 'es');
+        case 'tipo_asc':
+          return a.tipo.localeCompare(b.tipo, 'es');
+        case 'created_at_desc':
+        default:
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+    });
+  }, [currentRecursos, activeTab, sortBy]);
+
+  // ── Mutation: save sort preference ───────────────────────────────
+  const saveSortPrefMutation = useMutation({
+    mutationFn: async (newSort: SortBy) => {
+      const { error } = await supabase
+        .from('user_recursos_preferences')
+        .upsert({ user_id: user!.id, sort_by: newSort, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+      if (error) throw error;
+    },
+    onSuccess: (_, newSort) => {
+      queryClient.setQueryData(['recursos_sort_pref', user?.id], newSort);
+    },
+  });
+
+  const handleSortChange = (newSort: SortBy) => {
+    setSortBy(newSort);
+    setShowSortMenu(false);
+    saveSortPrefMutation.mutate(newSort);
+  };
 
   // ── Mutation: delete resource ─────────────────────────────────────
   const deleteMutation = useMutation({
@@ -411,6 +491,110 @@ export function RecursosView({ rol }: RecursosViewProps) {
           ))}
         </nav>
       )}
+
+      {/* Action bar: back arrow + breadcrumb + sort button */}
+      <div className="flex items-center gap-2">
+        {/* Back arrow — only shown when inside a folder */}
+        {currentCarpetaId && (
+          <button
+            type="button"
+            onClick={() => setCurrentCarpetaId(parentCarpetaId)}
+            title={t('volver_carpeta')}
+            className="flex size-9 shrink-0 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text-secondary)] shadow-[var(--shadow-sm)] transition-all hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]"
+          >
+            <ArrowLeft className="size-4" />
+          </button>
+        )}
+
+        {/* Breadcrumb — fills remaining space */}
+        {(breadcrumb.length > 0 || currentCarpetaId) && (
+          <nav className="flex flex-1 items-center gap-1 text-sm min-w-0">
+            <button
+              onClick={() => setCurrentCarpetaId(null)}
+              className="flex shrink-0 items-center gap-1 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
+            >
+              <Home className="size-3.5" />
+              <span className="hidden sm:inline">{t('titulo')}</span>
+            </button>
+            {breadcrumb.map((c) => (
+              <span key={c.id} className="flex items-center gap-1 min-w-0">
+                <ChevronRight className="size-3.5 shrink-0 text-[var(--color-text-muted)]" />
+                <button
+                  onClick={() => setCurrentCarpetaId(c.id)}
+                  className={cn(
+                    'truncate transition-colors',
+                    c.id === currentCarpetaId
+                      ? 'font-semibold text-[var(--color-text-primary)]'
+                      : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]',
+                  )}
+                >
+                  {c.nombre}
+                </button>
+              </span>
+            ))}
+          </nav>
+        )}
+
+        {/* Spacer when not in a folder */}
+        {!currentCarpetaId && <div className="flex-1" />}
+
+        {/* Sort button */}
+        <div className="relative shrink-0" ref={sortMenuRef}>
+          <button
+            type="button"
+            onClick={() => setShowSortMenu((v) => !v)}
+            title={t('ordenar')}
+            className={cn(
+              'flex items-center gap-2 rounded-[var(--radius-md)] border px-3 py-2 text-sm font-medium shadow-[var(--shadow-sm)] transition-all min-h-[36px]',
+              showSortMenu
+                ? 'border-[var(--color-brand-gold)] bg-[var(--color-brand-gold-muted)] text-[var(--color-brand-gold)]'
+                : 'border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]',
+            )}
+          >
+            {/* Classic funnel/filter icon with 3 horizontal lines of decreasing width */}
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <line x1="2" y1="4" x2="14" y2="4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              <line x1="4" y1="8" x2="12" y2="8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              <line x1="6" y1="12" x2="10" y2="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+            <span className="hidden sm:inline">{t('ordenar')}</span>
+          </button>
+
+          {showSortMenu && (
+            <div className="absolute right-0 top-full z-50 mt-1.5 min-w-[200px] rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg)] py-1 shadow-[var(--shadow-lg)]">
+              <p className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
+                {t('ordenar_por')}
+              </p>
+              {(
+                [
+                  { value: 'created_at_desc', label: t('sort_reciente') },
+                  { value: 'created_at_asc',  label: t('sort_antiguo') },
+                  { value: 'nombre_asc',       label: t('sort_nombre_az') },
+                  { value: 'nombre_desc',      label: t('sort_nombre_za') },
+                  { value: 'tipo_asc',         label: t('sort_tipo') },
+                ] as { value: SortBy; label: string }[]
+              ).map(({ value, label }) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => handleSortChange(value)}
+                  className={cn(
+                    'flex w-full items-center gap-3 px-3 py-2 text-sm transition-colors text-left',
+                    sortBy === value
+                      ? 'bg-[var(--color-brand-gold-muted)] text-[var(--color-brand-gold)]'
+                      : 'text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)]',
+                  )}
+                >
+                  <span className="flex size-4 shrink-0 items-center justify-center">
+                    {sortBy === value && <Check className="size-3.5" />}
+                  </span>
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Filter tabs */}
       <div className="flex gap-1 border-b border-[var(--color-border)]">

@@ -1238,6 +1238,32 @@ export type Database = {
         }
         Relationships: []
       }
+      user_recursos_preferences: {
+        Row: {
+          user_id: string
+          sort_by: 'created_at_desc' | 'created_at_asc' | 'nombre_asc' | 'nombre_desc' | 'tipo_asc'
+          updated_at: string
+        }
+        Insert: {
+          user_id: string
+          sort_by?: 'created_at_desc' | 'created_at_asc' | 'nombre_asc' | 'nombre_desc' | 'tipo_asc'
+          updated_at?: string
+        }
+        Update: {
+          user_id?: string
+          sort_by?: 'created_at_desc' | 'created_at_asc' | 'nombre_asc' | 'nombre_desc' | 'tipo_asc'
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_recursos_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
