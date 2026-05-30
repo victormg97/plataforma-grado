@@ -359,7 +359,7 @@ export function RecursosView({ rol }: RecursosViewProps) {
     onError: () => toast.error(t('error_eliminar_carpeta')),
   });
 
-  // ── Mutation: propagate folder permissions to all resources inside ──
+  // ── Mutation: propagate folder permissions recursively (all subfolders) ──
   const propagarPermisosMutation = useMutation({
     mutationFn: async ({
       carpetaId,
@@ -372,36 +372,13 @@ export function RecursosView({ rol }: RecursosViewProps) {
       para_todos_app: boolean;
       alumno_ids: string[];
     }) => {
-      const { data: recursos, error: fetchErr } = await supabase
-        .from('recursos_compartidos')
-        .select('id')
-        .eq('carpeta_id', carpetaId);
-      if (fetchErr) throw fetchErr;
-      if (!recursos || recursos.length === 0) return;
-
-      const ids = recursos.map((r) => r.id);
-
-      const { error: updateErr } = await supabase
-        .from('recursos_compartidos')
-        .update({ para_todos, para_todos_app })
-        .in('id', ids);
-      if (updateErr) throw updateErr;
-
-      const { error: deleteErr } = await supabase
-        .from('recursos_acceso')
-        .delete()
-        .in('recurso_id', ids);
-      if (deleteErr) throw deleteErr;
-
-      if (!para_todos && !para_todos_app && alumno_ids.length > 0) {
-        const rows = ids.flatMap((recurso_id) =>
-          alumno_ids.map((alumno_id) => ({ recurso_id, alumno_id }))
-        );
-        const { error: insertErr } = await supabase
-          .from('recursos_acceso')
-          .insert(rows);
-        if (insertErr) throw insertErr;
-      }
+      const { error } = await supabase.rpc('propagate_folder_permissions', {
+        p_folder_id:      carpetaId,
+        p_para_todos:     para_todos,
+        p_para_todos_app: para_todos_app,
+        p_alumno_ids:     alumno_ids,
+      });
+      if (error) throw error;
     },
     onSuccess: () => {
       toast.success(t('carpeta_permisos_guardados'));
@@ -768,7 +745,7 @@ export function RecursosView({ rol }: RecursosViewProps) {
       {editPermisosCarpeta && canUpload && (
         <CarpetaPermisosModal
           carpeta={editPermisosCarpeta}
-          recursosEnCarpeta={allRecursos.filter((r) => r.carpeta_id === editPermisosCarpeta.id)}
+          recursosCount={editPermisosCarpeta.recursive_recursos_count ?? allRecursos.filter((r) => r.carpeta_id === editPermisosCarpeta.id).length}
           alumnos={alumnos}
           saving={propagarPermisosMutation.isPending}
           onClose={() => setEditPermisosCarpeta(null)}

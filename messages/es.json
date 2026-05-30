@@ -1141,7 +1141,7 @@
     "carpeta_sin_recursos_permisos": "Esta carpeta no tiene archivos aún. Los permisos que configures se aplicarán a los archivos que subas.",
     "carpeta_sin_permisos": "Sin acceso asignado",
     "carpeta_propagacion_titulo": "Los cambios se aplicarán a todos los archivos",
-    "carpeta_propagacion_desc": "Al guardar, los permisos de {count, plural, one {# archivo} other {# archivos}} dentro de esta carpeta serán actualizados para coincidir con esta configuración.",
+    "carpeta_propagacion_desc": "Al guardar, los permisos de {count, plural, one {# archivo} other {# archivos}} dentro de esta carpeta y sus subcarpetas serán actualizados.",
     "carpeta_permisos_guardados": "Permisos de carpeta actualizados",
     "error_guardar_permisos_carpeta": "Error al actualizar los permisos",
     "tenia_acceso": "tenía acceso",
@@ -1154,7 +1154,7 @@
     "sort_tipo": "Por tipo",
     "volver_carpeta": "Volver a la carpeta anterior",
     "todos_mis_alumnos": "Todos mis alumnos",
-    "todos_app": "Toda la app",
+    "todos_app": "Todos los alumnos",
     "todos_app_desc": "Todos los alumnos de la plataforma podrán ver este recurso, sin importar a qué profesor estén asignados."
   },
   "pagos": {

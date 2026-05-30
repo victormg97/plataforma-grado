@@ -1384,6 +1384,15 @@ export type Database = {
       }
       get_profesor_dashboard: { Args: { p_profesor_id: string }; Returns: Json }
       get_recursos_for_user: { Args: never; Returns: Json }
+      propagate_folder_permissions: {
+        Args: {
+          p_folder_id: string
+          p_para_todos: boolean
+          p_para_todos_app: boolean
+          p_alumno_ids: string[]
+        }
+        Returns: undefined
+      }
       get_server_time: { Args: never; Returns: string }
       get_user_rol: {
         Args: never

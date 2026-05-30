@@ -6,7 +6,6 @@ import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import { Modal } from '@/components/common/Modal';
 import type { CarpetaItem } from '@/components/recursos/CarpetaCard';
-import type { RecursoItem } from '@/components/recursos/RecursoCard';
 import type { VisibilidadMode } from '@/components/recursos/RecursoUploader/components/AlumnoAssignmentSelector';
 
 const labelCls = 'mb-1.5 block text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]';
@@ -19,7 +18,8 @@ interface Alumno {
 
 interface CarpetaPermisosModalProps {
   carpeta: CarpetaItem;
-  recursosEnCarpeta: RecursoItem[];
+  /** Total recursive count of resources inside this folder and all subfolders */
+  recursosCount: number;
   alumnos: Alumno[];
   onClose: () => void;
   onSave: (data: { para_todos: boolean; para_todos_app: boolean; alumno_ids: string[] }) => Promise<void>;
@@ -36,7 +36,7 @@ function getInitialMode(carpeta: CarpetaItem): VisibilidadMode {
 
 export function CarpetaPermisosModal({
   carpeta,
-  recursosEnCarpeta,
+  recursosCount,
   alumnos,
   onClose,
   onSave,
@@ -50,7 +50,7 @@ export function CarpetaPermisosModal({
   const [selectedIds, setSelectedIds] = useState<string[]>(currentAlumnoIds);
   const [alumnoSearch, setAlumnoSearch] = useState('');
 
-  const hasResources = recursosEnCarpeta.length > 0;
+  const hasResources = recursosCount > 0;
 
   const currentParaTodos = carpeta.para_todos_efectivo ?? false;
 
@@ -156,7 +156,7 @@ export function CarpetaPermisosModal({
             <AlertTriangle className="size-3.5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
             <div className="text-amber-800 dark:text-amber-300">
               <p className="font-medium mb-0.5">{t('carpeta_propagacion_titulo')}</p>
-              <p>{t('carpeta_propagacion_desc', { count: recursosEnCarpeta.length })}</p>
+              <p>{t('carpeta_propagacion_desc', { count: recursosCount })}</p>
             </div>
           </div>
         )}
