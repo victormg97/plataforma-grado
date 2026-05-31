@@ -509,6 +509,7 @@ export function HorariosProfesorView({ profesorId, role, activeTab: activeTabPro
   const tc = useTranslations('common');
   const locale = useLocale();
   const dateFnsLocale = locale === 'en' ? enUS : es;
+  const pruebaTerm = usePruebaTerm();
 
   const alumnoBasePath = role === 'admin' ? '/admin/alumnos' : '/profesor/alumnos';
   const fromPath = role === 'admin'
@@ -668,13 +669,15 @@ export function HorariosProfesorView({ profesorId, role, activeTab: activeTabPro
                   onChange={filters.setSelectedAlumnoId}
                 />
               )}
-              <FilterChip
-                active={filters.soloPruebasProximas}
-                onClick={() => filters.setSoloPruebasProximas(!filters.soloPruebasProximas)}
-                icon={<GraduationCap className="size-3.5 shrink-0" />}
-                label={t('filtro_pruebas')}
-                tooltip={t('tooltip_filtro_pruebas')}
-              />
+              {filters.hasUpcomingPruebas && (
+                <FilterChip
+                  active={filters.soloPruebasProximas}
+                  onClick={() => filters.setSoloPruebasProximas(!filters.soloPruebasProximas)}
+                  icon={<GraduationCap className="size-3.5 shrink-0" />}
+                  label={t('filtro_pruebas', { term: pruebaTerm.plural })}
+                  tooltip={t('tooltip_filtro_pruebas', { term: pruebaTerm.plural })}
+                />
+              )}
             </div>
           </div>
 
@@ -766,20 +769,24 @@ export function HorariosProfesorView({ profesorId, role, activeTab: activeTabPro
                   onChange={filters.setSelectedAlumnoId}
                 />
               )}
-              <FilterChip
-                active={filters.soloConNotas}
-                onClick={() => filters.setSoloConNotas(!filters.soloConNotas)}
-                icon={<FileText className="size-3.5 shrink-0" />}
-                label={t('filtro_con_notas')}
-                tooltip={t('tooltip_filtro_notas')}
-              />
-              <FilterChip
-                active={filters.soloPruebas}
-                onClick={() => filters.setSoloPruebas(!filters.soloPruebas)}
-                icon={<GraduationCap className="size-3.5 shrink-0" />}
-                label={t('filtro_pruebas')}
-                tooltip={t('tooltip_filtro_pruebas')}
-              />
+              {filters.hasPastNotas && (
+                <FilterChip
+                  active={filters.soloConNotas}
+                  onClick={() => filters.setSoloConNotas(!filters.soloConNotas)}
+                  icon={<FileText className="size-3.5 shrink-0" />}
+                  label={t('filtro_con_notas')}
+                  tooltip={t('tooltip_filtro_notas')}
+                />
+              )}
+              {filters.hasPastPruebas && (
+                <FilterChip
+                  active={filters.soloPruebas}
+                  onClick={() => filters.setSoloPruebas(!filters.soloPruebas)}
+                  icon={<GraduationCap className="size-3.5 shrink-0" />}
+                  label={t('filtro_pruebas', { term: pruebaTerm.plural })}
+                  tooltip={t('tooltip_filtro_pruebas', { term: pruebaTerm.plural })}
+                />
+              )}
             </div>
           </div>
 
@@ -797,7 +804,7 @@ export function HorariosProfesorView({ profesorId, role, activeTab: activeTabPro
                   : filters.historialFilter !== 'todos'
                     ? t('sin_historial_filtro', { estado: te(filters.historialFilter as EstadoAsistencia) })
                     : t('sin_historial_filtro', {
-                        estado: filters.soloConNotas ? t('filtro_con_notas') : t('filtro_pruebas'),
+                        estado: filters.soloConNotas ? t('filtro_con_notas') : t('filtro_pruebas', { term: pruebaTerm.plural }),
                       })}
               </p>
             </div>

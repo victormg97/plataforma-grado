@@ -45,9 +45,44 @@ export function CardActions({ actions, className, mobileOnly = false }: CardActi
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
-  const [pos, setPos] = useState({ top: 0, right: 0 });
+  const [pos, setPos] = useState<{ top: number; right: number }>({ top: 0, right: 0 });
 
-  // Close on outside click or Escape
+  // Estimación de la altura del popover: cada item ~44px + padding vertical.
+  const estimatedHeight = actions.length * 44 + 8;
+  const MARGIN = 8; // separación mínima respecto a los bordes de la ventana
+
+  // Calcula la mejor posición (arriba/abajo) según el espacio disponible.
+  const computePosition = () => {
+    if (!triggerRef.current) return;
+    const rect = triggerRef.current.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+
+    // Por defecto se abre hacia abajo; si no cabe y hay más espacio arriba, se
+    // abre hacia arriba para que las opciones nunca queden fuera de la pantalla.
+    const openUp = spaceBelow < estimatedHeight + MARGIN && spaceAbove > spaceBelow;
+
+    let top: number;
+    if (openUp) {
+      // El popover termina justo encima del trigger.
+      top = rect.top + window.scrollY - estimatedHeight - 6;
+      // No dejar que se salga por arriba.
+      const minTop = window.scrollY + MARGIN;
+      if (top < minTop) top = minTop;
+    } else {
+      top = rect.bottom + window.scrollY + 6;
+      // No dejar que se salga por abajo.
+      const maxTop = window.scrollY + window.innerHeight - estimatedHeight - MARGIN;
+      if (top > maxTop) top = Math.max(window.scrollY + MARGIN, maxTop);
+    }
+
+    setPos({
+      top,
+      right: Math.max(MARGIN, window.innerWidth - rect.right),
+    });
+  };
+
+  // Close on outside click or Escape; recolocar al hacer scroll/resize.
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
@@ -59,22 +94,24 @@ export function CardActions({ actions, className, mobileOnly = false }: CardActi
         setOpen(false);
       }
     };
+    const onReposition = () => computePosition();
     document.addEventListener('keydown', onKey);
     document.addEventListener('mousedown', onClick);
+    window.addEventListener('resize', onReposition);
+    window.addEventListener('scroll', onReposition, true);
     return () => {
       document.removeEventListener('keydown', onKey);
       document.removeEventListener('mousedown', onClick);
+      window.removeEventListener('resize', onReposition);
+      window.removeEventListener('scroll', onReposition, true);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   const handleTrigger = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!triggerRef.current) return;
-    const rect = triggerRef.current.getBoundingClientRect();
-    setPos({
-      top: rect.bottom + window.scrollY + 6,
-      right: window.innerWidth - rect.right,
-    });
+    computePosition();
     setOpen((v) => !v);
   };
 
@@ -132,9 +169,13 @@ export function CardActions({ actions, className, mobileOnly = false }: CardActi
         <div
           ref={popoverRef}
           role="menu"
-          style={{ top: pos.top, right: pos.right }}
+          style={{
+            top: pos.top,
+            right: pos.right,
+            maxHeight: `calc(100vh - ${MARGIN * 2}px)`,
+          }}
           className={cn(
-            'fixed z-[70] min-w-[160px] rounded-[var(--radius-lg)]',
+            'fixed z-[70] min-w-[160px] overflow-y-auto rounded-[var(--radius-lg)]',
             'border border-[var(--color-border)] bg-[var(--color-bg)]',
             'shadow-[var(--shadow-lg)] py-1',
             'animate-in fade-in-0 zoom-in-95 duration-100',

@@ -10,6 +10,12 @@ interface CollapsibleProps {
   badge?: string | number;
   icon?: ReactNode;
   className?: string;
+  /** Overrides the inner content padding wrapper classes (default `px-4 py-3`). */
+  contentClassName?: string;
+  /** Controlled open state. When provided, the component is controlled. */
+  open?: boolean;
+  /** Called with the next open state when the header is toggled. */
+  onOpenChange?: (open: boolean) => void;
 }
 
 export function Collapsible({
@@ -19,12 +25,25 @@ export function Collapsible({
   badge,
   icon,
   className = '',
+  contentClassName = 'px-4 py-3',
+  open: openProp,
+  onOpenChange,
 }: CollapsibleProps) {
-  const [open, setOpen] = useState(defaultOpen);
+  const isControlled = openProp !== undefined;
+  const [internalOpen, setInternalOpen] = useState(defaultOpen);
+  const open = isControlled ? openProp : internalOpen;
+
+  const toggle = () => {
+    const next = !open;
+    if (!isControlled) setInternalOpen(next);
+    onOpenChange?.(next);
+  };
+
   const contentRef = useRef<HTMLDivElement>(null);
 
-  // Animate height
-  const [height, setHeight] = useState(defaultOpen ? 'auto' : '0px');
+  // Animate height. Initialize from the actual starting open state so a
+  // controlled-open accordion doesn't flash an open animation on mount.
+  const [height, setHeight] = useState((openProp ?? defaultOpen) ? 'auto' : '0px');
   const [transitioning, setTransitioning] = useState(false);
 
   useEffect(() => {
@@ -58,7 +77,7 @@ export function Collapsible({
       {/* Header */}
       <button
         type="button"
-        onClick={() => { setTransitioning(true); setOpen((o) => !o); }}
+        onClick={() => { setTransitioning(true); toggle(); }}
         onTransitionEnd={() => setTransitioning(false)}
         className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-[var(--color-bg-secondary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand-gold)]"
         aria-expanded={open}
@@ -90,7 +109,7 @@ export function Collapsible({
           transition: 'height 280ms cubic-bezier(0.4, 0, 0.2, 1)',
         }}
       >
-        <div className="border-t border-[var(--color-border)] px-4 py-3">
+        <div className={`border-t border-[var(--color-border)] ${contentClassName}`}>
           {children}
         </div>
       </div>

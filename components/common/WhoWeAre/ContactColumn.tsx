@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Mail, ExternalLink, ArrowLeft } from 'lucide-react';
+import { Mail, ExternalLink } from 'lucide-react';
 import {
   SiInstagram,
   SiX,
@@ -39,12 +39,11 @@ function getIconForLabel(label: string): { icon: IconComponent; color: string } 
 
 interface ContactColumnProps {
   entries: TenantContactInfo[];
-  onClose?: () => void;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function ContactColumn({ entries, onClose }: ContactColumnProps) {
+export function ContactColumn({ entries }: ContactColumnProps) {
   const t = useTranslations('quienesSomos');
   const [pendingUrl, setPendingUrl] = useState<string | null>(null);
   const [pendingTitle, setPendingTitle] = useState<string | undefined>(undefined);
@@ -72,18 +71,6 @@ export function ContactColumn({ entries, onClose }: ContactColumnProps) {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Back/close control (for mobile) */}
-      {onClose && (
-        <button
-          type="button"
-          onClick={onClose}
-          className="flex items-center gap-2 mb-4 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
-        >
-          <ArrowLeft className="size-4" />
-          {t('contacto_volver')}
-        </button>
-      )}
-
       {/* Title */}
       <h3
         className="text-base font-semibold text-[var(--color-text-primary)] mb-4"

@@ -10,6 +10,7 @@ import {
 import { Collapsible } from '@/components/common/Collapsible';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { useRouter } from 'next/navigation';
+import { usePruebaTerm } from '@/lib/hooks/usePruebaTerm';
 import { NotasProfesorSection } from './NotasProfesorSection';
 
 interface NotaAlumno {
@@ -61,6 +62,7 @@ export function TabInformacion({ alumnoId, data, role = 'profesor' }: TabInforma
   const locale = useLocale();
   const dateFnsLocale = locale === 'en' ? enUS : es;
   const router = useRouter();
+  const pruebaTerm = usePruebaTerm();
 
   const extra = data.alumnos_extra;
 
@@ -265,7 +267,7 @@ export function TabInformacion({ alumnoId, data, role = 'profesor' }: TabInforma
 
         {/* Evaluaciones / Calificaciones de pruebas app */}
         <Collapsible
-          title={tf('evaluaciones')}
+          title={tf('evaluaciones', { term: pruebaTerm.plural })}
           badge={data.pruebas.length}
           icon={<Star className="size-4" />}
           defaultOpen={false}

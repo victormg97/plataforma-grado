@@ -100,27 +100,11 @@ export function WhoWeAreModal({ tenantSlug, markdown, onClose }: WhoWeAreModalPr
               </div>
             </div>
 
-            {/* Mobile toggle button — always says "Ver contacto", chevron direction shows action */}
-            <div className="absolute bottom-0 left-0 right-0 z-10 border-t border-[var(--color-border)] bg-[var(--color-bg)]">
-              <button
-                type="button"
-                onClick={() => setContactOpen((v) => !v)}
-                className="w-full flex items-center justify-center gap-2 py-3 text-sm font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] transition-colors"
-              >
-                {contactOpen ? (
-                  <ChevronDown className="size-4" />
-                ) : (
-                  <ChevronUp className="size-4" />
-                )}
-                {t('contacto_toggle_abrir')}
-              </button>
-            </div>
-
-            {/* Mobile contact column (slide up) */}
+            {/* Mobile contact column (slide up) — sits above the toggle bar so the bar stays tappable */}
             <AnimatePresence>
               {contactOpen && (
                 <m.div
-                  className="absolute inset-x-0 bottom-0 z-20 bg-[var(--color-bg)] border-t border-[var(--color-border)] rounded-t-[var(--radius-xl)] overflow-y-auto"
+                  className="absolute inset-x-0 bottom-12 z-20 bg-[var(--color-bg)] border-t border-[var(--color-border)] rounded-t-[var(--radius-xl)] overflow-y-auto"
                   style={{ maxHeight: '70%' }}
                   initial={{ y: '100%' }}
                   animate={{ y: 0 }}
@@ -133,6 +117,23 @@ export function WhoWeAreModal({ tenantSlug, markdown, onClose }: WhoWeAreModalPr
                 </m.div>
               )}
             </AnimatePresence>
+
+            {/* Mobile toggle bar — chevron direction shows the action; tapping it opens/closes the panel */}
+            <div className="absolute bottom-0 left-0 right-0 z-30 border-t border-[var(--color-border)] bg-[var(--color-bg)]">
+              <button
+                type="button"
+                onClick={() => setContactOpen((v) => !v)}
+                aria-expanded={contactOpen}
+                className="w-full flex items-center justify-center gap-2 py-3 text-sm font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] transition-colors"
+              >
+                {contactOpen ? (
+                  <ChevronDown className="size-4" />
+                ) : (
+                  <ChevronUp className="size-4" />
+                )}
+                {contactOpen ? t('contacto_toggle_cerrar') : t('contacto_toggle_abrir')}
+              </button>
+            </div>
           </div>
         </div>
       </m.div>

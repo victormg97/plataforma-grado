@@ -8,9 +8,11 @@ import { Users, GraduationCap, CalendarDays, Clock, Bell } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card } from '@/components/common/Card';
+import { Collapsible } from '@/components/common/Collapsible';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { CalendarioAdmin } from '@/components/calendario/CalendarioAdmin';
 import { useUserStore } from '@/stores/useUserStore';
+import { useUiPreference } from '@/lib/hooks/useUiPreference';
 import { useTranslations, useLocale } from 'next-intl';
 
 type Stats = {
@@ -93,6 +95,10 @@ export default function AdminDashboardPage() {
     [clasesHoy]
   );
 
+  // Per-user accordion state (default open; persisted to profiles.ui_preferences, debounced)
+  const [actividadOpen, setActividadOpen] = useUiPreference<boolean>('admin_dash_actividad_open', true);
+  const [clasesHoyOpen, setClasesHoyOpen] = useUiPreference<boolean>('admin_dash_clases_hoy_open', true);
+
   return (
     <div>
       <PageHeader
@@ -120,19 +126,21 @@ export default function AdminDashboardPage() {
         ))}
       </div>
 
-      {/* Two-column: Actividad reciente + Clases hoy */}
+      {/* Two-column: Actividad reciente + Clases hoy (accordions, state saved per user) */}
       <div className="mt-[var(--space-md)] grid grid-cols-1 gap-[var(--space-md)] lg:grid-cols-2">
         {/* Actividad reciente */}
-        <Card padding="none">
-          <div className="px-4 pt-3 pb-2">
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)] flex items-center gap-2">
-              <Bell className="size-3.5" /> {t('actividad_reciente')}
-            </h2>
-          </div>
+        <Collapsible
+          open={actividadOpen}
+          onOpenChange={setActividadOpen}
+          icon={<Bell className="size-3.5" />}
+          title={t('actividad_reciente')}
+          contentClassName="p-0"
+          className="shadow-[var(--shadow-sm)] self-start"
+        >
           {notificaciones.length === 0 ? (
             <p className="text-sm text-[var(--color-text-muted)] py-6 text-center">{t('sin_actividad')}</p>
           ) : (
-            <div className="border-t border-[var(--color-border)] divide-y divide-[var(--color-border)] max-h-64 overflow-y-auto">
+            <div className="divide-y divide-[var(--color-border)] max-h-64 overflow-y-auto">
               {notificaciones.map((n) => (
                 <div key={n.id} className={`flex items-start gap-2.5 px-4 py-2.5 ${!n.leida ? 'bg-[var(--color-brand-gold-muted)]' : ''}`}>
                   <div className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${!n.leida ? 'bg-[var(--color-brand-gold)]' : 'bg-[var(--color-border-strong)]'}`} />
@@ -172,19 +180,21 @@ export default function AdminDashboardPage() {
               ))}
             </div>
           )}
-        </Card>
+        </Collapsible>
 
         {/* Clases hoy */}
-        <Card padding="none">
-          <div className="px-4 pt-3 pb-2">
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)] flex items-center gap-2">
-              <CalendarDays className="size-3.5" /> {t('clases_hoy')}
-            </h2>
-          </div>
+        <Collapsible
+          open={clasesHoyOpen}
+          onOpenChange={setClasesHoyOpen}
+          icon={<CalendarDays className="size-3.5" />}
+          title={t('clases_hoy')}
+          contentClassName="p-0"
+          className="shadow-[var(--shadow-sm)] self-start"
+        >
           {clasesHoySorted.length === 0 ? (
             <p className="text-sm text-[var(--color-text-muted)] py-6 text-center">{t('sin_clases_hoy')}</p>
           ) : (
-            <div className="border-t border-[var(--color-border)] divide-y divide-[var(--color-border)] max-h-64 overflow-y-auto">
+            <div className="divide-y divide-[var(--color-border)] max-h-64 overflow-y-auto">
               {clasesHoySorted.map((c) => (
                 <button
                   key={c.id}
@@ -216,7 +226,7 @@ export default function AdminDashboardPage() {
               ))}
             </div>
           )}
-        </Card>
+        </Collapsible>
       </div>
 
       {/* Calendario Global */}

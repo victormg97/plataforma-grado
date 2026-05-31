@@ -109,6 +109,20 @@ export function useHorariosFilters({ rawData, pruebaHorarioIds, dateFnsLocale }:
     return Array.from(seen);
   }, [past]);
 
+  /* Whether each filter type has any matching classes (for dynamic chips) */
+  const hasUpcomingPruebas = useMemo(
+    () => upcoming.some((h) => pruebaHorarioIds.has(h.id)),
+    [upcoming, pruebaHorarioIds]
+  );
+  const hasPastPruebas = useMemo(
+    () => past.some((h) => pruebaHorarioIds.has(h.id)),
+    [past, pruebaHorarioIds]
+  );
+  const hasPastNotas = useMemo(
+    () => Object.values(notasCounts).some((c) => (c ?? 0) > 0),
+    [notasCounts]
+  );
+
   /* Filtered upcoming */
   const filteredUpcoming = useMemo(() => {
     let data = upcoming;
@@ -179,6 +193,10 @@ export function useHorariosFilters({ rawData, pruebaHorarioIds, dateFnsLocale }:
     filteredHistorial,
     historialStatuses,
     notasCounts,
+    // Availability flags for dynamic chips
+    hasUpcomingPruebas,
+    hasPastPruebas,
+    hasPastNotas,
     // Shared
     selectedAlumnoId,
     setSelectedAlumnoId,

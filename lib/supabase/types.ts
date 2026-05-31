@@ -729,6 +729,7 @@ export type Database = {
           rol: Database["public"]["Enums"]["user_rol"]
           telefono: string | null
           tema: string | null
+          ui_preferences: Json
           updated_at: string
         }
         Insert: {
@@ -747,6 +748,7 @@ export type Database = {
           rol?: Database["public"]["Enums"]["user_rol"]
           telefono?: string | null
           tema?: string | null
+          ui_preferences?: Json
           updated_at?: string
         }
         Update: {
@@ -765,6 +767,7 @@ export type Database = {
           rol?: Database["public"]["Enums"]["user_rol"]
           telefono?: string | null
           tema?: string | null
+          ui_preferences?: Json
           updated_at?: string
         }
         Relationships: []
@@ -1399,6 +1402,10 @@ export type Database = {
         Returns: Database["public"]["Enums"]["user_rol"]
       }
       is_own_recurso: { Args: { p_recurso_id: string }; Returns: boolean }
+      set_ui_preference: {
+        Args: { p_key: string; p_value: Json }
+        Returns: Json
+      }
     }
     Enums: {
       estado_asistencia:

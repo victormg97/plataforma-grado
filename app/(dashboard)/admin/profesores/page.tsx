@@ -20,6 +20,7 @@ type Profesor = {
   id: string;
   nombre: string;
   apellido: string;
+  apellido_materno?: string | null;
   email: string;
   telefono: string | null;
   avatar_url: string | null;
@@ -72,6 +73,9 @@ export default function ProfesoresPage() {
     [profesores]
   );
 
+  const nombreCompleto = (p: Profesor) =>
+    [p.nombre, p.apellido, p.apellido_materno].filter(Boolean).join(' ');
+
 
   return (
     <div>
@@ -102,7 +106,7 @@ export default function ProfesoresPage() {
                 <Avatar nombre={p.nombre} apellido={p.apellido} avatarUrl={p.avatar_url} size="md" />
                 <div>
                   <div className="flex items-center gap-2">
-                    <p className="font-medium text-[var(--color-text-primary)]">{p.nombre} {p.apellido}</p>
+                    <p className="font-medium text-[var(--color-text-primary)]">{nombreCompleto(p)}</p>
                     {p.rol === 'admin' ? (
                       <span className="rounded-full bg-[var(--color-brand-gold-muted)] px-2 py-0.5 text-xs font-medium text-[var(--color-brand-gold)]">Admin</span>
                     ) : (
@@ -127,7 +131,7 @@ export default function ProfesoresPage() {
                 {p.rol !== 'admin' && (
                   <Tooltip content={p.activo ? tp('deshabilitar') : tp('habilitar')}>
                     <button
-                      onClick={() => setConfirmAction({ id: p.id, nombre: `${p.nombre} ${p.apellido}`, activo: p.activo })}
+                      onClick={() => setConfirmAction({ id: p.id, nombre: nombreCompleto(p), activo: p.activo })}
                       className={`flex items-center gap-1 rounded-[var(--radius-md)] border px-3 py-1.5 text-xs font-medium transition-colors ${
                         p.activo
                           ? 'border-[var(--color-error)] text-[var(--color-error)] hover:bg-red-50 dark:hover:bg-red-950/20'
@@ -183,7 +187,7 @@ export default function ProfesoresPage() {
                       key: 'toggle',
                       label: p.activo ? tp('deshabilitar') : tp('habilitar'),
                       icon: p.activo ? <UserX className="size-4" /> : <UserCheck className="size-4" />,
-                      onClick: () => setConfirmAction({ id: p.id, nombre: `${p.nombre} ${p.apellido}`, activo: p.activo }),
+                      onClick: () => setConfirmAction({ id: p.id, nombre: nombreCompleto(p), activo: p.activo }),
                       danger: p.activo,
                     } as CardAction] : []),
                     {

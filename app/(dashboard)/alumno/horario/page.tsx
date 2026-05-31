@@ -351,6 +351,16 @@ function HorarioListView({ clases, loading }: { clases: ClaseAlumno[]; loading: 
     return Array.from(seen);
   }, [past]);
 
+  /* Availability flags for dynamic chips */
+  const hasPastNotas = useMemo(
+    () => Object.values(notasCounts).some((c) => (c ?? 0) > 0),
+    [notasCounts]
+  );
+  const hasPastPruebas = useMemo(
+    () => past.some((c) => pruebaHorarioIds.has(c.horario.id)),
+    [past, pruebaHorarioIds]
+  );
+
   if (loading) {
     return (
       <div className="mt-[var(--space-lg)] space-y-3">
@@ -471,22 +481,26 @@ function HorarioListView({ clases, loading }: { clases: ClaseAlumno[]; loading: 
               )}
 
               {/* Notas filter chip */}
-              <FilterChip
-                active={soloConNotas}
-                onClick={() => setSoloConNotas(!soloConNotas)}
-                icon={<FileText className="size-3.5 shrink-0" />}
-                label={t('filtro_con_notas')}
-                tooltip={t('tooltip_filtro_notas')}
-              />
+              {hasPastNotas && (
+                <FilterChip
+                  active={soloConNotas}
+                  onClick={() => setSoloConNotas(!soloConNotas)}
+                  icon={<FileText className="size-3.5 shrink-0" />}
+                  label={t('filtro_con_notas')}
+                  tooltip={t('tooltip_filtro_notas')}
+                />
+              )}
 
               {/* Prueba filter chip */}
-              <FilterChip
-                active={soloPruebas}
-                onClick={() => setSoloPruebas(!soloPruebas)}
-                icon={<GraduationCap className="size-3.5 shrink-0" />}
-                label={t('filtro_pruebas')}
-                tooltip={t('tooltip_filtro_pruebas')}
-              />
+              {hasPastPruebas && (
+                <FilterChip
+                  active={soloPruebas}
+                  onClick={() => setSoloPruebas(!soloPruebas)}
+                  icon={<GraduationCap className="size-3.5 shrink-0" />}
+                  label={t('filtro_pruebas', { term: pruebaTerm.plural })}
+                  tooltip={t('tooltip_filtro_pruebas', { term: pruebaTerm.plural })}
+                />
+              )}
             </div>
           </div>
 
@@ -503,7 +517,7 @@ function HorarioListView({ clases, loading }: { clases: ClaseAlumno[]; loading: 
                   ? t('sin_resultados_busqueda', { query: debouncedHistorial })
                   : historialFilter !== 'todos'
                     ? t('sin_historial_filtro', { estado: te(historialFilter) })
-                    : t('sin_historial_filtro', { estado: soloConNotas ? t('filtro_con_notas') : t('filtro_pruebas') })}
+                    : t('sin_historial_filtro', { estado: soloConNotas ? t('filtro_con_notas') : t('filtro_pruebas', { term: pruebaTerm.plural }) })}
               </p>
             </div>
           ) : (
