@@ -24,6 +24,7 @@ import { CalendarioStyles } from '@/components/calendario/CalendarioStyles';
 import { EventDetailModal } from '@/components/calendario/EventDetailModal';
 import { CalendarEventPopover, useCalendarPopover, type PopoverEventData } from '@/components/calendario/CalendarEventPopover';
 import { CalendarPersonFilter, ALL_PEOPLE } from '@/components/calendario/CalendarPersonFilter';
+import { CalendarioToolbarTooltips } from '@/components/calendario/CalendarioToolbarTooltips';
 import { Modal } from '@/components/common/Modal';
 import { useBloqueos, type BloqueHorario } from '@/lib/hooks/useBloqueos';
 import { useUserStore } from '@/stores/useUserStore';
@@ -352,6 +353,21 @@ export function CalendarioAdmin() {
       />
       <div className="calendario-admin" style={{ overflow: 'hidden' }}>
         <CalendarioStyles containerClass=".calendario-admin" />
+        <CalendarioToolbarTooltips
+          containerClass=".calendario-admin"
+          labels={{
+            prev: t('toolbar_prev'),
+            next: t('toolbar_next'),
+            today: t('toolbar_hoy'),
+            hoyIcono: t('toolbar_hoy'),
+            dayGridMonth: t('toolbar_mes'),
+            timeGridWeek: t('toolbar_semana'),
+            listWeek: t('toolbar_agenda'),
+            nuevaClase: t('toolbar_nueva_clase'),
+            descargar: t('toolbar_descargar'),
+          }}
+          deps={[isMobile, currentView]}
+        />
         <FullCalendar
           ref={calendarRef}
           plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}

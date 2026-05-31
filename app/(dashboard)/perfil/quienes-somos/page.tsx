@@ -20,7 +20,6 @@ import type { TenantContactInfo } from '@/lib/supabase/types';
 const LOCALES = ['es', 'en'] as const;
 type Locale = typeof LOCALES[number];
 
-const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg'] as const;
 const ACCEPTED_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5 MB
 
@@ -412,6 +411,7 @@ export default function QuienesSomosEditorPage() {
         {(imagePreview ?? existingImage?.url) && (
           <div>
             <p className="text-xs text-[var(--color-text-muted)] mb-2">{t('editor_imagen_preview')}</p>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={imagePreview ?? existingImage!.url}
               alt=""

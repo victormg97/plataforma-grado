@@ -81,8 +81,8 @@ export function RecursosView({ rol }: RecursosViewProps) {
     },
   });
 
-  const allRecursos: RecursoItem[] = rpcData?.recursos ?? [];
-  const allCarpetas: CarpetaItem[] = rpcData?.carpetas ?? [];
+  const allRecursos: RecursoItem[] = useMemo(() => rpcData?.recursos ?? [], [rpcData]);
+  const allCarpetas: CarpetaItem[] = useMemo(() => rpcData?.carpetas ?? [], [rpcData]);
 
   // ── Data: sort preference (from DB) ──────────────────────────────
   const { data: sortPref } = useQuery<SortBy>({

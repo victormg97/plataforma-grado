@@ -27,7 +27,7 @@ export function WhoWeAre({ tenantSlug, locale }: WhoWeAreProps) {
 
   const label = tenantConfig.quienesSomosLabel ?? t('boton_aria');
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => { setMounted(true); }, []); // eslint-disable-line react-hooks/set-state-in-effect
 
   const measureTrigger = useCallback(() => {
     if (!triggerRef.current) return;

@@ -1,6 +1,6 @@
 'use client';
 
-import { Folder, FolderOpen, ArrowUp } from 'lucide-react';
+import { Folder, FolderOpen } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Modal } from '@/components/common/Modal';
 import { Button } from '@/components/common/Button';

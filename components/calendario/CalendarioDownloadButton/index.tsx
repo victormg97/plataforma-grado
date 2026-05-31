@@ -17,7 +17,6 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Download, ImageIcon, FileText, Loader2, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Tooltip } from '@/components/common/Tooltip';
 import { useDownloadRateLimit } from '@/lib/hooks/useDownloadRateLimit';
 import {
   exportAsImage,
@@ -91,7 +90,12 @@ export function CalendarioDownloadButton({
     if (isMobile) return;
     const timer = setTimeout(() => {
       const btn = document.querySelector(`${containerClass} .fc-descargar-button`);
-      if (btn) setDesktopBtnEl(btn);
+      if (btn) {
+        // Ensure the injected overlay can fill the whole button so clicks
+        // anywhere on it (not just on the icon) open the dropdown.
+        (btn as HTMLElement).style.position = 'relative';
+        setDesktopBtnEl(btn);
+      }
     }, 100);
     return () => {
       clearTimeout(timer);
@@ -454,23 +458,23 @@ export function CalendarioDownloadButton({
 
   return (
     <>
-      {/* Desktop: inject icon + Tooltip into the FC toolbar .fc-descargar-button via portal */}
+      {/* Desktop: inject icon into the FC toolbar .fc-descargar-button via portal.
+          The overlay fills the whole button so a click anywhere on it (not just
+          the icon) opens the dropdown. Tooltip is handled by CalendarioToolbarTooltips. */}
       {!isMobile && desktopBtnEl && createPortal(
-        <Tooltip content={locale === 'es' ? 'Descargar' : 'Download'}>
-          <span
-            role="button"
-            tabIndex={0}
-            aria-label={locale === 'es' ? 'Descargar agenda' : 'Download agenda'}
-            onClick={handleDesktopClick}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleDesktopClick(); }}
-            className="inline-flex items-center justify-center"
-          >
-            {downloading
-              ? <Loader2 className="size-3.5 animate-spin" />
-              : <Download className="size-3.5" />
-            }
-          </span>
-        </Tooltip>,
+        <span
+          role="button"
+          tabIndex={0}
+          aria-label={locale === 'es' ? 'Descargar agenda' : 'Download agenda'}
+          onClick={handleDesktopClick}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleDesktopClick(); }}
+          className="absolute inset-0 flex items-center justify-center cursor-pointer"
+        >
+          {downloading
+            ? <Loader2 className="size-3.5 animate-spin" />
+            : <Download className="size-3.5" />
+          }
+        </span>,
         desktopBtnEl,
       )}
 

@@ -826,7 +826,6 @@ function AlumnoHorarioContent() {
   const { clases, loading, confirmar, cancelar, pedirCambio } = useAsistencia();
   const { data: pruebas = [] } = usePruebas(user?.id);
   const t = useTranslations('horarios');
-  const pruebaTerm = usePruebaTerm();
   const tc = useTranslations('common');
   const backHref = getAlumnoHorarioBackHref(from);
 

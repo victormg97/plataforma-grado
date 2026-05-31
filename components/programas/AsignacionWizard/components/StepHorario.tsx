@@ -3,7 +3,6 @@
 import { User } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { ClaseItem } from '@/lib/supabase/types';
-import { usePruebaTerm } from '@/lib/hooks/usePruebaTerm';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

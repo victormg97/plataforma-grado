@@ -11,6 +11,7 @@ import { horarioSchema, type HorarioFormData } from '@/lib/validations/horario.s
 import { createClient } from '@/lib/supabase/client';
 import { Modal } from '@/components/common/Modal';
 import { Button } from '@/components/common/Button';
+import { Tooltip } from '@/components/common/Tooltip';
 import type { Profile } from '@/lib/supabase/types';
 import type { HorarioConAsistencia } from '@/lib/hooks/useHorarios';
 import { AlumnoCombobox } from './components/AlumnoCombobox';
@@ -186,6 +187,9 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
   // Fetch alumnos using React Query — eliminates the effect chain
   const fetchTargetId = adminProfesores ? activeProfId : profesorId;
   const useCachedAlumnos = !adminProfesores && cachedAlumnos && cachedAlumnos.length > 0;
+
+  // In admin mode the alumno selector is locked until a professor is chosen.
+  const alumnoSelectorDisabled = !!adminProfesores && !isEditing && !activeProfId;
 
   const { data: fetchedAlumnos = [], isLoading: loadingAlumnos } = useQuery({
     queryKey: ['form-alumnos', fetchTargetId, !!adminProfesores],
@@ -430,41 +434,47 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
             {/* Fecha */}
             <div>
               <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">{t('fecha')}</label>
-              <input
-                type="date"
-                value={bloqueoFecha}
-                onChange={(e) => setBloqueoFecha(e.target.value)}
-                className={inputClass}
-              />
+              <Tooltip content={t('tooltip_fecha')} position="top" className="w-full">
+                <input
+                  type="date"
+                  value={bloqueoFecha}
+                  onChange={(e) => setBloqueoFecha(e.target.value)}
+                  className={`${inputClass} w-full`}
+                />
+              </Tooltip>
             </div>
 
             {/* Horas */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">{t('hora_inicio')}</label>
-                <input
-                  type="time"
-                  value={bloqueoHoraInicio}
-                  onChange={(e) => {
-                    setBloqueoHoraInicio(e.target.value);
-                    // Auto-fill hora_fin = hora_inicio + 1h
-                    if (e.target.value) {
-                      const [h, m] = e.target.value.split(':').map(Number);
-                      const endH = Math.min(h + 1, 23);
-                      setBloqueoHoraFin(`${String(endH).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
-                    }
-                  }}
-                  className={inputClass}
-                />
+                <Tooltip content={t('tooltip_hora_inicio')} position="top" className="w-full">
+                  <input
+                    type="time"
+                    value={bloqueoHoraInicio}
+                    onChange={(e) => {
+                      setBloqueoHoraInicio(e.target.value);
+                      // Auto-fill hora_fin = hora_inicio + 1h
+                      if (e.target.value) {
+                        const [h, m] = e.target.value.split(':').map(Number);
+                        const endH = Math.min(h + 1, 23);
+                        setBloqueoHoraFin(`${String(endH).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
+                      }
+                    }}
+                    className={`${inputClass} w-full`}
+                  />
+                </Tooltip>
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">{t('hora_fin')}</label>
-                <input
-                  type="time"
-                  value={bloqueoHoraFin}
-                  onChange={(e) => setBloqueoHoraFin(e.target.value)}
-                  className={inputClass}
-                />
+                <Tooltip content={t('tooltip_hora_fin')} position="top" className="w-full">
+                  <input
+                    type="time"
+                    value={bloqueoHoraFin}
+                    onChange={(e) => setBloqueoHoraFin(e.target.value)}
+                    className={`${inputClass} w-full`}
+                  />
+                </Tooltip>
               </div>
             </div>
 
@@ -503,12 +513,13 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
                   setValue('alumno_id', id, { shouldValidate: true });
                   setAlumnoSearch(displayName);
                 }}
-                placeholder={t('buscar_alumno_placeholder')}
-                emptyMessage={ta('sin_alumnos')}
+                placeholder={alumnoSelectorDisabled ? t('debe_seleccionar_profesor') : t('buscar_alumno_placeholder')}
+                emptyMessage={alumnoSelectorDisabled ? t('debe_seleccionar_profesor') : ta('sin_alumnos')}
                 noResultsMessage={t('no_alumnos_encontrados')}
                 loadingMessage={tc('cargando')}
                 inputClassName={inputClass}
                 filteredAlumnos={filteredAlumnos}
+                disabled={alumnoSelectorDisabled}
               />
               {errors.alumno_id && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.alumno_id.message}</p>}
             </div>
@@ -543,12 +554,14 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
             {/* Fecha */}
             <div>
               <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">{t('fecha')}</label>
-              <input
-                type="date"
-                value={watchedFecha}
-                onChange={(e) => setValue('fecha', e.target.value, { shouldValidate: !!errors.fecha })}
-                className={inputClass}
-              />
+              <Tooltip content={t('tooltip_fecha')} position="top" className="w-full">
+                <input
+                  type="date"
+                  value={watchedFecha}
+                  onChange={(e) => setValue('fecha', e.target.value, { shouldValidate: !!errors.fecha })}
+                  className={`${inputClass} w-full`}
+                />
+              </Tooltip>
               {errors.fecha && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.fecha.message}</p>}
             </div>
 
@@ -556,22 +569,26 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">{t('hora_inicio')}</label>
-                <input
-                  type="time"
-                  value={watchedHoraInicio}
-                  onChange={(e) => setValue('hora_inicio', e.target.value, { shouldValidate: !!errors.hora_inicio })}
-                  className={inputClass}
-                />
+                <Tooltip content={t('tooltip_hora_inicio')} position="top" className="w-full">
+                  <input
+                    type="time"
+                    value={watchedHoraInicio}
+                    onChange={(e) => setValue('hora_inicio', e.target.value, { shouldValidate: !!errors.hora_inicio })}
+                    className={`${inputClass} w-full`}
+                  />
+                </Tooltip>
                 {errors.hora_inicio && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.hora_inicio.message}</p>}
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">{t('hora_fin')}</label>
-                <input
-                  type="time"
-                  value={watchedHoraFin}
-                  onChange={(e) => setValue('hora_fin', e.target.value, { shouldValidate: !!errors.hora_fin })}
-                  className={inputClass}
-                />
+                <Tooltip content={t('tooltip_hora_fin')} position="top" className="w-full">
+                  <input
+                    type="time"
+                    value={watchedHoraFin}
+                    onChange={(e) => setValue('hora_fin', e.target.value, { shouldValidate: !!errors.hora_fin })}
+                    className={`${inputClass} w-full`}
+                  />
+                </Tooltip>
                 {errors.hora_fin && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.hora_fin.message}</p>}
               </div>
             </div>

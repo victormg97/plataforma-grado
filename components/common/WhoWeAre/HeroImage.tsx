@@ -8,6 +8,7 @@ interface HeroImageProps {
 export function HeroImage({ url, className }: HeroImageProps) {
   return (
     <div className={`relative overflow-hidden ${className ?? ''}`}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={url}
         alt=""

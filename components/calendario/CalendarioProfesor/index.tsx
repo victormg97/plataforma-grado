@@ -33,6 +33,7 @@ import { es as esDateFns, enUS } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { usePruebas } from '@/lib/hooks/usePruebas';
 import { CalendarEventPopover, useCalendarPopover, type PopoverEventData } from '@/components/calendario/CalendarEventPopover';
+import { CalendarioToolbarTooltips } from '@/components/calendario/CalendarioToolbarTooltips';
 import type { EstadoAsistencia } from '@/lib/supabase/types';
 
 // Prefix used to distinguish bloqueo events from horario events in FullCalendar
@@ -52,7 +53,7 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
   const pruebaTerm = usePruebaTerm();
   const locale = useLocale();
   const { events, alumnos, rawData, refetch } = useHorarios(profesorId);
-  const { bloqueos, isLoading: loadingBloqueos } = useBloqueos(profesorId);
+  const { bloqueos } = useBloqueos(profesorId);
   const [selectedHorario, setSelectedHorario] = useState<HorarioConAsistencia | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedBloqueo, setSelectedBloqueo] = useState<BloqueHorario | null>(null);
@@ -282,6 +283,21 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
 
       <div className="calendario-profesor" style={{ overflow: 'hidden' }}>
         <CalendarioStyles containerClass=".calendario-profesor" />
+        <CalendarioToolbarTooltips
+          containerClass=".calendario-profesor"
+          labels={{
+            prev: t('toolbar_prev'),
+            next: t('toolbar_next'),
+            today: t('toolbar_hoy'),
+            hoyIcono: t('toolbar_hoy'),
+            dayGridMonth: t('toolbar_mes'),
+            timeGridWeek: t('toolbar_semana'),
+            listWeek: t('toolbar_agenda'),
+            nuevaClase: t('toolbar_nueva_clase'),
+            descargar: t('toolbar_descargar'),
+          }}
+          deps={[isMobile, currentView]}
+        />
         <FullCalendar
           ref={calendarRef}
           plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}

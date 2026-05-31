@@ -18,6 +18,8 @@ export interface AlumnoComboboxProps {
   loadingMessage: string;
   inputClassName: string;
   filteredAlumnos: Profile[];
+  /** When true, the input is disabled (e.g. no professor selected yet). */
+  disabled?: boolean;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -35,6 +37,7 @@ export function AlumnoCombobox({
   loadingMessage,
   inputClassName,
   filteredAlumnos,
+  disabled = false,
 }: AlumnoComboboxProps) {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -61,8 +64,10 @@ export function AlumnoCombobox({
         }}
         onFocus={() => setShowDropdown(true)}
         placeholder={placeholder}
-        className={inputClassName}
+        className={`${inputClassName} ${disabled ? 'cursor-not-allowed opacity-60' : ''}`}
         autoComplete="off"
+        disabled={disabled}
+        aria-disabled={disabled}
       />
       {showDropdown && (
         <div className="absolute z-50 mt-1 max-h-48 w-full overflow-auto rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] shadow-lg">

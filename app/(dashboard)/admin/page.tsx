@@ -9,17 +9,24 @@ import { useRouter } from 'next/navigation';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card } from '@/components/common/Card';
 import { Collapsible } from '@/components/common/Collapsible';
+import { RotatingStatCard, type RotatingStatItem } from '@/components/common/RotatingStatCard';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { CalendarioAdmin } from '@/components/calendario/CalendarioAdmin';
 import { useUserStore } from '@/stores/useUserStore';
 import { useUiPreference } from '@/lib/hooks/useUiPreference';
+import { buildClaseDetailHref } from '@/lib/utils/horarioNavigation';
 import { useTranslations, useLocale } from 'next-intl';
 
 type Stats = {
   total_alumnos: number;
   total_profesores: number;
   clases_hoy: number;
+  clases_semana: number;
+  clases_mes: number;
   pendientes: number;
+  estado_pendientes: number;
+  estado_confirmadas: number;
+  estado_canceladas: number;
 };
 
 type Notificacion = {
@@ -79,13 +86,32 @@ export default function AdminDashboardPage() {
     refetchOnWindowFocus: true,
   });
 
+  // Plain stat cards (counts that don't rotate)
   const statCards = useMemo(() => {
     if (!stats) return [];
     return [
       { label: t('alumnos'), value: stats.total_alumnos, icon: Users, color: 'var(--color-text-primary)' },
       { label: t('profesores'), value: stats.total_profesores, icon: GraduationCap, color: 'var(--color-brand-gold)' },
-      { label: t('clases_hoy'), value: stats.clases_hoy, icon: CalendarDays, color: 'var(--color-success)' },
-      { label: t('pendientes'), value: stats.pendientes, icon: Clock, color: 'var(--color-error)' },
+    ];
+  }, [stats, t]);
+
+  // Rotating "Clases" card — cycles between today / week / month
+  const clasesItems = useMemo<RotatingStatItem[]>(() => {
+    if (!stats) return [];
+    return [
+      { key: 'hoy', value: stats.clases_hoy, label: t('clases_hoy') },
+      { key: 'semana', value: stats.clases_semana, label: t('clases_semana') },
+      { key: 'mes', value: stats.clases_mes, label: t('clases_mes') },
+    ];
+  }, [stats, t]);
+
+  // Rotating "Estados" card — cycles between pending / confirmed / cancelled
+  const estadoItems = useMemo<RotatingStatItem[]>(() => {
+    if (!stats) return [];
+    return [
+      { key: 'pendientes', value: stats.estado_pendientes, label: t('pendientes') },
+      { key: 'confirmadas', value: stats.estado_confirmadas, label: t('confirmadas') },
+      { key: 'canceladas', value: stats.estado_canceladas, label: t('canceladas') },
     ];
   }, [stats, t]);
 
@@ -124,7 +150,25 @@ export default function AdminDashboardPage() {
             </div>
           </Card>
         ))}
+
+        {/* Rotating: Clases (hoy / semana / mes) */}
+        <RotatingStatCard
+          items={clasesItems}
+          icon={<CalendarDays className="size-5" />}
+          color="var(--color-success)"
+          ariaLabel={t('clases_hoy')}
+        />
+
+        {/* Rotating: Estados de clases (pendientes / confirmadas / canceladas) */}
+        <RotatingStatCard
+          items={estadoItems}
+          icon={<Clock className="size-5" />}
+          color="var(--color-error)"
+          onlyWithData={false}
+          ariaLabel={t('pendientes')}
+        />
       </div>
+
 
       {/* Two-column: Actividad reciente + Clases hoy (accordions, state saved per user) */}
       <div className="mt-[var(--space-md)] grid grid-cols-1 gap-[var(--space-md)] lg:grid-cols-2">
@@ -199,7 +243,7 @@ export default function AdminDashboardPage() {
                 <button
                   key={c.id}
                   type="button"
-                  onClick={() => router.push(`/admin/horarios?clase=${c.id}`)}
+                  onClick={() => router.push(buildClaseDetailHref(c.id, 'admin', '/admin'))}
                   className="flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left transition-colors hover:bg-[var(--color-bg-secondary)]"
                 >
                   <div className="min-w-0 flex-1">

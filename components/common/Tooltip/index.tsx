@@ -1,12 +1,13 @@
 'use client';
 
-import { ReactNode, useState, useRef, useEffect } from 'react';
+import { ReactNode, useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
+import { computeTooltipPosition, type TooltipPlacement, type TooltipLayout } from '@/lib/utils/tooltipPosition';
 
 interface TooltipProps {
   children: ReactNode;
   content: string;
-  position?: 'top' | 'bottom' | 'left' | 'right';
+  position?: TooltipPlacement;
   className?: string;
   /**
    * 'default' — solid dark background, high contrast (for standalone action buttons)
@@ -32,8 +33,10 @@ export function Tooltip({
    * at least 20px away from the trigger bounding rect.
    */
   const [blocked, setBlocked] = useState(false);
-  const [coords, setCoords] = useState({ top: 0, left: 0 });
+  // Resolved layout (placement + clamped coords + arrow offset).
+  const [layout, setLayout] = useState<TooltipLayout>({ placement: position, top: 0, left: 0, arrow: 0 });
   const triggerRef = useRef<HTMLDivElement>(null);
+  const bubbleRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
   const [isHoverDevice, setIsHoverDevice] = useState(true);
 
@@ -41,6 +44,38 @@ export function Tooltip({
     setMounted(true); // eslint-disable-line react-hooks/set-state-in-effect
     setIsHoverDevice(window.matchMedia('(hover: hover)').matches);
   }, []);
+
+  // Recompute placement from the live trigger + measured bubble size.
+  const reposition = useCallback(() => {
+    if (!triggerRef.current || !bubbleRef.current) return;
+    const triggerRect = triggerRef.current.getBoundingClientRect();
+    const bubbleRect = bubbleRef.current.getBoundingClientRect();
+    setLayout(
+      computeTooltipPosition(
+        triggerRect,
+        { width: bubbleRect.width, height: bubbleRect.height },
+        position,
+      ),
+    );
+  }, [position]);
+
+  // Measure + position once the bubble is in the DOM, before paint.
+  useLayoutEffect(() => {
+    if (!visible) return;
+    reposition();
+  }, [visible, content, reposition]);
+
+  // Keep the tooltip anchored on scroll/resize while visible.
+  useEffect(() => {
+    if (!visible) return;
+    const onMove = () => reposition();
+    window.addEventListener('scroll', onMove, true);
+    window.addEventListener('resize', onMove);
+    return () => {
+      window.removeEventListener('scroll', onMove, true);
+      window.removeEventListener('resize', onMove);
+    };
+  }, [visible, reposition]);
 
   // While visible: hide + block on any mousedown (capture phase fires
   // before any React handler, so this catches all clicks including those
@@ -82,33 +117,7 @@ export function Tooltip({
 
   const showTooltip = () => {
     if (blocked) return; // suppress synthetic re-enter after click/modal
-    if (triggerRef.current) {
-      const rect = triggerRef.current.getBoundingClientRect();
-      let top = 0;
-      let left = 0;
-      const offset = 6;
-
-      switch (position) {
-        case 'top':
-          top = rect.top - offset;
-          left = rect.left + rect.width / 2;
-          break;
-        case 'bottom':
-          top = rect.bottom + offset;
-          left = rect.left + rect.width / 2;
-          break;
-        case 'left':
-          top = rect.top + rect.height / 2;
-          left = rect.left - offset;
-          break;
-        case 'right':
-          top = rect.top + rect.height / 2;
-          left = rect.right + offset;
-          break;
-      }
-      setCoords({ top, left });
-      setVisible(true);
-    }
+    setVisible(true);
   };
 
   const hideTooltip = () => setVisible(false);
@@ -123,23 +132,28 @@ export function Tooltip({
     ? 'absolute size-2 bg-[var(--color-bg)]/80 backdrop-blur-md rotate-45'
     : 'absolute size-2 bg-[var(--color-brand-black)] rotate-45 border-r border-b border-transparent';
 
-  const transform =
-    position === 'top'
-      ? 'translate(-50%, -100%) scale(1)'
-      : position === 'bottom'
-      ? 'translate(-50%, 0) scale(1)'
-      : position === 'left'
-      ? 'translate(-100%, -50%) scale(1)'
-      : 'translate(0, -50%) scale(1)';
+  const { placement, top, left, arrow } = layout;
 
-  const animFrom =
-    position === 'top'
-      ? 'translate(-50%, calc(-100% + 4px))'
-      : position === 'bottom'
-      ? 'translate(-50%, -4px)'
-      : position === 'left'
-      ? 'translate(calc(-100% + 4px), -50%)'
-      : 'translate(-4px, -50%)';
+  // Arrow positioning is driven by the resolved placement + clamped offset so it
+  // keeps pointing at the trigger even when the bubble was shifted to fit.
+  const arrowStyle: React.CSSProperties =
+    placement === 'top'
+      ? { bottom: '-3px', left: `${arrow - 4}px` }
+      : placement === 'bottom'
+      ? { top: '-3px', left: `${arrow - 4}px` }
+      : placement === 'left'
+      ? { right: '-3px', top: `${arrow - 4}px` }
+      : { left: '-3px', top: `${arrow - 4}px` };
+
+  const arrowShadow: React.CSSProperties = isSubtle
+    ? placement === 'top'
+      ? { boxShadow: '1px 1px 0 var(--color-border)' }
+      : placement === 'bottom'
+      ? { boxShadow: '-1px -1px 0 var(--color-border)' }
+      : placement === 'left'
+      ? { boxShadow: '1px -1px 0 var(--color-border)' }
+      : { boxShadow: '-1px 1px 0 var(--color-border)' }
+    : {};
 
   return (
     <div
@@ -154,53 +168,21 @@ export function Tooltip({
       {visible && mounted && typeof document !== 'undefined'
         ? createPortal(
             <div
+              ref={bubbleRef}
               className={bubbleClass}
               style={{
-                top: coords.top,
-                left: coords.left,
-                transform,
+                top,
+                left,
                 opacity: 1,
                 animation: 'tooltipFadeIn .12s ease-out forwards',
               }}
             >
               {content}
               {/* Arrow */}
-              <div
-                className={arrowClass}
-                style={{
-                  ...(position === 'top' && {
-                    bottom: '-3px',
-                    left: 'calc(50% - 4px)',
-                    ...(isSubtle
-                      ? { boxShadow: '1px 1px 0 var(--color-border)' }
-                      : { borderRightColor: 'hsla(0,0%,100%,0.1)', borderBottomColor: 'hsla(0,0%,100%,0.1)' }),
-                  }),
-                  ...(position === 'bottom' && {
-                    top: '-3px',
-                    left: 'calc(50% - 4px)',
-                    ...(isSubtle
-                      ? { boxShadow: '-1px -1px 0 var(--color-border)' }
-                      : { borderTopColor: 'hsla(0,0%,100%,0.1)', borderLeftColor: 'hsla(0,0%,100%,0.1)' }),
-                  }),
-                  ...(position === 'left' && {
-                    right: '-3px',
-                    top: 'calc(50% - 4px)',
-                    ...(isSubtle
-                      ? { boxShadow: '1px -1px 0 var(--color-border)' }
-                      : { borderTopColor: 'hsla(0,0%,100%,0.1)', borderRightColor: 'hsla(0,0%,100%,0.1)' }),
-                  }),
-                  ...(position === 'right' && {
-                    left: '-3px',
-                    top: 'calc(50% - 4px)',
-                    ...(isSubtle
-                      ? { boxShadow: '-1px 1px 0 var(--color-border)' }
-                      : { borderBottomColor: 'hsla(0,0%,100%,0.1)', borderLeftColor: 'hsla(0,0%,100%,0.1)' }),
-                  }),
-                }}
-              />
+              <div className={arrowClass} style={{ ...arrowStyle, ...arrowShadow }} />
               <style>{`
                 @keyframes tooltipFadeIn {
-                  from { opacity: 0; transform: ${animFrom}; }
+                  from { opacity: 0; }
                 }
               `}</style>
             </div>,

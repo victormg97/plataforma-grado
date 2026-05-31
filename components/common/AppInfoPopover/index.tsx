@@ -47,7 +47,7 @@ export function AppInfoPopover() {
   const whoWeAreLabel = tenant.quienesSomosLabel ?? '¿Quiénes Somos?';
 
   useEffect(() => {
-    setMounted(true);
+    setMounted(true); // eslint-disable-line react-hooks/set-state-in-effect
     setIsHoverDevice(window.matchMedia('(hover: hover)').matches);
   }, []);
 

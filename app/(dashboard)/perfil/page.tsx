@@ -171,19 +171,9 @@ export default function PerfilPage() {
     }
   }, [perfilData, initialized]);
 
-  if (!user) return null;
-
-  const isAlumno = (perfilData?.rol ?? user.rol) === 'alumno';
-  const isProfesorOrAdmin = ['profesor', 'admin'].includes(perfilData?.rol ?? user.rol);
-  const savedAvatarUrl = initialized ? (perfilData?.avatar_url ?? null) : (user.avatar_url ?? null);
-  const currentAvatarUrl = pendingDelete ? null : (previewUrl ?? savedAvatarUrl);
-  const hasSavedAvatar = !!savedAvatarUrl;
-
-  // Display name in header: nombre + apellidos from form state
-  const displayName = [nombre || user.nombre, apellidos || getApellidosDisplay({ ...user, alumno_extra: null } as PerfilResponse)].filter(Boolean).join(' ');
+  const isAlumno = (perfilData?.rol ?? user?.rol) === 'alumno';
 
   // ── Dirty detection ───────────────────────────────────────────────────────
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const isDirtyInfo = useMemo(() => {
     if (!initialized) return false;
     const avatarChanged = !!pendingBlob || pendingDelete;
@@ -202,6 +192,16 @@ export default function PerfilPage() {
     if (!initialized) return false;
     return duracionClase !== savedConfig.duracionClase || cancellationDeadline !== savedConfig.cancellationDeadline;
   }, [initialized, duracionClase, cancellationDeadline, savedConfig]);
+
+  if (!user) return null;
+
+  const isProfesorOrAdmin = ['profesor', 'admin'].includes(perfilData?.rol ?? user.rol);
+  const savedAvatarUrl = initialized ? (perfilData?.avatar_url ?? null) : (user.avatar_url ?? null);
+  const currentAvatarUrl = pendingDelete ? null : (previewUrl ?? savedAvatarUrl);
+  const hasSavedAvatar = !!savedAvatarUrl;
+
+  // Display name in header: nombre + apellidos from form state
+  const displayName = [nombre || user.nombre, apellidos || getApellidosDisplay({ ...user, alumno_extra: null } as PerfilResponse)].filter(Boolean).join(' ');
 
   // ── Save profile info ─────────────────────────────────────────────────────
   async function handleSaveInfo(e: React.FormEvent) {

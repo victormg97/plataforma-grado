@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Folder, Save, Loader2 } from 'lucide-react';
+import { Folder, Save } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Modal } from '@/components/common/Modal';
 import { Button } from '@/components/common/Button';
@@ -20,7 +20,7 @@ export function CarpetaModal({ initialNombre, onClose, onSave, saving }: Carpeta
   const isEditing = !!initialNombre;
 
   useEffect(() => {
-    setNombre(initialNombre ?? '');
+    setNombre(initialNombre ?? ''); // eslint-disable-line react-hooks/set-state-in-effect
   }, [initialNombre]);
 
   const handleSubmit = async (e: React.FormEvent) => {

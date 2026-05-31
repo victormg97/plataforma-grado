@@ -43,7 +43,10 @@ export function CarpetaPermisosModal({
 }: CarpetaPermisosModalProps) {
   const t = useTranslations('recursos');
 
-  const currentAlumnoIds = carpeta.alumno_ids_efectivos ?? [];
+  const currentAlumnoIds = useMemo(
+    () => carpeta.alumno_ids_efectivos ?? [],
+    [carpeta.alumno_ids_efectivos]
+  );
 
   const [visibilidad, setVisibilidad] = useState<VisibilidadMode>(getInitialMode(carpeta));
   const [selectedIds, setSelectedIds] = useState<string[]>(currentAlumnoIds);

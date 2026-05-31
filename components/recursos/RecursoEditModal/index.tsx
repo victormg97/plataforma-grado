@@ -80,7 +80,7 @@ export function RecursoEditModal({
   });
 
   useEffect(() => {
-    if (accesoIds) setSelectedIds(accesoIds);
+    if (accesoIds) setSelectedIds(accesoIds); // eslint-disable-line react-hooks/set-state-in-effect
   }, [accesoIds]);
 
   const filteredAlumnos = alumnos.filter((a) =>
