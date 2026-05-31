@@ -382,6 +382,15 @@
   margin-inline: auto;
 }
 
+/* Scroll horizontal sin barra visible (tabs, chips, etc.) */
+.no-scrollbar {
+  -ms-overflow-style: none;      /* IE/Edge */
+  scrollbar-width: none;          /* Firefox */
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;                  /* Chrome/Safari */
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

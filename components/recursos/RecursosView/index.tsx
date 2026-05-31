@@ -508,21 +508,21 @@ export function RecursosView({ rol }: RecursosViewProps) {
 
       {/* Breadcrumb navigation — hidden while searching */}
       {!isSearching && (breadcrumb.length > 0 || currentCarpetaId) && (
-        <nav className="flex items-center gap-1 text-sm">
+        <nav className="flex flex-wrap items-center gap-x-1 gap-y-1 text-xs sm:text-sm">
           <button
             onClick={() => setCurrentCarpetaId(null)}
             className="flex items-center gap-1 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
           >
-            <Home className="size-3.5" />
+            <Home className="size-3.5 shrink-0" />
             {t('titulo')}
           </button>
           {breadcrumb.map((c) => (
-            <span key={c.id} className="flex items-center gap-1">
-              <ChevronRight className="size-3.5 text-[var(--color-text-muted)]" />
+            <span key={c.id} className="flex min-w-0 items-center gap-1">
+              <ChevronRight className="size-3.5 shrink-0 text-[var(--color-text-muted)]" />
               <button
                 onClick={() => setCurrentCarpetaId(c.id)}
                 className={cn(
-                  'transition-colors',
+                  'truncate transition-colors',
                   c.id === currentCarpetaId
                     ? 'font-semibold text-[var(--color-text-primary)]'
                     : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]',
@@ -564,16 +564,18 @@ export function RecursosView({ rol }: RecursosViewProps) {
               className="h-9 w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] pl-9 pr-9 text-sm text-[var(--color-text-primary)] shadow-[var(--shadow-sm)] outline-none transition-all placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-brand-gold)] disabled:cursor-not-allowed disabled:opacity-50"
             />
             {searchInput && (
-              <Tooltip content={t('buscar_limpiar')} position="bottom">
-                <button
-                  type="button"
-                  onClick={clearSearch}
-                  className="absolute right-2 top-1/2 flex size-6 -translate-y-1/2 items-center justify-center rounded-full text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]"
-                  aria-label={t('buscar_limpiar')}
-                >
-                  <X className="size-3.5" />
-                </button>
-              </Tooltip>
+              <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                <Tooltip content={t('buscar_limpiar')} position="bottom">
+                  <button
+                    type="button"
+                    onClick={clearSearch}
+                    className="flex size-6 items-center justify-center rounded-full text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]"
+                    aria-label={t('buscar_limpiar')}
+                  >
+                    <X className="size-3.5" />
+                  </button>
+                </Tooltip>
+              </div>
             )}
           </div>
         </div>
@@ -638,7 +640,7 @@ export function RecursosView({ rol }: RecursosViewProps) {
       </div>
 
       {/* Filter tabs */}
-      <div className="flex gap-1 border-b border-[var(--color-border)]">
+      <div className="no-scrollbar flex gap-1 overflow-x-auto border-b border-[var(--color-border)]">
         {TABS.map(({ key, label }) => {
           const source = isSearching ? searchBase : currentRecursos;
           const count = key === 'todos' ? source.length : source.filter((r) => r.tipo === key).length;
@@ -647,7 +649,7 @@ export function RecursosView({ rol }: RecursosViewProps) {
               key={key}
               onClick={() => setActiveTab(key)}
               className={cn(
-                'px-4 py-2.5 text-sm font-medium transition-all border-b-2 -mb-px',
+                'shrink-0 whitespace-nowrap px-4 py-2.5 text-sm font-medium transition-all border-b-2 -mb-px',
                 activeTab === key
                   ? 'border-[var(--color-brand-gold)] text-[var(--color-brand-gold)]'
                   : 'border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]',
