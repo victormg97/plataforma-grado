@@ -1177,6 +1177,9 @@
     "sort_nombre_za": "Nombre Z → A",
     "sort_tipo": "Por tipo",
     "volver_carpeta": "Volver a la carpeta anterior",
+    "buscar_placeholder": "Buscar archivos...",
+    "buscar_limpiar": "Limpiar búsqueda",
+    "buscar_sin_resultados": "No se encontraron archivos para \"{query}\"",
     "todos_mis_alumnos": "Todos mis alumnos",
     "todos_app": "Todos los alumnos",
     "todos_app_desc": "Todos los alumnos de la plataforma podrán ver este recurso, sin importar a qué profesor estén asignados."

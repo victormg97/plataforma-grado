@@ -1177,6 +1177,9 @@
     "sort_nombre_za": "Name Z → A",
     "sort_tipo": "By type",
     "volver_carpeta": "Go back to previous folder",
+    "buscar_placeholder": "Search files...",
+    "buscar_limpiar": "Clear search",
+    "buscar_sin_resultados": "No files found for \"{query}\"",
     "todos_mis_alumnos": "All my students",
     "todos_app": "All students",
     "todos_app_desc": "All students on the platform will be able to see this resource, regardless of which teacher they are assigned to."

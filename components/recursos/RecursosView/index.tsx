@@ -3,7 +3,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
-import { Plus, FolderOpen, X, FolderPlus, ChevronRight, Home, ArrowLeft, Check } from 'lucide-react';
+import { Plus, FolderOpen, X, FolderPlus, ChevronRight, Home, ArrowLeft, Check, Search } from 'lucide-react';
 import { Tooltip } from '@/components/common/Tooltip';
 import { createClient } from '@/lib/supabase/client';
 import { useUserStore } from '@/stores/useUserStore';
@@ -63,6 +63,23 @@ export function RecursosView({ rol }: RecursosViewProps) {
   const [sortBy, setSortBy] = useState<SortBy>('created_at_desc');
   const [showSortMenu, setShowSortMenu] = useState(false);
   const sortMenuRef = useRef<HTMLDivElement>(null);
+
+  // Search state (local, in-memory across all folders)
+  const [searchInput, setSearchInput] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Debounce the search input for performance with large datasets
+  useEffect(() => {
+    const id = setTimeout(() => setSearchQuery(searchInput.trim()), 200);
+    return () => clearTimeout(id);
+  }, [searchInput]);
+
+  const clearSearch = () => {
+    setSearchInput('');
+    setSearchQuery('');
+  };
+
+  const isSearching = searchQuery.length > 0;
 
   const canUpload = rol === 'admin' || rol === 'profesor';
 
@@ -226,6 +243,37 @@ export function RecursosView({ rol }: RecursosViewProps) {
       }
     });
   }, [currentRecursos, activeTab, sortBy]);
+
+  // ── Search results (across ALL folders, files only) ──────────────
+  // When searching, ignore folder navigation and folder cards — search every
+  // resource the user already has loaded in memory, filtered by title.
+  // searchBase = all title matches (used for tab counts); searchResults adds
+  // the active tab filter + current sort order.
+  const searchBase = useMemo(() => {
+    if (!isSearching) return [];
+    const q = searchQuery.toLowerCase();
+    return allRecursos.filter((r) => r.titulo.toLowerCase().includes(q));
+  }, [isSearching, searchQuery, allRecursos]);
+
+  const searchResults = useMemo(() => {
+    if (!isSearching) return [];
+    const matched = activeTab === 'todos' ? searchBase : searchBase.filter((r) => r.tipo === activeTab);
+    return [...matched].sort((a, b) => {
+      switch (sortBy) {
+        case 'created_at_asc':
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        case 'nombre_asc':
+          return a.titulo.localeCompare(b.titulo, 'es');
+        case 'nombre_desc':
+          return b.titulo.localeCompare(a.titulo, 'es');
+        case 'tipo_asc':
+          return a.tipo.localeCompare(b.tipo, 'es');
+        case 'created_at_desc':
+        default:
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+    });
+  }, [isSearching, searchBase, activeTab, sortBy]);
 
   // ── Mutation: save sort preference ───────────────────────────────
   const saveSortPrefMutation = useMutation({
@@ -418,6 +466,9 @@ export function RecursosView({ rol }: RecursosViewProps) {
 
   const isEmpty = carpetasWithCount.length === 0 && filteredRecursos.length === 0;
 
+  // No files uploaded at all (across every folder) — disables the search box
+  const hasAnyRecurso = allRecursos.length > 0;
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -455,8 +506,8 @@ export function RecursosView({ rol }: RecursosViewProps) {
         />
       )}
 
-      {/* Breadcrumb navigation */}
-      {(breadcrumb.length > 0 || currentCarpetaId) && (
+      {/* Breadcrumb navigation — hidden while searching */}
+      {!isSearching && (breadcrumb.length > 0 || currentCarpetaId) && (
         <nav className="flex items-center gap-1 text-sm">
           <button
             onClick={() => setCurrentCarpetaId(null)}
@@ -484,10 +535,10 @@ export function RecursosView({ rol }: RecursosViewProps) {
         </nav>
       )}
 
-      {/* Action bar: back arrow + breadcrumb (only when inside folder) + sort button */}
+      {/* Action bar: back arrow + search (center) + sort button */}
       <div className="flex items-center gap-2">
-        {/* Back arrow — only shown when inside a folder */}
-        {currentCarpetaId && (
+        {/* Back arrow — only shown when inside a folder and not searching */}
+        {currentCarpetaId && !isSearching && (
           <Tooltip content={t('volver_carpeta')} position="bottom">
             <button
               type="button"
@@ -499,8 +550,33 @@ export function RecursosView({ rol }: RecursosViewProps) {
           </Tooltip>
         )}
 
-        {/* Spacer — pushes sort button to the right */}
-        <div className="flex-1" />
+        {/* Search box — centered, filters all files locally */}
+        <div className="flex flex-1 justify-center">
+          <div className="relative w-full max-w-md">
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--color-text-muted)]" />
+            <input
+              type="text"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              disabled={!hasAnyRecurso}
+              placeholder={t('buscar_placeholder')}
+              aria-label={t('buscar_placeholder')}
+              className="h-9 w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] pl-9 pr-9 text-sm text-[var(--color-text-primary)] shadow-[var(--shadow-sm)] outline-none transition-all placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-brand-gold)] disabled:cursor-not-allowed disabled:opacity-50"
+            />
+            {searchInput && (
+              <Tooltip content={t('buscar_limpiar')} position="bottom">
+                <button
+                  type="button"
+                  onClick={clearSearch}
+                  className="absolute right-2 top-1/2 flex size-6 -translate-y-1/2 items-center justify-center rounded-full text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]"
+                  aria-label={t('buscar_limpiar')}
+                >
+                  <X className="size-3.5" />
+                </button>
+              </Tooltip>
+            )}
+          </div>
+        </div>
 
         {/* Sort button */}
         <div className="relative shrink-0" ref={sortMenuRef}>
@@ -564,7 +640,8 @@ export function RecursosView({ rol }: RecursosViewProps) {
       {/* Filter tabs */}
       <div className="flex gap-1 border-b border-[var(--color-border)]">
         {TABS.map(({ key, label }) => {
-          const count = key === 'todos' ? currentRecursos.length : currentRecursos.filter((r) => r.tipo === key).length;
+          const source = isSearching ? searchBase : currentRecursos;
+          const count = key === 'todos' ? source.length : source.filter((r) => r.tipo === key).length;
           return (
             <button
               key={key}
@@ -598,6 +675,44 @@ export function RecursosView({ rol }: RecursosViewProps) {
           <div className="mx-auto size-8 animate-spin rounded-full border-2 border-[var(--color-border)] border-t-[var(--color-brand-gold)]" />
           <p className="mt-4 text-sm text-[var(--color-text-muted)]">{t('cargando')}</p>
         </div>
+      ) : isSearching ? (
+        /* ── Search mode: files only, across all folders ── */
+        searchResults.length > 0 ? (
+          <div className="grid gap-3 md:grid-cols-2">
+            {searchResults.map((recurso) => (
+              <RecursoCard
+                key={recurso.id}
+                recurso={recurso}
+                rol={rol}
+                userId={user?.id ?? ''}
+                uploaderIdMatch={recurso.subido_por === user?.id}
+                onDelete={(id) => {
+                  const r = allRecursos.find((x) => x.id === id);
+                  if (r) setDeleteTarget(r);
+                }}
+                onEdit={(r) => setEditTarget(r)}
+                onDownload={handleDownload}
+                onMove={canUpload ? (r) => setMoveTarget(r) : undefined}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center gap-4 rounded-[var(--radius-xl)] border border-dashed border-[var(--color-border)] bg-[var(--color-bg-secondary)] py-16 px-8 text-center">
+            <div className="flex size-14 items-center justify-center rounded-[var(--radius-xl)] bg-[var(--color-brand-gold-muted)]">
+              <Search className="size-7 text-[var(--color-brand-gold)]" />
+            </div>
+            <p className="text-sm font-semibold text-[var(--color-text-primary)]">
+              {t('buscar_sin_resultados', { query: searchQuery })}
+            </p>
+            <button
+              onClick={clearSearch}
+              className="flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-brand-gold)] px-4 py-2 text-sm font-medium text-[var(--color-brand-gold)] transition-colors hover:bg-[var(--color-brand-gold-muted)]"
+            >
+              <X className="size-4" />
+              {t('buscar_limpiar')}
+            </button>
+          </div>
+        )
       ) : isEmpty && activeTab === 'todos' ? (
         <div className="flex flex-col items-center gap-4 rounded-[var(--radius-xl)] border border-dashed border-[var(--color-border)] bg-[var(--color-bg-secondary)] py-16 px-8 text-center">
           <div className="flex size-14 items-center justify-center rounded-[var(--radius-xl)] bg-[var(--color-brand-gold-muted)]">
