@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
 
   let query = supabase
     .from('bloqueos_horario')
-    .select('*')
+    .select('*, profesor:profiles!bloqueos_horario_profesor_id_fkey(id, nombre, apellido, apellido_materno, rol, avatar_url)')
     .eq('activo', true)
     .order('fecha', { ascending: true })
     .order('hora_inicio', { ascending: true });

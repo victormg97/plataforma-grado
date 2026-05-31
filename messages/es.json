@@ -120,6 +120,7 @@
     "bloqueo_eliminado": "Bloqueo eliminado",
     "bloqueo_badge": "Horario bloqueado — no disponible",
     "bloqueo_sin_motivo": "Sin motivo especificado",
+    "bloqueo_creado_por": "Bloqueado por",
     "bloqueo_campos_requeridos": "Completa la fecha y los horarios",
     "error_hora_fin": "La hora de fin debe ser posterior a la hora de inicio",
     "nueva_descripcion": "Programa una nueva clase con un alumno",

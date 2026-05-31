@@ -24,6 +24,10 @@ interface HorarioFormProps {
   horario?: HorarioConAsistencia | null;
   defaultDate?: string;
   defaultTime?: string;
+  /** Optional explicit end time. When omitted, the form auto-fills start + 1h. */
+  defaultEndTime?: string;
+  /** When true (and creating), the form opens directly in "bloqueo de horario" mode. */
+  defaultBloqueo?: boolean;
   onSuccess: () => void;
   cachedAlumnos?: { id: string; nombre: string; apellido: string; email: string; avatar_url: string | null }[];
   /** Admin mode: pass all professors to show a professor selector */
@@ -58,7 +62,7 @@ async function fetchAlumnosForProfesor(fetchTargetId: string, isAdmin: boolean):
   return (profiles as Profile[]) ?? [];
 }
 
-export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, defaultTime, onSuccess, cachedAlumnos, adminProfesores }: HorarioFormProps) {
+export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, defaultTime, defaultEndTime, defaultBloqueo, onSuccess, cachedAlumnos, adminProfesores }: HorarioFormProps) {
   const t = useTranslations('horarios');
   const tc = useTranslations('common');
   const ta = useTranslations('alumnos');
@@ -121,16 +125,18 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
   // Reset form when horario or open changes
   useEffect(() => {
     if (!open) return;
-    // Reset bloqueo mode when opening
-    setEsBloqueo(false);
+    // Reset bloqueo mode when opening — honor defaultBloqueo (e.g. all-day cell click)
+    setEsBloqueo(!isEditing && !!defaultBloqueo);
     setMotivoBloqueo('');
     // Pre-fill bloqueo date/time from defaults (same as the class form)
     setBloqueoFecha(defaultDate || '');
     setBloqueoHoraInicio(defaultTime || '');
     setBloqueoHoraFin(
-      defaultTime
-        ? `${String(Math.min(Number(defaultTime.split(':')[0]) + 1, 23)).padStart(2, '0')}:${defaultTime.split(':')[1]}`
-        : ''
+      defaultEndTime
+        ? defaultEndTime
+        : defaultTime
+          ? `${String(Math.min(Number(defaultTime.split(':')[0]) + 1, 23)).padStart(2, '0')}:${defaultTime.split(':')[1]}`
+          : ''
     );
     // Admin mode: init activeProfId from edited horario or prop
     if (adminProfesores) {
@@ -159,9 +165,11 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
         .maybeSingle()
         .then(({ data }) => setEsExamen(!!data));
     } else {
-      const endTime = defaultTime
-        ? `${String(Math.min(Number(defaultTime.split(':')[0]) + 1, 23)).padStart(2, '0')}:${defaultTime.split(':')[1]}`
-        : '';
+      const endTime = defaultEndTime
+        ? defaultEndTime
+        : defaultTime
+          ? `${String(Math.min(Number(defaultTime.split(':')[0]) + 1, 23)).padStart(2, '0')}:${defaultTime.split(':')[1]}`
+          : '';
       reset({
         alumno_id: '',
         titulo: '',
@@ -173,7 +181,7 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
       setAlumnoSearch('');
       setEsExamen(false);
     }
-  }, [horario, defaultDate, defaultTime, open, reset, adminProfesores, profesorId]);
+  }, [horario, defaultDate, defaultTime, defaultEndTime, defaultBloqueo, open, reset, adminProfesores, profesorId, isEditing]);
 
   // Fetch alumnos using React Query — eliminates the effect chain
   const fetchTargetId = adminProfesores ? activeProfId : profesorId;

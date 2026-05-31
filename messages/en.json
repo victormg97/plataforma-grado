@@ -120,6 +120,7 @@
     "bloqueo_eliminado": "Block removed",
     "bloqueo_badge": "Blocked — unavailable",
     "bloqueo_sin_motivo": "No reason specified",
+    "bloqueo_creado_por": "Blocked by",
     "bloqueo_campos_requeridos": "Please fill in the date and times",
     "error_hora_fin": "End time must be after start time",
     "nueva_descripcion": "Schedule a new class with a student",

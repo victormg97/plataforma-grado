@@ -14,6 +14,15 @@ export type BloqueHorario = {
   activo: boolean;
   created_at: string;
   updated_at: string;
+  /** Profesor/admin que creó el bloqueo (join con profiles) */
+  profesor?: {
+    id: string;
+    nombre: string;
+    apellido: string;
+    apellido_materno: string | null;
+    rol: string;
+    avatar_url: string | null;
+  } | null;
 };
 
 async function fetchBloqueos(profesorId?: string): Promise<BloqueHorario[]> {

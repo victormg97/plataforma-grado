@@ -62,6 +62,8 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
   const [editingHorario, setEditingHorario] = useState<HorarioConAsistencia | null>(null);
   const [defaultDate, setDefaultDate] = useState<string | undefined>(undefined);
   const [defaultTime, setDefaultTime] = useState<string | undefined>(undefined);
+  const [defaultEndTime, setDefaultEndTime] = useState<string | undefined>(undefined);
+  const [defaultBloqueo, setDefaultBloqueo] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [currentView, setCurrentView] = useState('dayGridMonth');
   const [markingNoAsistio, setMarkingNoAsistio] = useState(false);
@@ -204,15 +206,27 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
     setEditingHorario(null);
     setDefaultDate(undefined);
     setDefaultTime(undefined);
+    setDefaultEndTime(undefined);
+    setDefaultBloqueo(false);
     setFormOpen(true);
   }
 
   function handleDateClick(info: DateClickArg) {
     setEditingHorario(null);
     setDefaultDate(info.dateStr.slice(0, 10));
+    // All-day cell (week/day "Todo el día" row): open as a full-day bloqueo 00:00–23:59
+    if (info.allDay) {
+      setDefaultTime('00:00');
+      setDefaultEndTime('23:59');
+      setDefaultBloqueo(true);
+      setFormOpen(true);
+      return;
+    }
     // In week/time views, dateStr includes time (e.g. 2026-03-28T10:00:00)
     const timeMatch = info.dateStr.match(/T(\d{2}:\d{2})/);
     setDefaultTime(timeMatch ? timeMatch[1] : undefined);
+    setDefaultEndTime(undefined);
+    setDefaultBloqueo(false);
     setFormOpen(true);
   }
 
@@ -477,11 +491,13 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
       {/* HorarioForm Modal */}
       <HorarioForm
         open={formOpen}
-        onClose={() => { setFormOpen(false); setEditingHorario(null); setDefaultDate(undefined); setDefaultTime(undefined); }}
+        onClose={() => { setFormOpen(false); setEditingHorario(null); setDefaultDate(undefined); setDefaultTime(undefined); setDefaultEndTime(undefined); setDefaultBloqueo(false); }}
         profesorId={profesorId}
         horario={editingHorario}
         defaultDate={defaultDate}
         defaultTime={defaultTime}
+        defaultEndTime={defaultEndTime}
+        defaultBloqueo={defaultBloqueo}
         onSuccess={refetch}
         cachedAlumnos={alumnos}
       />
@@ -514,6 +530,28 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
               <Lock className="size-4 shrink-0 text-[var(--color-brand-gold)]" />
               <p className="text-sm font-medium text-[var(--color-brand-gold)]">{t('bloqueo_badge')}</p>
             </div>
+
+            {/* Profesor/Admin que creó el bloqueo */}
+            {selectedBloqueo.profesor && (
+              <div className="flex items-center gap-3">
+                <Avatar
+                  nombre={selectedBloqueo.profesor.nombre}
+                  apellido={selectedBloqueo.profesor.apellido}
+                  avatarUrl={selectedBloqueo.profesor.avatar_url}
+                  size="sm"
+                />
+                <div>
+                  <p className="text-xs text-[var(--color-text-muted)]">{t('bloqueo_creado_por')}</p>
+                  <p className="text-sm font-medium text-[var(--color-text-primary)]">
+                    {[selectedBloqueo.profesor.nombre, selectedBloqueo.profesor.apellido, selectedBloqueo.profesor.apellido_materno].filter(Boolean).join(' ')}
+                    {selectedBloqueo.profesor.rol === 'admin' && (
+                      <span className="ml-1.5 rounded-full bg-[var(--color-brand-gold-muted)] px-2 py-0.5 text-[10px] font-medium text-[var(--color-brand-gold)]">Admin</span>
+                    )}
+                  </p>
+                </div>
+              </div>
+            )}
+
             <div className="flex flex-wrap items-center gap-1.5">
               <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-bg-secondary)] px-2.5 py-1 text-xs text-[var(--color-text-secondary)]">
                 <Calendar className="size-3.5" style={{ color: 'var(--color-brand-gold)' }} />

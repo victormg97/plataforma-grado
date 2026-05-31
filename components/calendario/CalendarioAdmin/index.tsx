@@ -79,6 +79,8 @@ export function CalendarioAdmin() {
   const [editingHorario, setEditingHorario] = useState<HorarioGlobal | null>(null);
   const [defaultDate, setDefaultDate] = useState<string | undefined>(undefined);
   const [defaultTime, setDefaultTime] = useState<string | undefined>(undefined);
+  const [defaultEndTime, setDefaultEndTime] = useState<string | undefined>(undefined);
+  const [defaultBloqueo, setDefaultBloqueo] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [currentView, setCurrentView] = useState('dayGridMonth');
   const calendarRef = useRef<FullCalendar>(null);
@@ -265,14 +267,26 @@ export function CalendarioAdmin() {
     setEditingHorario(selectedHorario);
     setDefaultDate(undefined);
     setDefaultTime(undefined);
+    setDefaultEndTime(undefined);
+    setDefaultBloqueo(false);
     setFormOpen(true);
   }
 
   function handleDateClick(info: DateClickArg) {
     setEditingHorario(null);
     setDefaultDate(info.dateStr.slice(0, 10));
+    // All-day cell (week/day "Todo el día" row): open as a full-day bloqueo 00:00–23:59
+    if (info.allDay) {
+      setDefaultTime('00:00');
+      setDefaultEndTime('23:59');
+      setDefaultBloqueo(true);
+      setFormOpen(true);
+      return;
+    }
     const timeMatch = info.dateStr.match(/T(\d{2}:\d{2})/);
     setDefaultTime(timeMatch ? timeMatch[1] : undefined);
+    setDefaultEndTime(undefined);
+    setDefaultBloqueo(false);
     setFormOpen(true);
   }
 
@@ -321,6 +335,8 @@ export function CalendarioAdmin() {
                 setEditingHorario(null);
                 setDefaultDate(undefined);
                 setDefaultTime(undefined);
+                setDefaultEndTime(undefined);
+                setDefaultBloqueo(false);
                 setFormOpen(true);
               },
             },
@@ -458,11 +474,13 @@ export function CalendarioAdmin() {
       {/* HorarioForm Modal */}
       <HorarioForm
         open={formOpen}
-        onClose={() => { setFormOpen(false); setEditingHorario(null); }}
+        onClose={() => { setFormOpen(false); setEditingHorario(null); setDefaultDate(undefined); setDefaultTime(undefined); setDefaultEndTime(undefined); setDefaultBloqueo(false); }}
         profesorId={editingHorario?.profesor_id || ''}
         horario={editingHorario as never}
         defaultDate={defaultDate}
         defaultTime={defaultTime}
+        defaultEndTime={defaultEndTime}
+        defaultBloqueo={defaultBloqueo}
         adminProfesores={adminProfesores}
         onSuccess={() => queryClient.invalidateQueries({ queryKey: ['admin-horarios'] })}
       />
@@ -495,6 +513,28 @@ export function CalendarioAdmin() {
               <Lock className="size-4 shrink-0 text-[var(--color-brand-gold)]" />
               <p className="text-sm font-medium text-[var(--color-brand-gold)]">{t('bloqueo_badge')}</p>
             </div>
+
+            {/* Profesor/Admin que creó el bloqueo */}
+            {selectedBloqueo.profesor && (
+              <div className="flex items-center gap-3 rounded-[var(--radius-md)] bg-[var(--color-bg-secondary)] p-3">
+                <div
+                  className="flex size-8 shrink-0 items-center justify-center rounded-full"
+                  style={{ backgroundColor: profesorColorMap[selectedBloqueo.profesor_id]?.bg || 'var(--color-text-muted)' }}
+                >
+                  <User className="size-4 text-white" />
+                </div>
+                <div>
+                  <p className="text-xs text-[var(--color-text-muted)]">{t('bloqueo_creado_por')}</p>
+                  <p className="text-sm font-medium text-[var(--color-text-primary)]">
+                    {[selectedBloqueo.profesor.nombre, selectedBloqueo.profesor.apellido, selectedBloqueo.profesor.apellido_materno].filter(Boolean).join(' ')}
+                    {selectedBloqueo.profesor.rol === 'admin' && (
+                      <span className="ml-1.5 rounded-full bg-[var(--color-brand-gold-muted)] px-2 py-0.5 text-[10px] font-medium text-[var(--color-brand-gold)]">Admin</span>
+                    )}
+                  </p>
+                </div>
+              </div>
+            )}
+
             <div className="flex flex-wrap items-center gap-1.5">
               <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-bg-secondary)] px-2.5 py-1 text-xs text-[var(--color-text-secondary)]">
                 <Calendar className="size-3.5" style={{ color: 'var(--color-brand-gold)' }} />
