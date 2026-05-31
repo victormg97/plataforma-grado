@@ -66,6 +66,13 @@ const metadataSchema = z.object({
   favicon: relativePathSchema.optional(),
 });
 
+// Opciones de autenticación del tenant. `googleHabilitado` indica si el tenant
+// configuró el proveedor de Google OAuth en su proyecto Supabase; si es false
+// (default), el botón "Registrarse con Google" no se muestra.
+const authSchema = z.object({
+  googleHabilitado: z.boolean().optional().default(false),
+});
+
 // ─── Main Tenant Config Schema ───────────────────────────────────────────────
 
 export const tenantConfigSchema = z.object({
@@ -97,6 +104,7 @@ export const tenantConfigSchema = z.object({
   theme: themeSchema,
   fonts: fontsSchema.optional().default({ display: 'Playfair Display', body: 'DM Sans' }),
   metadata: metadataSchema.optional().default({}),
+  auth: authSchema.optional().default({ googleHabilitado: false }),
 });
 
 // ─── Exported Types ──────────────────────────────────────────────────────────

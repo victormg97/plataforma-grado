@@ -680,7 +680,7 @@ export function RecursosView({ rol }: RecursosViewProps) {
       ) : isSearching ? (
         /* ── Search mode: files only, across all folders ── */
         searchResults.length > 0 ? (
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             {searchResults.map((recurso) => (
               <RecursoCard
                 key={recurso.id}
@@ -742,7 +742,7 @@ export function RecursosView({ rol }: RecursosViewProps) {
         <div className="space-y-4">
           {/* Folders grid — only shown in "todos" tab */}
           {activeTab === 'todos' && carpetasWithCount.length > 0 && (
-            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
               {carpetasWithCount.map((c) => (
                 <CarpetaCard
                   key={c.id}
@@ -760,7 +760,7 @@ export function RecursosView({ rol }: RecursosViewProps) {
 
           {/* Resources grid */}
           {filteredRecursos.length > 0 && (
-            <div className="grid gap-3 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               {filteredRecursos.map((recurso) => (
                 <RecursoCard
                   key={recurso.id}

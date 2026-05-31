@@ -3,7 +3,7 @@
 import { Suspense, useState, useMemo, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { Plus, Search, ChevronDown, Loader2 } from 'lucide-react';
+import { Plus, Search, ChevronDown, Loader2, Link2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card } from '@/components/common/Card';
@@ -32,6 +32,7 @@ function AdminAlumnosContent() {
   const queryClient = useQueryClient();
   const ta = useTranslations('alumnos');
   const tc = useTranslations('common');
+  const te = useTranslations('enlaces');
   const router = useRouter();
 
   // Filters via URL
@@ -315,10 +316,16 @@ function AdminAlumnosContent() {
         title={ta('titulo')}
         subtitle={ta('subtitulo')}
         actions={
-          <Button onClick={() => router.push('/admin/alumnos/crear')}>
-            <Plus className="mr-1.5 size-4" />
-            {ta('nuevo_alumno')}
-          </Button>
+          <>
+            <Button variant="secondary" onClick={() => router.push('/enlaces-invitacion?from=/admin/alumnos')}>
+              <Link2 className="mr-1.5 size-4" />
+              {te('boton_enlace_invitacion')}
+            </Button>
+            <Button onClick={() => router.push('/admin/alumnos/crear')}>
+              <Plus className="mr-1.5 size-4" />
+              {ta('nuevo_alumno')}
+            </Button>
+          </>
         }
       />
 

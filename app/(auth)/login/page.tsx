@@ -14,12 +14,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/common/Button';
 import { AppLogo } from '@/components/common/AppLogo';
+import { GoogleButton } from '@/components/auth/GoogleButton';
+import { useTenant } from '@/config/client';
 import type { LocaleCode } from '@/lib/config/locales';
 
 export default function LoginPage() {
   const t = useTranslations('auth.login');
   const router = useRouter();
   const { theme, setTheme } = useTheme();
+  const tenant = useTenant();
+  const googleHabilitado = tenant.auth?.googleHabilitado === true;
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [cooldownSeconds, setCooldownSeconds] = useState(0);
@@ -31,8 +35,11 @@ export default function LoginPage() {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       if (params.get('blocked') === '1') setShowBlockedBanner(true);
+      const err = params.get('error');
+      if (err === 'google') toast.error(t('error_google'));
+      else if (err === 'google_sin_cuenta') toast.error(t('error_google_sin_cuenta'));
     }
-  }, []);
+  }, [t]);
 
   // Countdown timer — ticks every second, stops at 0
   function startCooldown(seconds: number) {
@@ -234,6 +241,18 @@ export default function LoginPage() {
                 : t('boton')}
           </Button>
         </form>
+
+        {googleHabilitado && (
+          <div className="mt-4 space-y-4">
+            {/* Divisor */}
+            <div className="flex items-center gap-3">
+              <div className="h-px flex-1 bg-[var(--color-border)]" />
+              <span className="text-xs text-[var(--color-text-muted)]">{t('divisor')}</span>
+              <div className="h-px flex-1 bg-[var(--color-border)]" />
+            </div>
+            <GoogleButton label={t('google_boton')} callbackPath="/api/auth/login/callback" />
+          </div>
+        )}
       </div>
     </div>
   );

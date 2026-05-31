@@ -51,7 +51,11 @@
       "error_bloqueado": "Access temporarily blocked. Please try again later.",
       "error_servidor": "Server error. Please try again later.",
       "error_cuenta_bloqueada": "Your account has been blocked. Please contact your professor or administrator.",
-      "intentos_restantes": "{count} attempt(s) remaining before temporary lockout"
+      "intentos_restantes": "{count} attempt(s) remaining before temporary lockout",
+      "google_boton": "Sign in with Google",
+      "divisor": "or sign in with your email",
+      "error_google": "Google sign-in was not completed. Please try again.",
+      "error_google_sin_cuenta": "No account exists with that Google email. Request an invitation to register."
     },
     "logout": "Sign out"
   },

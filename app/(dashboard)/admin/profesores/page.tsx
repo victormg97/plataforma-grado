@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, UserCheck, UserX, Eye, Pencil, CalendarDays, BookOpen, CalendarRange } from 'lucide-react';
+import { Plus, UserCheck, UserX, Eye, Pencil, CalendarDays, BookOpen, CalendarRange, Link2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card } from '@/components/common/Card';
@@ -35,6 +35,7 @@ export default function ProfesoresPage() {
   const queryClient = useQueryClient();
   const tp = useTranslations('profesores');
   const tc = useTranslations('common');
+  const te = useTranslations('enlaces');
   const { data: profesores = [], isLoading: loading } = useQuery<Profesor[]>({
     queryKey: ['admin-profesores'],
     queryFn: async () => {
@@ -83,10 +84,16 @@ export default function ProfesoresPage() {
         title={tp('titulo')}
         subtitle={tp('subtitulo')}
         actions={
-          <Button onClick={() => router.push('/admin/profesores/crear')}>
-            <Plus className="mr-1.5 size-4" />
-            {tp('nuevo_profesor')}
-          </Button>
+          <>
+            <Button variant="secondary" onClick={() => router.push('/enlaces-invitacion?from=/admin/profesores')}>
+              <Link2 className="mr-1.5 size-4" />
+              {te('boton_enlace_invitacion')}
+            </Button>
+            <Button onClick={() => router.push('/admin/profesores/crear')}>
+              <Plus className="mr-1.5 size-4" />
+              {tp('nuevo_profesor')}
+            </Button>
+          </>
         }
       />
 

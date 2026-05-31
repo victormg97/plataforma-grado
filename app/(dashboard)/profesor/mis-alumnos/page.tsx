@@ -4,8 +4,9 @@ import { Suspense, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
-import { Search, Users } from 'lucide-react';
+import { Search, Users, Link2 } from 'lucide-react';
 import { PageHeader } from '@/components/common/PageHeader';
+import { Button } from '@/components/common/Button';
 import { AlumnoCard, type AlumnoConExtra } from '@/components/alumnos/AlumnoCard';
 import { useUser } from '@/lib/hooks/useUser';
 import { useQueryParam } from '@/lib/hooks/useQueryParam';
@@ -14,6 +15,7 @@ type Tab = 'mis' | 'todos';
 
 function MisAlumnosContent() {
   const t = useTranslations('alumnos');
+  const te = useTranslations('enlaces');
   const { user } = useUser();
   const router = useRouter();
   const [tabParam, setTabParam] = useQueryParam('tab');
@@ -53,13 +55,22 @@ function MisAlumnosContent() {
         subtitle={t('ficha_conteo', { count: filtered.length })}
         actions={
           user?.puede_crear_alumno && (
-            <button
-              onClick={() => router.push('/profesor/mis-alumnos/crear')}
-              className="flex items-center gap-2 rounded-[var(--radius-sm)] bg-[var(--color-brand-gold)] px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-opacity"
-            >
-              <Users className="size-4" />
-              {t('agregar_alumno')}
-            </button>
+            <>
+              <Button
+                variant="secondary"
+                onClick={() => router.push('/enlaces-invitacion')}
+              >
+                <Link2 className="mr-1.5 size-4" />
+                {te('boton_enlace_invitacion')}
+              </Button>
+              <button
+                onClick={() => router.push('/profesor/mis-alumnos/crear')}
+                className="flex items-center gap-2 rounded-[var(--radius-sm)] bg-[var(--color-brand-gold)] px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-opacity"
+              >
+                <Users className="size-4" />
+                {t('agregar_alumno')}
+              </button>
+            </>
           )
         }
       />

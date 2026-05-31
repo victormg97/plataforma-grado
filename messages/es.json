@@ -51,7 +51,11 @@
       "error_bloqueado": "Acceso bloqueado temporalmente. Intenta más tarde.",
       "error_servidor": "Error del servidor. Intenta más tarde.",
       "error_cuenta_bloqueada": "Tu cuenta ha sido bloqueada. Contacta a tu profesor o administrador.",
-      "intentos_restantes": "Queda(n) {count} intento(s) antes de bloqueo temporal"
+      "intentos_restantes": "Queda(n) {count} intento(s) antes de bloqueo temporal",
+      "google_boton": "Ingresar con Google",
+      "divisor": "o ingresa con tu correo",
+      "error_google": "No se completó el inicio de sesión con Google. Intenta de nuevo.",
+      "error_google_sin_cuenta": "No existe una cuenta con ese correo de Google. Solicita una invitación para registrarte."
     },
     "logout": "Cerrar sesión"
   },

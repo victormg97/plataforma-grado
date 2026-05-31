@@ -469,6 +469,73 @@ export type Database = {
           },
         ]
       }
+      enlaces_invitacion: {
+        Row: {
+          id: string
+          tenant: string
+          codigo: string
+          tipo: string
+          estado: string
+          created_by: string | null
+          profesor_asignado: string | null
+          usuario_creado: string | null
+          eliminado: boolean
+          deleted_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          tenant: string
+          codigo: string
+          tipo: string
+          estado?: string
+          created_by?: string | null
+          profesor_asignado?: string | null
+          usuario_creado?: string | null
+          eliminado?: boolean
+          deleted_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          tenant?: string
+          codigo?: string
+          tipo?: string
+          estado?: string
+          created_by?: string | null
+          profesor_asignado?: string | null
+          usuario_creado?: string | null
+          eliminado?: boolean
+          deleted_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "enlaces_invitacion_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "enlaces_invitacion_profesor_asignado_fkey"
+            columns: ["profesor_asignado"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "enlaces_invitacion_usuario_creado_fkey"
+            columns: ["usuario_creado"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invitations: {
         Row: {
           code: string
@@ -1591,6 +1658,7 @@ export type AlumnoExtra = Tables<'alumnos_extra'>;
 export type Horario = Tables<'horarios'>;
 export type Prueba = Tables<'pruebas'>;
 export type ProgramaClase = Tables<'programas_clases'>;
+export type EnlaceInvitacion = Tables<'enlaces_invitacion'>;
 
 export type EmailPlantilla = Tables<'email_plantillas'>;
 export type EmailEnvio = Tables<'email_envios'>;
