@@ -12,6 +12,7 @@ import { createClient } from '@/lib/supabase/client';
 import { Modal } from '@/components/common/Modal';
 import { Button } from '@/components/common/Button';
 import { Tooltip } from '@/components/common/Tooltip';
+import { AppSelect } from '@/components/common/AppSelect';
 import type { Profile } from '@/lib/supabase/types';
 import type { HorarioConAsistencia } from '@/lib/hooks/useHorarios';
 import { AlumnoCombobox } from './components/AlumnoCombobox';
@@ -408,21 +409,18 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
         {adminProfesores && adminProfesores.length > 0 && (
           <div>
             <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">Profesor</label>
-            <select
+            <AppSelect
               value={activeProfId}
-              onChange={(e) => {
-                setActiveProfId(e.target.value);
+              onChange={(value) => {
+                setActiveProfId(value);
                 // Clear alumno when professor changes
                 setValue('alumno_id', '');
                 setAlumnoSearch('');
               }}
-              className={inputClass}
-            >
-              <option value="">Seleccionar profesor</option>
-              {adminProfesores.map((p) => (
-                <option key={p.id} value={p.id}>{p.nombre} {p.apellido}</option>
-              ))}
-            </select>
+              options={adminProfesores.map((p) => ({ value: p.id, label: `${p.nombre} ${p.apellido}` }))}
+              placeholder="Seleccionar profesor"
+              className="w-full"
+            />
           </div>
         )}
 
