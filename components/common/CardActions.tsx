@@ -45,7 +45,7 @@ export function CardActions({ actions, className, mobileOnly = false }: CardActi
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
-  const [pos, setPos] = useState<{ top: number; right: number }>({ top: 0, right: 0 });
+  const [pos, setPos] = useState<{ top?: number; bottom?: number; right: number }>({ top: 0, right: 0 });
 
   // Estimación de la altura del popover: cada item ~44px + padding vertical.
   const estimatedHeight = actions.length * 44 + 8;
@@ -57,29 +57,19 @@ export function CardActions({ actions, className, mobileOnly = false }: CardActi
     const rect = triggerRef.current.getBoundingClientRect();
     const spaceBelow = window.innerHeight - rect.bottom;
     const spaceAbove = rect.top;
+    const right = Math.max(MARGIN, window.innerWidth - rect.right);
 
     // Por defecto se abre hacia abajo; si no cabe y hay más espacio arriba, se
     // abre hacia arriba para que las opciones nunca queden fuera de la pantalla.
     const openUp = spaceBelow < estimatedHeight + MARGIN && spaceAbove > spaceBelow;
 
-    let top: number;
     if (openUp) {
-      // El popover termina justo encima del trigger.
-      top = rect.top + window.scrollY - estimatedHeight - 6;
-      // No dejar que se salga por arriba.
-      const minTop = window.scrollY + MARGIN;
-      if (top < minTop) top = minTop;
+      // Anclar por el borde inferior: el menú queda pegado al trigger sin hueco,
+      // sin depender de la altura real (que puede diferir de la estimada).
+      setPos({ bottom: window.innerHeight - rect.top + 6, right });
     } else {
-      top = rect.bottom + window.scrollY + 6;
-      // No dejar que se salga por abajo.
-      const maxTop = window.scrollY + window.innerHeight - estimatedHeight - MARGIN;
-      if (top > maxTop) top = Math.max(window.scrollY + MARGIN, maxTop);
+      setPos({ top: rect.bottom + 6, right });
     }
-
-    setPos({
-      top,
-      right: Math.max(MARGIN, window.innerWidth - rect.right),
-    });
   };
 
   // Close on outside click or Escape; recolocar al hacer scroll/resize.
@@ -171,6 +161,7 @@ export function CardActions({ actions, className, mobileOnly = false }: CardActi
           role="menu"
           style={{
             top: pos.top,
+            bottom: pos.bottom,
             right: pos.right,
             maxHeight: `calc(100vh - ${MARGIN * 2}px)`,
           }}

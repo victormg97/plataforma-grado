@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { LazyMotion, domAnimation, m, AnimatePresence } from 'framer-motion';
+import { LazyMotion, domAnimation, m } from 'framer-motion';
 import { X, ChevronUp, ChevronDown } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { MarkdownRenderer } from '@/components/common/MarkdownRenderer';
@@ -100,31 +100,17 @@ export function WhoWeAreModal({ tenantSlug, markdown, onClose }: WhoWeAreModalPr
               </div>
             </div>
 
-            {/* Mobile contact column (slide up) — sits above the toggle bar so the bar stays tappable */}
-            <AnimatePresence>
-              {contactOpen && (
-                <m.div
-                  className="absolute inset-x-0 bottom-12 z-20 bg-[var(--color-bg)] border-t border-[var(--color-border)] rounded-t-[var(--radius-xl)] overflow-y-auto"
-                  style={{ maxHeight: '70%' }}
-                  initial={{ y: '100%' }}
-                  animate={{ y: 0 }}
-                  exit={{ y: '100%' }}
-                  transition={{ duration: 0.25, ease: 'easeInOut' }}
-                >
-                  <div className="px-4 py-4">
-                    <ContactColumn entries={entries} />
-                  </div>
-                </m.div>
-              )}
-            </AnimatePresence>
-
-            {/* Mobile toggle bar — chevron direction shows the action; tapping it opens/closes the panel */}
-            <div className="absolute bottom-0 left-0 right-0 z-30 border-t border-[var(--color-border)] bg-[var(--color-bg)]">
+            {/* ── Mobile contact bottom sheet ──
+                The toggle IS the sheet header: it rises together with the
+                content when opening, and tapping it (now "Cerrar contacto")
+                slides the sheet back down. Anchored at bottom-0 and grows
+                upward, so there's no gap between the header and the list. */}
+            <div className="absolute inset-x-0 bottom-0 z-20 flex flex-col rounded-t-[var(--radius-xl)] border-t border-[var(--color-border)] bg-[var(--color-bg)] shadow-[var(--shadow-lg)]">
               <button
                 type="button"
                 onClick={() => setContactOpen((v) => !v)}
                 aria-expanded={contactOpen}
-                className="w-full flex items-center justify-center gap-2 py-3 text-sm font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] transition-colors"
+                className="w-full flex items-center justify-center gap-2 rounded-t-[var(--radius-xl)] py-3 text-sm font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] transition-colors"
               >
                 {contactOpen ? (
                   <ChevronDown className="size-4" />
@@ -133,6 +119,17 @@ export function WhoWeAreModal({ tenantSlug, markdown, onClose }: WhoWeAreModalPr
                 )}
                 {contactOpen ? t('contacto_toggle_cerrar') : t('contacto_toggle_abrir')}
               </button>
+
+              <m.div
+                initial={false}
+                animate={{ height: contactOpen ? 'auto' : 0 }}
+                transition={{ duration: 0.25, ease: 'easeInOut' }}
+                className="overflow-hidden"
+              >
+                <div className="max-h-[55vh] overflow-y-auto border-t border-[var(--color-border)] px-4 py-4">
+                  <ContactColumn entries={entries} />
+                </div>
+              </m.div>
             </div>
           </div>
         </div>
