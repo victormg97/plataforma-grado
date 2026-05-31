@@ -53,7 +53,7 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
   const pruebaTerm = usePruebaTerm();
   const locale = useLocale();
   const { events, alumnos, rawData, refetch } = useHorarios(profesorId);
-  const { bloqueos } = useBloqueos(profesorId);
+  const { bloqueos, refetch: refetchBloqueos } = useBloqueos(profesorId);
   const [selectedHorario, setSelectedHorario] = useState<HorarioConAsistencia | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedBloqueo, setSelectedBloqueo] = useState<BloqueHorario | null>(null);
@@ -263,6 +263,7 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
       toast.success(t('bloqueo_eliminado'));
       setBloqueoDetailOpen(false);
       setSelectedBloqueo(null);
+      refetchBloqueos();
     } catch {
       toast.error(t('error_eliminar'));
     } finally {

@@ -100,7 +100,7 @@ export function CalendarioAdmin() {
   });
 
   // Bloqueos de todos los profesores (admin ve todos)
-  const { bloqueos } = useBloqueos();
+  const { bloqueos, refetch: refetchBloqueos } = useBloqueos();
 
   // Filtrado por persona seleccionada (Todos por defecto). Los mapas de color
   // se calculan sobre el set completo para que cada profesor conserve su color.
@@ -278,6 +278,7 @@ export function CalendarioAdmin() {
       toast.success(t('bloqueo_eliminado'));
       setBloqueoDetailOpen(false);
       setSelectedBloqueo(null);
+      refetchBloqueos();
     } catch {
       toast.error(t('error_eliminar'));
     } finally {

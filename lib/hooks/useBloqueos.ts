@@ -62,5 +62,7 @@ export function useBloqueos(profesorId?: string) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profesorId, queryClient]);
 
-  return { bloqueos, isLoading, error: error?.message ?? null };
+  const refetch = () => queryClient.invalidateQueries({ queryKey });
+
+  return { bloqueos, isLoading, error: error?.message ?? null, refetch };
 }
