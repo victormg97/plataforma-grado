@@ -236,6 +236,10 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
   }, [alumnos, alumnoSearch, selectedAlumnoId]);
 
   async function onSubmitBloqueo() {
+    if (adminProfesores && !activeProfId) {
+      toast.error(t('debe_seleccionar_profesor'));
+      return;
+    }
     if (!bloqueoFecha || !bloqueoHoraInicio || !bloqueoHoraFin) {
       toast.error(t('bloqueo_campos_requeridos'));
       return;
@@ -387,7 +391,7 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
           <div className="flex gap-2">
             <Button variant="ghost" onClick={onClose}>{tc('cancelar')}</Button>
             {esBloqueo ? (
-              <Button onClick={onSubmitBloqueo} loading={submittingBloqueo}>
+              <Button onClick={onSubmitBloqueo} loading={submittingBloqueo} disabled={!!adminProfesores && !activeProfId}>
                 {t('bloqueo_guardar')}
               </Button>
             ) : (
