@@ -26,7 +26,12 @@ export async function prefetchDashboardData(userId: string, rol: UserRol) {
             total_alumnos: stats?.total_alumnos ?? 0,
             total_profesores: stats?.total_profesores ?? 0,
             clases_hoy: stats?.clases_hoy ?? 0,
+            clases_semana: stats?.clases_semana ?? 0,
+            clases_mes: stats?.clases_mes ?? 0,
             pendientes: stats?.pendientes_confirmar ?? 0,
+            estado_pendientes: stats?.estado_pendientes ?? 0,
+            estado_confirmadas: stats?.estado_confirmadas ?? 0,
+            estado_canceladas: stats?.estado_canceladas ?? 0,
           };
         },
         staleTime: 60_000,
