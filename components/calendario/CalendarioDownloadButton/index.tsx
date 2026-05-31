@@ -90,16 +90,29 @@ export function CalendarioDownloadButton({
     if (isMobile) return;
     const timer = setTimeout(() => {
       const btn = document.querySelector(`${containerClass} .fc-descargar-button`);
-      if (btn) {
-        // Ensure the injected overlay can fill the whole button so clicks
-        // anywhere on it (not just on the icon) open the dropdown.
-        (btn as HTMLElement).style.position = 'relative';
-        setDesktopBtnEl(btn);
-      }
+      if (!btn) return;
+      setDesktopBtnEl(btn);
+      // Make the WHOLE button toggle the dropdown (not just the icon).
+      // Functional setState avoids stale closures over desktopDropdownPos.
+      const onClick = (e: Event) => {
+        e.preventDefault();
+        setDesktopDropdownPos((prev) => {
+          if (prev) return null;
+          const rect = (btn as HTMLElement).getBoundingClientRect();
+          return { top: rect.bottom + 4, right: window.innerWidth - rect.right };
+        });
+      };
+      btn.addEventListener('click', onClick);
+      // Store cleanup on the element so the return handler can detach it.
+      (btn as HTMLElement & { _dlCleanup?: () => void })._dlCleanup = () =>
+        btn.removeEventListener('click', onClick);
     }, 100);
     return () => {
       clearTimeout(timer);
-      setDesktopBtnEl(null);
+      setDesktopBtnEl((prev) => {
+        (prev as (HTMLElement & { _dlCleanup?: () => void }) | null)?._dlCleanup?.();
+        return null;
+      });
       setDesktopDropdownPos(null);
     };
   }, [isMobile, containerClass]);
@@ -363,20 +376,6 @@ export function CalendarioDownloadButton({
   // DESKTOP: portal into FC toolbar button + fixed dropdown portal
   // ─────────────────────────────────────────────────────────────────────────
 
-  function handleDesktopClick() {
-    if (desktopDropdownPos) {
-      setDesktopDropdownPos(null);
-      return;
-    }
-    const btn = desktopBtnEl;
-    if (!btn) return;
-    const rect = btn.getBoundingClientRect();
-    setDesktopDropdownPos({
-      top: rect.bottom + 4,
-      right: window.innerWidth - rect.right,
-    });
-  }
-
   // Dropdown JSX (reused in both mobile and desktop portals)
   const dropdownContent = (pos: { top: number; right: number }) => (
     <div
@@ -458,18 +457,12 @@ export function CalendarioDownloadButton({
 
   return (
     <>
-      {/* Desktop: inject icon into the FC toolbar .fc-descargar-button via portal.
-          The overlay fills the whole button so a click anywhere on it (not just
-          the icon) opens the dropdown. Tooltip is handled by CalendarioToolbarTooltips. */}
+      {/* Desktop: inject the icon into the FC toolbar .fc-descargar-button via
+          portal. The click is handled by a native listener on the whole button
+          (see effect above), so clicking anywhere on it opens the dropdown.
+          Tooltip is handled centrally by CalendarioToolbarTooltips. */}
       {!isMobile && desktopBtnEl && createPortal(
-        <span
-          role="button"
-          tabIndex={0}
-          aria-label={locale === 'es' ? 'Descargar agenda' : 'Download agenda'}
-          onClick={handleDesktopClick}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleDesktopClick(); }}
-          className="absolute inset-0 flex items-center justify-center cursor-pointer"
-        >
+        <span className="pointer-events-none inline-flex items-center justify-center" aria-hidden>
           {downloading
             ? <Loader2 className="size-3.5 animate-spin" />
             : <Download className="size-3.5" />

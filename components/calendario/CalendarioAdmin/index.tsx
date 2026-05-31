@@ -356,8 +356,8 @@ export function CalendarioAdmin() {
         <CalendarioToolbarTooltips
           containerClass=".calendario-admin"
           labels={{
-            prev: t('toolbar_prev'),
-            next: t('toolbar_next'),
+            prev: currentView === 'dayGridMonth' ? t('toolbar_prev_mes') : t('toolbar_prev_semana'),
+            next: currentView === 'dayGridMonth' ? t('toolbar_next_mes') : t('toolbar_next_semana'),
             today: t('toolbar_hoy'),
             hoyIcono: t('toolbar_hoy'),
             dayGridMonth: t('toolbar_mes'),
