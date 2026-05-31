@@ -23,8 +23,10 @@ import { CalendarioDownloadButton, type CalendarioExportEvent } from '@/componen
 import { CalendarioStyles } from '@/components/calendario/CalendarioStyles';
 import { EventDetailModal } from '@/components/calendario/EventDetailModal';
 import { CalendarEventPopover, useCalendarPopover, type PopoverEventData } from '@/components/calendario/CalendarEventPopover';
+import { CalendarPersonFilter, ALL_PEOPLE } from '@/components/calendario/CalendarPersonFilter';
 import { Modal } from '@/components/common/Modal';
 import { useBloqueos, type BloqueHorario } from '@/lib/hooks/useBloqueos';
+import { useUserStore } from '@/stores/useUserStore';
 import { format } from 'date-fns';
 import { es as esDateFns, enUS } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -83,9 +85,11 @@ export function CalendarioAdmin() {
   const [defaultBloqueo, setDefaultBloqueo] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [currentView, setCurrentView] = useState('dayGridMonth');
+  const [selectedPersonId, setSelectedPersonId] = useState<string>(ALL_PEOPLE);
   const calendarRef = useRef<FullCalendar>(null);
+  const { user } = useUserStore();
 
-  const { data: adminProfesores = [] } = useQuery<{ id: string; nombre: string; apellido: string }[]>({
+  const { data: adminProfesores = [] } = useQuery<{ id: string; nombre: string; apellido: string; apellido_materno?: string | null; rol?: string }[]>({
     queryKey: ['admin-profesores'],
     queryFn: async () => {
       const r = await fetch('/api/admin/profesores');
@@ -96,6 +100,24 @@ export function CalendarioAdmin() {
 
   // Bloqueos de todos los profesores (admin ve todos)
   const { bloqueos } = useBloqueos();
+
+  // Filtrado por persona seleccionada (Todos por defecto). Los mapas de color
+  // se calculan sobre el set completo para que cada profesor conserve su color.
+  const filteredHorarios = useMemo(
+    () =>
+      selectedPersonId === ALL_PEOPLE
+        ? horarios
+        : horarios.filter((h) => h.profesor_id === selectedPersonId),
+    [horarios, selectedPersonId]
+  );
+
+  const filteredBloqueos = useMemo(
+    () =>
+      selectedPersonId === ALL_PEOPLE
+        ? bloqueos
+        : bloqueos.filter((b) => b.profesor_id === selectedPersonId),
+    [bloqueos, selectedPersonId]
+  );
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -154,7 +176,7 @@ export function CalendarioAdmin() {
   // Normalised events for PDF export
   const adminExportEvents = useMemo<CalendarioExportEvent[]>(
     () =>
-      horarios.map((h) => ({
+      filteredHorarios.map((h) => ({
         id: h.id,
         title: h.titulo,
         start: new Date(`${h.fecha}T${h.hora_inicio}`),
@@ -163,13 +185,13 @@ export function CalendarioAdmin() {
         subtitle: h.alumno ? `${h.alumno.nombre} ${h.alumno.apellido}` : undefined,
         status: h.asistencia?.[0]?.estado,
       })),
-    [horarios, profesorHexMap],
+    [filteredHorarios, profesorHexMap],
   );
 
   // Legend
   const legend = useMemo(() => {
     const seen = new Map<string, { nombre: string; color: string }>();
-    for (const h of horarios) {
+    for (const h of filteredHorarios) {
       if (h.profesor && !seen.has(h.profesor_id)) {
         seen.set(h.profesor_id, {
           nombre: `${h.profesor.nombre} ${h.profesor.apellido}`,
@@ -178,11 +200,11 @@ export function CalendarioAdmin() {
       }
     }
     return [...seen.values()];
-  }, [horarios, profesorColorMap]);
+  }, [filteredHorarios, profesorColorMap]);
 
   const events = useMemo(
     () =>
-      horarios.map((h) => {
+      filteredHorarios.map((h) => {
         const colors = profesorColorMap[h.profesor_id] || { bg: 'var(--color-profe-1)', border: 'var(--color-profe-1)', text: 'var(--color-brand-black)' };
         return {
           id: h.id,
@@ -195,12 +217,12 @@ export function CalendarioAdmin() {
           extendedProps: { horario: h },
         };
       }),
-    [horarios, profesorColorMap]
+    [filteredHorarios, profesorColorMap]
   );
 
   const pruebaHorarioIds = useMemo(
-    () => new Set(horarios.filter((h) => (h.pruebas?.length ?? 0) > 0).map((h) => h.id)),
-    [horarios]
+    () => new Set(filteredHorarios.filter((h) => (h.pruebas?.length ?? 0) > 0).map((h) => h.id)),
+    [filteredHorarios]
   );
 
   // Popover on hover (desktop only)
@@ -217,7 +239,7 @@ export function CalendarioAdmin() {
       api.removeAllEvents();
       events.forEach((e) => api.addEvent(e));
       // Add bloqueo events with a distinct style
-      bloqueos.forEach((b) => {
+      filteredBloqueos.forEach((b) => {
         api.addEvent({
           id: `${BLOQUEO_PREFIX}${b.id}`,
           title: b.motivo ? `🔒 ${b.motivo}` : '🔒 No disponible',
@@ -231,7 +253,7 @@ export function CalendarioAdmin() {
         });
       });
     });
-  }, [events, bloqueos]);
+  }, [events, filteredBloqueos]);
 
   function handleEventClick(info: EventClickArg) {
     closePopover();
@@ -292,9 +314,9 @@ export function CalendarioAdmin() {
 
   return (
     <>
-      {/* Legend row + desktop download button */}
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap gap-3">
+      {/* Legend row + person filter */}
+      <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+        <div className="order-2 flex flex-wrap gap-3 sm:order-1">
           {legend.map((l) => (
             <div key={l.nombre} className="flex items-center gap-1.5">
               <span className="size-3 rounded-full" style={{ backgroundColor: l.color }} />
@@ -302,10 +324,20 @@ export function CalendarioAdmin() {
             </div>
           ))}
         </div>
-        {!isMobile && (
-          <>
-          </>
-        )}
+
+        {/* Person filter: full width on mobile, compact on desktop */}
+        <div className="order-1 flex items-center gap-2 sm:order-2 sm:ml-auto">
+          <span className="hidden whitespace-nowrap text-xs text-[var(--color-text-muted)] sm:inline">
+            {t('filtro_calendario_label')}
+          </span>
+          <CalendarPersonFilter
+            people={adminProfesores}
+            value={selectedPersonId}
+            onChange={setSelectedPersonId}
+            currentUserId={user?.id}
+            className="w-full sm:w-56"
+          />
+        </div>
       </div>
 
       {/* Download button: desktop injects into FC toolbar, mobile shows popup on view-button tap */}
@@ -475,7 +507,7 @@ export function CalendarioAdmin() {
       <HorarioForm
         open={formOpen}
         onClose={() => { setFormOpen(false); setEditingHorario(null); setDefaultDate(undefined); setDefaultTime(undefined); setDefaultEndTime(undefined); setDefaultBloqueo(false); }}
-        profesorId={editingHorario?.profesor_id || ''}
+        profesorId={editingHorario?.profesor_id || (selectedPersonId !== ALL_PEOPLE ? selectedPersonId : '')}
         horario={editingHorario as never}
         defaultDate={defaultDate}
         defaultTime={defaultTime}
