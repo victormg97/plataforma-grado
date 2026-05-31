@@ -1,10 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { Folder, Pencil, Trash2, MoreHorizontal, Globe, Users, Settings2 } from 'lucide-react';
+import { Folder, Pencil, Trash2, Globe, Users, Settings2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
-import { Tooltip } from '@/components/common/Tooltip';
+import { CardActions, type CardAction } from '@/components/common/CardActions';
 
 export interface CarpetaItem {
   id: string;
@@ -39,7 +38,6 @@ interface CarpetaCardProps {
 
 export function CarpetaCard({ carpeta, canManage, showPermisoBadge = true, onClick, onRename, onDelete, onEditPermisos }: CarpetaCardProps) {
   const t = useTranslations('recursos');
-  const [menuOpen, setMenuOpen] = useState(false);
 
   // Use recursive count (all subfolders) if available, fall back to direct count
   const displayCount = carpeta.recursive_recursos_count ?? carpeta.recursos_count ?? 0;
@@ -47,6 +45,29 @@ export function CarpetaCard({ carpeta, canManage, showPermisoBadge = true, onCli
   const paraTodosApp = carpeta.para_todos_app_efectivo ?? false;
   const paraTodos = carpeta.para_todos_efectivo ?? false;
   const alumnosCount = carpeta.alumno_ids_efectivos?.length ?? 0;
+
+  // Build actions for the ellipsis menu (consistent UX across all views)
+  const actions: CardAction[] = [
+    {
+      key: 'permisos',
+      label: t('editar_permisos_carpeta'),
+      icon: <Settings2 className="size-4" />,
+      onClick: () => onEditPermisos(carpeta),
+    },
+    {
+      key: 'renombrar',
+      label: t('renombrar_carpeta'),
+      icon: <Pencil className="size-4" />,
+      onClick: () => onRename(carpeta),
+    },
+    {
+      key: 'eliminar',
+      label: t('eliminar_carpeta'),
+      icon: <Trash2 className="size-4" />,
+      onClick: () => onDelete(carpeta),
+      danger: true,
+    },
+  ];
 
   return (
     <div
@@ -94,85 +115,13 @@ export function CarpetaCard({ carpeta, canManage, showPermisoBadge = true, onCli
         </div>
       </div>
 
-      {/* Actions — only for managers */}
+      {/* Actions — only for managers. Always shows the ellipsis menu (consistent UX). */}
       {canManage && (
         <div
-          className="relative flex shrink-0 items-center"
+          className="flex shrink-0 items-center"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Desktop: icon buttons on hover */}
-          <div className="hidden lg:flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-            <Tooltip content={t('editar_permisos_carpeta')} position="top">
-              <button
-                type="button"
-                onClick={() => onEditPermisos(carpeta)}
-                className="flex size-8 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
-              >
-                <Settings2 className="size-3.5" />
-              </button>
-            </Tooltip>
-            <Tooltip content={t('renombrar_carpeta')} position="top">
-              <button
-                type="button"
-                onClick={() => onRename(carpeta)}
-                className="flex size-8 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
-              >
-                <Pencil className="size-3.5" />
-              </button>
-            </Tooltip>
-            <Tooltip content={t('eliminar_carpeta')} position="top">
-              <button
-                type="button"
-                onClick={() => onDelete(carpeta)}
-                className="flex size-8 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:bg-red-50 hover:text-[var(--color-error)] transition-colors"
-              >
-                <Trash2 className="size-3.5" />
-              </button>
-            </Tooltip>
-          </div>
-
-          {/* Mobile: ⋯ menu */}
-          <div className="flex lg:hidden">
-            <button
-              type="button"
-              onClick={() => setMenuOpen((v) => !v)}
-              className={cn(
-                'flex size-8 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-muted)] transition-colors',
-                'hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]',
-                menuOpen && 'bg-[var(--color-bg-secondary)]',
-              )}
-            >
-              <MoreHorizontal className="size-4" />
-            </button>
-            {menuOpen && (
-              <div className="absolute right-0 top-full z-50 mt-1 min-w-[160px] rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg)] py-1 shadow-[var(--shadow-lg)]">
-                <button
-                  type="button"
-                  onClick={() => { setMenuOpen(false); onEditPermisos(carpeta); }}
-                  className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)]"
-                >
-                  <Settings2 className="size-4" />
-                  {t('editar_permisos_carpeta')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setMenuOpen(false); onRename(carpeta); }}
-                  className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)]"
-                >
-                  <Pencil className="size-4" />
-                  {t('renombrar_carpeta')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setMenuOpen(false); onDelete(carpeta); }}
-                  className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-[var(--color-error)] hover:bg-red-50/50"
-                >
-                  <Trash2 className="size-4" />
-                  {t('eliminar_carpeta')}
-                </button>
-              </div>
-            )}
-          </div>
+          <CardActions actions={actions} mobileOnly />
         </div>
       )}
     </div>

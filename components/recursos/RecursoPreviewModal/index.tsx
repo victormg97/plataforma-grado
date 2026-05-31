@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { useQuery } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
 import { getFileInfo, getExtension } from '@/lib/utils/fileInfo';
+import { downloadRecurso } from '@/lib/utils/downloadRecurso';
 import type { RecursoItem } from '@/components/recursos/RecursoCard';
 
 // Cache signed URLs for 50 min — they expire after 1 h from the API
@@ -111,14 +112,7 @@ export function RecursoPreviewModal({ recurso, onClose, canDownload = true }: Re
   // ── Download with forced filename ─────────────────────────────────────────
   const handleDownload = async () => {
     try {
-      const res = await fetch(`/api/recursos/${recurso.id}/download?action=download`);
-      const { url: dlUrl } = await res.json();
-      const a = document.createElement('a');
-      a.href = dlUrl;
-      a.download = recurso.titulo;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      await downloadRecurso(recurso.id);
     } catch { /* silent */ }
   };
 

@@ -238,7 +238,7 @@ export function RecursoCard({
 
         {/* Actions — stops propagation internally so clicks don't trigger card */}
         <div onClick={(e) => e.stopPropagation()}>
-          <RecursoCardActions actions={actions} />
+          <RecursoCardActions actions={actions} mobileOnly />
         </div>
       </div>
 

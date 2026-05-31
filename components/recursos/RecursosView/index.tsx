@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/client';
 import { useUserStore } from '@/stores/useUserStore';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { downloadRecurso } from '@/lib/utils/downloadRecurso';
 import { PageHeader } from '@/components/common/PageHeader';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
 import { RecursoCard, type RecursoItem } from '@/components/recursos/RecursoCard';
@@ -401,15 +402,7 @@ export function RecursosView({ rol }: RecursosViewProps) {
   const handleDownload = async (recurso: RecursoItem): Promise<void> => {
     if (!recurso.storage_path) return;
     try {
-      const res = await fetch(`/api/recursos/${recurso.id}/download?action=download`);
-      if (!res.ok) throw new Error();
-      const { url } = await res.json();
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = recurso.titulo;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      await downloadRecurso(recurso.id);
     } catch {
       toast.error(t('error_subir'));
     }

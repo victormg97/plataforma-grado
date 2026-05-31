@@ -14,7 +14,8 @@ const SIGNED_URL_EXPIRY_SECONDS = 3600; // 1 hour
  *  4. Manually verify the caller has access based on their role:
  *     - admin: always allowed
  *     - profesor: only their own resources
- *     - alumno: para_todos from admin, para_todos from their assigned profesor,
+ *     - alumno: para_todos_app (any uploader), para_todos from admin,
+ *               para_todos from their assigned profesor,
  *               or explicitly granted via recursos_acceso
  *  5. If download is blocked (bloquear_descarga=true), reject alumno download requests.
  *  6. Generate a short-lived signed URL via admin client and return it.
@@ -47,7 +48,7 @@ export async function GET(
   // 3. Fetch resource via admin client (no RLS)
   const { data: recurso, error: fetchError } = await adminClient
     .from('recursos_compartidos')
-    .select('id, tipo, storage_path, titulo, bloquear_descarga, para_todos, subido_por')
+    .select('id, tipo, storage_path, titulo, bloquear_descarga, para_todos, para_todos_app, subido_por')
     .eq('id', id)
     .single();
 
@@ -73,14 +74,19 @@ export async function GET(
     // Alumno: check access conditions
     let hasAccess = false;
 
+    // Condition 0: app-wide visibility (any uploader)
+    if (recurso.para_todos_app) hasAccess = true;
+
     // Condition 1: explicit grant via recursos_acceso
-    const { data: acceso } = await adminClient
-      .from('recursos_acceso')
-      .select('id')
-      .eq('recurso_id', id)
-      .eq('alumno_id', user.id)
-      .maybeSingle();
-    if (acceso) hasAccess = true;
+    if (!hasAccess) {
+      const { data: acceso } = await adminClient
+        .from('recursos_acceso')
+        .select('id')
+        .eq('recurso_id', id)
+        .eq('alumno_id', user.id)
+        .maybeSingle();
+      if (acceso) hasAccess = true;
+    }
 
     if (!hasAccess && recurso.para_todos) {
       // Condition 2: para_todos from admin
