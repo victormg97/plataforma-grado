@@ -11,7 +11,7 @@
   "campo_email": "Correo electrónico",
   "campo_telefono": "Teléfono",
   "campo_universidad": "Universidad",
-  "campo_anio_ingreso": "Año de ingreso",
+  "campo_anio_egreso": "Año de egreso",
   "campo_password": "Contraseña",
   "campo_confirmar": "Repetir contraseña",
   "placeholder_password": "Mínimo 6 caracteres",

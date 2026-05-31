@@ -16,7 +16,7 @@ export const CAMPOS_OBLIGATORIOS = {
 
 export const CAMPOS_OPCIONALES = {
   profesor: ['apellido_materno', 'telefono'] as const,
-  alumno: ['apellido_materno', 'telefono', 'universidad', 'año_ingreso'] as const,
+  alumno: ['apellido_materno', 'telefono', 'universidad', 'año_egreso'] as const,
 };
 
 export type TipoRegistro = 'profesor' | 'alumno';
@@ -29,7 +29,7 @@ export interface RegistroFormData {
   email: string;
   telefono?: string;
   universidad?: string;
-  ['año_ingreso']?: string;
+  ['año_egreso']?: string;
   password: string;
   confirmar: string;
   aceptaTyC: boolean;
@@ -68,7 +68,7 @@ export const registroAlumnoSchema = z
   .object({
     ...baseObject,
     universidad: z.string().optional(),
-    ['año_ingreso']: z.string().optional(),
+    ['año_egreso']: z.string().optional(),
   })
   .refine((d) => d.password === d.confirmar, {
     message: 'Las contraseñas no coinciden',

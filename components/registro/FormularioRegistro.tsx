@@ -126,7 +126,7 @@ export function FormularioRegistro({ code, tipo }: FormularioRegistroProps) {
       {tipo === 'alumno' && (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {campoTexto('universidad', 'campo_universidad')}
-          {campoTexto('año_ingreso', 'campo_anio_ingreso')}
+          {campoTexto('año_egreso', 'campo_anio_egreso')}
         </div>
       )}
 

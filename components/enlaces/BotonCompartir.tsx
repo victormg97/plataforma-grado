@@ -4,12 +4,13 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Link2, Check } from 'lucide-react';
+import { Tooltip } from '@/components/common/Tooltip';
 import { construirUrlEnlace } from '@/lib/enlaces/compartir';
 import { tenantConfig } from '@/config';
 
 interface BotonCompartirProps {
   codigo: string;
-  /** Etiqueta accesible para el control. */
+  /** Etiqueta accesible / tooltip del control. */
   label: string;
 }
 
@@ -46,21 +47,23 @@ export function BotonCompartir({ codigo, label }: BotonCompartirProps) {
 
   return (
     <span className="relative inline-flex">
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          handleCompartir();
-        }}
-        aria-label={label}
-        className="flex size-9 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]"
-      >
-        <Link2 className="size-4" />
-      </button>
+      <Tooltip content={label} position="top">
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleCompartir();
+          }}
+          aria-label={label}
+          className="flex size-9 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]"
+        >
+          <Link2 className="size-4" />
+        </button>
+      </Tooltip>
       {copiado && (
         <span
           role="status"
-          className="absolute bottom-full left-1/2 z-20 mb-1 flex -translate-x-1/2 items-center gap-1 whitespace-nowrap rounded-[var(--radius-sm)] bg-[var(--color-success)] px-2 py-1 text-xs font-medium text-white shadow-[var(--shadow-md)]"
+          className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-1 flex -translate-x-1/2 items-center gap-1 whitespace-nowrap rounded-[var(--radius-sm)] bg-[var(--color-success)] px-2 py-1 text-xs font-medium text-white shadow-[var(--shadow-md)]"
         >
           <Check className="size-3" />
           {t('copiado')}

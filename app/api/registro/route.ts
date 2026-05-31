@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
       alumno_id: userId,
       profesor_id: profesorId,
       universidad: form.universidad?.trim() || null,
-      ['año_ingreso']: form['año_ingreso']?.trim() || null,
+      ['año_egreso']: form['año_egreso']?.trim() || null,
     } as never);
 
     if (extraError) {

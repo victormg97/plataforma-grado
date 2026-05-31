@@ -32,7 +32,7 @@ export function GrupoEstado({
   });
 
   return (
-    <Collapsible title={titulo} badge={items.length} defaultOpen={false}>
+    <Collapsible title={titulo} badge={items.length} defaultOpen={true}>
       <div className="space-y-3">
         {items.map((enlace) => (
           <FilaEnlace

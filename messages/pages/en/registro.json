@@ -11,7 +11,7 @@
   "campo_email": "Email",
   "campo_telefono": "Phone",
   "campo_universidad": "University",
-  "campo_anio_ingreso": "Year of entry",
+  "campo_anio_egreso": "Graduation year",
   "campo_password": "Password",
   "campo_confirmar": "Repeat password",
   "placeholder_password": "At least 6 characters",
