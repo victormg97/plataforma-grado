@@ -297,8 +297,10 @@ export function CalendarioAdmin() {
   function handleDateClick(info: DateClickArg) {
     setEditingHorario(null);
     setDefaultDate(info.dateStr.slice(0, 10));
-    // All-day cell (week/day "Todo el día" row): open as a full-day bloqueo 00:00–23:59
-    if (info.allDay) {
+    // "Todo el día" row in week/day time-grid views: open as a full-day bloqueo
+    // 00:00–23:59. Month view cells are also allDay but must open normally.
+    const isTimeGrid = info.view.type === 'timeGridWeek' || info.view.type === 'timeGridDay';
+    if (info.allDay && isTimeGrid) {
       setDefaultTime('00:00');
       setDefaultEndTime('23:59');
       setDefaultBloqueo(true);
