@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
-import { Users, GraduationCap, CalendarDays, Clock, Bell } from 'lucide-react';
+import { Users, GraduationCap, CalendarDays, Clock, Bell, CheckCircle, XCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card } from '@/components/common/Card';
@@ -99,19 +99,20 @@ export default function AdminDashboardPage() {
   const clasesItems = useMemo<RotatingStatItem[]>(() => {
     if (!stats) return [];
     return [
-      { key: 'hoy', value: stats.clases_hoy, label: t('clases_hoy') },
-      { key: 'semana', value: stats.clases_semana, label: t('clases_semana') },
-      { key: 'mes', value: stats.clases_mes, label: t('clases_mes') },
+      { key: 'hoy', value: stats.clases_hoy ?? 0, label: t('clases_hoy') },
+      { key: 'semana', value: stats.clases_semana ?? 0, label: t('clases_semana') },
+      { key: 'mes', value: stats.clases_mes ?? 0, label: t('clases_mes') },
     ];
   }, [stats, t]);
 
-  // Rotating "Estados" card — cycles between pending / confirmed / cancelled
+  // Rotating "Estados" card — cycles between pending / confirmed / cancelled.
+  // Each state carries its own icon + color so the bubble matches the value.
   const estadoItems = useMemo<RotatingStatItem[]>(() => {
     if (!stats) return [];
     return [
-      { key: 'pendientes', value: stats.estado_pendientes, label: t('pendientes') },
-      { key: 'confirmadas', value: stats.estado_confirmadas, label: t('confirmadas') },
-      { key: 'canceladas', value: stats.estado_canceladas, label: t('canceladas') },
+      { key: 'pendientes', value: stats.estado_pendientes ?? 0, label: t('pendientes'), icon: <Clock className="size-5" />, color: 'var(--color-brand-gold)' },
+      { key: 'confirmadas', value: stats.estado_confirmadas ?? 0, label: t('confirmadas'), icon: <CheckCircle className="size-5" />, color: 'var(--color-success)' },
+      { key: 'canceladas', value: stats.estado_canceladas ?? 0, label: t('canceladas'), icon: <XCircle className="size-5" />, color: 'var(--color-error)' },
     ];
   }, [stats, t]);
 
@@ -157,15 +158,15 @@ export default function AdminDashboardPage() {
           icon={<CalendarDays className="size-5" />}
           color="var(--color-success)"
           ariaLabel={t('clases_hoy')}
+          showIndicators={false}
         />
 
         {/* Rotating: Estados de clases (pendientes / confirmadas / canceladas) */}
         <RotatingStatCard
           items={estadoItems}
-          icon={<Clock className="size-5" />}
-          color="var(--color-error)"
           onlyWithData={false}
           ariaLabel={t('pendientes')}
+          showIndicators={false}
         />
       </div>
 

@@ -89,6 +89,7 @@ export default function ProfesorDashboardPage() {
           icon={<CalendarDays className="size-5" />}
           color="var(--color-text-primary)"
           ariaLabel={t('clases_semana')}
+          showIndicators={false}
         />
 
         {stateCards.map((stat) => (

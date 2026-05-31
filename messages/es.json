@@ -96,7 +96,9 @@
     "profesor": {
       "titulo": "Mi panel",
       "subtitulo": "Gestión de clases y alumnos",
+      "clases_hoy": "Clases hoy",
       "clases_semana": "Clases esta semana",
+      "clases_mes": "Clases este mes",
       "pendientes": "Pendientes",
       "confirmadas": "Confirmadas",
       "canceladas": "Canceladas"

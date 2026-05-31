@@ -10,6 +10,10 @@ export interface RotatingStatItem {
   key: string;
   value: number | string;
   label: string;
+  /** Optional per-item icon. Falls back to the card-level icon. */
+  icon?: ReactNode;
+  /** Optional per-item accent color. Falls back to the card-level color. */
+  color?: string;
 }
 
 interface RotatingStatCardProps {
@@ -27,6 +31,8 @@ interface RotatingStatCardProps {
   onlyWithData?: boolean;
   /** Accessible label for the up/down controls (e.g. "estadística"). */
   ariaLabel?: string;
+  /** Show the position dots indicating which item is active. Default true. */
+  showIndicators?: boolean;
   className?: string;
 }
 
@@ -51,6 +57,7 @@ export function RotatingStatCard({
   intervalMs = 4000,
   onlyWithData = true,
   ariaLabel = 'dato',
+  showIndicators = true,
   className = '',
 }: RotatingStatCardProps) {
   // Items eligible to rotate. Never collapse to empty.
@@ -101,6 +108,17 @@ export function RotatingStatCard({
   const current = visible[safeIndex];
   const canRotate = visible.length > 1;
 
+  // Per-item icon/color with fallback to card-level props.
+  const activeIcon = current?.icon ?? icon;
+  const activeColor = current?.color ?? color;
+
+  // Render the value safely: show 0 (and other falsy-but-valid values) instead
+  // of a blank when the value is a number; only truly missing values are blank.
+  const displayValue =
+    current == null || current.value === undefined || current.value === null
+      ? '—'
+      : current.value;
+
   return (
     <Card
       padding="md"
@@ -111,12 +129,23 @@ export function RotatingStatCard({
       onTouchEnd={onTouchEnd}
     >
       <div className="flex items-center gap-3">
-        {icon && (
-          <div
-            className="flex size-10 shrink-0 items-center justify-center rounded-full"
-            style={{ backgroundColor: `color-mix(in srgb, ${color} 12%, transparent)` }}
-          >
-            <span style={{ color }}>{icon}</span>
+        {activeIcon && (
+          <div className="relative size-10 shrink-0">
+            <AnimatePresence custom={direction} initial={false}>
+              <m.div
+                key={current?.key}
+                custom={direction}
+                variants={variants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ duration: 0.35, ease: 'easeInOut' }}
+                className="absolute inset-0 flex items-center justify-center rounded-full"
+                style={{ backgroundColor: `color-mix(in srgb, ${activeColor} 12%, transparent)` }}
+              >
+                <span style={{ color: activeColor }}>{activeIcon}</span>
+              </m.div>
+            </AnimatePresence>
           </div>
         )}
 
@@ -134,7 +163,7 @@ export function RotatingStatCard({
               className="absolute inset-0 flex flex-col justify-center"
             >
               <p className="text-2xl font-bold leading-none text-[var(--color-text-primary)]">
-                {current?.value}
+                {displayValue}
               </p>
               <p className="mt-1 truncate text-xs text-[var(--color-text-muted)]">
                 {current?.label}
@@ -167,7 +196,7 @@ export function RotatingStatCard({
       )}
 
       {/* Position dots */}
-      {canRotate && (
+      {canRotate && showIndicators && (
         <div className="absolute bottom-1.5 left-1/2 flex -translate-x-1/2 gap-1">
           {visible.map((it, i) => (
             <span
@@ -175,7 +204,7 @@ export function RotatingStatCard({
               className="size-1 rounded-full transition-colors"
               style={{
                 backgroundColor:
-                  i === safeIndex ? color : 'var(--color-border-strong)',
+                  i === safeIndex ? activeColor : 'var(--color-border-strong)',
               }}
             />
           ))}

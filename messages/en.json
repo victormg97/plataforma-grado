@@ -96,7 +96,9 @@
     "profesor": {
       "titulo": "My Dashboard",
       "subtitulo": "Class and student management",
+      "clases_hoy": "Classes today",
       "clases_semana": "Classes this week",
+      "clases_mes": "Classes this month",
       "pendientes": "Pending",
       "confirmadas": "Confirmed",
       "canceladas": "Cancelled"
