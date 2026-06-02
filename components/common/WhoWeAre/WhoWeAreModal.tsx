@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { LazyMotion, domAnimation, m } from 'framer-motion';
 import { X, ChevronUp, ChevronDown } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -22,6 +22,24 @@ export function WhoWeAreModal({ tenantSlug, markdown, onClose }: WhoWeAreModalPr
   const { url: heroUrl, found: heroFound } = useHeroImage(tenantSlug);
   const { entries } = useContactInfo(tenantSlug);
   const [contactOpen, setContactOpen] = useState(false);
+
+  // Bloquear el scroll de la página de fondo mientras el modal está abierto.
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
+
+  // Cerrar con Escape.
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [onClose]);
 
   return (
     <LazyMotion features={domAnimation}>

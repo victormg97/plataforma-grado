@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { validarEmail, validarTelefono } from './contacto';
 
 // ─── Constantes de contraseña ────────────────────────────────────────────────
 export const PASSWORD_MIN = 6;
@@ -46,12 +47,26 @@ const passwordSchema = z
   .min(PASSWORD_MIN, `La contraseña debe tener al menos ${PASSWORD_MIN} caracteres`)
   .max(PASSWORD_MAX, `La contraseña no puede superar ${PASSWORD_MAX} caracteres`);
 
+const emailSchema = z
+  .string()
+  .min(1, 'El correo es obligatorio')
+  .refine((v) => validarEmail(v).valido, { message: 'Correo electrónico inválido' });
+
+// Teléfono opcional: si viene vacío es válido; si trae valor debe ser un número
+// válido (estilo E.164).
+const telefonoSchema = z
+  .string()
+  .optional()
+  .refine((v) => !v || v.trim() === '' || validarTelefono(v).valido, {
+    message: 'Número de teléfono inválido',
+  });
+
 const baseObject = {
   nombre: trimmed('El nombre'),
   apellido: trimmed('El apellido'),
   apellido_materno: z.string().optional(),
-  email: z.string().email('Correo electrónico inválido'),
-  telefono: z.string().optional(),
+  email: emailSchema,
+  telefono: telefonoSchema,
   password: passwordSchema,
   confirmar: z.string(),
   aceptaTyC: z.literal(true, { message: 'Debes aceptar los Términos y Condiciones' }),
@@ -101,6 +116,14 @@ export function registroEsValido(
   const obligatorios = CAMPOS_OBLIGATORIOS[tipo];
   for (const campo of obligatorios) {
     if (!noVacio((form as Record<string, unknown>)[campo])) return false;
+  }
+
+  // El correo (obligatorio) debe ser sintácticamente válido.
+  if (!validarEmail(form.email ?? '').valido) return false;
+
+  // El teléfono es opcional, pero si se ingresó debe ser válido.
+  if (form.telefono && form.telefono.trim() !== '' && !validarTelefono(form.telefono).valido) {
+    return false;
   }
 
   const password = form.password ?? '';

@@ -9,6 +9,7 @@ import {
   type RegistroFormData,
   type TipoRegistro,
 } from '@/lib/validations/registro';
+import { validarTelefono } from '@/lib/validations/contacto';
 
 /**
  * POST público: registro manual mediante un enlace de invitación.
@@ -78,7 +79,10 @@ export async function POST(request: NextRequest) {
   // ── 4. Completar perfil y datos extra ──
   const profileUpdates: Record<string, string> = {};
   if (form.apellido_materno?.trim()) profileUpdates.apellido_materno = form.apellido_materno.trim();
-  if (form.telefono?.trim()) profileUpdates.telefono = form.telefono.trim();
+  if (form.telefono?.trim()) {
+    const tel = validarTelefono(form.telefono);
+    if (tel.valido) profileUpdates.telefono = tel.normalizado;
+  }
   if (Object.keys(profileUpdates).length > 0) {
     await admin.from('profiles').update(profileUpdates).eq('id', userId);
   }

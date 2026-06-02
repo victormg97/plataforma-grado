@@ -43,11 +43,13 @@ interface PruebaWithGrade {
 function GradeInlineForm({ 
   horario, 
   tc, 
-  th 
+  th,
+  pruebaTerm,
 }: { 
   horario: HorarioConAsistencia; 
   tc: ReturnType<typeof useTranslations>; 
   th: ReturnType<typeof useTranslations>; 
+  pruebaTerm: ReturnType<typeof usePruebaTerm>;
 }) {
   const prueba = (horario.pruebas as PruebaWithGrade[] | undefined)?.[0];
   const [nota, setNota] = useState<string>(prueba?.nota != null ? prueba.nota.toFixed(1) : '');
@@ -93,7 +95,7 @@ function GradeInlineForm({
         <div className="flex items-end gap-3">
           <div className="space-y-1.5 w-[90px]">
             <label className="block text-[13px] font-semibold text-[var(--color-text-secondary)]">
-              {th('nota_prueba')}
+              {th('nota_prueba', { term: pruebaTerm.singular })}
             </label>
             <input
               type="text"
@@ -407,7 +409,7 @@ export function ClaseDetailView({ rol }: ClaseDetailViewProps) {
 
             {/* Prueba Grading */}
             {(horario.pruebas?.length ?? 0) > 0 && (
-              <GradeInlineForm horario={horario} tc={tc} th={t} />
+              <GradeInlineForm horario={horario} tc={tc} th={t} pruebaTerm={pruebaTerm} />
             )}
           </div>
         </Card>

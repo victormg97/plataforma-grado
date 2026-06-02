@@ -255,6 +255,10 @@ export default function PerfilPage() {
       const updated: Profile = await res.json();
       setUser(updated);
       queryClient.invalidateQueries({ queryKey: ['perfil'] });
+      // La ficha del alumno (TabInformacion) lee de ['ficha-alumno', id],
+      // key distinta a ['perfil']. Invalidarla para evitar datos viejos
+      // (ej. teléfono eliminado que persiste hasta que expira staleTime).
+      queryClient.invalidateQueries({ queryKey: ['ficha-alumno'] });
       setPendingBlob(null);
       setPreviewUrl(null);
       setPendingDelete(false);

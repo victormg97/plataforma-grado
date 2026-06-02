@@ -181,6 +181,10 @@ export function EditarPerfilModal({ open, onClose }: EditarPerfilModalProps) {
       const updated: Profile = await res.json();
       setUser(updated);
       queryClient.invalidateQueries({ queryKey: ['perfil'] });
+      // La ficha del alumno (TabInformacion) lee de ['ficha-alumno', id],
+      // que es una key distinta a ['perfil']. Hay que invalidarla también
+      // para que no muestre datos viejos (ej. teléfono eliminado).
+      queryClient.invalidateQueries({ queryKey: ['ficha-alumno'] });
       setPendingBlob(null);
       setPreviewUrl(null);
       setPendingDelete(false);
