@@ -12,28 +12,26 @@ export default async function RegistroLayout({
   const locale = await getLocale();
 
   return (
-    // El contenedor raíz NO usa position:relative + overflow hidden para no
-    // romper el scroll. El centrado se logra con min-h-screen en el flex inner.
-    <div className="min-h-screen bg-[var(--color-bg-secondary)]">
-      {/*
-        Logo — esquina superior izquierda, position:absolute sobre el viewport.
-        El ancestro con position que lo contiene es el body (ya que este div
-        no tiene position propia), lo que es correcto.
-      */}
-      <div className="fixed left-4 top-4 z-10 pointer-events-none">
+    /*
+     * Contenedor raíz con position:relative para anclar logo y controles.
+     * El uso de `absolute` (no `fixed`) hace que logo y controles se muevan
+     * con el scroll de la página en lugar de quedarse pegados al viewport.
+     *
+     * El padding-top (pt-24) da espacio para que la card no quede bajo el logo
+     * y los controles, y el padding-bottom (pb-12) da margen al fondo.
+     * `min-h-screen` garantiza que el fondo cubra toda la pantalla.
+     */
+    <div className="relative min-h-screen bg-[var(--color-bg-secondary)]">
+      {/* Logo — esquina superior izquierda, se mueve con el scroll */}
+      <div className="absolute left-4 top-4">
         <AppLogo
           variant="login"
-          className="pointer-events-auto"
           style={{ maxHeight: 'clamp(40px, 12vw, 130px)' }}
         />
       </div>
 
-      {/*
-        Controles — esquina superior derecha, fixed igual que el logo.
-        Sin z-index que cree contexto de apilamiento que tape el modal de
-        WhoWeAre (el modal es fixed z-40/z-50, queda sobre estos controles).
-      */}
-      <div className="fixed right-4 top-4 z-10 flex items-center gap-2">
+      {/* Controles — esquina superior derecha, se mueven con el scroll */}
+      <div className="absolute right-4 top-4 flex items-center gap-2">
         <WhoWeAre tenantSlug={tenantConfig.id} locale={locale} />
         <div className="opacity-50 hover:opacity-100 transition-opacity">
           <ThemeToggle />
@@ -41,12 +39,12 @@ export default async function RegistroLayout({
       </div>
 
       {/*
-        Card centrada. Se usa grid con place-items-center para centrar cuando
-        el contenido cabe en pantalla, y auto para que el contenedor crezca
-        más allá del viewport cuando el formulario es largo (permite scroll).
-        El min-h garantiza el centrado cuando el formulario es corto.
-      */}
-      <div className="grid min-h-screen place-items-center px-[var(--container-padding)] py-24">
+       * Card centrada. pt-28 da espacio sobre el logo/controles;
+       * pb-12 da margen al fondo. justify-center centra horizontalmente.
+       * El grid con place-items-center funciona correctamente porque el
+       * contenedor crece con el contenido (sin altura fija que corte el scroll).
+       */}
+      <div className="grid min-h-screen place-items-center px-[var(--container-padding)] pb-12 pt-28">
         <div className="w-full max-w-lg">{children}</div>
       </div>
     </div>
