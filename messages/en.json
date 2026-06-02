@@ -467,6 +467,7 @@
     "telefono": "Phone",
     "universidad": "University",
     "año_ingreso": "Year of admission",
+    "año_egreso": "Year of graduation",
     "opcional": "(optional)",
     "foto_hint": "JPG, PNG or WEBP · Max 10 MB",
     "foto_aria": "Change profile photo",

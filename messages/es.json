@@ -467,6 +467,7 @@
     "telefono": "Teléfono",
     "universidad": "Universidad",
     "año_ingreso": "Año de ingreso",
+    "año_egreso": "Año de egreso",
     "opcional": "(opcional)",
     "foto_hint": "JPG, PNG, WEBP o HEIC · Máx. 10 MB",
     "foto_aria": "Cambiar foto de perfil",
