@@ -134,8 +134,7 @@ export function registroEsValido(
     return false;
   }
 
-  // Los años son opcionales, pero si se ingresaron deben ser válidos.
-  if (!validarAño(form['año_ingreso']).valido) return false;
+  // El año de egreso es opcional, pero si se ingresó debe ser válido.
   if (!validarAño(form['año_egreso']).valido) return false;
 
   const password = form.password ?? '';
