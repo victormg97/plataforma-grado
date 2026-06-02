@@ -12,36 +12,38 @@ export default async function RegistroLayout({
   const locale = await getLocale();
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg-secondary)]">
+    <div className="relative min-h-screen bg-[var(--color-bg-secondary)] px-[var(--container-padding)]">
       {/*
-        Layout responsive:
-        - Desktop (lg+): 3 columnas a la misma altura → logo | card de registro | controles.
-        - Móvil: fila superior (logo + controles) y la card debajo, con poca separación.
-        Se usa `lg:contents` en la fila superior para que el logo y los controles
-        pasen a ser columnas hermanas de la card en desktop, reordenadas con `order`.
+        Logo — esquina superior izquierda, igual que el login pero con variante
+        "login" (logoLight/Dark) y tamaño responsive con clamp.
+        Sin z-index propio para no crear contexto de apilamiento que tape el
+        modal de WhoWeAre.
       */}
-      <div className="mx-auto flex min-h-screen max-w-5xl flex-col justify-center gap-4 px-[var(--container-padding)] py-8 lg:flex-row lg:items-center lg:justify-center lg:gap-10">
-        {/* Fila superior en móvil / columnas laterales en desktop */}
-        <div className="flex items-center justify-between lg:contents">
-          {/* Logo — mismo logo que el login (logoLight/Dark), responsive */}
-          <div className="lg:order-1 lg:flex lg:justify-end">
-            <AppLogo
-              variant="login"
-              style={{ maxHeight: 'clamp(40px, 10vw, 130px)' }}
-            />
-          </div>
+      <div className="absolute left-4 top-4">
+        <AppLogo
+          variant="login"
+          style={{ maxHeight: 'clamp(40px, 9vw, 80px)' }}
+        />
+      </div>
 
-          {/* Controles: WhoWeAre + toggle de modo */}
-          <div className="flex items-center gap-2 lg:order-3">
-            <WhoWeAre tenantSlug={tenantConfig.id} locale={locale} />
-            <div className="opacity-50 hover:opacity-100 transition-opacity">
-              <ThemeToggle />
-            </div>
-          </div>
+      {/*
+        Controles — esquina superior derecha, igual que el layout de auth.
+        Sin z-index propio (mismo motivo que el logo).
+      */}
+      <div className="absolute right-4 top-4 flex items-center gap-2">
+        <WhoWeAre tenantSlug={tenantConfig.id} locale={locale} />
+        <div className="opacity-50 hover:opacity-100 transition-opacity">
+          <ThemeToggle />
         </div>
+      </div>
 
-        {/* Card de registro — más ancha que la de login (max-w-lg > max-w-md) */}
-        <div className="w-full max-w-lg lg:order-2">{children}</div>
+      {/*
+        Card centrada. El padding vertical (py-20) asegura que la card no quede
+        tapada por el logo ni los controles en pantallas pequeñas.
+        max-w-lg hace la card más ancha que la de login (max-w-md).
+      */}
+      <div className="flex min-h-screen items-center justify-center py-20">
+        <div className="w-full max-w-lg">{children}</div>
       </div>
     </div>
   );
