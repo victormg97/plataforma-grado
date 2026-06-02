@@ -68,11 +68,17 @@ export async function prefetchDashboardData(userId: string, rol: UserRol) {
       // Notifications full view (page /admin/notificaciones)
       queryClient.setQueryData(['notificaciones-full'], prefetch.notificaciones_full ?? { data: [], total: 0, page: 1, page_size: 500, total_pages: 1 });
 
+      // Notificaciones panel navbar — key ['notificaciones'] (top 10, mismo dato que el dash)
+      queryClient.setQueryData(['notificaciones'], prefetch.notificaciones ?? []);
+
       // Today's classes
       queryClient.setQueryData(['admin-clases-hoy'], prefetch.clases_hoy ?? []);
 
       // All horarios for CalendarioAdmin (dashboard + agenda)
       queryClient.setQueryData(['admin-horarios'], prefetch.horarios_calendario ?? []);
+
+      // Bloqueos horario (todos) — key usada por useBloqueos en admin
+      queryClient.setQueryData(['bloqueos-horario', 'all'], prefetch.bloqueos ?? []);
 
       // Programas (todos)
       queryClient.setQueryData(['programas', 'todos'], prefetch.programas ?? []);
@@ -129,6 +135,12 @@ export async function prefetchDashboardData(userId: string, rol: UserRol) {
       // Notificaciones full view
       queryClient.setQueryData(['notificaciones-full'], prefetch.notificaciones_full ?? { data: [], total: 0, page: 1, page_size: 500, total_pages: 1 });
 
+      // Notificaciones panel navbar
+      queryClient.setQueryData(['notificaciones'], (prefetch.notificaciones_full?.data ?? []).slice(0, 30));
+
+      // Bloqueos propios del profesor
+      queryClient.setQueryData(['bloqueos-horario', userId], prefetch.bloqueos ?? []);
+
       // Recursos
       const recursos = prefetch.recursos ?? {};
       queryClient.setQueryData(['recursos', userId], {
@@ -166,11 +178,14 @@ export async function prefetchDashboardData(userId: string, rol: UserRol) {
       // Notificaciones full view
       queryClient.setQueryData(['notificaciones-full'], prefetch.notificaciones_full ?? { data: [], total: 0, page: 1, page_size: 500, total_pages: 1 });
 
+      // Notificaciones panel navbar
+      queryClient.setQueryData(['notificaciones'], (prefetch.notificaciones_full?.data ?? []).slice(0, 30));
+
       // Recursos
-      const recursos = prefetch.recursos ?? {};
+      const recursosAlumno = prefetch.recursos ?? {};
       queryClient.setQueryData(['recursos', userId], {
-        recursos: recursos.recursos ?? [],
-        carpetas: recursos.carpetas ?? [],
+        recursos: recursosAlumno.recursos ?? [],
+        carpetas: recursosAlumno.carpetas ?? [],
       });
     }
   }
