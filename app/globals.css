@@ -396,13 +396,13 @@
     @apply border-border outline-ring/50;
   }
   html, body {
-    overflow-x: hidden;
     max-width: 100vw;
     /* none = elimina el rubber-band/rebote en X e Y (desktop + móvil).
        Con esto ya no asoma el fondo blanco al sobre-scrollear. */
     overscroll-behavior: none;
   }
   body {
+    overflow-x: hidden;
     @apply bg-background text-foreground;
   }
   html {
