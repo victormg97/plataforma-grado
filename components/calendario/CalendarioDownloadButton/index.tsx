@@ -274,17 +274,23 @@ export function CalendarioDownloadButton({
   if (isMobile) {
     return (
       <>
-        {mobilePopup && (
+        {mobilePopup && typeof document !== 'undefined' && createPortal(
           <div
             ref={mobilePopupRef}
             role="dialog"
             aria-label={locale === 'es' ? 'Opciones de descarga' : 'Download options'}
             style={{
               position: 'fixed',
-              left: mobilePopup.x,
+              // Center horizontally on the button, clamped so the pill never
+              // overflows either edge of the screen (12px safe margin).
+              left: `clamp(12px, ${mobilePopup.x}px, calc(100vw - 12px))`,
               top: mobilePopup.y - 8,
               transform: 'translateX(-50%) translateY(-100%)',
-              zIndex: 50,
+              zIndex: 9999,
+              // Ensure the clamped translateX(-50%) doesn't slip off-screen:
+              // The clamp keeps the anchor point inside the viewport, but the
+              // pill itself is ~180px wide, so we add a max-width guard too.
+              maxWidth: 'calc(100vw - 24px)',
             }}
             className="animate-in fade-in slide-in-from-bottom-2 duration-200"
           >
@@ -366,7 +372,8 @@ export function CalendarioDownloadButton({
                 className="size-2.5 rotate-45 bg-[var(--color-bg)] border-r border-b border-[var(--color-border)]"
               />
             </div>
-          </div>
+          </div>,
+          document.body,
         )}
       </>
     );

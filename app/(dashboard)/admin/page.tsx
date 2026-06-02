@@ -1,7 +1,7 @@
 'use client';
 
-import { useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useMemo, useCallback } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
 import { Users, GraduationCap, CalendarDays, Clock, Bell, CheckCircle, XCircle } from 'lucide-react';
@@ -13,6 +13,7 @@ import { RotatingStatCard, type RotatingStatItem } from '@/components/common/Rot
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { CalendarioAdmin } from '@/components/calendario/CalendarioAdmin';
 import { useUserStore } from '@/stores/useUserStore';
+import { useUIStore } from '@/stores/useUIStore';
 import { useUiPreference } from '@/lib/hooks/useUiPreference';
 import { buildClaseDetailHref } from '@/lib/utils/horarioNavigation';
 import { useTranslations, useLocale } from 'next-intl';
@@ -54,10 +55,18 @@ type ClaseHoy = {
 
 export default function AdminDashboardPage() {
   const { user } = useUserStore();
+  const { setHorarioDetailId } = useUIStore();
   const t = useTranslations('dashboard.admin');
   const locale = useLocale();
   const dateFnsLocale = locale === 'en' ? enUS : es;
   const router = useRouter();
+  const queryClient = useQueryClient();
+
+  const invalidateNotif = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['admin-notificaciones-dash'] });
+    queryClient.invalidateQueries({ queryKey: ['notificaciones'] });
+    queryClient.invalidateQueries({ queryKey: ['notificaciones-full'] });
+  }, [queryClient]);
 
   const { data: stats } = useQuery<Stats>({
     queryKey: ['admin-stats'],
@@ -126,6 +135,43 @@ export default function AdminDashboardPage() {
   const [actividadOpen, setActividadOpen] = useUiPreference<boolean>('admin_dash_actividad_open', true);
   const [clasesHoyOpen, setClasesHoyOpen] = useUiPreference<boolean>('admin_dash_clases_hoy_open', true);
 
+  // Handle click on an activity-feed notification:
+  // 1. Mark as read (fire-and-forget)
+  // 2. Navigate to the relevant detail depending on notification type
+  const handleNotifClick = useCallback(async (n: Notificacion) => {
+    // Mark as read if not already
+    if (!n.leida) {
+      await fetch('/api/notificaciones', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: [n.id] }),
+      });
+      invalidateNotif();
+    }
+
+    // Navigate based on type
+    if (n.horario_id) {
+      // Class-related notifications → open class detail drawer
+      setHorarioDetailId(n.horario_id);
+      return;
+    }
+
+    if (n.tipo === 'programa_asignado' && n.alumno_id) {
+      // Program assignment → go to the alumno's profile/programs
+      router.push(`/admin/alumnos/${n.alumno_id}`);
+      return;
+    }
+
+    if (n.tipo === 'solicitud_cambio_horario' || n.tipo === 'cambio_horario_aceptado' || n.tipo === 'cambio_horario_rechazado') {
+      // Schedule change requests → go to notifications full view for detail
+      router.push('/admin/notificaciones');
+      return;
+    }
+
+    // Fallback: go to notifications page
+    router.push('/admin/notificaciones');
+  }, [invalidateNotif, setHorarioDetailId, router]);
+
   return (
     <div>
       <PageHeader
@@ -187,10 +233,15 @@ export default function AdminDashboardPage() {
           ) : (
             <div className="divide-y divide-[var(--color-border)] max-h-64 overflow-y-auto">
               {notificaciones.map((n) => (
-                <div key={n.id} className={`flex items-start gap-2.5 px-4 py-2.5 ${!n.leida ? 'bg-[var(--color-brand-gold-muted)]' : ''}`}>
+                <button
+                  key={n.id}
+                  type="button"
+                  onClick={() => handleNotifClick(n)}
+                  className={`group flex w-full items-start gap-2.5 px-4 py-2.5 text-left transition-colors hover:bg-[var(--color-bg-secondary)] ${!n.leida ? 'bg-[var(--color-brand-gold-muted)]' : ''}`}
+                >
                   <div className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${!n.leida ? 'bg-[var(--color-brand-gold)]' : 'bg-[var(--color-border-strong)]'}`} />
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm text-[var(--color-text-primary)] leading-snug">{n.mensaje}</p>
+                    <p className={`text-sm leading-snug ${!n.leida ? 'font-medium text-[var(--color-text-primary)]' : 'text-[var(--color-text-primary)]'}`}>{n.mensaje}</p>
                     {n.destinatario && (
                       <p className="mt-0.5 flex items-center gap-1 text-xs text-[var(--color-text-muted)]">
                         → {n.destinatario.nombre} {n.destinatario.apellido}
@@ -221,7 +272,7 @@ export default function AdminDashboardPage() {
                       </span>
                     </div>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           )}

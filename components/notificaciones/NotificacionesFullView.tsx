@@ -193,6 +193,7 @@ export function NotificacionesFullView({ role }: NotificacionesFullViewProps) {
   const invalidate = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ['notificaciones-full'] });
     queryClient.invalidateQueries({ queryKey: ['notificaciones'] });
+    queryClient.invalidateQueries({ queryKey: ['admin-notificaciones-dash'] });
   }, [queryClient]);
 
   // Selection helpers

@@ -125,6 +125,7 @@ export function NotificacionesPanel() {
 
   const invalidate = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ['notificaciones'] });
+    queryClient.invalidateQueries({ queryKey: ['admin-notificaciones-dash'] });
   }, [queryClient]);
 
   const marcarTodo = async () => {
