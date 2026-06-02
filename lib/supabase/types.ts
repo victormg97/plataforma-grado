@@ -1394,8 +1394,10 @@ export type Database = {
         Returns: undefined
       }
       get_admin_init_data: { Args: never; Returns: Json }
+      get_admin_prefetch: { Args: { p_admin_id?: string }; Returns: Json }
       get_admin_stats: { Args: never; Returns: Json }
       get_alumno_dashboard: { Args: { p_alumno_id: string }; Returns: Json }
+      get_alumno_prefetch: { Args: { p_alumno_id: string }; Returns: Json }
       get_alumno_ficha:
         | { Args: { p_alumno_id: string; p_limit?: number }; Returns: Json }
         | {
@@ -1487,6 +1489,7 @@ export type Database = {
         }[]
       }
       get_profesor_dashboard: { Args: { p_profesor_id: string }; Returns: Json }
+      get_profesor_prefetch: { Args: { p_profesor_id: string }; Returns: Json }
       get_recursos_for_user: { Args: never; Returns: Json }
       propagate_folder_permissions: {
         Args: {

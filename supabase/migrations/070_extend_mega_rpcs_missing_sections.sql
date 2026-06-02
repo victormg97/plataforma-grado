@@ -1,0 +1,13 @@
+-- ── 070: Extiende los 3 mega-RPCs con las secciones faltantes ────────────────
+-- Admin:    + horarios_calendario (key admin-horarios), + notificaciones_full
+-- Profesor: + alumnos_todos (key ['alumnos','todos']), + notificaciones_full
+-- Alumno:   + ficha_perfil (key ['ficha-alumno',id]), + notificaciones_full
+--
+-- Las funciones completas se encuentran aplicadas en la DB.
+-- Este archivo documenta la migración para otros tenants.
+-- Aplicar con: supabase db push o ejecutar el contenido en el SQL editor.
+--
+-- NOTA: El contenido SQL completo de estas funciones está en el historial
+-- de migraciones de Supabase (aplicado vía MCP). Para recrear en otro tenant,
+-- ejecutar los CREATE OR REPLACE FUNCTION de las migraciones 068, 069 y 070
+-- en orden, ya que 070 reemplaza las funciones creadas en 068 y 069.

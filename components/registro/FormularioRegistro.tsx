@@ -75,6 +75,10 @@ export function FormularioRegistro({ code, tipo }: FormularioRegistroProps) {
   // Enter avanza al siguiente input del formulario; en el último, si el
   // formulario es válido, envía. Combinado con `enterKeyHint`, los teclados
   // móviles muestran "Siguiente"/"Ir".
+  // Se usa un blur+focus con requestAnimationFrame para que el teclado virtual
+  // re-evalúe el atributo `autoCapitalize` del nuevo campo (sin este truco, los
+  // teclados móviles no activan la capitalización cuando el foco se mueve
+  // programáticamente en lugar de con un tap directo del usuario).
   const handleEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key !== 'Enter') return;
     e.preventDefault();
@@ -87,9 +91,11 @@ export function FormularioRegistro({ code, tipo }: FormularioRegistroProps) {
     );
     const idx = inputs.indexOf(e.currentTarget);
     if (idx >= 0 && idx < inputs.length - 1) {
-      inputs[idx + 1].focus();
+      const next = inputs[idx + 1];
+      // Blur + rAF para que el teclado virtual lea autoCapitalize del nuevo campo.
+      next.blur();
+      requestAnimationFrame(() => next.focus());
     } else {
-      // Último input: intentar enviar.
       formEl.requestSubmit();
     }
   };

@@ -302,8 +302,10 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
       toast.success(isEditing ? t('exito_actualizado') : t('exito_creado'));
       // Invalidate all horarios and asistencia caches (affects profesor calendar + alumno schedule)
       queryClient.invalidateQueries({ queryKey: ['horarios'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-horarios'] });
       queryClient.invalidateQueries({ queryKey: ['asistencia'] });
       queryClient.invalidateQueries({ queryKey: ['pruebas'] });
+      queryClient.invalidateQueries({ queryKey: ['ficha-alumno'] });
       queryClient.invalidateQueries({ queryKey: ['admin-clases-hoy'] });
       queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
       onSuccess();
@@ -321,8 +323,10 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
       if (!res.ok) throw new Error(t('error_eliminar'));
       toast.success(t('exito_eliminado'));
       queryClient.invalidateQueries({ queryKey: ['horarios'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-horarios'] });
       queryClient.invalidateQueries({ queryKey: ['asistencia'] });
       queryClient.invalidateQueries({ queryKey: ['pruebas'] });
+      queryClient.invalidateQueries({ queryKey: ['ficha-alumno'] });
       queryClient.invalidateQueries({ queryKey: ['admin-clases-hoy'] });
       queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
       onSuccess();
