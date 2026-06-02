@@ -12,25 +12,28 @@ export default async function RegistroLayout({
   const locale = await getLocale();
 
   return (
-    <div className="relative min-h-screen bg-[var(--color-bg-secondary)] px-[var(--container-padding)]">
+    // El contenedor raíz NO usa position:relative + overflow hidden para no
+    // romper el scroll. El centrado se logra con min-h-screen en el flex inner.
+    <div className="min-h-screen bg-[var(--color-bg-secondary)]">
       {/*
-        Logo — esquina superior izquierda, igual que el login pero con variante
-        "login" (logoLight/Dark) y tamaño responsive con clamp.
-        Sin z-index propio para no crear contexto de apilamiento que tape el
-        modal de WhoWeAre.
+        Logo — esquina superior izquierda, position:absolute sobre el viewport.
+        El ancestro con position que lo contiene es el body (ya que este div
+        no tiene position propia), lo que es correcto.
       */}
-      <div className="absolute left-4 top-4">
+      <div className="fixed left-4 top-4 z-10 pointer-events-none">
         <AppLogo
           variant="login"
-          style={{ maxHeight: 'clamp(40px, 9vw, 80px)' }}
+          className="pointer-events-auto"
+          style={{ maxHeight: 'clamp(40px, 12vw, 130px)' }}
         />
       </div>
 
       {/*
-        Controles — esquina superior derecha, igual que el layout de auth.
-        Sin z-index propio (mismo motivo que el logo).
+        Controles — esquina superior derecha, fixed igual que el logo.
+        Sin z-index que cree contexto de apilamiento que tape el modal de
+        WhoWeAre (el modal es fixed z-40/z-50, queda sobre estos controles).
       */}
-      <div className="absolute right-4 top-4 flex items-center gap-2">
+      <div className="fixed right-4 top-4 z-10 flex items-center gap-2">
         <WhoWeAre tenantSlug={tenantConfig.id} locale={locale} />
         <div className="opacity-50 hover:opacity-100 transition-opacity">
           <ThemeToggle />
@@ -38,11 +41,10 @@ export default async function RegistroLayout({
       </div>
 
       {/*
-        Card centrada. El padding vertical (py-20) asegura que la card no quede
-        tapada por el logo ni los controles en pantallas pequeñas.
-        max-w-lg hace la card más ancha que la de login (max-w-md).
+        Card centrada. padding vertical para que no quede bajo los controles
+        fixed en pantallas pequeñas o cuando el formulario es largo.
       */}
-      <div className="flex min-h-screen items-center justify-center py-20">
+      <div className="flex min-h-screen items-center justify-center px-[var(--container-padding)] py-24">
         <div className="w-full max-w-lg">{children}</div>
       </div>
     </div>

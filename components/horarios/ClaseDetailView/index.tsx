@@ -92,13 +92,14 @@ function GradeInlineForm({
   return (
     <div className="mt-4 pt-4 border-t border-[var(--color-border)]">
       <div className="flex flex-col sm:flex-row sm:items-end gap-4 w-full">
-        <div className="flex items-end gap-3">
-          <div className="space-y-1.5 w-[90px]">
-            <label className="block text-[13px] font-semibold text-[var(--color-text-secondary)]">
-              {th('nota_prueba', { term: pruebaTerm.singular })}
-            </label>
-            <input
-              type="text"
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[13px] font-semibold text-[var(--color-text-secondary)] whitespace-nowrap">
+            {th('nota_prueba', { term: pruebaTerm.singular })}
+          </label>
+          <div className="flex items-center gap-3">
+            <div className="w-[90px]">
+              <input
+                type="text"
           value={nota}
           onChange={(e) => {
             let val = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.');
@@ -160,38 +161,36 @@ function GradeInlineForm({
           placeholder="Ej: 5.5"
           className={`${inputCls} text-center font-bold text-lg px-2 shadow-inner`}
         />
-      </div>
+            </div>{/* w-[90px] */}
 
-      <Button variant="primary" loading={isPending} onClick={handleSave} disabled={isPending} className="h-10 font-semibold px-5 shadow-sm">
-         {prueba?.nota != null ? th('actualizar_nota') : th('guardar_nota')}
-      </Button>
+            <Button variant="primary" loading={isPending} onClick={handleSave} disabled={isPending} className="h-10 font-semibold px-5 shadow-sm">
+              {prueba?.nota != null ? th('actualizar_nota') : th('guardar_nota')}
+            </Button>
+          </div>{/* flex items-center gap-3 */}
+        </div>{/* flex flex-col gap-1.5 */}
+
+        <div className="hidden sm:block flex-1" />
+
+        {(() => {
+          if (nota === '' && !prueba.nota) return null;
+          const localNum = parseFloat(nota);
+          if (isNaN(localNum)) return null;
+          const isAprobado = localNum >= 4.0;
+          return (
+            <div
+              className="flex h-10 items-center justify-center rounded-full px-5 font-bold text-[13px] shadow-sm ml-auto sm:ml-0"
+              style={{
+                backgroundColor: isAprobado ? 'color-mix(in srgb, var(--color-success) 15%, transparent)' : 'color-mix(in srgb, var(--color-error) 15%, transparent)',
+                color: isAprobado ? 'var(--color-success)' : 'var(--color-error)',
+                border: `1px solid color-mix(in srgb, ${isAprobado ? 'var(--color-success)' : 'var(--color-error)'} 30%, transparent)`,
+              }}
+            >
+              {th(isAprobado ? 'aprobado' : 'reprobado')}
+            </div>
+          );
+        })()}
+      </div>{/* flex flex-col sm:flex-row */}
     </div>
-      
-    <div className="hidden sm:block flex-1"></div>
-
-    {(() => {
-      // Evaluate visual UI badge using local unsaved `nota` state instead of DB state
-      // If empty string and was never originally saved, don't show badge
-      if (nota === '' && !prueba.nota) return null;
-      
-      const localNum = parseFloat(nota);
-      if (isNaN(localNum)) return null;
-
-      const isAprobado = localNum >= 4.0;
-      return (
-        <div className="flex h-10 items-center justify-center rounded-full px-5 font-bold text-[13px] shadow-sm ml-auto sm:ml-0"
-             style={{ 
-               backgroundColor: isAprobado ? 'color-mix(in srgb, var(--color-success) 15%, transparent)' : 'color-mix(in srgb, var(--color-error) 15%, transparent)',
-               color: isAprobado ? 'var(--color-success)' : 'var(--color-error)',
-               border: `1px solid color-mix(in srgb, ${isAprobado ? 'var(--color-success)' : 'var(--color-error)'} 30%, transparent)`
-             }}>
-          {th(isAprobado ? 'aprobado' : 'reprobado')}
-        </div>
-      );
-    })()}
-
-    </div>
-  </div>
   );
 }
 
