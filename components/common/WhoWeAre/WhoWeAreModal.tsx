@@ -24,27 +24,11 @@ export function WhoWeAreModal({ tenantSlug, markdown, onClose }: WhoWeAreModalPr
   const [contactOpen, setContactOpen] = useState(false);
 
   // Bloquear el scroll de la página de fondo mientras el modal está abierto.
-  // Usa `fixed` + `overflow: hidden` en lugar de solo `overflow: hidden` para
-  // que funcione también en iOS Safari, donde `overflow: hidden` en body no
-  // siempre bloquea el scroll.
   useEffect(() => {
-    const scrollY = window.scrollY;
-    const prevOverflow = document.body.style.overflow;
-    const prevPosition = document.body.style.position;
-    const prevTop = document.body.style.top;
-    const prevWidth = document.body.style.width;
-
+    const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    document.body.style.position = 'fixed';
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.width = '100%';
-
     return () => {
-      document.body.style.overflow = prevOverflow;
-      document.body.style.position = prevPosition;
-      document.body.style.top = prevTop;
-      document.body.style.width = prevWidth;
-      window.scrollTo(0, scrollY);
+      document.body.style.overflow = prev;
     };
   }, []);
 

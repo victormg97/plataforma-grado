@@ -261,7 +261,7 @@ export function FormularioRegistro({ code, tipo }: FormularioRegistroProps) {
             tabIndex={-1}
             onClick={() => setShowPassword((v) => !v)}
             aria-label={showPassword ? t('ocultar_password') : t('mostrar_password')}
-            className="absolute right-2 top-1/2 z-10 inline-flex size-8 -translate-y-1/2 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text-secondary)]"
+            className="absolute right-2 top-1/2 inline-flex size-8 -translate-y-1/2 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text-secondary)]"
           >
             {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
           </button>
@@ -292,7 +292,7 @@ export function FormularioRegistro({ code, tipo }: FormularioRegistroProps) {
             tabIndex={-1}
             onClick={() => setShowPassword((v) => !v)}
             aria-label={showPassword ? t('ocultar_password') : t('mostrar_password')}
-            className="absolute right-2 top-1/2 z-10 inline-flex size-8 -translate-y-1/2 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text-secondary)]"
+            className="absolute right-2 top-1/2 inline-flex size-8 -translate-y-1/2 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text-secondary)]"
           >
             {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
           </button>

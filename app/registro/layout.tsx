@@ -41,10 +41,12 @@ export default async function RegistroLayout({
       </div>
 
       {/*
-        Card centrada. padding vertical para que no quede bajo los controles
-        fixed en pantallas pequeñas o cuando el formulario es largo.
+        Card centrada. Se usa grid con place-items-center para centrar cuando
+        el contenido cabe en pantalla, y auto para que el contenedor crezca
+        más allá del viewport cuando el formulario es largo (permite scroll).
+        El min-h garantiza el centrado cuando el formulario es corto.
       */}
-      <div className="flex min-h-screen items-center justify-center px-[var(--container-padding)] py-24">
+      <div className="grid min-h-screen place-items-center px-[var(--container-padding)] py-24">
         <div className="w-full max-w-lg">{children}</div>
       </div>
     </div>
