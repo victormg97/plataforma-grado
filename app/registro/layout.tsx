@@ -44,7 +44,7 @@ export default async function RegistroLayout({
        * El grid con place-items-center funciona correctamente porque el
        * contenedor crece con el contenido (sin altura fija que corte el scroll).
        */}
-      <div className="grid min-h-screen place-items-center px-[var(--container-padding)] pb-12 pt-28">
+      <div className="grid min-h-screen place-items-center px-[var(--container-padding)] pb-6 pt-16 lg:pb-12 lg:pt-28">
         <div className="w-full max-w-lg">{children}</div>
       </div>
     </div>

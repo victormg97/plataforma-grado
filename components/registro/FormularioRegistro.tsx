@@ -129,7 +129,7 @@ export function FormularioRegistro({ code, tipo }: FormularioRegistroProps) {
   const campoTexto = (
     campo: keyof RegistroFormData,
     labelKey: string,
-    opts: { type?: string; obligatorio?: boolean; enterKeyHint?: 'next' | 'go' } = {},
+    opts: { type?: string; obligatorio?: boolean; enterKeyHint?: 'next' | 'go'; capitalize?: boolean } = {},
   ) => {
     const obligatorio = opts.obligatorio ?? obligatorios.includes(campo);
     const mostrarError = (submitted || touched[campo]) && obligatorio && esVacio(campo);
@@ -142,6 +142,7 @@ export function FormularioRegistro({ code, tipo }: FormularioRegistroProps) {
         <Input
           id={campo}
           type={opts.type ?? 'text'}
+          autoCapitalize={opts.capitalize ? 'words' : undefined}
           value={(form[campo] as string) ?? ''}
           onChange={(e) => set(campo, e.target.value)}
           onBlur={() => marcarTocado(campo)}
@@ -164,9 +165,9 @@ export function FormularioRegistro({ code, tipo }: FormularioRegistroProps) {
   return (
     <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {campoTexto('nombre', 'campo_nombre')}
-        {campoTexto('apellido', 'campo_apellido')}
-        {campoTexto('apellido_materno', 'campo_apellido_materno')}
+        {campoTexto('nombre', 'campo_nombre', { capitalize: true })}
+        {campoTexto('apellido', 'campo_apellido', { capitalize: true })}
+        {campoTexto('apellido_materno', 'campo_apellido_materno', { capitalize: true })}
         <div className="space-y-1.5">
           <Label htmlFor="telefono" className="text-[var(--color-text-secondary)]">
             {t('campo_telefono')}
