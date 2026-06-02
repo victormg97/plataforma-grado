@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { validarEmail, validarTelefono } from './contacto';
+import { validarAño } from './año';
 
 // ─── Constantes de contraseña ────────────────────────────────────────────────
 export const PASSWORD_MIN = 6;
@@ -83,7 +84,14 @@ export const registroAlumnoSchema = z
   .object({
     ...baseObject,
     universidad: z.string().optional(),
-    ['año_egreso']: z.string().optional(),
+    ['año_ingreso']: z
+      .string()
+      .optional()
+      .refine((v) => validarAño(v).valido, { message: 'Año de ingreso inválido' }),
+    ['año_egreso']: z
+      .string()
+      .optional()
+      .refine((v) => validarAño(v).valido, { message: 'Año de egreso inválido' }),
   })
   .refine((d) => d.password === d.confirmar, {
     message: 'Las contraseñas no coinciden',
@@ -125,6 +133,10 @@ export function registroEsValido(
   if (form.telefono && form.telefono.trim() !== '' && !validarTelefono(form.telefono).valido) {
     return false;
   }
+
+  // Los años son opcionales, pero si se ingresaron deben ser válidos.
+  if (!validarAño(form['año_ingreso']).valido) return false;
+  if (!validarAño(form['año_egreso']).valido) return false;
 
   const password = form.password ?? '';
   if (password.length < PASSWORD_MIN || password.length > PASSWORD_MAX) return false;

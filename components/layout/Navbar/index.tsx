@@ -76,7 +76,10 @@ export function Navbar() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
               <div className="px-2 py-1.5">
-                <p className="text-sm font-medium">{user.nombre} {user.apellido}</p>
+                <p className="text-sm font-medium">
+                  {user.nombre} {user.apellido}
+                  {user.apellido_materno ? ` ${user.apellido_materno.charAt(0).toUpperCase()}.` : ''}
+                </p>
                 <p className="text-xs text-[var(--color-text-muted)]">{user.email}</p>
               </div>
               <DropdownMenuSeparator />

@@ -18,6 +18,7 @@ import {
   type TipoRegistro,
 } from '@/lib/validations/registro';
 import { validarEmail, validarTelefono } from '@/lib/validations/contacto';
+import { validarAño } from '@/lib/validations/año';
 
 interface FormularioRegistroProps {
   code: string;
@@ -242,7 +243,31 @@ export function FormularioRegistro({ code, tipo }: FormularioRegistroProps) {
       {tipo === 'alumno' && (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {campoTexto('universidad', 'campo_universidad')}
-          {campoTexto('año_egreso', 'campo_anio_egreso')}
+          <div className="space-y-1.5">
+            <Label htmlFor="año_egreso" className="text-[var(--color-text-secondary)]">
+              {t('campo_anio_egreso')}
+            </Label>
+            <Input
+              id="año_egreso"
+              type="number"
+              inputMode="numeric"
+              value={(form['año_egreso'] as string) ?? ''}
+              onChange={(e) => set('año_egreso', e.target.value.replace(/\D/g, '').slice(0, 4))}
+              onBlur={() => marcarTocado('año_egreso')}
+              onKeyDown={handleEnter}
+              enterKeyHint="next"
+              maxLength={4}
+              placeholder="Ej. 2027"
+              className="h-11 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            />
+            {(submitted || touched['año_egreso']) &&
+              form['año_egreso'] &&
+              !validarAño(form['año_egreso'] as string).valido && (
+                <p className="text-xs text-[var(--color-error)]">
+                  {validarAño(form['año_egreso'] as string).mensaje}
+                </p>
+            )}
+          </div>
         </div>
       )}
 

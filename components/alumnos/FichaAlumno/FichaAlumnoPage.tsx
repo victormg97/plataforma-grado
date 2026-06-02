@@ -109,7 +109,7 @@ export function FichaAlumnoPage({ alumnoId, role = 'profesor', backHref }: Ficha
     );
   }
 
-  const nombre = `${data.nombre} ${data.apellido}`;
+  const nombre = [data.nombre, data.apellido, data.apellido_materno].filter(Boolean).join(' ');
   const getStatus = () => {
     if (!data.activo) return 'bloqueado' as const;
     if (pasoPrueba) return 'graduado' as const;

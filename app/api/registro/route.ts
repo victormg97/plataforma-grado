@@ -10,6 +10,7 @@ import {
   type TipoRegistro,
 } from '@/lib/validations/registro';
 import { validarTelefono } from '@/lib/validations/contacto';
+import { validarAño } from '@/lib/validations/año';
 
 /**
  * POST público: registro manual mediante un enlace de invitación.
@@ -99,11 +100,17 @@ export async function POST(request: NextRequest) {
       profesorId = resolverProfesorAsociado(prof);
     }
 
+    const anoEgresoRaw = form['año_egreso']?.trim() || null;
+    if (anoEgresoRaw && !validarAño(anoEgresoRaw).valido) {
+      await revertir();
+      return NextResponse.json({ error: 'VALIDACION', field: 'año_egreso' }, { status: 422 });
+    }
+
     const { error: extraError } = await admin.from('alumnos_extra').insert({
       alumno_id: userId,
       profesor_id: profesorId,
       universidad: form.universidad?.trim() || null,
-      ['año_egreso']: form['año_egreso']?.trim() || null,
+      ['año_egreso']: anoEgresoRaw,
     } as never);
 
     if (extraError) {

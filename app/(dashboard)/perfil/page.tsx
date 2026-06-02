@@ -8,9 +8,10 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import { useUserStore } from '@/stores/useUserStore';
-import { AvatarUploadSection } from '@/components/common/EditarPerfilModal/components/AvatarUploadSection';
+import { AvatarUploadSection } from '@/components/common/AvatarUploadSection';
 import { LanguageSelector } from '@/components/common/LanguageSelector';
 import { cn } from '@/lib/utils';
+import { validarAño } from '@/lib/validations/año';
 import {
   User, Lock, Eye, EyeOff, Globe,
   ArrowLeft, Save, Loader2, ClipboardCheck, Settings2, Mail, Users,
@@ -24,7 +25,7 @@ type PerfilResponse = Profile & {
   duracion_clase_default_min?: number;
   cancellation_deadline_hours?: number;
   email_disponible?: boolean;
-  alumno_extra: Pick<AlumnoExtra, 'universidad' | 'año_ingreso' | 'ha_dado_examen' | 'intentos_prueba'> | null;
+  alumno_extra: Pick<AlumnoExtra, 'universidad' | 'año_ingreso' | 'año_egreso' | 'ha_dado_examen' | 'intentos_prueba'> | null;
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -112,6 +113,7 @@ export default function PerfilPage() {
   const [telefono, setTelefono] = useState('');
   const [universidad, setUniversidad] = useState('');
   const [añoIngreso, setAñoIngreso] = useState('');
+  const [añoEgreso, setAñoEgreso] = useState('');
   const [haDadoExamen, setHaDadoExamen] = useState(false);
   const [intentosPrueba, setIntentosPrueba] = useState('');
   const [duracionClase, setDuracionClase] = useState('60');
@@ -120,7 +122,7 @@ export default function PerfilPage() {
   // Saved snapshots for dirty detection
   const [savedInfo, setSavedInfo] = useState({
     nombre: '', apellidos: '', telefono: '',
-    universidad: '', añoIngreso: '', haDadoExamen: false, intentosPrueba: '',
+    universidad: '', añoIngreso: '', añoEgreso: '', haDadoExamen: false, intentosPrueba: '',
   });
   const [savedConfig, setSavedConfig] = useState({ duracionClase: '60', cancellationDeadline: '0' });
 
@@ -148,6 +150,7 @@ export default function PerfilPage() {
       const initTelefono = perfilData.telefono ?? '';
       const initUniversidad = perfilData.alumno_extra?.universidad ?? '';
       const initAñoIngreso = perfilData.alumno_extra?.año_ingreso ?? '';
+      const initAñoEgreso = perfilData.alumno_extra?.año_egreso ?? '';
       const initHaDadoExamen = perfilData.alumno_extra?.ha_dado_examen ?? false;
       const intentos = perfilData.alumno_extra?.intentos_prueba;
       const initIntentosPrueba = intentos != null && intentos > 0 ? String(intentos) : '';
@@ -159,12 +162,13 @@ export default function PerfilPage() {
       setTelefono(initTelefono);
       setUniversidad(initUniversidad);
       setAñoIngreso(initAñoIngreso);
+      setAñoEgreso(initAñoEgreso);
       setHaDadoExamen(initHaDadoExamen);
       setIntentosPrueba(initIntentosPrueba);
       setDuracionClase(initDuracion);
       setCancellationDeadline(initDeadline);
 
-      setSavedInfo({ nombre: initNombre, apellidos: initApellidos, telefono: initTelefono, universidad: initUniversidad, añoIngreso: initAñoIngreso, haDadoExamen: initHaDadoExamen, intentosPrueba: initIntentosPrueba });
+      setSavedInfo({ nombre: initNombre, apellidos: initApellidos, telefono: initTelefono, universidad: initUniversidad, añoIngreso: initAñoIngreso, añoEgreso: initAñoEgreso, haDadoExamen: initHaDadoExamen, intentosPrueba: initIntentosPrueba });
       setSavedConfig({ duracionClase: initDuracion, cancellationDeadline: initDeadline });
 
       setInitialized(true);
@@ -183,10 +187,11 @@ export default function PerfilPage() {
       (telefono.trim() || null) !== (savedInfo.telefono.trim() || null) ||
       (isAlumno && universidad !== savedInfo.universidad) ||
       (isAlumno && añoIngreso !== savedInfo.añoIngreso) ||
+      (isAlumno && añoEgreso !== savedInfo.añoEgreso) ||
       (isAlumno && haDadoExamen !== savedInfo.haDadoExamen) ||
       (isAlumno && intentosPrueba !== savedInfo.intentosPrueba);
     return avatarChanged || fieldsChanged;
-  }, [initialized, pendingBlob, pendingDelete, nombre, apellidos, telefono, universidad, añoIngreso, haDadoExamen, intentosPrueba, savedInfo, isAlumno]);
+  }, [initialized, pendingBlob, pendingDelete, nombre, apellidos, telefono, universidad, añoIngreso, añoEgreso, haDadoExamen, intentosPrueba, savedInfo, isAlumno]);
 
   const isDirtyConfig = useMemo(() => {
     if (!initialized) return false;
@@ -208,6 +213,14 @@ export default function PerfilPage() {
     e.preventDefault();
     if (!nombre.trim()) { toast.error(t('error_nombre')); return; }
     if (!apellidos.trim()) { toast.error(t('error_apellido')); return; }
+
+    // Validación de años en front (evita round-trip innecesario al servidor)
+    if (isAlumno) {
+      const rIngreso = validarAño(añoIngreso);
+      if (!rIngreso.valido) { toast.error(rIngreso.mensaje); return; }
+      const rEgreso = validarAño(añoEgreso);
+      if (!rEgreso.valido) { toast.error(rEgreso.mensaje); return; }
+    }
 
     setSavingInfo(true);
     try {
@@ -235,6 +248,7 @@ export default function PerfilPage() {
         telefono: telefono.trim() || null,
         ...(isAlumno && { universidad: universidad.trim() || null }),
         ...(isAlumno && { año_ingreso: añoIngreso.trim() || null }),
+        ...(isAlumno && { año_egreso: añoEgreso.trim() || null }),
         ...(isAlumno && { ha_dado_examen: haDadoExamen }),
         ...(isAlumno && { intentos_prueba: haDadoExamen && intentosPruebaNum ? intentosPruebaNum : null }),
       };
@@ -263,7 +277,7 @@ export default function PerfilPage() {
       setPreviewUrl(null);
       setPendingDelete(false);
       // Reset dirty snapshot
-      setSavedInfo({ nombre: nombre.trim(), apellidos: apellidos.trim(), telefono: telefono.trim(), universidad: universidad.trim(), añoIngreso: añoIngreso.trim(), haDadoExamen, intentosPrueba });
+      setSavedInfo({ nombre: nombre.trim(), apellidos: apellidos.trim(), telefono: telefono.trim(), universidad: universidad.trim(), añoIngreso: añoIngreso.trim(), añoEgreso: añoEgreso.trim(), haDadoExamen, intentosPrueba });
       toast.success(t('exito_perfil'));
     } catch {
       toast.error(t('error_perfil'));
@@ -417,14 +431,32 @@ export default function PerfilPage() {
 
                 <Field label={t('año_ingreso')} hint={t('opcional')}>
                   <input
-                    type="text"
+                    type="number"
                     inputMode="numeric"
                     value={añoIngreso}
                     onChange={(e) => setAñoIngreso(e.target.value.replace(/\D/g, '').slice(0, 4))}
                     placeholder="Ej. 2023"
                     maxLength={4}
-                    className={inputCls}
+                    className={cn(inputCls, '[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none')}
                   />
+                  {añoIngreso && !validarAño(añoIngreso).valido && (
+                    <p className="mt-1 text-xs text-[var(--color-error)]">{validarAño(añoIngreso).mensaje}</p>
+                  )}
+                </Field>
+
+                <Field label={t('año_egreso')} hint={t('opcional')}>
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    value={añoEgreso}
+                    onChange={(e) => setAñoEgreso(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                    placeholder="Ej. 2027"
+                    maxLength={4}
+                    className={cn(inputCls, '[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none')}
+                  />
+                  {añoEgreso && !validarAño(añoEgreso).valido && (
+                    <p className="mt-1 text-xs text-[var(--color-error)]">{validarAño(añoEgreso).mensaje}</p>
+                  )}
                 </Field>
 
                 <Field label={t('ha_dado_examen')} hint={t('ha_dado_examen_desc')}>

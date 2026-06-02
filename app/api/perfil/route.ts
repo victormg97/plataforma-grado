@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { isValidCancellationDeadline } from '@/lib/validations/asistencia';
 import { isEmailEnabled } from '@/lib/email/resendClient';
+import { validarAño } from '@/lib/validations/año';
 
 export async function GET() {
   const supabase = await createClient();
@@ -136,6 +137,7 @@ export async function PATCH(request: NextRequest) {
       const hasExtraFields =
         body.universidad !== undefined ||
         body.año_ingreso !== undefined ||
+        body.año_egreso !== undefined ||
         'ha_dado_examen' in body ||
         'intentos_prueba' in body;
       if (hasExtraFields) {
@@ -144,7 +146,16 @@ export async function PATCH(request: NextRequest) {
           updated_at: new Date().toISOString(),
         };
         if (body.universidad !== undefined) extraUpdate.universidad = body.universidad || null;
-        if (body.año_ingreso !== undefined) extraUpdate.año_ingreso = body.año_ingreso || null;
+        if (body.año_ingreso !== undefined) {
+          const res = validarAño(body.año_ingreso);
+          if (!res.valido) return NextResponse.json({ error: res.mensaje ?? 'Año de ingreso inválido' }, { status: 400 });
+          extraUpdate.año_ingreso = body.año_ingreso || null;
+        }
+        if (body.año_egreso !== undefined) {
+          const res = validarAño(body.año_egreso);
+          if (!res.valido) return NextResponse.json({ error: res.mensaje ?? 'Año de egreso inválido' }, { status: 400 });
+          extraUpdate.año_egreso = body.año_egreso || null;
+        }
         if ('ha_dado_examen' in body) extraUpdate.ha_dado_examen = Boolean(body.ha_dado_examen);
         if ('intentos_prueba' in body) extraUpdate.intentos_prueba = body.intentos_prueba ?? null;
 

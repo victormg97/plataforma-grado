@@ -89,7 +89,7 @@ function AlumnoDashboardContent() {
     <div>
       <PageHeader
         title={td('titulo')}
-        subtitle={user ? `${user.nombre} ${user.apellido}` : td('subtitulo')}
+        subtitle={user ? [user.nombre, user.apellido, user.apellido_materno].filter(Boolean).join(' ') : td('subtitulo')}
       />
 
       <div className="mt-[var(--space-lg)] space-y-[var(--space-lg)]">
