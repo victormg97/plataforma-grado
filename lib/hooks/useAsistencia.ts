@@ -51,11 +51,14 @@ export function useAsistencia(alumnoId?: string) {
     queryFn: () => fetchAlumnoDashboard(id!),
     enabled: !!id,
     staleTime: 30_000,
+    // Poll every 60s as a Realtime fallback — catches cron-driven state changes
+    // in case the WebSocket drops or the event is missed.
+    refetchInterval: 60_000,
   });
 
   const clases = useMemo(() => data?.clases ?? [], [data?.clases]);
 
-  // Realtime: invalidate on changes
+  // Realtime: invalidate on changes to asistencia or horarios for this alumno
   useEffect(() => {
     if (!id) return;
 
@@ -79,17 +82,29 @@ export function useAsistencia(alumnoId?: string) {
     };
   }, [id, queryClient]);
 
-  const today = new Date().toISOString().split('T')[0];
   const now = new Date();
 
+  /**
+   * Una clase va a "próximas" si:
+   * - Su hora_fin aún no pasó (la clase no terminó), Y
+   * - Su estado NO es cancelado/cambiado (a menos que esté en curso y confirmada)
+   *
+   * Regla específica:
+   * - confirmada + en curso (hora_fin > now > hora_inicio) → próximas (mostrando "en curso")
+   * - cancelada → historial, aunque la hora_fin no haya pasado
+   * - cambiada  → historial
+   * - pendiente + hora_fin > now → próximas
+   */
   const proximas = useMemo(
     () =>
       clases
         .filter((c) => {
           if (!c.horario || !c.horario.activo) return false;
-          // Excluir clases cuya hora_fin ya pasó hoy
           const fin = new Date(`${c.horario.fecha}T${c.horario.hora_fin}`);
-          return fin > now;
+          if (fin <= now) return false; // ya terminó → historial
+          // Cancelada o cambiada → historial aunque no haya terminado
+          if (c.estado === 'cancelado' || c.estado === 'cambiado') return false;
+          return true;
         })
         .sort((a, b) => a.horario.fecha.localeCompare(b.horario.fecha) || a.horario.hora_inicio.localeCompare(b.horario.hora_inicio)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -102,16 +117,18 @@ export function useAsistencia(alumnoId?: string) {
         .filter((c) => {
           if (!c.horario) return false;
           const fin = new Date(`${c.horario.fecha}T${c.horario.hora_fin}`);
-          return fin <= now;
+          // Terminada → historial
+          if (fin <= now) return true;
+          // Cancelada o cambiada antes de terminar → historial también
+          if (c.estado === 'cancelado' || c.estado === 'cambiado') return true;
+          return false;
         })
-        .sort((a, b) => b.horario.fecha.localeCompare(a.horario.fecha)),
+        .sort((a, b) => b.horario.fecha.localeCompare(a.horario.fecha) || b.horario.hora_inicio.localeCompare(a.horario.hora_inicio)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [clases]
   );
 
-  // Prefer client-side proximas[0] so the datetime comparison above (hora_fin > now)
-  // takes precedence over the DB's date-only proxima_clase fallback.
-  const proximaClase = proximas[0] ?? data?.proxima_clase ?? null;
+  const proximaClase = proximas[0] ?? null;
 
   // Auto-invalidate when the deadline of the próxima clase is reached.
   // This triggers a refetch so the UI reflects the auto-cancellation without
