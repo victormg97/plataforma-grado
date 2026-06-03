@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useCallback, useMemo } from 'react';
+import { useEffect, useCallback, useMemo, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { createClient } from '@/lib/supabase/client';
 import type { EstadoAsistencia } from '@/lib/supabase/types';
@@ -112,6 +112,34 @@ export function useAsistencia(alumnoId?: string) {
   // Prefer client-side proximas[0] so the datetime comparison above (hora_fin > now)
   // takes precedence over the DB's date-only proxima_clase fallback.
   const proximaClase = proximas[0] ?? data?.proxima_clase ?? null;
+
+  // Auto-invalidate when the deadline of the próxima clase is reached.
+  // This triggers a refetch so the UI reflects the auto-cancellation without
+  // the user needing to reload the page.
+  const deadlineTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (deadlineTimerRef.current) clearTimeout(deadlineTimerRef.current);
+    if (!proximaClase || proximaClase.estado !== 'pendiente') return;
+
+    const deadlineHours = proximaClase.horario.profesor?.cancellation_deadline_hours ?? 0;
+    const classStart = new Date(`${proximaClase.horario.fecha}T${proximaClase.horario.hora_inicio}`);
+    // When deadline=0, the cutoff is classStart; otherwise classStart - deadlineHours
+    const cutoff = deadlineHours === 0
+      ? classStart
+      : new Date(classStart.getTime() - deadlineHours * 3600 * 1000);
+
+    const msUntilCutoff = cutoff.getTime() - Date.now();
+    if (msUntilCutoff <= 0) return; // already past — DB cron will handle it shortly
+
+    deadlineTimerRef.current = setTimeout(() => {
+      // Invalidate so the UI refetches updated estado from the DB
+      queryClient.invalidateQueries({ queryKey: ['asistencia', id] });
+    }, msUntilCutoff + 2000); // +2s to give the cron a moment to run
+
+    return () => {
+      if (deadlineTimerRef.current) clearTimeout(deadlineTimerRef.current);
+    };
+  }, [proximaClase, id, queryClient]);
 
   const confirmar = useCallback(async (asistenciaId: string) => {
     const res = await fetch(`/api/asistencia/${asistenciaId}`, {

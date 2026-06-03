@@ -143,8 +143,11 @@ function AlumnoDashboardContent() {
                   const deadlineTime = new Date(classStart.getTime() - deadlineHours * 3600 * 1000);
                   const now = new Date();
                   const msDiff = deadlineTime.getTime() - now.getTime();
+
+                  // Solo mostrar aviso cuando la clase aún no empezó y está pendiente/cancelado
                   const isActionable = proximaClase.estado === 'pendiente' || proximaClase.estado === 'cancelado';
-                  if (!isActionable) return null;
+                  const classStarted = now >= classStart;
+                  if (!isActionable || classStarted) return null;
 
                   if (deadlineHours === 0) {
                     return (
