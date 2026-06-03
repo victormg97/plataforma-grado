@@ -68,10 +68,17 @@ export function TabInformacion({ alumnoId, data, role = 'profesor' }: TabInforma
   const extra = data.alumnos_extra;
 
   // ── Clasificar clases ──
+  const now = new Date();
+
+  // "Pasada" para efectos del historial: terminó, O fue cancelada/cambiada (aunque no haya terminado)
   const clasesPasadas = data.historial_clases.filter((c) => {
-    const fecha = new Date(`${c.fecha}T${c.hora_fin}`);
-    return fecha < new Date();
+    const fin = new Date(`${c.fecha}T${c.hora_fin}`);
+    if (fin < now) return true; // ya terminó
+    const estado = c.asistencia?.[0]?.estado;
+    if (estado === 'cancelado' || estado === 'cambiado') return true; // cancelada antes de terminar
+    return false;
   });
+
   const clasesConfirmadas = clasesPasadas.filter(
     (c) => c.asistencia?.[0]?.estado === 'confirmado'
   );
