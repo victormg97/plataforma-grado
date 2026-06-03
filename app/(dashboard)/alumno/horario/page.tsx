@@ -621,17 +621,21 @@ function HorarioDetailView({ clase, user, confirmar, cancelar, pedirCambio: _ped
               <p className="text-[var(--color-text-muted)]">{clase.horario.descripcion}</p>
             )}
 
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="flex items-center gap-2 text-sm text-[var(--color-text-primary)]">
-                <Calendar className="size-4 text-[var(--color-brand-gold)]" />
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-bg-secondary)] px-3 py-1.5 text-sm font-medium text-[var(--color-text-primary)]">
+                <Calendar className="size-3.5 text-[var(--color-brand-gold)]" />
                 <span className="capitalize">
                   {format(new Date(clase.horario.fecha + 'T12:00:00'), locale === 'en' ? "EEEE, MMMM d yyyy" : "EEEE d 'de' MMMM yyyy", { locale: dateFnsLocale })}
                 </span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-[var(--color-text-primary)]">
-                <Clock className="h-4 w-4 text-[var(--color-brand-gold)]" />
-                <span>{clase.horario.hora_inicio} - {clase.horario.hora_fin}</span>
-              </div>
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-bg-secondary)] px-3 py-1.5 text-sm font-medium text-[var(--color-text-primary)]">
+                <Clock className="size-3.5 text-[var(--color-brand-gold)]" />
+                {clase.horario.hora_inicio.slice(0, 5)}
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-bg-secondary)] px-3 py-1.5 text-sm font-medium text-[var(--color-text-primary)]">
+                <Clock className="size-3.5 text-[var(--color-text-muted)]" />
+                {clase.horario.hora_fin.slice(0, 5)}
+              </span>
             </div>
 
             {clase.horario.profesor && (
@@ -687,6 +691,9 @@ function HorarioDetailView({ clase, user, confirmar, cancelar, pedirCambio: _ped
         </Card>
 
         {/* Acciones */}
+        {/* Solo mostrar si hay algo accionable: no mostrar cuando confirmado y en curso o ya pasó */}
+        {/* Acciones — se oculta cuando la clase está confirmada y ya empezó o terminó */}
+        {!(clase.estado === 'confirmado' && (enCurso || yaPaso)) && (
         <Card padding="lg">
           <h3 className="text-sm font-semibold uppercase text-[var(--color-text-muted)] mb-3">{t('acciones')}</h3>
 
@@ -783,6 +790,7 @@ function HorarioDetailView({ clase, user, confirmar, cancelar, pedirCambio: _ped
             </p>
           )}
         </Card>
+        )}
 
         {/* Notas de clase */}
         {showNotas && (

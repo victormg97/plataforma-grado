@@ -122,7 +122,21 @@ function AlumnoDashboardContent() {
                       </p>
                     )}
                   </div>
-                  <StatusBadge status={proximaClase.estado} />
+                  {(() => {
+                    const now = new Date();
+                    const start = new Date(`${proximaClase.horario.fecha}T${proximaClase.horario.hora_inicio}`);
+                    const end = new Date(`${proximaClase.horario.fecha}T${proximaClase.horario.hora_fin}`);
+                    const enCurso = proximaClase.estado === 'confirmado' && now >= start && now < end;
+                    if (enCurso) {
+                      return (
+                        <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-700/50">
+                          <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          {locale === 'en' ? 'In progress' : 'En curso'}
+                        </span>
+                      );
+                    }
+                    return <StatusBadge status={proximaClase.estado} />;
+                  })()}
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
@@ -221,17 +235,23 @@ function AlumnoDashboardContent() {
                   </div>
                 )}
 
-                {proximaClase.estado === 'confirmado' && (
-                  <div className="mt-2">
-                    <button
-                      onClick={() => setModal({ type: 'cancelar', clase: proximaClase })}
-                      className="flex items-center justify-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-error)] px-4 py-3 text-sm font-medium text-[var(--color-error)] hover:bg-red-50 dark:hover:bg-red-950/20 min-h-[48px] w-full sm:w-auto"
-                    >
-                      <XCircle className="size-4" />
-                      {t('cancelar_confirmado')}
-                    </button>
-                  </div>
-                )}
+                {proximaClase.estado === 'confirmado' && (() => {
+                  const now = new Date();
+                  const start = new Date(`${proximaClase.horario.fecha}T${proximaClase.horario.hora_inicio}`);
+                  const classStarted = now >= start;
+                  if (classStarted) return null;
+                  return (
+                    <div className="mt-2">
+                      <button
+                        onClick={() => setModal({ type: 'cancelar', clase: proximaClase })}
+                        className="flex items-center justify-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-error)] px-4 py-3 text-sm font-medium text-[var(--color-error)] hover:bg-red-50 dark:hover:bg-red-950/20 min-h-[48px] w-full sm:w-auto"
+                      >
+                        <XCircle className="size-4" />
+                        {t('cancelar_confirmado')}
+                      </button>
+                    </div>
+                  );
+                })()}
 
                 {proximaClase.estado === 'cancelado' && (
                   <div className="mt-2 space-y-2">
