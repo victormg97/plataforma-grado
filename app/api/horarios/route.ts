@@ -116,12 +116,12 @@ export async function POST(request: NextRequest) {
     const admin = createAdminClient();
     const { data: alumno } = await admin
       .from('profiles')
-      .select('email, idioma, nombre, apellido')
+      .select('email, idioma, nombre, apellido, apellido_materno')
       .eq('id', body.alumno_id)
       .single();
     if (!alumno?.email) return;
 
-    const nombreAlumno = `${alumno.nombre ?? ''} ${alumno.apellido ?? ''}`.trim();
+    const nombreAlumno = [alumno.nombre, alumno.apellido, alumno.apellido_materno].filter(Boolean).join(' ').trim();
 
     const solicitud: SolicitudCorreo = {
       tipo: 'nueva_clase',
@@ -135,8 +135,8 @@ export async function POST(request: NextRequest) {
         titulo_clase: horario.titulo,
         descripcion_clase: horario.descripcion ?? '',
         fecha: horario.fecha,
-        hora_inicio: horario.hora_inicio,
-        hora_fin: horario.hora_fin,
+        hora_inicio: horario.hora_inicio?.slice(0, 5) ?? '',
+        hora_fin: horario.hora_fin?.slice(0, 5) ?? '',
         // El destinatario es el alumno → enlace a la vista de la clase del alumno.
         enlace_clase: buildEnlaceClase(horario.id, 'alumno'),
       },

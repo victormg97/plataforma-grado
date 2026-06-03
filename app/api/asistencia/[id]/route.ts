@@ -195,7 +195,7 @@ export async function PATCH(
         // Datos del alumno (originador) para la variable {nombre_alumno}.
         const { data: alumno } = await admin
           .from('profiles')
-          .select('nombre, apellido')
+          .select('nombre, apellido, apellido_materno')
           .eq('id', user.id)
           .single();
 
@@ -210,7 +210,7 @@ export async function PATCH(
           .filter(Boolean)
           .join(' ')
           .trim();
-        const nombreAlumno = [alumno?.nombre, alumno?.apellido]
+        const nombreAlumno = [alumno?.nombre, alumno?.apellido, alumno?.apellido_materno]
           .filter(Boolean)
           .join(' ')
           .trim();
@@ -230,8 +230,8 @@ export async function PATCH(
             titulo_clase: horarioData?.titulo ?? horario?.titulo ?? '',
             descripcion_clase: horarioData?.descripcion ?? '',
             fecha: horarioData?.fecha ?? '',
-            hora_inicio: horarioData?.hora_inicio ?? '',
-            hora_fin: horarioData?.hora_fin ?? '',
+            hora_inicio: horarioData?.hora_inicio?.slice(0, 5) ?? '',
+            hora_fin: horarioData?.hora_fin?.slice(0, 5) ?? '',
             enlace_clase: buildEnlaceClase(existing.horario_id, rolDestinatario),
           },
           horarioId: existing.horario_id,

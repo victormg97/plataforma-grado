@@ -128,13 +128,75 @@ function AlumnoDashboardContent() {
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-bg-secondary)] px-2.5 py-1 text-sm font-medium text-[var(--color-text-primary)]">
                     <Calendar className="size-3.5 text-[var(--color-brand-gold)]" />
-                    <span className="capitalize">{format(new Date(proximaClase.horario.fecha + 'T12:00:00'), locale === 'en' ? "EEEE, MMMM d" : "EEEE d 'de' MMMM", { locale: dateFnsLocale })}</span>
+                    <span className="capitalize">{format(new Date(proximaClase.horario.fecha + 'T12:00:00'), locale === 'en' ? "EEEE, MMMM d, yyyy" : "EEEE d 'de' MMMM 'de' yyyy", { locale: dateFnsLocale })}</span>
                   </span>
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-bg-secondary)] px-2.5 py-1 text-sm font-medium text-[var(--color-text-primary)]">
                     <Clock className="h-3.5 w-3.5 text-[var(--color-brand-gold)]" />
-                    {proximaClase.horario.hora_inicio} - {proximaClase.horario.hora_fin}
+                    {proximaClase.horario.hora_inicio.slice(0, 5)} - {proximaClase.horario.hora_fin.slice(0, 5)}
                   </span>
                 </div>
+
+                {/* Aviso de plazo de confirmación */}
+                {(() => {
+                  const deadlineHours = proximaClase.horario.profesor?.cancellation_deadline_hours ?? 0;
+                  const classStart = new Date(`${proximaClase.horario.fecha}T${proximaClase.horario.hora_inicio}`);
+                  const deadlineTime = new Date(classStart.getTime() - deadlineHours * 3600 * 1000);
+                  const now = new Date();
+                  const msDiff = deadlineTime.getTime() - now.getTime();
+                  const isActionable = proximaClase.estado === 'pendiente' || proximaClase.estado === 'cancelado';
+                  if (!isActionable) return null;
+
+                  if (deadlineHours === 0) {
+                    return (
+                      <div className="flex items-start gap-2 rounded-[var(--radius-md)] border border-amber-200 dark:border-amber-700/50 bg-amber-50 dark:bg-amber-900/20 px-3 py-2.5 text-sm">
+                        <span className="mt-0.5 text-amber-500">⏰</span>
+                        <p className="text-amber-700 dark:text-amber-400">
+                          {locale === 'en'
+                            ? 'If you haven\'t confirmed when the class starts, it will be automatically cancelled.'
+                            : 'Si no confirmas al momento en que comience la clase, se marcará como cancelada automáticamente.'}
+                        </p>
+                      </div>
+                    );
+                  }
+
+                  if (msDiff <= 0) {
+                    return (
+                      <div className="flex items-start gap-2 rounded-[var(--radius-md)] border border-red-200 dark:border-red-700/50 bg-red-50 dark:bg-red-900/20 px-3 py-2.5 text-sm">
+                        <span className="mt-0.5 text-[var(--color-error)]">🔒</span>
+                        <p className="text-[var(--color-error)]">
+                          {locale === 'en'
+                            ? 'The confirmation window has closed. This class will be automatically cancelled if not already confirmed.'
+                            : 'El plazo para confirmar ya venció. Esta clase se cancelará automáticamente si no fue confirmada.'}
+                        </p>
+                      </div>
+                    );
+                  }
+
+                  const hoursLeft = Math.floor(msDiff / 3600000);
+                  const minutesLeft = Math.floor((msDiff % 3600000) / 60000);
+                  const deadlineStr = format(deadlineTime, locale === 'en' ? "MMM d 'at' HH:mm" : "d 'de' MMM 'a las' HH:mm", { locale: dateFnsLocale });
+                  const timeLeftStr = hoursLeft > 0
+                    ? locale === 'en' ? `${hoursLeft}h ${minutesLeft}m` : `${hoursLeft}h ${minutesLeft}m`
+                    : locale === 'en' ? `${minutesLeft} minutes` : `${minutesLeft} minutos`;
+
+                  return (
+                    <div className="flex items-start gap-2 rounded-[var(--radius-md)] border border-amber-200 dark:border-amber-700/50 bg-amber-50 dark:bg-amber-900/20 px-3 py-2.5 text-sm">
+                      <span className="mt-0.5 text-amber-500">⏰</span>
+                      <div className="text-amber-700 dark:text-amber-400">
+                        <p className="font-medium">
+                          {locale === 'en'
+                            ? `Confirm before ${deadlineStr} (${timeLeftStr} left)`
+                            : `Confirma antes del ${deadlineStr} (quedan ${timeLeftStr})`}
+                        </p>
+                        <p className="text-xs mt-0.5 text-amber-600 dark:text-amber-500">
+                          {locale === 'en'
+                            ? 'After that, unconfirmed classes are automatically cancelled.'
+                            : 'Pasado ese momento, las clases sin confirmar se cancelan automáticamente.'}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Acciones según estado */}
                 {proximaClase.estado === 'pendiente' && (
@@ -252,7 +314,7 @@ function AlumnoDashboardContent() {
                       </span>
                       <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-bg-secondary)] px-2 py-0.5 text-xs text-[var(--color-text-muted)]">
                         <Clock className="h-3 w-3 text-[var(--color-brand-gold)]" />
-                        {clase.horario.hora_inicio} - {clase.horario.hora_fin}
+                        {clase.horario.hora_inicio.slice(0, 5)} - {clase.horario.hora_fin.slice(0, 5)}
                       </span>
                     </div>
                     {clase.horario.profesor && (
@@ -315,7 +377,7 @@ function AlumnoDashboardContent() {
                           </span>
                           <span className="inline-flex items-center gap-1 text-xs text-[var(--color-text-muted)]">
                             <Clock className="size-3 text-[var(--color-brand-gold)]" />
-                            {clase.horario.hora_inicio}
+                            {clase.horario.hora_inicio.slice(0, 5)}
                           </span>
                         </div>
                         {clase.horario.profesor && (

@@ -128,12 +128,12 @@ export async function POST(request: NextRequest) {
   // Create notification for the profesor
   const { data: alumnoProfile } = await supabase
     .from('profiles')
-    .select('nombre, apellido')
+    .select('nombre, apellido, apellido_materno')
     .eq('id', user.id)
     .single();
 
   const alumnoNombre = alumnoProfile
-    ? `${alumnoProfile.nombre} ${alumnoProfile.apellido}`
+    ? [alumnoProfile.nombre, alumnoProfile.apellido, alumnoProfile.apellido_materno].filter(Boolean).join(' ')
     : 'Un alumno';
 
   await supabase.from('notificaciones').insert({
@@ -196,11 +196,11 @@ export async function POST(request: NextRequest) {
         titulo_clase: horarioData?.titulo ?? horarioOriginal.titulo,
         descripcion_clase: horarioData?.descripcion ?? '',
         fecha: horarioData?.fecha ?? '',
-        hora_inicio: horarioData?.hora_inicio ?? '',
-        hora_fin: horarioData?.hora_fin ?? '',
+        hora_inicio: horarioData?.hora_inicio?.slice(0, 5) ?? '',
+        hora_fin: horarioData?.hora_fin?.slice(0, 5) ?? '',
         fecha_propuesta: solicitud.fecha_propuesta,
-        hora_inicio_propuesta: solicitud.hora_inicio_propuesta,
-        hora_fin_propuesta: solicitud.hora_fin_propuesta,
+        hora_inicio_propuesta: solicitud.hora_inicio_propuesta?.slice(0, 5),
+        hora_fin_propuesta: solicitud.hora_fin_propuesta?.slice(0, 5),
         nota_alumno: solicitud.nota_alumno ?? '',
         enlace_clase: buildEnlaceClase(horario_original_id, rolDestinatario),
       },

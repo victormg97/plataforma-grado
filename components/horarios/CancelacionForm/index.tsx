@@ -47,7 +47,7 @@ export function CancelacionForm({ clase, onCancel, onClose }: CancelacionFormPro
 
         <div className="mb-4 rounded-[var(--radius-md)] bg-[var(--color-bg-secondary)] p-[var(--space-md)]">
           <p className="font-medium text-[var(--color-text-primary)]">
-            {format(new Date(clase.horario.fecha + 'T12:00:00'), "EEEE d 'de' MMMM", { locale: es })}, {clase.horario.hora_inicio}
+            {format(new Date(clase.horario.fecha + 'T12:00:00'), "EEEE d 'de' MMMM", { locale: es })}, {clase.horario.hora_inicio.slice(0, 5)}
           </p>
           <p className="text-sm text-[var(--color-text-muted)] mt-1">{clase.horario.titulo}</p>
         </div>

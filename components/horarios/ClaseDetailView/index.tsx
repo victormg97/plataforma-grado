@@ -334,7 +334,7 @@ export function ClaseDetailView({ rol }: ClaseDetailViewProps) {
                 />
                 <div>
                   <p className="font-medium text-[var(--color-text-primary)]">
-                    {horario.alumno.nombre} {horario.alumno.apellido}
+                    {horario.alumno.nombre} {horario.alumno.apellido}{horario.alumno.apellido_materno ? ` ${horario.alumno.apellido_materno}` : ''}
                   </p>
                   <p className="text-sm text-[var(--color-text-muted)]">
                     {horario.alumno.email}

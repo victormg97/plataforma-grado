@@ -32,6 +32,7 @@ export type HorarioConAsistencia = {
     id: string;
     nombre: string;
     apellido: string;
+    apellido_materno: string | null;
     email: string;
     avatar_url: string | null;
   } | null;

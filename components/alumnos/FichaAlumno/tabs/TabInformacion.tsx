@@ -12,6 +12,7 @@ import { StatusBadge } from '@/components/common/StatusBadge';
 import { useRouter } from 'next/navigation';
 import { usePruebaTerm } from '@/lib/hooks/usePruebaTerm';
 import { NotasProfesorSection } from './NotasProfesorSection';
+import { buildClaseDetailHref, buildAlumnoHorarioDetailHref } from '@/lib/utils/horarioNavigation';
 
 interface NotaAlumno {
   id: string;
@@ -95,12 +96,16 @@ export function TabInformacion({ alumnoId, data, role = 'profesor' }: TabInforma
     format(new Date(fecha), locale === 'en' ? 'MMM d, yyyy' : 'd MMM yyyy', { locale: dateFnsLocale });
   const fmtHora = (h: string) => h.slice(0, 5);
 
-  const claseDetailPath = (claseId: string) =>
-    role === 'admin'
-      ? `/admin/clase/${claseId}`
-      : role === 'alumno'
-        ? `/alumno/horario?id=${claseId}&from=/alumno/perfil`
-        : `/profesor/clase/${claseId}`;
+  const claseDetailPath = (claseId: string) => {
+    if (role === 'admin') {
+      return buildClaseDetailHref(claseId, 'admin', `/admin/alumnos/${alumnoId}`);
+    }
+    if (role === 'alumno') {
+      return buildAlumnoHorarioDetailHref(claseId, '/alumno/perfil');
+    }
+    // profesor
+    return buildClaseDetailHref(claseId, 'profesor', `/profesor/alumnos/${alumnoId}`);
+  };
 
   return (
     <div className="space-y-5">
