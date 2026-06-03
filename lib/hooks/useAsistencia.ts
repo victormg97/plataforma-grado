@@ -80,24 +80,38 @@ export function useAsistencia(alumnoId?: string) {
   }, [id, queryClient]);
 
   const today = new Date().toISOString().split('T')[0];
+  const now = new Date();
 
   const proximas = useMemo(
     () =>
       clases
-        .filter((c) => c.horario && c.horario.fecha >= today && c.horario.activo)
+        .filter((c) => {
+          if (!c.horario || !c.horario.activo) return false;
+          // Excluir clases cuya hora_fin ya pasó hoy
+          const fin = new Date(`${c.horario.fecha}T${c.horario.hora_fin}`);
+          return fin > now;
+        })
         .sort((a, b) => a.horario.fecha.localeCompare(b.horario.fecha) || a.horario.hora_inicio.localeCompare(b.horario.hora_inicio)),
-    [clases, today]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [clases]
   );
 
   const historial = useMemo(
     () =>
       clases
-        .filter((c) => c.horario && c.horario.fecha < today)
+        .filter((c) => {
+          if (!c.horario) return false;
+          const fin = new Date(`${c.horario.fecha}T${c.horario.hora_fin}`);
+          return fin <= now;
+        })
         .sort((a, b) => b.horario.fecha.localeCompare(a.horario.fecha)),
-    [clases, today]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [clases]
   );
 
-  const proximaClase = data?.proxima_clase ?? proximas[0] ?? null;
+  // Prefer client-side proximas[0] so the datetime comparison above (hora_fin > now)
+  // takes precedence over the DB's date-only proxima_clase fallback.
+  const proximaClase = proximas[0] ?? data?.proxima_clase ?? null;
 
   const confirmar = useCallback(async (asistenciaId: string) => {
     const res = await fetch(`/api/asistencia/${asistenciaId}`, {
