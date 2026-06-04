@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
   }
 
   const userId = sessionData.user.id;
-  const tipo = enlace!.tipo as 'profesor' | 'alumno';
+  const tipo = enlace!.tipo as 'profesor' | 'alumno' | 'lector';
 
   // ── 3. Asegurar rol del perfil y datos extra ──
   await admin.from('profiles').update({ rol: tipo }).eq('id', userId);
@@ -74,6 +74,7 @@ export async function GET(request: NextRequest) {
       await admin.from('alumnos_extra').update({ profesor_id: profesorId } as never).eq('alumno_id', userId);
     }
   }
+  // tipo 'lector': no requiere datos extra
 
   // ── 4. Claim atómico del enlace ──
   const { data: claimed } = await admin
@@ -112,6 +113,6 @@ export async function GET(request: NextRequest) {
     }).catch(() => {});
   }
 
-  const redirectPath = tipo === 'profesor' ? '/profesor' : '/alumno';
+  const redirectPath = tipo === 'profesor' ? '/profesor' : tipo === 'lector' ? '/lector' : '/alumno';
   return NextResponse.redirect(`${origin}${redirectPath}`);
 }

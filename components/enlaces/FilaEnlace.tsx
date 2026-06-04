@@ -53,7 +53,12 @@ export function FilaEnlace({ enlace, rol, onEditar, onToggleEstado, onEliminar }
     usuarioExiste: enlace.usuario !== null,
   });
 
-  const tipoLabel = enlace.tipo === 'profesor' ? t('tipos.profesor') : t('tipos.alumno');
+  const tipoLabel =
+    enlace.tipo === 'profesor'
+      ? t('tipos.profesor')
+      : enlace.tipo === 'lector'
+      ? t('tipos.lector')
+      : t('tipos.alumno');
   const estadoClass = estadoBadgeClass[enlace.estado] ?? 'bg-gray-100 text-gray-600 dark:bg-gray-800';
 
   // Acciones para CardActions (excluye "compartir": tiene su propio botón con popover).
@@ -118,7 +123,7 @@ export function FilaEnlace({ enlace, rol, onEditar, onToggleEstado, onEliminar }
           </span>
         </p>
         <div className="mt-0.5 text-xs text-[var(--color-text-muted)]">
-          {enlace.tipo === 'alumno' && (
+          {(enlace.tipo === 'alumno') && (
             <span>
               {t('columna_profesor')}:{' '}
               {profesorNombre ?? <span className="italic">{t('sin_profesor')}</span>}

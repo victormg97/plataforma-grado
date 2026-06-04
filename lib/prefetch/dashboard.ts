@@ -190,5 +190,19 @@ export async function prefetchDashboardData(userId: string, rol: UserRol) {
     }
   }
 
+  if (rol === 'lector') {
+    // ── Single RPC call for lector ───────────────────────────────────────────
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: prefetch } = await supabase.rpc('get_lector_prefetch', { p_lector_id: userId }) as { data: any };
+
+    if (prefetch) {
+      const recursos = prefetch.recursos ?? {};
+      queryClient.setQueryData(['recursos', userId], {
+        recursos: recursos.recursos ?? [],
+        carpetas: recursos.carpetas ?? [],
+      });
+    }
+  }
+
   return dehydrate(queryClient);
 }

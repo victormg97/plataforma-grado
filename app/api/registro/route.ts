@@ -118,6 +118,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'REGISTRO_FALLIDO', message: extraError.message }, { status: 500 });
     }
   }
+  // tipo 'lector': no requiere datos extra, el perfil base es suficiente
 
   // ── 5. Claim atómico del enlace (activo -> usado) ──
   const { data: claimed, error: claimError } = await admin
@@ -165,6 +166,6 @@ export async function POST(request: NextRequest) {
     eventoId: `registro:${userId}`,
   }).catch(() => {});
 
-  const redirectPath = tipo === 'profesor' ? '/profesor' : '/alumno';
+  const redirectPath = tipo === 'profesor' ? '/profesor' : tipo === 'lector' ? '/lector' : '/alumno';
   return NextResponse.json({ ok: true, redirectPath }, { status: 200 });
 }

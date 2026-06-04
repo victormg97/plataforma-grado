@@ -144,10 +144,11 @@ export function RecursosView({ rol }: RecursosViewProps) {
     staleTime: 30_000,
     queryFn: async () => {
       if (rol === 'admin') {
+        // Admin puede asignar acceso a alumnos Y lectores
         const { data, error } = await supabase
           .from('profiles')
           .select('id, nombre, apellido')
-          .eq('rol', 'alumno')
+          .in('rol', ['alumno', 'lector'])
           .eq('activo', true)
           .order('nombre');
         if (error) throw error;
@@ -722,7 +723,7 @@ export function RecursosView({ rol }: RecursosViewProps) {
           </div>
           <div>
             <p className="text-sm font-semibold text-[var(--color-text-primary)]">
-              {currentCarpetaId ? t('carpeta_vacia') : (rol === 'alumno' ? t('sin_recursos_alumno') : t('sin_recursos'))}
+              {currentCarpetaId ? t('carpeta_vacia') : (rol === 'alumno' || rol === 'lector' ? t('sin_recursos_alumno') : t('sin_recursos'))}
             </p>
             {canUpload && (
               <p className="mt-1 text-xs text-[var(--color-text-muted)]">{t('sin_recursos_desc')}</p>
@@ -748,7 +749,7 @@ export function RecursosView({ rol }: RecursosViewProps) {
                   key={c.id}
                   carpeta={c}
                   canManage={canUpload && (rol === 'admin' || c.creada_por === user?.id)}
-                  showPermisoBadge={rol !== 'alumno'}
+                  showPermisoBadge={rol !== 'alumno' && rol !== 'lector'}
                   onClick={() => setCurrentCarpetaId(c.id)}
                   onRename={(carpeta) => { setRenamingCarpeta(carpeta); setCarpetaModalMode('rename'); }}
                   onDelete={(carpeta) => setDeleteCarpetaTarget(carpeta)}

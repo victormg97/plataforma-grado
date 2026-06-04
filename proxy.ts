@@ -60,6 +60,7 @@ export async function proxy(request: NextRequest) {
           admin: '/admin',
           profesor: '/profesor',
           alumno: '/alumno',
+          lector: '/lector',
         };
         const url = request.nextUrl.clone();
         url.pathname = redirectMap[profile.rol] || '/login';
@@ -73,7 +74,8 @@ export async function proxy(request: NextRequest) {
   const isProtected =
     pathname.startsWith('/admin') ||
     pathname.startsWith('/profesor') ||
-    pathname.startsWith('/alumno');
+    pathname.startsWith('/alumno') ||
+    pathname.startsWith('/lector');
 
   if (isProtected) {
     if (!user) {
@@ -99,6 +101,7 @@ export async function proxy(request: NextRequest) {
       '/admin': ['admin'],
       '/profesor': ['admin', 'profesor'],
       '/alumno': ['alumno'],
+      '/lector': ['lector'],
     };
 
     const matchedPrefix = Object.keys(roleAccess).find((prefix) =>
@@ -111,6 +114,7 @@ export async function proxy(request: NextRequest) {
         admin: '/admin',
         profesor: '/profesor',
         alumno: '/alumno',
+        lector: '/lector',
       };
       const url = request.nextUrl.clone();
       url.pathname = redirectMap[profile.rol] || '/login';
@@ -132,6 +136,7 @@ export async function proxy(request: NextRequest) {
           admin: '/admin',
           profesor: '/profesor',
           alumno: '/alumno',
+          lector: '/lector',
         };
         const url = request.nextUrl.clone();
         url.pathname = redirectMap[profile.rol] || '/login';

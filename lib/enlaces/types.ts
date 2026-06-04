@@ -1,6 +1,6 @@
 // Tipos compartidos para la funcionalidad de enlaces de invitación.
 
-export type TipoEnlace = 'profesor' | 'alumno';
+export type TipoEnlace = 'profesor' | 'alumno' | 'lector';
 
 /** Estados conocidos. El estado se modela como string para ser extensible. */
 export type EstadoEnlaceConocido = 'activo' | 'usado' | 'deshabilitado';
@@ -30,7 +30,7 @@ export interface EnlaceListItem {
 }
 
 /** Rol del usuario autenticado. */
-export type Rol = 'admin' | 'profesor' | 'alumno';
+export type Rol = 'admin' | 'profesor' | 'alumno' | 'lector';
 
 /** Actor que solicita crear un enlace. */
 export interface Actor {

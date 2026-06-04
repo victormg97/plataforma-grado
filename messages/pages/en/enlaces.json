@@ -13,7 +13,8 @@
   },
   "tipos": {
     "profesor": "Teacher",
-    "alumno": "Student"
+    "alumno": "Student",
+    "lector": "Reader"
   },
   "columna_creador": "Created by",
   "columna_fecha": "Date",
@@ -52,5 +53,6 @@
   "guardar": "Save",
   "cancelar": "Cancel",
   "tipo_profesor": "To register a teacher",
-  "tipo_alumno": "To register a student"
+  "tipo_alumno": "To register a student",
+  "tipo_lector": "For read-only access to shared resources"
 }

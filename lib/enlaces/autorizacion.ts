@@ -7,7 +7,7 @@ import type {
   TipoEnlace,
 } from './types';
 
-const TIPOS_VALIDOS: TipoEnlace[] = ['profesor', 'alumno'];
+const TIPOS_VALIDOS: TipoEnlace[] = ['profesor', 'alumno', 'lector'];
 
 function esTipoValido(tipo: string): tipo is TipoEnlace {
   return (TIPOS_VALIDOS as string[]).includes(tipo);

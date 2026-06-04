@@ -1398,6 +1398,7 @@ export type Database = {
       get_admin_stats: { Args: never; Returns: Json }
       get_alumno_dashboard: { Args: { p_alumno_id: string }; Returns: Json }
       get_alumno_prefetch: { Args: { p_alumno_id: string }; Returns: Json }
+      get_lector_prefetch: { Args: { p_lector_id: string }; Returns: Json }
       get_alumno_ficha:
         | { Args: { p_alumno_id: string; p_limit?: number }; Returns: Json }
         | {
@@ -1530,7 +1531,7 @@ export type Database = {
         | "cambio_horario_aceptado"
         | "cambio_horario_rechazado"
         | "invitacion_acceso"
-      user_rol: "admin" | "profesor" | "alumno"
+      user_rol: "admin" | "profesor" | "alumno" | "lector"
     }
     CompositeTypes: {
       [_ in never]: never

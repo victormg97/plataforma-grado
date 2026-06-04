@@ -82,7 +82,7 @@ export default function RegistroPage({ params }: { params: Promise<{ code: strin
               className="mb-1 text-center text-xl font-semibold text-[var(--color-text-primary)]"
               style={{ fontFamily: 'var(--font-display)' }}
             >
-              {tipo === 'profesor' ? t('titulo_profesor') : t('titulo_alumno')}
+              {tipo === 'profesor' ? t('titulo_profesor') : tipo === 'lector' ? t('titulo_lector') : t('titulo_alumno')}
             </h2>
             <p className="mb-6 text-center text-sm text-[var(--color-text-muted)]">
               {t('subtitulo')}

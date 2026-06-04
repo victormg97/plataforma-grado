@@ -13,7 +13,8 @@
   },
   "tipos": {
     "profesor": "Profesor",
-    "alumno": "Alumno"
+    "alumno": "Alumno",
+    "lector": "Lector"
   },
   "columna_creador": "Creado por",
   "columna_fecha": "Fecha",
@@ -52,5 +53,6 @@
   "guardar": "Guardar",
   "cancelar": "Cancelar",
   "tipo_profesor": "Para registrar un profesor",
-  "tipo_alumno": "Para registrar un alumno"
+  "tipo_alumno": "Para registrar un alumno",
+  "tipo_lector": "Para acceso de solo lectura a recursos compartidos"
 }

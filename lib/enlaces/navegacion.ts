@@ -30,6 +30,7 @@ export interface EnlaceParaNavegacion {
 /**
  * Ruta de navegación al usuario creado con un enlace usado:
  * - alumno activo -> `/admin/alumnos/[id]`
+ * - lector activo -> `/admin/alumnos/[id]` (el lector aparece en la lista de alumnos del admin)
  * - profesor activo -> `/admin/profesores/[id]/horarios`
  * - cuenta desactivada o perfil inexistente -> `null`
  */
@@ -37,7 +38,7 @@ export function controlNavegacionUsuario(enlace: EnlaceParaNavegacion): string |
   if (!enlace.usuario_creado || !enlace.usuarioExiste || !enlace.usuarioActivo) {
     return null;
   }
-  if (enlace.tipo === 'alumno') return `/admin/alumnos/${enlace.usuario_creado}`;
+  if (enlace.tipo === 'alumno' || enlace.tipo === 'lector') return `/admin/alumnos/${enlace.usuario_creado}`;
   if (enlace.tipo === 'profesor') return `/admin/profesores/${enlace.usuario_creado}/horarios`;
   return null;
 }

@@ -43,7 +43,12 @@ export function FiltrosEnlaces({ enlaces, filtro, onChange }: FiltrosEnlacesProp
     { value: TODOS, label: t('filtro_todos') },
     ...tiposDistintos.map((tp) => ({
       value: tp,
-      label: tp === 'profesor' ? t('tipos.profesor') : t('tipos.alumno'),
+      label:
+        tp === 'profesor'
+          ? t('tipos.profesor')
+          : tp === 'lector'
+          ? t('tipos.lector')
+          : t('tipos.alumno'),
     })),
   ];
 

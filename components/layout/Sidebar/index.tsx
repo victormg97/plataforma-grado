@@ -51,6 +51,9 @@ const navItems: Record<UserRol, NavItem[]> = {
     { key: 'horario', href: '/alumno/horario', icon: <GraduationCap className="size-4" /> },
     { key: 'perfil', href: '/alumno/perfil', icon: <User className="size-4" /> },
   ],
+  // Lector: no tiene sección principal aparte de recursos, el nav queda vacío
+  // y recursos aparece en la sección inferior destacada.
+  lector: [],
 };
 
 export function Sidebar() {
@@ -67,6 +70,8 @@ export function Sidebar() {
       ? '/admin/recursos'
       : user?.rol === 'profesor'
       ? '/profesor/recursos'
+      : user?.rol === 'lector'
+      ? '/lector/recursos'
       : '/alumno/recursos';
 
   const isSharedFilesActive = pathname.startsWith(sharedFilesHref);

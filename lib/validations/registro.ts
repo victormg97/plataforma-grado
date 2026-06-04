@@ -14,14 +14,16 @@ export const PASSWORD_MAX = 128;
 export const CAMPOS_OBLIGATORIOS = {
   profesor: ['nombre', 'apellido', 'email'] as const,
   alumno: ['nombre', 'apellido', 'email'] as const,
+  lector: ['nombre', 'apellido', 'email'] as const,
 };
 
 export const CAMPOS_OPCIONALES = {
   profesor: ['apellido_materno', 'telefono'] as const,
   alumno: ['apellido_materno', 'telefono', 'universidad', 'año_egreso'] as const,
+  lector: ['apellido_materno', 'telefono'] as const,
 };
 
-export type TipoRegistro = 'profesor' | 'alumno';
+export type TipoRegistro = 'profesor' | 'alumno' | 'lector';
 
 // ─── Forma de los datos del formulario ────────────────────────────────────────
 export interface RegistroFormData {
@@ -99,7 +101,7 @@ export const registroAlumnoSchema = z
   });
 
 export function schemaPorTipo(tipo: TipoRegistro) {
-  return tipo === 'profesor' ? registroProfesorSchema : registroAlumnoSchema;
+  return tipo === 'profesor' || tipo === 'lector' ? registroProfesorSchema : registroAlumnoSchema;
 }
 
 // ─── Regla compartida cliente/servidor ────────────────────────────────────────
@@ -121,7 +123,7 @@ export function registroEsValido(
   form: Partial<RegistroFormData>,
   tipo: TipoRegistro,
 ): boolean {
-  const obligatorios = CAMPOS_OBLIGATORIOS[tipo];
+  const obligatorios = CAMPOS_OBLIGATORIOS[tipo] ?? CAMPOS_OBLIGATORIOS.profesor;
   for (const campo of obligatorios) {
     if (!noVacio((form as Record<string, unknown>)[campo])) return false;
   }

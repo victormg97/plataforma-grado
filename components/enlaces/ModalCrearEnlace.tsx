@@ -7,7 +7,7 @@ import { Modal } from '@/components/common/Modal';
 import { Button } from '@/components/common/Button';
 import { Label } from '@/components/ui/label';
 import { AppSelect } from '@/components/common/AppSelect';
-import type { PersonaResumen } from '@/lib/enlaces/types';
+import type { PersonaResumen, TipoEnlace } from '@/lib/enlaces/types';
 
 interface ModalCrearEnlaceProps {
   open: boolean;
@@ -21,7 +21,7 @@ const SIN_PROFESOR = '__sin__';
 
 export function ModalCrearEnlace({ open, onClose, soloAlumno, onCreated }: ModalCrearEnlaceProps) {
   const t = useTranslations('enlaces');
-  const [tipo, setTipo] = useState<'profesor' | 'alumno'>(soloAlumno ? 'alumno' : 'alumno');
+  const [tipo, setTipo] = useState<TipoEnlace>(soloAlumno ? 'alumno' : 'alumno');
   const [profesor, setProfesor] = useState<string>(SIN_PROFESOR);
   const [profesores, setProfesores] = useState<PersonaResumen[]>([]);
   const [loading, setLoading] = useState(false);
@@ -66,15 +66,25 @@ export function ModalCrearEnlace({ open, onClose, soloAlumno, onCreated }: Modal
     }
   };
 
-  const tipoOptions = [
-    { value: 'alumno', label: t('tipos.alumno') },
-    { value: 'profesor', label: t('tipos.profesor') },
-  ];
+  const tipoOptions = soloAlumno
+    ? [{ value: 'alumno', label: t('tipos.alumno') }]
+    : [
+        { value: 'alumno', label: t('tipos.alumno') },
+        { value: 'profesor', label: t('tipos.profesor') },
+        { value: 'lector', label: t('tipos.lector') },
+      ];
 
   const profesorOptions = [
     { value: SIN_PROFESOR, label: t('sin_profesor') },
     ...profesores.map((p) => ({ value: p.id, label: `${p.nombre} ${p.apellido}`.trim() })),
   ];
+
+  const tipoDescripcion =
+    tipo === 'profesor'
+      ? t('tipo_profesor')
+      : tipo === 'lector'
+      ? t('tipo_lector')
+      : t('tipo_alumno');
 
   return (
     <Modal
@@ -98,14 +108,12 @@ export function ModalCrearEnlace({ open, onClose, soloAlumno, onCreated }: Modal
             <Label className="text-[var(--color-text-secondary)]">{t('campo_tipo')}</Label>
             <AppSelect
               value={tipo}
-              onChange={(v) => setTipo(v as 'profesor' | 'alumno')}
+              onChange={(v) => setTipo(v as TipoEnlace)}
               options={tipoOptions}
               placeholder={t('placeholder_tipo')}
               className="w-full"
             />
-            <p className="text-xs text-[var(--color-text-muted)]">
-              {tipo === 'profesor' ? t('tipo_profesor') : t('tipo_alumno')}
-            </p>
+            <p className="text-xs text-[var(--color-text-muted)]">{tipoDescripcion}</p>
           </div>
         )}
 
