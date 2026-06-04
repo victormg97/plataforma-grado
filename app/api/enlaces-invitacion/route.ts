@@ -49,7 +49,7 @@ export async function GET() {
   const { data: rows, error } = await supabase
     .from('enlaces_invitacion')
     .select(
-      `id, codigo, tipo, estado, created_by, profesor_asignado, usuario_creado, created_at,
+      `id, codigo, tipo, estado, created_by, profesor_asignado, usuario_creado, created_at, updated_at,
        creador:created_by ( id, nombre, apellido, activo ),
        profesor:profesor_asignado ( id, nombre, apellido, activo ),
        usuario:usuario_creado ( id, nombre, apellido, activo )`,
@@ -73,6 +73,7 @@ export async function GET() {
       estado: r.estado,
       created_by: r.created_by,
       created_at: r.created_at,
+      updated_at: r.updated_at,
       creador: persona(creador),
       profesor_asignado: r.profesor_asignado,
       profesor: persona(profesor),

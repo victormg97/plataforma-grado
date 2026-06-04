@@ -31,8 +31,8 @@ export function FiltrosEnlaces({ enlaces, filtro, onChange }: FiltrosEnlacesProp
   const tiposDistintos = useMemo(() => opcionesDistintas(enlaces, 'tipo'), [enlaces]);
   const creadoresDistintos = useMemo(() => Array.from(creadores.keys()), [creadores]);
 
-  const creadorDisabled = filtroDeshabilitado(creadoresDistintos);
-  const tipoDisabled = filtroDeshabilitado(tiposDistintos);
+  const creadorDisabled = filtroDeshabilitado(creadoresDistintos, filtro.creador);
+  const tipoDisabled = filtroDeshabilitado(tiposDistintos, filtro.tipo);
 
   const creadorOptions = [
     { value: TODOS, label: t('filtro_todos') },

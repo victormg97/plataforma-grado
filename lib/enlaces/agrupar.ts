@@ -9,25 +9,33 @@ export interface GrupoEstado<T extends ConEstado> {
   items: T[];
 }
 
+// Orden preferido de estados en la UI: activos primero, usados al final.
+const ORDEN_ESTADOS: Record<string, number> = {
+  activo: 0,
+  deshabilitado: 1,
+  usado: 2,
+};
+
 /**
- * Agrupa los enlaces por `estado` en orden de primera aparición en los datos.
- * No incluye grupos vacíos. La concatenación de los `items` es una permutación
- * exacta de la entrada (ningún elemento perdido ni duplicado).
+ * Agrupa los enlaces por `estado`. Los grupos se ordenan: activo → deshabilitado
+ * → usado → cualquier estado desconocido. Dentro de cada grupo el orden de
+ * entrada se preserva.
  */
 export function agruparPorEstado<T extends ConEstado>(enlaces: T[]): GrupoEstado<T>[] {
-  const orden: string[] = [];
   const mapa = new Map<string, T[]>();
 
   for (const e of enlaces) {
-    if (!mapa.has(e.estado)) {
-      mapa.set(e.estado, []);
-      orden.push(e.estado);
-    }
+    if (!mapa.has(e.estado)) mapa.set(e.estado, []);
     mapa.get(e.estado)!.push(e);
   }
 
-  return orden
-    .map((estado) => ({ estado, items: mapa.get(estado)! }))
+  return Array.from(mapa.entries())
+    .sort(([a], [b]) => {
+      const oa = ORDEN_ESTADOS[a] ?? 99;
+      const ob = ORDEN_ESTADOS[b] ?? 99;
+      return oa - ob;
+    })
+    .map(([estado, items]) => ({ estado, items }))
     .filter((g) => g.items.length > 0);
 }
 

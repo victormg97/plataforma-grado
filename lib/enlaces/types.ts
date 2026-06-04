@@ -22,6 +22,8 @@ export interface EnlaceListItem {
   estado: string;
   created_by: string | null;
   created_at: string;
+  /** Última modificación — cuando estado='usado', refleja la fecha de uso. */
+  updated_at: string;
   creador: PersonaResumen | null;
   profesor_asignado: string | null;
   profesor: PersonaResumen | null;

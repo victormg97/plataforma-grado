@@ -48,9 +48,12 @@ export function opcionesDistintas<T, K extends keyof T>(
 }
 
 /**
- * Un filtro debe deshabilitarse si y solo si hay menos de dos valores distintos
- * disponibles en los datos visibles.
+ * Un filtro debe deshabilitarse solo cuando no hay ningún valor disponible,
+ * o cuando hay exactamente un valor Y no hay filtro activo (no tiene sentido
+ * seleccionar el único valor existente si no puedes comparar con otro).
+ * Si el usuario ya tiene un filtro activo, siempre puede quitarlo.
  */
-export function filtroDeshabilitado(valoresDistintos: string[]): boolean {
-  return valoresDistintos.length < 2;
+export function filtroDeshabilitado(valoresDistintos: string[], valorActual?: string | null): boolean {
+  if (valorActual) return false; // siempre puede deseleccionar
+  return valoresDistintos.length === 0;
 }
