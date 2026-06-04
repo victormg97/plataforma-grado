@@ -31,6 +31,11 @@ interface CardActionsProps {
   /** Extra class for the desktop button row wrapper */
   className?: string;
   /**
+   * When true, desktop icon buttons are always visible (no group-hover fade).
+   * Useful when the card doesn't rely on hover to reveal actions.
+   */
+  alwaysVisible?: boolean;
+  /**
    * When true, only the ⋯ ellipsis trigger + popover are rendered (no desktop
    * icon row). The caller is responsible for controlling visibility via wrapper
    * classes (e.g. `sm:hidden`). Useful when the desktop layout is custom.
@@ -40,7 +45,7 @@ interface CardActionsProps {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function CardActions({ actions, className, mobileOnly = false }: CardActionsProps) {
+export function CardActions({ actions, className, alwaysVisible = false, mobileOnly = false }: CardActionsProps) {
   const t = useTranslations('common');
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -121,7 +126,9 @@ export function CardActions({ actions, className, mobileOnly = false }: CardActi
                 className={cn(
                   'flex size-9 items-center justify-center rounded-[var(--radius-sm)]',
                   'text-[var(--color-text-muted)] transition-colors',
-                  'opacity-0 group-hover:opacity-100 transition-opacity',
+                  alwaysVisible
+                    ? 'opacity-100'
+                    : 'opacity-0 group-hover:opacity-100 transition-opacity',
                   action.danger
                     ? 'hover:bg-[rgba(192,57,43,0.1)] hover:text-[var(--color-error)]'
                     : 'hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]',
