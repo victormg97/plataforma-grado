@@ -112,6 +112,37 @@ export async function GET(
     if (!hasAccess) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
+  } else if (rol === 'lector') {
+    // Lector: mismas condiciones que alumno pero sin visibilidad por profesor asignado
+    let hasAccess = false;
+
+    // Condition 0: app-wide visibility
+    if (recurso.para_todos_app) hasAccess = true;
+
+    // Condition 1: explicit grant via recursos_acceso
+    if (!hasAccess) {
+      const { data: acceso } = await adminClient
+        .from('recursos_acceso')
+        .select('id')
+        .eq('recurso_id', id)
+        .eq('alumno_id', user.id)
+        .maybeSingle();
+      if (acceso) hasAccess = true;
+    }
+
+    // Condition 2: para_todos from admin
+    if (!hasAccess && recurso.para_todos) {
+      const { data: uploader } = await adminClient
+        .from('profiles')
+        .select('rol')
+        .eq('id', recurso.subido_por)
+        .single();
+      if (uploader?.rol === 'admin') hasAccess = true;
+    }
+
+    if (!hasAccess) {
+      return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+    }
   } else {
     return NextResponse.json({ error: 'Access denied' }, { status: 403 });
   }
@@ -120,7 +151,7 @@ export async function GET(
   const searchParams = _req.nextUrl.searchParams;
   const isDownload = searchParams.get('action') === 'download';
 
-  if (isDownload && recurso.bloquear_descarga && rol === 'alumno') {
+  if (isDownload && recurso.bloquear_descarga && (rol === 'alumno' || rol === 'lector')) {
     return NextResponse.json({ error: 'Download not allowed for this resource' }, { status: 403 });
   }
 
