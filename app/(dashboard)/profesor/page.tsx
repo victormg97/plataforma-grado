@@ -3,7 +3,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { CalendarDays, CheckCircle, Clock, XCircle, Plus } from 'lucide-react';
+import { CalendarDays, CalendarClock, CalendarRange, CheckCircle, Clock, XCircle, Plus } from 'lucide-react';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
@@ -54,9 +54,9 @@ export default function ProfesorDashboardPage() {
     }
 
     return [
-      { key: 'hoy', value: hoy, label: t('clases_hoy') },
-      { key: 'semana', value: semana, label: t('clases_semana') },
-      { key: 'mes', value: mes, label: t('clases_mes') },
+      { key: 'hoy',    value: hoy,    label: t('clases_hoy'),    icon: <CalendarClock className="size-5" />, color: 'var(--color-text-primary)' },
+      { key: 'semana', value: semana, label: t('clases_semana'), icon: <CalendarRange  className="size-5" />, color: 'var(--color-text-primary)' },
+      { key: 'mes',    value: mes,    label: t('clases_mes'),    icon: <CalendarDays  className="size-5" />, color: 'var(--color-text-primary)' },
     ];
   }, [horarios, t]);
 
@@ -86,10 +86,10 @@ export default function ProfesorDashboardPage() {
         {/* Rotating: Clases (hoy / semana / mes) */}
         <RotatingStatCard
           items={clasesItems}
-          icon={<CalendarDays className="size-5" />}
           color="var(--color-text-primary)"
           ariaLabel={t('clases_semana')}
           showIndicators={false}
+          onlyWithData={false}
         />
 
         {stateCards.map((stat) => (

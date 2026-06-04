@@ -34,9 +34,7 @@ export async function GET(request: NextRequest) {
   const to = from + pageSize - 1;
 
   if (isAdmin) {
-    // ── Admin: fetch all notifications + join admin read status ──────────────
-    // We fetch notificaciones_vistas_admin for this admin in a single join
-    // so we can compute `leida` (from the admin's perspective) client-side.
+    // ── Admin: fetch all notifications + join admin read/discard status ───────
     let query = supabase
       .from('notificaciones')
       .select(
@@ -45,7 +43,8 @@ export async function GET(request: NextRequest) {
         horario:horario_id(id, fecha, hora_inicio, hora_fin, titulo, descripcion), 
         destinatario:destinatario_id(id, nombre, apellido, rol), 
         solicitud:solicitud_id(id, alumno_id, profesor_id, horario_original_id, fecha_propuesta, hora_inicio_propuesta, hora_fin_propuesta, estado, motivo_rechazo, nuevo_horario_id, nota_alumno, created_at, updated_at),
-        notificaciones_vistas_admin!left(admin_id)`,
+        notificaciones_vistas_admin!left(admin_id),
+        notificaciones_descartadas_admin!left(admin_id)`,
         { count: 'exact' }
       )
       .order('created_at', { ascending: false })
@@ -69,15 +68,20 @@ export async function GET(request: NextRequest) {
     const { data, error, count } = await query;
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-    // Map `leida` to whether this admin has a vista record for each notification
-    // The join returns an array (could be [] or [{admin_id}]) due to the left join.
-    const mappedData = (data ?? []).map((n) => {
-      const vistas = n.notificaciones_vistas_admin as { admin_id: string }[] | null;
-      const leida = Array.isArray(vistas) && vistas.some((v) => v.admin_id === user.id);
-      // Remove the join artifact from the response shape
-      const { notificaciones_vistas_admin: _, ...rest } = n as typeof n & { notificaciones_vistas_admin: unknown };
-      return { ...rest, leida };
-    });
+    // Map `leida` to whether this admin has a vista record, and exclude discarded ones.
+    const mappedData = (data ?? [])
+      .filter((n) => {
+        // Exclude notifications this admin has discarded
+        const descartadas = n.notificaciones_descartadas_admin as { admin_id: string }[] | null;
+        return !(Array.isArray(descartadas) && descartadas.some((d) => d.admin_id === user.id));
+      })
+      .map((n) => {
+        const vistas = n.notificaciones_vistas_admin as { admin_id: string }[] | null;
+        const leida = Array.isArray(vistas) && vistas.some((v) => v.admin_id === user.id);
+        const { notificaciones_vistas_admin: _v, notificaciones_descartadas_admin: _d, ...rest } =
+          n as typeof n & { notificaciones_vistas_admin: unknown; notificaciones_descartadas_admin: unknown };
+        return { ...rest, leida };
+      });
 
     // soloNoLeidas filter (applied after mapping)
     const filteredData = soloNoLeidas ? mappedData.filter((n) => !n.leida) : mappedData;
@@ -238,27 +242,24 @@ export async function DELETE(request: NextRequest) {
   const idsParam = searchParams.get('ids');
 
   if (isAdmin) {
-    // ── Admin: delete only their own vista records (not the notification itself) ──
-    // Admins can't delete notifications they don't own; they can only clear their
-    // read-status entries. If you want admins to hard-delete notifications,
-    // remove this guard — but that would affect the original recipient too.
-    if (idsParam) {
-      const ids = idsParam.split(',').filter(Boolean);
-      if (ids.length === 0) return NextResponse.json({ error: 'Se requiere al menos un id' }, { status: 400 });
-      const { error } = await supabase
-        .from('notificaciones_vistas_admin')
-        .delete()
-        .in('notificacion_id', ids)
-        .eq('admin_id', user.id);
-      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-      return NextResponse.json({ ok: true });
+    // ── Admin: insert into notificaciones_descartadas_admin ──────────────────
+    // This hides the notification from this admin's view without affecting
+    // the original recipient. Each admin manages their own discards independently.
+    const idsToDiscard = idsParam
+      ? idsParam.split(',').filter(Boolean)
+      : id
+      ? [id]
+      : [];
+
+    if (idsToDiscard.length === 0) {
+      return NextResponse.json({ error: 'Se requiere id o ids' }, { status: 400 });
     }
-    if (!id) return NextResponse.json({ error: 'Se requiere id' }, { status: 400 });
+
+    const rows = idsToDiscard.map((nid) => ({ notificacion_id: nid, admin_id: user.id }));
     const { error } = await supabase
-      .from('notificaciones_vistas_admin')
-      .delete()
-      .eq('notificacion_id', id)
-      .eq('admin_id', user.id);
+      .from('notificaciones_descartadas_admin')
+      .upsert(rows, { onConflict: 'notificacion_id,admin_id', ignoreDuplicates: true });
+
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ ok: true });
   }

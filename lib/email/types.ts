@@ -27,7 +27,7 @@ import type { TipoNotificacion } from '@/lib/supabase/types';
  */
 export type TipoCorreo = Extract<
   TipoNotificacion,
-  'confirmacion' | 'cancelacion' | 'solicitud_cambio_horario' | 'programa_asignado' | 'nueva_clase' | 'invitacion_acceso'
+  'confirmacion' | 'cancelacion' | 'solicitud_cambio_horario' | 'programa_asignado' | 'nueva_clase' | 'invitacion_acceso' | 'bienvenida_registro'
 >;
 
 /**
@@ -101,6 +101,10 @@ export interface VariablesCorreo {
   enlace_acceso?: string;
   /** Correo con el que el usuario recién creado accederá (`{email_acceso}`) — Requisito 19.4 */
   email_acceso?: string;
+
+  // Variables específicas de `bienvenida_registro`:
+  /** Descripción corta del acceso del usuario según su rol (`{descripcion_acceso}`). */
+  descripcion_acceso?: string;
 }
 
 /**

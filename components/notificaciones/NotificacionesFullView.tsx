@@ -79,7 +79,8 @@ const TIPO_ICON: Record<TipoNotificacion, { icon: React.ElementType; color: stri
   solicitud_cambio_horario: { icon: CalendarClock, color: 'var(--color-info)' },
   cambio_horario_aceptado:  { icon: CheckCircle2,  color: 'var(--color-success)' },
   cambio_horario_rechazado: { icon: XCircle,       color: 'var(--color-error)' },
-  invitacion_acceso:  { icon: Mail,          color: 'var(--color-brand-gold)' },
+  invitacion_acceso:        { icon: Mail,          color: 'var(--color-brand-gold)' },
+  bienvenida_registro:      { icon: Mail,          color: 'var(--color-brand-gold)' },
 };
 
 // (tipos are now fetched dynamically from the API)

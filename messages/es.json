@@ -64,6 +64,7 @@
     "horarios": "Horarios",
     "mis_clases": "Mis clases",
     "alumnos": "Alumnos",
+    "lectores": "Lectores",
     "mis_alumnos": "Mis alumnos",
     "profesores": "Profesores",
     "notificaciones": "Notificaciones",
@@ -73,7 +74,8 @@
     "horario": "Horario",
     "programas": "Programas de Clases",
     "recursos": "Recursos Compartidos",
-    "pagos": "Pagos"
+    "pagos": "Pagos",
+    "enlaces_invitacion": "Enlaces de invitación"
   },
   "dashboard": {
     "admin": {
@@ -405,6 +407,32 @@
     "agregar_alumno": "Agregar Alumno",
     "info_alumno": "Información del alumno",
     "error_cargar": "No se pudo cargar el alumno"
+  },
+  "lectores": {
+    "titulo": "Lectores",
+    "subtitulo": "Usuarios con acceso de solo lectura a los recursos compartidos.",
+    "buscar_placeholder": "Buscar lector...",
+    "grupo_activos": "Activos",
+    "grupo_bloqueados": "Bloqueados",
+    "sin_lectores": "Sin lectores registrados aún.",
+    "col_nombre": "Nombre",
+    "col_email": "Email",
+    "col_telefono": "Teléfono",
+    "promover_titulo": "Promover a alumno",
+    "promover_tooltip": "Promover a alumno",
+    "promover_descripcion": "¿Cambiar el rol de {nombre} de lector a alumno? El usuario mantiene su cuenta y contraseña. Tendrá acceso completo como alumno y podrá ser asignado a un profesor desde la vista de alumnos. Esta acción no se puede deshacer desde aquí.",
+    "promover_confirmar": "Promover a alumno",
+    "exito_promovido": "{nombre} ahora es alumno.",
+    "error_promover": "No se pudo cambiar el rol.",
+    "bloquear_titulo": "Bloquear lector",
+    "desbloquear_titulo": "Desbloquear lector",
+    "bloquear_descripcion": "¿Bloquear a {nombre}? No podrá iniciar sesión hasta que se desbloquee.",
+    "desbloquear_descripcion": "¿Desbloquear a {nombre}? Podrá volver a iniciar sesión.",
+    "bloquear_confirmar": "Bloquear",
+    "desbloquear_confirmar": "Desbloquear",
+    "exito_bloqueado": "Lector bloqueado.",
+    "exito_desbloqueado": "Lector desbloqueado.",
+    "error_bloquear": "No se pudo actualizar el estado."
   },
   "profesores": {
     "titulo": "Profesores",

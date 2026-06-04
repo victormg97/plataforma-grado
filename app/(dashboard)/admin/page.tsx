@@ -4,7 +4,7 @@ import { useMemo, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
-import { Users, GraduationCap, CalendarDays, Clock, Bell, CheckCircle, XCircle } from 'lucide-react';
+import { Users, GraduationCap, CalendarDays, CalendarClock, CalendarRange, Clock, Bell, CheckCircle, XCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card } from '@/components/common/Card';
@@ -108,9 +108,9 @@ export default function AdminDashboardPage() {
   const clasesItems = useMemo<RotatingStatItem[]>(() => {
     if (!stats) return [];
     return [
-      { key: 'hoy', value: stats.clases_hoy ?? 0, label: t('clases_hoy') },
-      { key: 'semana', value: stats.clases_semana ?? 0, label: t('clases_semana') },
-      { key: 'mes', value: stats.clases_mes ?? 0, label: t('clases_mes') },
+      { key: 'hoy',    value: stats.clases_hoy    ?? 0, label: t('clases_hoy'),    icon: <CalendarClock className="size-5" />, color: 'var(--color-success)' },
+      { key: 'semana', value: stats.clases_semana ?? 0, label: t('clases_semana'), icon: <CalendarRange  className="size-5" />, color: 'var(--color-success)' },
+      { key: 'mes',    value: stats.clases_mes    ?? 0, label: t('clases_mes'),    icon: <CalendarDays  className="size-5" />, color: 'var(--color-success)' },
     ];
   }, [stats, t]);
 
@@ -201,10 +201,10 @@ export default function AdminDashboardPage() {
         {/* Rotating: Clases (hoy / semana / mes) */}
         <RotatingStatCard
           items={clasesItems}
-          icon={<CalendarDays className="size-5" />}
           color="var(--color-success)"
           ariaLabel={t('clases_hoy')}
           showIndicators={false}
+          onlyWithData={false}
         />
 
         {/* Rotating: Estados de clases (pendientes / confirmadas / canceladas) */}

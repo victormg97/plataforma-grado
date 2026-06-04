@@ -151,16 +151,19 @@ export async function POST(request: NextRequest) {
   }
 
   // ── 7. Correo de bienvenida (fire-and-forget; un fallo no revierte nada) ──
+  // Flujo de auto-registro: el usuario ya eligió su contraseña y tiene sesión.
+  // Se usa la plantilla `bienvenida_registro` con descripción de acceso según rol.
+  const { DESCRIPCION_ACCESO_ES } = await import('@/lib/email/templates/bienvenidaRegistro');
+  const rolNormalizado = (tipo === 'alumno' || tipo === 'profesor' || tipo === 'lector') ? tipo : 'alumno';
   void sendNotificationEmail({
-    tipo: 'invitacion_acceso',
+    tipo: 'bienvenida_registro',
     originadorId: userId,
     destinatarioId: userId,
     destinatarioEmail: email,
     destinatarioIdioma: null,
     variables: {
       nombre_destinatario: `${nombre} ${apellido}`.trim(),
-      email_acceso: email,
-      enlace_acceso: `${process.env.NEXT_PUBLIC_APP_URL}/login`,
+      descripcion_acceso: DESCRIPCION_ACCESO_ES[rolNormalizado],
     },
     horarioId: null,
     eventoId: `registro:${userId}`,

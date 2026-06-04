@@ -85,7 +85,19 @@ const CLAVES_INVITACION = [
 ] as const satisfies readonly (keyof VariablesCorreo)[];
 
 /**
- * Conjunto completo de claves conocidas por el motor (las 13 claves de
+ * Claves base de las Variables_Dinamicas específicas del tipo
+ * `bienvenida_registro`.
+ *
+ * Cuando el usuario se auto-registra mediante un enlace de invitación, ya tiene
+ * sesión activa. Solo se incluye el nombre del destinatario y una descripción de
+ * acceso adaptada al rol (`{descripcion_acceso}`).
+ */
+const CLAVES_BIENVENIDA_REGISTRO = [
+  'descripcion_acceso',
+] as const satisfies readonly (keyof VariablesCorreo)[];
+
+/**
+ * Conjunto completo de claves conocidas por el motor (las 14 claves de
  * `VariablesCorreo`).
  *
  * Es la única fuente de verdad para `sustituirVariables`: garantiza que la
@@ -97,6 +109,7 @@ const CLAVES_CONOCIDAS = [
   ...CLAVES_COMUNES,
   ...CLAVES_SOLICITUD_CAMBIO,
   ...CLAVES_INVITACION,
+  ...CLAVES_BIENVENIDA_REGISTRO,
 ] as const satisfies readonly (keyof VariablesCorreo)[];
 
 /** Construye el token insertable (`{clave}`) a partir de una clave base. */
@@ -133,6 +146,9 @@ export function variablesDisponibles(tipo: TipoCorreo): DefinicionVariable[] {
       break;
     case 'invitacion_acceso':
       claves = ['nombre_destinatario', ...CLAVES_INVITACION];
+      break;
+    case 'bienvenida_registro':
+      claves = ['nombre_destinatario', ...CLAVES_BIENVENIDA_REGISTRO];
       break;
     case 'nueva_clase':
       claves = CLAVES_COMUNES;

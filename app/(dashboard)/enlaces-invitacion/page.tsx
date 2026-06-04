@@ -14,7 +14,6 @@ import { useUser } from '@/lib/hooks/useUser';
 import { getRolRedirectPath } from '@/lib/auth/helpers';
 import { agruparPorEstado } from '@/lib/enlaces/agrupar';
 import { filtrarEnlaces, type FiltroState } from '@/lib/enlaces/filtrar';
-import { destinoRetorno } from '@/lib/enlaces/navegacion';
 import type { EnlaceListItem } from '@/lib/enlaces/types';
 import { ModalCrearEnlace } from '@/components/enlaces/ModalCrearEnlace';
 import { ModalEditarEnlace } from '@/components/enlaces/ModalEditarEnlace';
@@ -104,7 +103,11 @@ export default function EnlacesInvitacionPage() {
   };
 
   const handleVolver = () => {
-    router.push(destinoRetorno(user?.rol ?? 'admin', from));
+    if (from) {
+      router.push(from);
+    } else {
+      router.back();
+    }
   };
 
   if (!user || !autorizado) {

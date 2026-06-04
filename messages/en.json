@@ -64,6 +64,7 @@
     "horarios": "Schedules",
     "mis_clases": "My classes",
     "alumnos": "Students",
+    "lectores": "Readers",
     "mis_alumnos": "My students",
     "profesores": "Professors",
     "notificaciones": "Notifications",
@@ -73,7 +74,8 @@
     "horario": "My Schedule",
     "programas": "Class Programs",
     "recursos": "Shared Files",
-    "pagos": "Payments"
+    "pagos": "Payments",
+    "enlaces_invitacion": "Invitation links"
   },
   "dashboard": {
     "admin": {
@@ -405,6 +407,32 @@
     "agregar_alumno": "Add Student",
     "info_alumno": "Student Information",
     "error_cargar": "Could not load student"
+  },
+  "lectores": {
+    "titulo": "Readers",
+    "subtitulo": "Users with read-only access to shared resources.",
+    "buscar_placeholder": "Search reader...",
+    "grupo_activos": "Active",
+    "grupo_bloqueados": "Blocked",
+    "sin_lectores": "No readers registered yet.",
+    "col_nombre": "Name",
+    "col_email": "Email",
+    "col_telefono": "Phone",
+    "promover_titulo": "Promote to student",
+    "promover_tooltip": "Promote to student",
+    "promover_descripcion": "Change {nombre}'s role from reader to student? The user keeps their account and password. They will have full student access and can be assigned to a teacher from the students view. This action cannot be undone from here.",
+    "promover_confirmar": "Promote to student",
+    "exito_promovido": "{nombre} is now a student.",
+    "error_promover": "Could not change role.",
+    "bloquear_titulo": "Block reader",
+    "desbloquear_titulo": "Unblock reader",
+    "bloquear_descripcion": "Block {nombre}? They will not be able to log in until unblocked.",
+    "desbloquear_descripcion": "Unblock {nombre}? They will be able to log in again.",
+    "bloquear_confirmar": "Block",
+    "desbloquear_confirmar": "Unblock",
+    "exito_bloqueado": "Reader blocked.",
+    "exito_desbloqueado": "Reader unblocked.",
+    "error_bloquear": "Could not update status."
   },
   "profesores": {
     "titulo": "Professors",

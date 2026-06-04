@@ -765,6 +765,39 @@ export type Database = {
           },
         ]
       }
+      notificaciones_descartadas_admin: {
+        Row: {
+          notificacion_id: string
+          admin_id: string
+          created_at: string
+        }
+        Insert: {
+          notificacion_id: string
+          admin_id: string
+          created_at?: string
+        }
+        Update: {
+          notificacion_id?: string
+          admin_id?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notificaciones_descartadas_admin_notificacion_id_fkey"
+            columns: ["notificacion_id"]
+            isOneToOne: false
+            referencedRelation: "notificaciones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notificaciones_descartadas_admin_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
 
       pagos: {
         Row: {
@@ -1531,6 +1564,7 @@ export type Database = {
         | "cambio_horario_aceptado"
         | "cambio_horario_rechazado"
         | "invitacion_acceso"
+        | "bienvenida_registro"
       user_rol: "admin" | "profesor" | "alumno" | "lector"
     }
     CompositeTypes: {
@@ -1678,6 +1712,7 @@ export const Constants = {
         "cambio_horario_aceptado",
         "cambio_horario_rechazado",
         "invitacion_acceso",
+        "bienvenida_registro",
       ],
       user_rol: ["admin", "profesor", "alumno"],
     },

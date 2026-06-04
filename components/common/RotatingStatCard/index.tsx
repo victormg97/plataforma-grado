@@ -36,20 +36,13 @@ interface RotatingStatCardProps {
   className?: string;
 }
 
+// Slide variants using translateY so exiting items move out of the clip box.
 const variants = {
   enter: (dir: number) => ({ y: dir > 0 ? '100%' : '-100%', opacity: 0 }),
   center: { y: '0%', opacity: 1 },
   exit: (dir: number) => ({ y: dir > 0 ? '-100%' : '100%', opacity: 0 }),
 };
 
-/**
- * A dashboard stat card that auto-rotates between several values (vertical,
- * carousel-like). Pauses on hover; on desktop, hovering reveals up/down
- * controls on the right; on touch devices, a vertical swipe changes the value.
- *
- * Reusable: pass any set of {value, label} items. Auto-rotation only runs when
- * there are at least two items to show.
- */
 export function RotatingStatCard({
   items,
   icon,
@@ -60,7 +53,6 @@ export function RotatingStatCard({
   showIndicators = true,
   className = '',
 }: RotatingStatCardProps) {
-  // Items eligible to rotate. Never collapse to empty.
   const visible = useMemo(() => {
     const filtered = onlyWithData
       ? items.filter((i) => (typeof i.value === 'number' ? i.value > 0 : true))
@@ -69,11 +61,17 @@ export function RotatingStatCard({
   }, [items, onlyWithData]);
 
   const [index, setIndex] = useState(0);
-  const [direction, setDirection] = useState(1); // 1 = next/down, -1 = prev/up
+  const [direction, setDirection] = useState(1);
   const [hovering, setHovering] = useState(false);
 
-  // Derive a safe index instead of clamping via an effect (avoids cascading
-  // renders). Stays valid even if the visible set shrinks.
+  const prevVisibleLengthRef = useRef(visible.length);
+  useEffect(() => {
+    if (prevVisibleLengthRef.current !== visible.length) {
+      prevVisibleLengthRef.current = visible.length;
+      setIndex(0);
+    }
+  }, [visible.length]);
+
   const safeIndex = visible.length > 0 ? index % visible.length : 0;
 
   const go = useCallback(
@@ -82,18 +80,15 @@ export function RotatingStatCard({
       setDirection(dir);
       setIndex((i) => ((i % visible.length) + dir + visible.length) % visible.length);
     },
-    [visible.length]
+    [visible.length],
   );
 
-  // Auto-rotate: a self-resetting timeout. Resets after every change (manual
-  // or automatic) so a manual nav gets a full interval before the next auto-step.
   useEffect(() => {
     if (hovering || visible.length < 2) return;
     const id = setTimeout(() => go(1), intervalMs);
     return () => clearTimeout(id);
   }, [safeIndex, hovering, visible.length, intervalMs, go]);
 
-  // Touch swipe (vertical).
   const touchStartY = useRef<number | null>(null);
   const onTouchStart = (e: React.TouchEvent) => {
     touchStartY.current = e.touches[0]?.clientY ?? null;
@@ -101,19 +96,15 @@ export function RotatingStatCard({
   const onTouchEnd = (e: React.TouchEvent) => {
     if (touchStartY.current == null) return;
     const dy = (e.changedTouches[0]?.clientY ?? 0) - touchStartY.current;
-    if (Math.abs(dy) > 30) go(dy < 0 ? 1 : -1); // swipe up → next
+    if (Math.abs(dy) > 30) go(dy < 0 ? 1 : -1);
     touchStartY.current = null;
   };
 
   const current = visible[safeIndex];
   const canRotate = visible.length > 1;
-
-  // Per-item icon/color with fallback to card-level props.
   const activeIcon = current?.icon ?? icon;
   const activeColor = current?.color ?? color;
 
-  // Render the value safely: show 0 (and other falsy-but-valid values) instead
-  // of a blank when the value is a number; only truly missing values are blank.
   const displayValue =
     current == null || current.value === undefined || current.value === null
       ? '—'
@@ -122,15 +113,17 @@ export function RotatingStatCard({
   return (
     <Card
       padding="md"
-      className={`relative overflow-hidden group ${className}`}
+      className={`relative group ${className}`}
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     >
       <div className="flex items-center gap-3">
+        {/* Icon bubble — overflow-hidden scoped here so the slide clips within
+            the bubble only, leaving the rest of the card untouched. */}
         {activeIcon && (
-          <div className="relative size-10 shrink-0">
+          <div className="relative size-10 shrink-0 overflow-hidden rounded-full">
             <AnimatePresence custom={direction} initial={false}>
               <m.div
                 key={current?.key}
@@ -149,8 +142,21 @@ export function RotatingStatCard({
           </div>
         )}
 
-        {/* Rotating value/label area */}
-        <div className="relative h-11 flex-1 min-w-0">
+        {/* Value / label area.
+            The outer div uses overflow:hidden + a fixed height that exactly
+            matches the static stat cards:
+              - text-2xl (line-height ≈ 2rem / 32px) with leading-none
+              - mt-1 (4px gap)
+              - text-xs (line-height = 1rem / 16px)
+              Total = 52px.
+            The animated m.div is position:absolute so it never contributes to
+            layout height, and the outer div's explicit height keeps it equal to
+            the sibling static cards so items-center aligns everything correctly.
+        */}
+        <div
+          className="relative min-w-0 flex-1 overflow-hidden"
+          style={{ height: '3.25rem' /* 52px */ }}
+        >
           <AnimatePresence custom={direction} initial={false}>
             <m.div
               key={current?.key}
@@ -160,7 +166,7 @@ export function RotatingStatCard({
               animate="center"
               exit="exit"
               transition={{ duration: 0.35, ease: 'easeInOut' }}
-              className="absolute inset-0 flex flex-col justify-center"
+              className="absolute inset-x-0 top-0 flex h-full flex-col justify-center"
             >
               <p className="text-2xl font-bold leading-none text-[var(--color-text-primary)]">
                 {displayValue}

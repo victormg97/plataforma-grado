@@ -1,0 +1,6 @@
+-- ── 081: Intentó actualizar get_admin_prefetch para filtrar notificaciones descartadas.
+-- ESTA MIGRACIÓN TENÍA UN BUG: GROUP BY incorrecto en pagos_anual que rompía
+-- toda la función. Fue reemplazada inmediatamente por 082.
+-- El SQL real y correcto está en 082_fix_get_admin_prefetch_pagos_anual.sql.
+-- Este archivo existe solo como marcador histórico del intento fallido.
+-- No ejecutar este archivo nuevamente.

@@ -12,6 +12,7 @@ export const TIPOS_CORREO = [
   'programa_asignado',
   'nueva_clase',
   'invitacion_acceso',
+  'bienvenida_registro',
 ] as const;
 
 /** Enum Zod para validar el parámetro `tipo` de las rutas del editor de plantillas. */

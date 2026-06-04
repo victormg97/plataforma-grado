@@ -167,6 +167,15 @@ export async function PATCH(
   if (body.apellido_materno !== undefined) profileUpdates.apellido_materno = body.apellido_materno;
   if (body.telefono !== undefined) profileUpdates.telefono = body.telefono;
 
+  // Cambio de rol (actualmente solo lector → alumno está permitido)
+  if (body.rol !== undefined) {
+    const ROLES_PERMITIDOS = ['alumno'];
+    if (!ROLES_PERMITIDOS.includes(body.rol)) {
+      return NextResponse.json({ error: 'Cambio de rol no permitido' }, { status: 400 });
+    }
+    profileUpdates.rol = body.rol;
+  }
+
   if (Object.keys(profileUpdates).length > 0) {
     const { error } = await supabase
       .from('profiles')
@@ -185,6 +194,22 @@ export async function PATCH(
         accion: body.activo ? 'desbloqueado' : 'bloqueado',
         motivo: body.motivo ?? null,
       });
+    }
+
+    // Si se cambió el rol a 'alumno', crear alumnos_extra si no existe
+    if (body.rol === 'alumno') {
+      const { data: existingExtra } = await supabase
+        .from('alumnos_extra')
+        .select('alumno_id')
+        .eq('alumno_id', id)
+        .maybeSingle();
+
+      if (!existingExtra) {
+        await supabase.from('alumnos_extra').insert({
+          alumno_id: id,
+          profesor_id: body.profesor_id ?? null,
+        } as never);
+      }
     }
   }
 
