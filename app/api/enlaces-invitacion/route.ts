@@ -13,12 +13,14 @@ interface ProfileRow {
   id: string;
   nombre: string;
   apellido: string;
+  apellido_materno?: string | null;
+  email?: string | null;
   activo: boolean;
 }
 
 function persona(p: ProfileRow | null | undefined): PersonaResumen | null {
   if (!p) return null;
-  return { id: p.id, nombre: p.nombre, apellido: p.apellido };
+  return { id: p.id, nombre: p.nombre, apellido: p.apellido, apellido_materno: p.apellido_materno ?? null, email: p.email ?? null };
 }
 
 // ─── GET: listar enlaces según rol (RLS) ──────────────────────────────────────
@@ -52,7 +54,7 @@ export async function GET() {
       `id, codigo, tipo, estado, created_by, profesor_asignado, usuario_creado, created_at, updated_at,
        creador:created_by ( id, nombre, apellido, activo ),
        profesor:profesor_asignado ( id, nombre, apellido, activo ),
-       usuario:usuario_creado ( id, nombre, apellido, activo )`,
+       usuario: usuario_creado ( id, nombre, apellido, apellido_materno, email, activo )`,
     )
     .eq('tenant', TENANT)
     .eq('eliminado', false)
@@ -79,7 +81,7 @@ export async function GET() {
       profesor: persona(profesor),
       usuario_creado: r.usuario_creado,
       usuario: usuario
-        ? { id: usuario.id, nombre: usuario.nombre, apellido: usuario.apellido, activo: usuario.activo }
+        ? { id: usuario.id, nombre: usuario.nombre, apellido: usuario.apellido, apellido_materno: usuario.apellido_materno ?? null, email: usuario.email ?? null, activo: usuario.activo }
         : null,
     };
   });

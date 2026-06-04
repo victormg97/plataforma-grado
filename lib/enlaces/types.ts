@@ -9,6 +9,8 @@ export interface PersonaResumen {
   id: string;
   nombre: string;
   apellido: string;
+  apellido_materno?: string | null;
+  email?: string | null;
 }
 
 /**

@@ -75,8 +75,15 @@ export function FilaEnlace({ enlace, rol, onEditar, onToggleEstado, onEliminar }
     : null;
 
   const usuarioNombre = enlace.usuario
-    ? `${enlace.usuario.nombre} ${enlace.usuario.apellido}`.trim()
+    ? [enlace.usuario.nombre, enlace.usuario.apellido, enlace.usuario.apellido_materno]
+        .filter(Boolean).join(' ')
     : null;
+
+  // Label contextual según el tipo del enlace
+  const usuarioLabel =
+    enlace.tipo === 'profesor' ? t('tipos.profesor') :
+    enlace.tipo === 'lector'   ? t('tipos.lector')   :
+    t('tipos.alumno');
 
   // Fecha de uso: updated_at solo es significativa cuando el enlace fue usado.
   // Para estado activo/deshabilitado mostramos solo la fecha de creación.
@@ -133,11 +140,15 @@ export function FilaEnlace({ enlace, rol, onEditar, onToggleEstado, onEliminar }
               <CheckCircle2 className="size-4 shrink-0 text-[var(--color-info)]" />
               <div className="min-w-0">
                 <p className="text-sm font-medium text-[var(--color-text-primary)] truncate">
-                  {usuarioNombre}
+                  <span className="font-normal text-[var(--color-text-muted)]">{usuarioLabel}:</span>
+                  {' '}{usuarioNombre}
                   {enlace.usuario && !enlace.usuario.activo && (
                     <span className="ml-2 text-xs font-normal text-[var(--color-text-muted)]">({t('cuenta_inactiva')})</span>
                   )}
                 </p>
+                {enlace.usuario?.email && (
+                  <p className="text-xs text-[var(--color-text-muted)] truncate">{enlace.usuario.email}</p>
+                )}
                 <p className="text-xs text-[var(--color-text-muted)]">{t('registro_completado')}</p>
               </div>
             </div>
