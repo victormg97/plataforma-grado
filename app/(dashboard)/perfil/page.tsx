@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import Link from 'next/link';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
@@ -14,7 +13,7 @@ import { cn } from '@/lib/utils';
 import { validarAño } from '@/lib/validations/año';
 import {
   User, Lock, Eye, EyeOff, Globe,
-  ArrowLeft, Save, Loader2, ClipboardCheck, Settings2, Mail, Users,
+  ArrowLeft, Save, Loader2, ClipboardCheck, Settings2,
 } from 'lucide-react';
 import type { Profile, AlumnoExtra } from '@/lib/supabase/types';
 
@@ -92,8 +91,6 @@ export default function PerfilPage() {
   const queryClient = useQueryClient();
   const t = useTranslations('perfil');
   const tc = useTranslations('common');
-  const tp = useTranslations('plantillasCorreo');
-  const tqs = useTranslations('quienesSomos');
   const currentLocale = useLocale();
   const router = useRouter();
 
@@ -549,37 +546,8 @@ export default function PerfilPage() {
                 </div>
               </Field>
 
-              {perfilData?.email_disponible && (
-                <Field label={tp('titulo')} hint={tp('subtitulo')}>
-                  <button
-                    type="button"
-                    onClick={() => router.push('/perfil/plantillas-correo')}
-                    className="flex items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] hover:border-[var(--color-brand-gold)] hover:text-[var(--color-brand-gold)] transition-colors"
-                  >
-                    <Mail className="size-4" />
-                    {tp('boton_acceso')}
-                  </button>
-                </Field>
-              )}
-
               <SaveBar saving={savingConfig} label={savingConfig ? tc('cargando') : t('guardar')} disabled={!isDirtyConfig} />
             </form>
-          )}
-
-          {/* ── ¿Quiénes Somos? (solo admin) ─────────────────────────────── */}
-          {(perfilData?.rol ?? user.rol) === 'admin' && (
-            <div className="space-y-4 pb-8 border-b border-[var(--color-border)]">
-              <SectionTitle icon={Users} title={tqs('perfil_titulo')} />
-              <Field label={tqs('perfil_titulo')} hint={tqs('perfil_subtitulo')}>
-                <Link
-                  href="/perfil/quienes-somos"
-                  className="inline-flex items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] hover:border-[var(--color-brand-gold)] hover:text-[var(--color-brand-gold)] transition-colors"
-                >
-                  <Users className="size-4" />
-                  {tqs('perfil_boton')}
-                </Link>
-              </Field>
-            </div>
           )}
 
           {/* ── Preferencias ─────────────────────────────────────────────── */}

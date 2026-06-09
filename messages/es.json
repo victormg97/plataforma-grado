@@ -1375,5 +1375,15 @@
     "perfil_titulo": "¿Quiénes Somos?",
     "perfil_subtitulo": "Edita el contenido del modal de presentación",
     "perfil_boton": "Editar contenido"
+  },
+  "configuracionPagina": {
+    "titulo": "Configuración de la página",
+    "subtitulo": "Personaliza el contenido público, comunicaciones y apariencia de tu sitio",
+    "navbar_label": "Configurar página",
+    "seccion_contenido": "Contenido público",
+    "seccion_comunicacion": "Comunicación",
+    "seccion_proximamente": "Próximamente",
+    "proximamente_titulo": "Más opciones en camino",
+    "proximamente_desc": "Aquí aparecerán nuevas configuraciones de página como temas, textos de bienvenida y más"
   }
 }

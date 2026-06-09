@@ -1,0 +1,88 @@
+{
+  "nav": {
+    "programas": "Programas",
+    "planes": "Planes",
+    "sobreNosotras": "Sobre Nosotras",
+    "contacto": "Contacto",
+    "iniciaSesion": "Inicia Sesión",
+    "irPlataforma": "Ir a la plataforma",
+    "abrirMenu": "Abrir menú",
+    "cerrarMenu": "Cerrar menú"
+  },
+  "hero": {
+    "titulo1": "PREPARACIÓN",
+    "titulo2": "ESTRATÉGICA",
+    "titulo3": "PARA TU GRADO",
+    "subtitulo": "Acompañamiento cercano, exigente y estratégico para que enfrentes tu examen de grado con ",
+    "subtituloDestacado": "seguridad y confianza.",
+    "imagenAlt": "Preparación para el examen de grado"
+  },
+  "features": {
+    "metodologia": "Metodología propia",
+    "interrogaciones": "Interrogaciones con retroalimentación",
+    "estrategica": "Preparación estratégica",
+    "plataforma": "Plataforma exclusiva",
+    "baseDatos": "Base de datos Jurídica"
+  },
+  "programas": {
+    "tituloPrincipal": "Nuestros programas:",
+    "subtitulo": "Elige la modalidad que se adapte a ti:",
+    "hibrido": {
+      "nombre": "PROGRAMA HÍBRIDO",
+      "modalidad": "Clases + interrogaciones",
+      "descripcion": "Acompañamiento completo para fortalecer tu conocimiento, estrategia y expresión oral."
+    },
+    "intensivo": {
+      "nombre": "PROGRAMA INTENSIVO",
+      "modalidad": "Solo interrogaciones",
+      "descripcion": "Práctica constante con retroalimentación especializada para rendir tu mejor versión."
+    }
+  },
+  "planes": {
+    "titulo": "PLANES CURSO DE INTERROGACIÓN",
+    "oferta": "Oferta Junio",
+    "plan1": {
+      "nombre": "PLAN 1",
+      "detalle": "4 interrogaciones mensuales",
+      "precio": "$45.000",
+      "precioAntes": "antes $50.000"
+    },
+    "plan2": {
+      "nombre": "PLAN 2",
+      "detalle": "8 interrogaciones mensuales",
+      "precio": "$80.000",
+      "precioAntes": "antes $90.000"
+    },
+    "incluyenTitulo": "Todos los planes incluyen:",
+    "incluyen": [
+      "Acceso a la plataforma",
+      "Agenda del alumno",
+      "Base de datos Jurídica",
+      "Material de estudio para el examen de grado"
+    ],
+    "modalidadTitulo": "Modalidad Flexible:",
+    "modalidad": [
+      "Solo Interrogaciones.",
+      "Clases + Interrogaciones."
+    ]
+  },
+  "footer": {
+    "derechos": "Todos los derechos reservados."
+  },
+  "sobreNosotras": {
+    "titulo": "SOBRE NOSOTRAS",
+    "imagenAlt": "Estefanía Montalbán Pino y Camila Ogalde Fonck",
+    "parrafos": [
+      "Somos Estefanía Montalbán Pino y Camila Ogalde Fonck, abogadas de la Universidad Católica del Norte, comprometidas con una preparación cercana, estratégica y rigurosa para el examen de grado ⚖️",
+      "Creamos Pregunta Estratégica desde nuestra propia experiencia, con el propósito de entregarte herramientas, acompañamiento real y una metodología enfocada en fortalecer tus conocimientos, expresión oral y seguridad para enfrentar este importante desafío 📚"
+    ]
+  },
+  "contacto": {
+    "titulo": "CONTACTO",
+    "subtitulo": "Conversemos sobre tu preparación",
+    "descripcion": "Escríbenos directamente y resolvamos juntas tus dudas. Estamos para acompañarte en cada paso hacia tu examen de grado.",
+    "ctaWhatsapp": "Escribir",
+    "ctaEmail": "Enviar correo",
+    "ctaSocial": "Seguir"
+  }
+}

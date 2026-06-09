@@ -16,6 +16,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Globe } from 'lucide-react';
 
 export function Navbar() {
   const { toggleSidebar } = useUIStore();
@@ -24,6 +25,9 @@ export function Navbar() {
   const router = useRouter();
   const t = useTranslations('perfil');
   const ta = useTranslations('auth');
+  const tc = useTranslations('configuracionPagina');
+
+  const isAdmin = user?.rol === 'admin';
 
   async function handleLogout() {
     try {
@@ -90,6 +94,17 @@ export function Navbar() {
                 <UserCog className="mr-2 size-4" />
                 {t('editar_perfil')}
               </DropdownMenuItem>
+              {isAdmin && (
+                <>
+                  <DropdownMenuItem
+                    onClick={() => router.push('/pagina')}
+                    className="cursor-pointer"
+                  >
+                    <Globe className="mr-2 size-4" />
+                    {tc('navbar_label')}
+                  </DropdownMenuItem>
+                </>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={handleLogout}

@@ -38,6 +38,7 @@ const themeSchema = z.object({
   colorAccentForeground: hexColorSchema.optional(), // Texto sobre el color accent (ej: blanco sobre azul)
   colorBg: hexColorSchema.optional(),
   colorBgSecondary: hexColorSchema.optional(),
+  colorSectionAlt: hexColorSchema.optional(), // Fondo alternativo para secciones del landing (separación visual entre secciones)
   colorCard: hexColorSchema.optional(), // Fondo de cards (si se quiere diferente al fondo principal)
   colorInput: hexColorSchema.optional(), // Fondo de inputs, selects, búsquedas (diferenciarlo del fondo)
   colorPopover: hexColorSchema.optional(), // Fondo de dropdown lists / popovers (default: colorCard)
@@ -47,6 +48,7 @@ const themeSchema = z.object({
     .object({
       colorBg: hexColorSchema.optional(),
       colorBgSecondary: hexColorSchema.optional(),
+      colorSectionAlt: hexColorSchema.optional(),
       colorCard: hexColorSchema.optional(),
       colorInput: hexColorSchema.optional(),
       colorPopover: hexColorSchema.optional(),
@@ -71,6 +73,18 @@ const metadataSchema = z.object({
 // (default), el botón "Registrarse con Google" no se muestra.
 const authSchema = z.object({
   googleHabilitado: z.boolean().optional().default(false),
+});
+
+// Configuración del landing page público por tenant.
+// Si `habilitado` es false (o si el objeto no existe), el "/" redirige al login
+// igual que antes. Si es true, "/" muestra el landing page.
+// `usuarioLogeadoVeLanding`: cuando es true, un usuario ya autenticado que
+// entra a "/" ve el landing (con su sesión activa y botón "Ir a la plataforma").
+// Cuando es false (default), el usuario autenticado es redirigido directamente
+// a su dashboard.
+const landingPageSchema = z.object({
+  habilitado: z.boolean().optional().default(false),
+  usuarioLogeadoVeLanding: z.boolean().optional().default(false),
 });
 
 // ─── Main Tenant Config Schema ───────────────────────────────────────────────
@@ -105,6 +119,7 @@ export const tenantConfigSchema = z.object({
   fonts: fontsSchema.optional().default({ display: 'Playfair Display', body: 'DM Sans' }),
   metadata: metadataSchema.optional().default({}),
   auth: authSchema.optional().default({ googleHabilitado: false }),
+  landingPage: landingPageSchema.optional().default({ habilitado: false, usuarioLogeadoVeLanding: false }),
 });
 
 // ─── Exported Types ──────────────────────────────────────────────────────────
