@@ -9,7 +9,10 @@ import { MotionProvider } from '@/components/common/MotionProvider';
 export default function LandingLayout({ children }: { children: ReactNode }) {
   return (
     <MotionProvider>
-      <div className="min-h-screen bg-[var(--color-bg)]">{children}</div>
+      {/* overflow-x: clip corta el desbordamiento horizontal (p. ej. de las
+          animaciones de reveal que trasladan en X) sin crear un contenedor de
+          scroll, por lo que NO rompe la navbar sticky. */}
+      <div className="min-h-screen bg-[var(--color-bg)] [overflow-x:clip]">{children}</div>
     </MotionProvider>
   );
 }

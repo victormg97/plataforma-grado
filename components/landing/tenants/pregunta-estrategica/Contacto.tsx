@@ -87,14 +87,14 @@ export function Contacto() {
 
                     {/* Texto */}
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm text-[var(--color-text-muted)]">{entry.label}</p>
+                      <p className="truncate text-sm text-[var(--color-text-muted)]">{entry.label}</p>
                       <p className="truncate font-semibold text-[var(--color-text-primary)]">
                         {entry.value}
                       </p>
                     </div>
 
-                    {/* CTA */}
-                    <span className="flex shrink-0 items-center gap-1 text-sm font-medium text-[var(--color-brand-gold)] opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                    {/* CTA — solo desktop (es un afford de hover, inútil en táctil) */}
+                    <span className="hidden shrink-0 items-center gap-1 text-sm font-medium text-[var(--color-brand-gold)] opacity-0 transition-opacity duration-300 group-hover:opacity-100 sm:flex">
                       {ctaLabel(entry)}
                       <ArrowRight className="size-4" />
                     </span>
