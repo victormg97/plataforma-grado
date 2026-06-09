@@ -64,18 +64,18 @@ export function Contacto() {
           </Reveal>
 
           {/* Tarjetas de contacto */}
-          <div className="mt-12 grid gap-5 sm:grid-cols-2">
+          <div className="mt-12 grid grid-cols-[minmax(0,1fr)] gap-5 sm:grid-cols-2 sm:[grid-template-columns:repeat(2,minmax(0,1fr))]">
             {entries.map((entry, i) => {
               const { Icon, color } = resolveIcon(entry);
               const isEmail = entry.type === 'email';
 
               return (
-                <Reveal key={entry.id} direction="up" delay={i * 0.08}>
+                <Reveal key={entry.id} direction="up" delay={i * 0.08} className="min-w-0">
                   <a
                     href={entry.url}
                     target={isEmail ? undefined : '_blank'}
                     rel={isEmail ? undefined : 'noopener noreferrer'}
-                    className="group flex h-full items-center gap-4 rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-card)] p-5 shadow-[var(--shadow-sm)] transition-all duration-300 hover:-translate-y-1 hover:border-[var(--color-brand-gold)] hover:shadow-[var(--shadow-md)]"
+                    className="group flex h-full w-full items-center gap-4 rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-card)] p-5 shadow-[var(--shadow-sm)] transition-all duration-300 hover:-translate-y-1 hover:border-[var(--color-brand-gold)] hover:shadow-[var(--shadow-md)]"
                   >
                     {/* Ícono */}
                     <span
