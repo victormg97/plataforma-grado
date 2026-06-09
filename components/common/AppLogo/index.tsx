@@ -2,10 +2,25 @@
 
 import Image from 'next/image';
 import { useState } from 'react';
-import type { CSSProperties } from 'react';
+import type { CSSProperties, ComponentType } from 'react';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
 import { useTenant } from '@/config/client';
+import { LogoCompleto } from '@/components/landing/tenants/pregunta-estrategica/LogoCompleto';
+import { LogoHorizontal } from '@/components/landing/tenants/pregunta-estrategica/LogoHorizontal';
+
+/**
+ * Registro de componentes SVG de logo por tenant.
+ * Si un tenant tiene un componente SVG registrado aquí, se usará en lugar del PNG.
+ */
+const tenantSvgLogos: Record<string, ComponentType<{ className?: string }>> = {
+  'pregunta-estrategica': LogoCompleto,
+};
+
+/** SVG para el sidebar (versión horizontal compacta) */
+const tenantSvgSidebarLogos: Record<string, ComponentType<{ className?: string }>> = {
+  'pregunta-estrategica': LogoHorizontal,
+};
 
 interface AppLogoProps {
   /** 'sidebar' = compact horizontal, 'login' = large centered */
@@ -36,6 +51,18 @@ export function AppLogo({ variant = 'sidebar', className, style }: AppLogoProps)
       : tenant.logoLight;
 
   if (variant === 'login') {
+    // Si el tenant tiene un logo SVG registrado, usarlo en vez del PNG
+    const SvgLogo = tenantSvgLogos[tenant.id];
+    if (SvgLogo) {
+      return (
+        <div className={cn('flex flex-col items-center', className)} style={style}>
+          <div className="w-[clamp(120px,35vw,200px)]" style={{ maxHeight: style?.maxHeight, overflow: 'hidden' }}>
+            <SvgLogo className="h-auto w-full" />
+          </div>
+        </div>
+      );
+    }
+
     if (imgError) {
       return (
         <div className={cn('flex flex-col items-center', className)} style={style}>
@@ -66,6 +93,15 @@ export function AppLogo({ variant = 'sidebar', className, style }: AppLogoProps)
   }
 
   // sidebar variant
+  const SvgSidebarLogo = tenantSvgSidebarLogos[tenant.id];
+  if (SvgSidebarLogo) {
+    return (
+      <div className={cn(className)}>
+        <SvgSidebarLogo className="h-[38px] w-auto" />
+      </div>
+    );
+  }
+
   if (imgError) {
     return (
       <span
