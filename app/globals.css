@@ -396,15 +396,22 @@
 }
 
 /* Sección de contenido del landing: se adapta automáticamente al alto del
-   viewport. Llena al menos la pantalla (menos la navbar) con el contenido
-   centrado verticalmente, y usa padding fluido. Evita huecos vacíos en
-   pantallas altas y apretones en las bajas — sin valores hardcodeados. */
+   viewport. Llena al menos la pantalla (menos la navbar) con padding fluido.
+   En pantallas grandes el contenido se centra verticalmente; en móvil se
+   alinea al inicio para que al navegar a la sección se vea su comienzo (no la
+   mitad), aunque el contenido se extienda hacia abajo. */
 .landing-section {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   min-height: calc(100svh - 5rem);
   padding-block: clamp(2.5rem, 7vh, 6rem);
+}
+
+@media (min-width: 768px) {
+  .landing-section {
+    justify-content: center;
+  }
 }
 
 /* Scroll horizontal sin barra visible (tabs, chips, etc.) */
