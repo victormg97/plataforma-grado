@@ -63,8 +63,12 @@ export function LandingNavbar({
     if (el) {
       e.preventDefault();
       setMobileOpen(false);
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
       window.history.pushState(null, '', link.href);
+      // Diferir al siguiente frame: el menú (overlay) ya no desplaza el layout,
+      // pero esperamos a que React aplique el cierre antes de medir y hacer scroll.
+      requestAnimationFrame(() => {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
     } else {
       // La sección no está en esta página: dejar que el Link navegue.
       setMobileOpen(false);
@@ -133,9 +137,10 @@ export function LandingNavbar({
         </div>
       </nav>
 
-      {/* Mobile menu */}
+      {/* Mobile menu — overlay absoluto: NO afecta el alto del header ni empuja
+          el contenido, así el scroll a las anclas cae siempre en el lugar correcto. */}
       <div
-        className={`overflow-hidden border-t border-[var(--color-border)] bg-[var(--color-bg)] transition-[max-height,opacity] duration-300 lg:hidden ${
+        className={`absolute inset-x-0 top-full overflow-hidden border-t border-[var(--color-border)] bg-[var(--color-bg)] shadow-[var(--shadow-md)] transition-[max-height,opacity] duration-300 lg:hidden ${
           mobileOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
         }`}
       >
