@@ -50,6 +50,12 @@ const config: TenantConfigInput = {
   metadata: {
     favicon: '/tenants/pregunta-estrategica/favicon.ico',
   },
+  landingPage: {
+    habilitado: true,
+    // El usuario logeado puede ver el landing (con su sesión y botón "Ir a la plataforma")
+    // en vez de ser redirigido directamente al dashboard.
+    usuarioLogeadoVeLanding: true,
+  },
 };
 
 export default config;

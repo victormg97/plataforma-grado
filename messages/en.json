@@ -1375,5 +1375,15 @@
     "perfil_titulo": "Who We Are",
     "perfil_subtitulo": "Edit the content of the presentation modal",
     "perfil_boton": "Edit content"
+  },
+  "configuracionPagina": {
+    "titulo": "Page settings",
+    "subtitulo": "Customize the public content, communications and appearance of your site",
+    "navbar_label": "Page settings",
+    "seccion_contenido": "Public content",
+    "seccion_comunicacion": "Communication",
+    "seccion_proximamente": "Coming soon",
+    "proximamente_titulo": "More options on the way",
+    "proximamente_desc": "New page settings like themes, welcome texts and more will appear here"
   }
 }

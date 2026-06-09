@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import { checkApiRateLimit, getIp, tooManyRequestsResponse } from '@/lib/utils/rateLimit';
+import { tenantConfig } from '@/config';
 
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
@@ -45,7 +46,76 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Public routes
+  const landingHabilitado = tenantConfig.landingPage?.habilitado === true;
+  const usuarioLogeadoVeLanding = tenantConfig.landingPage?.usuarioLogeadoVeLanding === true;
+
+  // ── Ruta raíz "/" ──────────────────────────────────────────────────────────
+  if (pathname === '/') {
+    if (landingHabilitado) {
+      // Tenant con landing page
+      if (user && !usuarioLogeadoVeLanding) {
+        // Usuario logeado + tenant prefiere mandarlo directo al dashboard
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('rol')
+          .eq('id', user.id)
+          .single();
+
+        if (profile) {
+          const redirectMap: Record<string, string> = {
+            admin: '/admin',
+            profesor: '/profesor',
+            alumno: '/alumno',
+            lector: '/lector',
+          };
+          const url = request.nextUrl.clone();
+          url.pathname = redirectMap[profile.rol] || '/login';
+          return NextResponse.redirect(url);
+        }
+      }
+      // Mostrar el landing (usuario logeado que puede verlo, o no logeado)
+      const url = request.nextUrl.clone();
+      url.pathname = '/landing';
+      return NextResponse.redirect(url);
+    }
+
+    // Tenant sin landing page: comportamiento original
+    if (user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('rol')
+        .eq('id', user.id)
+        .single();
+
+      if (profile) {
+        const redirectMap: Record<string, string> = {
+          admin: '/admin',
+          profesor: '/profesor',
+          alumno: '/alumno',
+          lector: '/lector',
+        };
+        const url = request.nextUrl.clone();
+        url.pathname = redirectMap[profile.rol] || '/login';
+        return NextResponse.redirect(url);
+      }
+    }
+    const url = request.nextUrl.clone();
+    url.pathname = '/login';
+    return NextResponse.redirect(url);
+  }
+
+  // ── Ruta "/landing" ────────────────────────────────────────────────────────
+  // Si el tenant no tiene landing habilitado, redirigir al login
+  if (pathname === '/landing' || pathname.startsWith('/landing/')) {
+    if (!landingHabilitado) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/login';
+      return NextResponse.redirect(url);
+    }
+    return supabaseResponse;
+  }
+
+  // ── Ruta "/login" ──────────────────────────────────────────────────────────
   if (pathname === '/login') {
     if (user) {
       // Already logged in, redirect to dashboard based on role
@@ -70,7 +140,7 @@ export async function proxy(request: NextRequest) {
     return supabaseResponse;
   }
 
-  // Protected routes
+  // ── Rutas protegidas ───────────────────────────────────────────────────────
   const isProtected =
     pathname.startsWith('/admin') ||
     pathname.startsWith('/profesor') ||
@@ -120,32 +190,6 @@ export async function proxy(request: NextRequest) {
       url.pathname = redirectMap[profile.rol] || '/login';
       return NextResponse.redirect(url);
     }
-  }
-
-  // Root redirect
-  if (pathname === '/') {
-    if (user) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('rol')
-        .eq('id', user.id)
-        .single();
-
-      if (profile) {
-        const redirectMap: Record<string, string> = {
-          admin: '/admin',
-          profesor: '/profesor',
-          alumno: '/alumno',
-          lector: '/lector',
-        };
-        const url = request.nextUrl.clone();
-        url.pathname = redirectMap[profile.rol] || '/login';
-        return NextResponse.redirect(url);
-      }
-    }
-    const url = request.nextUrl.clone();
-    url.pathname = '/login';
-    return NextResponse.redirect(url);
   }
 
   return supabaseResponse;
