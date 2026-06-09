@@ -38,6 +38,7 @@ const themeSchema = z.object({
   colorAccentForeground: hexColorSchema.optional(), // Texto sobre el color accent (ej: blanco sobre azul)
   colorBg: hexColorSchema.optional(),
   colorBgSecondary: hexColorSchema.optional(),
+  colorSectionAlt: hexColorSchema.optional(), // Fondo alternativo para secciones del landing (separación visual entre secciones)
   colorCard: hexColorSchema.optional(), // Fondo de cards (si se quiere diferente al fondo principal)
   colorInput: hexColorSchema.optional(), // Fondo de inputs, selects, búsquedas (diferenciarlo del fondo)
   colorPopover: hexColorSchema.optional(), // Fondo de dropdown lists / popovers (default: colorCard)
@@ -47,6 +48,7 @@ const themeSchema = z.object({
     .object({
       colorBg: hexColorSchema.optional(),
       colorBgSecondary: hexColorSchema.optional(),
+      colorSectionAlt: hexColorSchema.optional(),
       colorCard: hexColorSchema.optional(),
       colorInput: hexColorSchema.optional(),
       colorPopover: hexColorSchema.optional(),

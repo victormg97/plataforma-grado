@@ -53,6 +53,7 @@
   --color-brand-gold: var(--color-brand-gold);
   --color-brand-gold-light: var(--color-brand-gold-light);
   --color-brand-gold-muted: var(--color-brand-gold-muted);
+  --color-section-alt: var(--color-section-alt);
   --color-success: var(--color-success);
   --color-warning: var(--color-warning);
   --color-error: var(--color-error);
@@ -109,6 +110,7 @@
   --color-bg: #FFFFFF;
   --color-bg-secondary: #F8F6F2;
   --color-bg-elevated: #F0EDE6;
+  --color-section-alt: #F0EDE6;
 
   /* Texto */
   --color-text-primary: #1a1a1a;
@@ -196,6 +198,7 @@
   --color-bg: #0F0F0F;
   --color-bg-secondary: #1A1A1A;
   --color-bg-elevated: #222222;
+  --color-section-alt: #222222;
   --color-text-primary: #F5F0E8;
   --color-text-secondary: #B8B0A0;
   --color-text-muted: #666666;
@@ -251,6 +254,7 @@
   --color-bg: #0E0B00;
   --color-bg-secondary: #1a1500;
   --color-bg-elevated: #251e00;
+  --color-section-alt: #251e00;
   --color-text-primary: #F5D78A;
   --color-text-secondary: #C9993F;
   --color-text-muted: #7a6020;
@@ -382,6 +386,27 @@
   margin-inline: auto;
 }
 
+/* Contenedor del landing: más ancho y con menos padding lateral que el resto
+   de la app, para un look más amplio en pantallas grandes. */
+.container-landing {
+  width: 100%;
+  max-width: 1440px;
+  padding-inline: clamp(1.5rem, 4vw, 3.5rem);
+  margin-inline: auto;
+}
+
+/* Sección de contenido del landing: se adapta automáticamente al alto del
+   viewport. Llena al menos la pantalla (menos la navbar) con el contenido
+   centrado verticalmente, y usa padding fluido. Evita huecos vacíos en
+   pantallas altas y apretones en las bajas — sin valores hardcodeados. */
+.landing-section {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: calc(100svh - 5rem);
+  padding-block: clamp(2.5rem, 7vh, 6rem);
+}
+
 /* Scroll horizontal sin barra visible (tabs, chips, etc.) */
 .no-scrollbar {
   -ms-overflow-style: none;      /* IE/Edge */
@@ -411,6 +436,12 @@
        toma su color de <html>, no del body. Así asoma el color de marca
        y no el blanco. */
     background-color: var(--color-bg-secondary);
+    scroll-behavior: smooth;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
   }
   button:not(:disabled),
   [role="button"]:not(:disabled) {

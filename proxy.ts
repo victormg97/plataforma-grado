@@ -104,9 +104,17 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // ── Ruta "/landing" ────────────────────────────────────────────────────────
+  // ── Rutas públicas del landing ──────────────────────────────────────────────
   // Si el tenant no tiene landing habilitado, redirigir al login
-  if (pathname === '/landing' || pathname.startsWith('/landing/')) {
+  const isLandingRoute =
+    pathname === '/landing' ||
+    pathname.startsWith('/landing/') ||
+    pathname === '/programas' ||
+    pathname === '/planes' ||
+    pathname === '/sobre-nosotras' ||
+    pathname === '/contacto';
+
+  if (isLandingRoute) {
     if (!landingHabilitado) {
       const url = request.nextUrl.clone();
       url.pathname = '/login';

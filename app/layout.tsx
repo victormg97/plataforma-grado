@@ -70,6 +70,9 @@ function getTenantThemeCSS(): string {
     lightVars.push(`--muted: ${theme.colorBgSecondary}`);
     lightVars.push(`--sidebar: ${theme.colorBgSecondary}`);
   }
+  if (theme.colorSectionAlt) {
+    lightVars.push(`--color-section-alt: ${theme.colorSectionAlt}`);
+  }
   if (theme.colorTextPrimary) {
     lightVars.push(`--color-text-primary: ${theme.colorTextPrimary}`);
     lightVars.push(`--foreground: ${theme.colorTextPrimary}`);
@@ -112,6 +115,9 @@ function getTenantThemeCSS(): string {
       darkVars.push(`--secondary: ${theme.dark.colorBgSecondary}`);
       darkVars.push(`--muted: ${theme.dark.colorBgSecondary}`);
       darkVars.push(`--sidebar: ${theme.dark.colorBgSecondary}`);
+    }
+    if (theme.dark.colorSectionAlt) {
+      darkVars.push(`--color-section-alt: ${theme.dark.colorSectionAlt}`);
     }
     if (theme.dark.colorTextPrimary) {
       darkVars.push(`--color-text-primary: ${theme.dark.colorTextPrimary}`);

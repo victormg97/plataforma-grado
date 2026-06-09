@@ -76,6 +76,12 @@ const config: TenantConfig = {
     display: 'Montserrat',  // Fuente para títulos
     body: 'Inter',          // Fuente para texto
   },
+  // Opcional: landing page público (ver sección "Landing Page por Tenant").
+  // Si se omite, "/" redirige directo al login.
+  landingPage: {
+    habilitado: true,
+    usuarioLogeadoVeLanding: true,
+  },
 };
 
 export default config;
@@ -170,11 +176,13 @@ theme: {
   // Opcionales:
   colorBg: '#FFFFFF',           // Fondo principal
   colorBgSecondary: '#F9FAFB',  // Fondo secundario
+  colorSectionAlt: '#F0EDE6',   // Fondo alternativo de secciones del landing (separación visual)
   colorTextPrimary: '#111827',  // Texto principal
   colorBorder: '#E5E7EB',       // Bordes
   dark: {                       // Overrides para modo oscuro
     colorBg: '#0F172A',
     colorBgSecondary: '#1E293B',
+    colorSectionAlt: '#243044',
     colorTextPrimary: '#F1F5F9',
     colorBorder: '#334155',
   },
@@ -200,6 +208,136 @@ Las fuentes soportadas actualmente son:
 
 Si necesitas agregar una fuente nueva, edita `config/fonts.ts` y agrégala al registro.
 
+## Landing Page por Tenant
+
+Un tenant puede tener (opcionalmente) un **landing page público** — la página de
+marketing que ve un visitante antes de iniciar sesión. Si un tenant no lo tiene,
+la raíz `/` redirige directamente al login (comportamiento original).
+
+### Configuración (`landingPage`)
+
+Se define en el archivo de configuración del tenant (`config/tenants/<id>.ts`):
+
+```typescript
+landingPage: {
+  habilitado: true,                 // ¿El tenant tiene landing page?
+  usuarioLogeadoVeLanding: true,    // Un usuario con sesión, ¿ve el landing o va directo al dashboard?
+},
+```
+
+| Campo | Tipo | Default | Descripción |
+|-------|------|---------|-------------|
+| `habilitado` | boolean | `false` | Si es `true`, la raíz `/` muestra el landing. Si es `false` (o se omite el objeto), `/` redirige al login como antes. |
+| `usuarioLogeadoVeLanding` | boolean | `false` | Solo aplica si `habilitado: true`. Si es `true`, un usuario autenticado que entra a `/` ve el landing (con su sesión activa y el botón "Ir a la plataforma"). Si es `false`, el usuario autenticado es redirigido directo a su dashboard. |
+
+> **Importante:** `habilitado: true` no basta por sí solo. El tenant también
+> debe tener un **diseño de landing registrado** (ver abajo). Si está habilitado
+> pero no hay diseño, `/` cae al login igualmente.
+
+### Arquitectura del landing (diseño 100% personalizable por tenant)
+
+Cada tenant implementa su **propio diseño** de landing. No se comparte estructura
+entre tenants: uno puede tener hero + planes y otro un diseño completamente
+distinto. Todas las secciones se renderizan en una sola vista con **scroll
+continuo** dentro de la página principal. La organización es:
+
+```
+components/landing/
+├── index.tsx          ← Registro: mapea tenantId → { home, sections }
+├── context.ts         ← getLandingContext() — sesión/locale/CTA (compartido por las rutas)
+├── types.ts           ← LandingProps, NavLink
+├── shared/            ← Reutilizables entre tenants (opcionales de usar)
+│   ├── LandingNavbar.tsx     ← Navbar agnóstica (recibe navLinks + CTA por props)
+│   ├── LandingFooter.tsx     ← Footer (recibe textos por props)
+│   ├── LandingThemeToggle.tsx
+│   ├── LandingLangToggle.tsx
+│   ├── Reveal.tsx            ← Animación scroll-reveal (framer-motion)
+│   └── resolveAsset.ts       ← Resuelve assets multi-formato en el servidor
+└── tenants/
+    └── pregunta-estrategica/
+        ├── Shell.tsx            ← Marco común del tenant: navbar + contenido + footer
+        ├── Home.tsx             ← Página "/landing" (ensambla TODAS las secciones)
+        └── Hero.tsx, Features.tsx, Programas.tsx, Planes.tsx, SobreNosotras.tsx
+```
+
+Las secciones viven dentro del `Home` con un `id` de ancla (ej.
+`id="sobre-nosotras"`). Las rutas con URL propia **redirigen al ancla** para
+mantener el scroll continuo:
+
+| Ruta | Comportamiento | Archivo |
+|------|----------------|---------|
+| `/landing` | Renderiza el home con todas las secciones | `app/(landing)/landing/page.tsx` |
+| `/programas` | Redirige a `/landing#programas` | `app/(landing)/programas/page.tsx` |
+| `/planes` | Redirige a `/landing#planes` | `app/(landing)/planes/page.tsx` |
+| `/sobre-nosotras` | Redirige a `/landing#sobre-nosotras` | `app/(landing)/sobre-nosotras/page.tsx` |
+| `/contacto` | Redirige a `/landing#contacto` | (pendiente) |
+
+> La ruta NO lleva el id del tenant (es `/landing`, no `/pregunta-estrategica/landing`)
+> porque cada dominio = un deploy = un tenant. La diferenciación ocurre por
+> `NEXT_PUBLIC_TENANT_ID` en build time, igual que `/login` o `/admin`.
+
+### Internacionalización (i18n)
+
+Los textos del landing de cada tenant van en archivos i18n propios, uno por
+idioma, con el nombre `landing-<tenantId>.json`:
+
+```
+messages/pages/es/landing-pregunta-estrategica.json
+messages/pages/en/landing-pregunta-estrategica.json
+```
+
+El loader (`i18n/request.ts`) los auto-registra usando el nombre del archivo
+como namespace. En los componentes se accede con
+`useTranslations('landing-<tenantId>.<seccion>')`.
+
+### Assets del landing
+
+Las imágenes del landing van en `public/tenants/<id>/landing/`. El helper
+`resolveAsset()` (server-side) detecta la extensión automáticamente probando
+`.jpg → .jpeg → .png → .webp → .avif`, así que basta dejar el archivo con
+cualquiera de esos formatos sin tocar código. Convención de nombres:
+
+| Archivo base | Uso |
+|--------------|-----|
+| `hero.<ext>` | Imagen principal del hero |
+| `sobre-nosotras.<ext>` | Imagen de la sección "Sobre Nosotras" |
+
+Si el asset no existe, el componente muestra el logo del tenant como fallback.
+
+### Colores de fondo por sección
+
+Para separar visualmente las secciones del landing, el tema expone dos fondos:
+
+- `--color-bg-secondary` (campo `theme.colorBgSecondary`)
+- `--color-section-alt` (campo `theme.colorSectionAlt`) — fondo alternativo
+  pensado para alternar secciones contiguas.
+
+Cada sección decide su fondo con clases Tailwind sobre estas variables, ej:
+`bg-[var(--color-bg)]`, `bg-[var(--color-section-alt)]`. Ambas variables tienen
+modo claro y oscuro, configurables por tenant en `theme` y `theme.dark`.
+
+### Pasos para darle landing a un tenant nuevo
+
+1. **Habilitar** en `config/tenants/<id>.ts`: agregar el bloque `landingPage`.
+2. **Crear el diseño** en `components/landing/tenants/<id>/` (al menos `Home.tsx`
+   y un `Shell.tsx`). El `Home` ensambla todas las secciones en scroll continuo;
+   cada sección con URL propia debe tener un `id` de ancla. Puede reutilizar lo
+   de `shared/` o ignorarlo.
+3. **Crear los textos** i18n: `messages/pages/<locale>/landing-<id>.json`.
+4. **Dejar los assets** en `public/tenants/<id>/landing/`.
+5. **Registrar** en el mapa de `components/landing/index.tsx`:
+   ```typescript
+   '<id>': {
+     home: dynamic(() => import('./tenants/<id>/Home')),
+     sections: ['programas', 'planes', 'sobre-nosotras', 'contacto'],
+   },
+   ```
+6. **(Opcional) Rutas con URL propia**: crea `app/(landing)/<seccion>/page.tsx`
+   que redirija a `/landing#<seccion>` (ver `sobre-nosotras` como ejemplo).
+
+Cada `Home` se carga con `next/dynamic`, así solo entra al bundle el código del
+tenant activo. Agregar un tenant no afecta a los demás.
+
 ## Versionado del Esquema de Configuración
 
 El esquema de configuración tiene un número de versión (`CURRENT_SCHEMA_VERSION` en `config/schema.ts`). Esto permite:
@@ -219,7 +357,7 @@ El esquema de configuración tiene un número de versión (`CURRENT_SCHEMA_VERSI
 
 | Versión | Cambios |
 |---------|---------|
-| 1 | Esquema inicial: id, nombre, descripcion, logos, propietarios, theme, fonts, metadata |
+| 1 | Esquema inicial: id, nombre, descripcion, logos, propietarios, theme, fonts, metadata. Campos añadidos posteriormente (compatibles, con defaults): `emailDomain`, `emailFrom`, `terminoPrueba`, `quienesSomosLabel`, `sidebarLight`/`sidebarDark`, `auth.googleHabilitado`, `landingPage` (landing page público por tenant), `theme.colorSectionAlt` (fondo alternativo de secciones del landing). |
 
 ## Solución de Problemas
 

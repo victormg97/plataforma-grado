@@ -1,0 +1,88 @@
+{
+  "nav": {
+    "programas": "Programs",
+    "planes": "Plans",
+    "sobreNosotras": "About Us",
+    "contacto": "Contact",
+    "iniciaSesion": "Sign In",
+    "irPlataforma": "Go to platform",
+    "abrirMenu": "Open menu",
+    "cerrarMenu": "Close menu"
+  },
+  "hero": {
+    "titulo1": "STRATEGIC",
+    "titulo2": "PREPARATION",
+    "titulo3": "FOR YOUR DEGREE",
+    "subtitulo": "Close, demanding and strategic support so you can face your degree exam with ",
+    "subtituloDestacado": "security and confidence.",
+    "imagenAlt": "Degree exam preparation"
+  },
+  "features": {
+    "metodologia": "Own methodology",
+    "interrogaciones": "Interrogations with feedback",
+    "estrategica": "Strategic preparation",
+    "plataforma": "Exclusive platform",
+    "baseDatos": "Legal database"
+  },
+  "programas": {
+    "tituloPrincipal": "Our programs:",
+    "subtitulo": "Choose the modality that suits you:",
+    "hibrido": {
+      "nombre": "HYBRID PROGRAM",
+      "modalidad": "Classes + interrogations",
+      "descripcion": "Complete support to strengthen your knowledge, strategy and oral expression."
+    },
+    "intensivo": {
+      "nombre": "INTENSIVE PROGRAM",
+      "modalidad": "Interrogations only",
+      "descripcion": "Constant practice with specialized feedback to perform at your best."
+    }
+  },
+  "planes": {
+    "titulo": "INTERROGATION COURSE PLANS",
+    "oferta": "June Offer",
+    "plan1": {
+      "nombre": "PLAN 1",
+      "detalle": "4 monthly interrogations",
+      "precio": "$45.000",
+      "precioAntes": "before $50.000"
+    },
+    "plan2": {
+      "nombre": "PLAN 2",
+      "detalle": "8 monthly interrogations",
+      "precio": "$80.000",
+      "precioAntes": "before $90.000"
+    },
+    "incluyenTitulo": "All plans include:",
+    "incluyen": [
+      "Platform access",
+      "Student agenda",
+      "Legal database",
+      "Study material for the degree exam"
+    ],
+    "modalidadTitulo": "Flexible Modality:",
+    "modalidad": [
+      "Interrogations only.",
+      "Classes + Interrogations."
+    ]
+  },
+  "footer": {
+    "derechos": "All rights reserved."
+  },
+  "sobreNosotras": {
+    "titulo": "ABOUT US",
+    "imagenAlt": "Estefanía Montalbán Pino and Camila Ogalde Fonck",
+    "parrafos": [
+      "We are Estefanía Montalbán Pino and Camila Ogalde Fonck, lawyers from Universidad Católica del Norte, committed to a close, strategic and rigorous preparation for the degree exam ⚖️",
+      "We created Pregunta Estratégica from our own experience, with the purpose of giving you tools, real support and a methodology focused on strengthening your knowledge, oral expression and confidence to face this important challenge 📚"
+    ]
+  },
+  "contacto": {
+    "titulo": "CONTACT",
+    "subtitulo": "Let's talk about your preparation",
+    "descripcion": "Write to us directly and let's solve your questions together. We are here to support you in every step toward your degree exam.",
+    "ctaWhatsapp": "Message",
+    "ctaEmail": "Send email",
+    "ctaSocial": "Follow"
+  }
+}

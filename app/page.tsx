@@ -2,12 +2,14 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getRolRedirectPath } from '@/lib/auth/helpers';
 import { tenantConfig } from '@/config';
+import { tenantHasLanding } from '@/components/landing';
 
 export default async function Home() {
   const landing = tenantConfig.landingPage;
+  const hasLanding = landing?.habilitado === true && tenantHasLanding();
 
   // ── Tenant sin landing page: comportamiento original ─────────────────────
-  if (!landing?.habilitado) {
+  if (!hasLanding) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -30,7 +32,7 @@ export default async function Home() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (user && !landing.usuarioLogeadoVeLanding) {
+  if (user && !landing?.usuarioLogeadoVeLanding) {
     // El tenant prefiere redirigir al usuario logeado directo a su dashboard
     const { data: profile } = await supabase
       .from('profiles')
