@@ -68,7 +68,7 @@ The processing of your data is based on:
 
 ## 5. Storage and Security
 
-- Data is stored on **Supabase** servers (cloud PostgreSQL) with encryption in transit (TLS) and at rest.
+- Data is stored on cloud infrastructure provider servers with encryption in transit (TLS) and at rest.
 - Technical and organizational measures are applied to protect data against unauthorized access, loss, or destruction.
 - Access to data is restricted solely to authorized personnel and to users themselves according to their role on the platform.
 
@@ -101,12 +101,14 @@ The platform uses strictly necessary session cookies for service operation (auth
 
 ## 9. Third-Party Services
 
-The platform uses the following external services:
+The platform uses external third-party services for its operation, including:
 
-| Service | Purpose | Privacy Policy |
-|---|---|---|
-| Supabase | Database and authentication | [supabase.com/privacy](https://supabase.com/privacy) |
-| Vercel | Application hosting | [vercel.com/legal/privacy-policy](https://vercel.com/legal/privacy-policy) |
+| Category | Purpose |
+|---|---|
+| Cloud database provider | Data storage and user authentication |
+| Web hosting provider | Application hosting and distribution |
+
+These providers comply with industry security standards and process data solely according to our instructions. You may request information about specific providers by writing to **{{OWNER_EMAIL}}**.
 
 ---
 

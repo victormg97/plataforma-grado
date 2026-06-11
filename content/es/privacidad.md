@@ -68,7 +68,7 @@ El tratamiento de sus datos se basa en:
 
 ## 5. Almacenamiento y Seguridad
 
-- Los datos se almacenan en servidores de **Supabase** (PostgreSQL en la nube), con cifrado en tránsito (TLS) y en reposo.
+- Los datos se almacenan en servidores de proveedores de infraestructura en la nube, con cifrado en tránsito (TLS) y en reposo.
 - Se aplican medidas técnicas y organizativas para proteger los datos contra acceso no autorizado, pérdida o destrucción.
 - El acceso a los datos está restringido únicamente al personal autorizado y a los propios usuarios según su rol en la plataforma.
 
@@ -101,12 +101,14 @@ La plataforma utiliza cookies de sesión estrictamente necesarias para el funcio
 
 ## 9. Servicios de Terceros
 
-La plataforma utiliza los siguientes servicios externos:
+La plataforma utiliza servicios externos de terceros para su operación, incluyendo:
 
-| Servicio | Finalidad | Política de privacidad |
-|---|---|---|
-| Supabase | Base de datos y autenticación | [supabase.com/privacy](https://supabase.com/privacy) |
-| Vercel | Alojamiento de la aplicación | [vercel.com/legal/privacy-policy](https://vercel.com/legal/privacy-policy) |
+| Categoría | Finalidad |
+|---|---|
+| Proveedor de base de datos en la nube | Almacenamiento de datos y autenticación de usuarios |
+| Proveedor de alojamiento web | Hosting y distribución de la aplicación |
+
+Estos proveedores cumplen con estándares de seguridad de la industria y procesan datos únicamente según nuestras instrucciones. Puede solicitar información sobre los proveedores específicos escribiendo a **{{OWNER_EMAIL}}**.
 
 ---
 
