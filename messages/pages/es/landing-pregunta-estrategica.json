@@ -1,6 +1,7 @@
 {
   "nav": {
     "programas": "Programas",
+    "tutorias": "Tutorías",
     "planes": "Planes",
     "sobreNosotras": "Sobre Nosotras",
     "contacto": "Contacto",
@@ -36,7 +37,39 @@
       "nombre": "PROGRAMA INTENSIVO",
       "modalidad": "Solo interrogaciones",
       "descripcion": "Práctica constante con retroalimentación especializada para rendir tu mejor versión."
+    },
+    "modalidadesTitulo": "Nos adaptamos a la modalidad de tu",
+    "modalidadesSubtitulo": "Examen de grado",
+    "cedula": {
+      "nombre": "PREPARACIÓN DE LA CÉDULA",
+      "descripcion": "En este programa comenzamos con interrogaciones en Derecho Procesal y Civil, además de orientarte y apoyarte en la elección estratégica de tu cédula, considerando tus fortalezas y una preparación más eficiente para el examen de grado ⚖️"
+    },
+    "casos": {
+      "nombre": "RESOLUCIÓN DE CASOS",
+      "descripcion": "En este programa te acompañamos en la preparación de grados basados en resolución de casos, fortaleciendo el análisis jurídico, la argumentación y el razonamiento estratégico para enfrentar cada caso con mayor seguridad"
     }
+  },
+  "tutorias": {
+    "titulo": "TUTORÍAS",
+    "subtitulo": "PARA ESTUDIANTES DE PREGRADO",
+    "descripcion": "Te acompañamos en tu camino universitario con tutorías personalizadas",
+    "beneficios": {
+      "apoyo": "Apoyo académico en tus asignaturas, incluyendo resumen de la clase.",
+      "metodologia": "Metodología clara y efectiva para comprender y aplicar",
+      "acompanamiento": "Acompañamiento cercano y enfocado en tus objetivos"
+    },
+    "materiasTitulo": "¿QUE MATERIAS VEMOS?",
+    "materias": [
+      "Derecho Civil",
+      "Derecho Procesal",
+      "Derecho Constitucional",
+      "Derecho Penal",
+      "Derecho Laboral",
+      "Derecho de Familia"
+    ],
+    "duracion": "Cada sesión tiene una duración de 1 hora",
+    "banner": "Aprende, comprende y avanza con confianza",
+    "imagenAlt": "Tutorías para estudiantes de pregrado"
   },
   "planes": {
     "titulo": "PLANES CURSO DE INTERROGACIÓN",
@@ -64,7 +97,19 @@
     "modalidad": [
       "Solo Interrogaciones.",
       "Clases + Interrogaciones."
-    ]
+    ],
+    "duracionSesion": "Cada sesión tiene una duración de 1 hora",
+    "tutoriasTitulo": "VALOR TUTORÍA ONLINE:",
+    "tutoria1": {
+      "nombre": "SESIÓN 1 HORA",
+      "detalle": "1 persona",
+      "precio": "$10.000"
+    },
+    "tutoria2": {
+      "nombre": "SESIÓN 1 HORA",
+      "detalle": "2 personas",
+      "precio": "$15.000"
+    }
   },
   "footer": {
     "derechos": "Todos los derechos reservados."
@@ -81,6 +126,8 @@
     "titulo": "CONTACTO",
     "subtitulo": "Conversemos sobre tu preparación",
     "descripcion": "Escríbenos directamente y resolvamos tus dudas. Estamos para acompañarte en cada paso hacia tu examen de grado.",
+    "agendar": "O si prefieres puedes agendar una sesión de coordinación gratuita para resolver tus dudas",
+    "canales": "Mediante cualquiera de nuestros canales de comunicación:",
     "ctaWhatsapp": "Escribir",
     "ctaEmail": "Enviar correo",
     "ctaSocial": "Seguir"

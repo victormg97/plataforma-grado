@@ -22,7 +22,7 @@ export function SobreNosotras({ imageSrc }: SobreNosotrasProps) {
   return (
     <section
       id="sobre-nosotras"
-      className="scroll-mt-20 bg-[var(--color-bg)]"
+      className="scroll-mt-20 bg-[var(--color-section-alt)]"
     >
       <div className="container-landing landing-section">
         <div className="grid w-full items-center gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:gap-16">

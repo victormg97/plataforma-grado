@@ -110,6 +110,7 @@ export async function proxy(request: NextRequest) {
     pathname === '/landing' ||
     pathname.startsWith('/landing/') ||
     pathname === '/programas' ||
+    pathname === '/tutorias' ||
     pathname === '/planes' ||
     pathname === '/sobre-nosotras' ||
     pathname === '/contacto';

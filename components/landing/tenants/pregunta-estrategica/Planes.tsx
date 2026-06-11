@@ -16,8 +16,10 @@ export function Planes() {
 
   const planes = ['plan1', 'plan2'] as const;
 
+  const tutorias = ['tutoria1', 'tutoria2'] as const;
+
   return (
-    <section id="planes" className="scroll-mt-20 bg-[var(--color-section-alt)]">
+    <section id="planes" className="scroll-mt-20 bg-[var(--color-bg)]">
       <div className="container-landing landing-section">
         <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[1.5fr_auto_1fr] lg:gap-16">
           {/* ── Columna izquierda: título + tarjetas de precio ── */}
@@ -101,8 +103,48 @@ export function Planes() {
                   ))}
                 </ul>
               </div>
+
+              <p className="text-sm font-medium italic text-[var(--color-text-secondary)]">
+                {t('duracionSesion')}
+              </p>
             </div>
           </Reveal>
+        </div>
+
+        {/* ── Valor tutoría online ── */}
+        <div className="mx-auto mt-16 max-w-3xl">
+          <Reveal>
+            <h3
+              className="text-center text-[clamp(1.25rem,2.5vw,1.75rem)] font-bold uppercase tracking-wider text-[var(--color-text-primary)]"
+              style={{ fontFamily: 'var(--font-display)' }}
+            >
+              {t('tutoriasTitulo')}
+            </h3>
+          </Reveal>
+
+          <div className="mt-8 grid gap-6 sm:grid-cols-2 sm:gap-8">
+            {tutorias.map((tut, i) => (
+              <Reveal key={tut} delay={i * 0.12} direction="up">
+                <article className="flex flex-col items-center rounded-[var(--radius-xl)] bg-[var(--color-card)] p-8 text-center shadow-[var(--shadow-md)] transition-transform duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-lg)]">
+                  <h4
+                    className="text-xl font-bold tracking-wide text-[var(--color-text-primary)] md:text-2xl"
+                    style={{ fontFamily: 'var(--font-display)' }}
+                  >
+                    {t(`${tut}.nombre`)}
+                  </h4>
+                  <p className="mt-2 text-[var(--color-text-secondary)]">
+                    {t(`${tut}.detalle`)}
+                  </p>
+
+                  <div className="mt-5 w-full rounded-[var(--radius-lg)] bg-[var(--color-brand-gold-muted)] px-4 py-5">
+                    <p className="text-3xl font-extrabold text-[var(--color-brand-gold)] md:text-4xl">
+                      {t(`${tut}.precio`)}
+                    </p>
+                  </div>
+                </article>
+              </Reveal>
+            ))}
+          </div>
         </div>
       </div>
     </section>

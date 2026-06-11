@@ -19,6 +19,7 @@ export async function Shell({ locale, ctaHref, isLoggedIn, children }: ShellProp
 
   const navLinks = [
     { label: t('nav.programas'), href: '/programas', sectionId: 'programas' },
+    { label: t('nav.tutorias'), href: '/tutorias', sectionId: 'tutorias' },
     { label: t('nav.planes'), href: '/planes', sectionId: 'planes' },
     { label: t('nav.sobreNosotras'), href: '/sobre-nosotras', sectionId: 'sobre-nosotras' },
     { label: t('nav.contacto'), href: '/contacto', sectionId: 'contacto' },

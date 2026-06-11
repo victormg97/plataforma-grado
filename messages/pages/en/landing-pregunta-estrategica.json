@@ -1,6 +1,7 @@
 {
   "nav": {
     "programas": "Programs",
+    "tutorias": "Tutoring",
     "planes": "Plans",
     "sobreNosotras": "About Us",
     "contacto": "Contact",
@@ -36,7 +37,39 @@
       "nombre": "INTENSIVE PROGRAM",
       "modalidad": "Interrogations only",
       "descripcion": "Constant practice with specialized feedback to perform at your best."
+    },
+    "modalidadesTitulo": "We adapt to the modality of your",
+    "modalidadesSubtitulo": "Degree exam",
+    "cedula": {
+      "nombre": "CÉDULA PREPARATION",
+      "descripcion": "In this program we start with interrogations in Procedural and Civil Law, as well as guiding and supporting you in the strategic choice of your cédula, considering your strengths and a more efficient preparation for the degree exam ⚖️"
+    },
+    "casos": {
+      "nombre": "CASE RESOLUTION",
+      "descripcion": "In this program we accompany you in the preparation of degrees based on case resolution, strengthening legal analysis, argumentation and strategic reasoning to face each case with greater confidence"
     }
+  },
+  "tutorias": {
+    "titulo": "TUTORING",
+    "subtitulo": "FOR UNDERGRADUATE STUDENTS",
+    "descripcion": "We accompany you on your university journey with personalized tutoring",
+    "beneficios": {
+      "apoyo": "Academic support in your courses, including class summaries.",
+      "metodologia": "Clear and effective methodology to understand and apply",
+      "acompanamiento": "Close support focused on your goals"
+    },
+    "materiasTitulo": "WHAT SUBJECTS DO WE COVER?",
+    "materias": [
+      "Civil Law",
+      "Procedural Law",
+      "Constitutional Law",
+      "Criminal Law",
+      "Labor Law",
+      "Family Law"
+    ],
+    "duracion": "Each session lasts 1 hour",
+    "banner": "Learn, understand and move forward with confidence",
+    "imagenAlt": "Tutoring for undergraduate students"
   },
   "planes": {
     "titulo": "INTERROGATION COURSE PLANS",
@@ -64,7 +97,19 @@
     "modalidad": [
       "Interrogations only.",
       "Classes + Interrogations."
-    ]
+    ],
+    "duracionSesion": "Each session lasts 1 hour",
+    "tutoriasTitulo": "ONLINE TUTORING PRICE:",
+    "tutoria1": {
+      "nombre": "1 HOUR SESSION",
+      "detalle": "1 person",
+      "precio": "$10.000"
+    },
+    "tutoria2": {
+      "nombre": "1 HOUR SESSION",
+      "detalle": "2 people",
+      "precio": "$15.000"
+    }
   },
   "footer": {
     "derechos": "All rights reserved."
@@ -81,6 +126,8 @@
     "titulo": "CONTACT",
     "subtitulo": "Let's talk about your preparation",
     "descripcion": "Write to us directly and let's solve your questions together. We are here to support you in every step toward your degree exam.",
+    "agendar": "Or if you prefer, you can schedule a free coordination session to resolve your questions",
+    "canales": "Through any of our communication channels:",
     "ctaWhatsapp": "Message",
     "ctaEmail": "Send email",
     "ctaSocial": "Follow"

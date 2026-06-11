@@ -8,7 +8,7 @@ import type { LandingProps } from './types';
  * DENTRO de la página principal (scroll continuo) con un id de ancla; la ruta
  * homónima (ej. "/sobre-nosotras") simplemente lleva a "/landing#<ancla>".
  */
-export type LandingSection = 'programas' | 'planes' | 'sobre-nosotras' | 'contacto';
+export type LandingSection = 'programas' | 'tutorias' | 'planes' | 'sobre-nosotras' | 'contacto';
 
 interface TenantLanding {
   /** Componente de la página principal (ensambla todas las secciones). */
@@ -36,7 +36,7 @@ interface TenantLanding {
 const landingRegistry: Record<string, TenantLanding> = {
   'pregunta-estrategica': {
     home: dynamic(() => import('./tenants/pregunta-estrategica/Home')),
-    sections: ['programas', 'planes', 'sobre-nosotras', 'contacto'],
+    sections: ['programas', 'tutorias', 'planes', 'sobre-nosotras', 'contacto'],
   },
 };
 

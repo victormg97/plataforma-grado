@@ -6,7 +6,7 @@ import { SiInstagram, SiWhatsapp, SiFacebook, SiYoutube, SiTiktok } from 'react-
 import { useContactInfo } from '@/components/common/WhoWeAre/hooks/useContactInfo';
 import { tenantConfig } from '@/config';
 import { Reveal } from '../../shared/Reveal';
-import { LogoReducido } from './LogoReducido';
+import { LogoCompleto } from './LogoCompleto';
 import type { TenantContactInfo } from '@/lib/supabase/types';
 
 type IconComponent = React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
@@ -40,31 +40,45 @@ export function Contacto() {
   }
 
   return (
-    <section id="contacto" className="scroll-mt-20 bg-[var(--color-section-alt)]">
-      <div className="container-landing landing-section">
+    <section id="contacto" className="relative scroll-mt-20 bg-[var(--color-bg)]">
+      <div className="container-landing landing-section relative">
         <div className="mx-auto w-full max-w-5xl">
           {/* Encabezado */}
           <Reveal className="flex flex-col items-center text-center">
-            <LogoReducido className="mb-5 size-16" />
             <h2
-              className="text-[clamp(1.75rem,4.5vw,3rem)] font-bold uppercase tracking-wide text-[var(--color-text-primary)]"
+              className="text-[clamp(1.5rem,4vw,2.5rem)] font-bold uppercase tracking-wide text-[var(--color-text-primary)]"
               style={{ fontFamily: 'var(--font-display)' }}
             >
               {t('titulo')}
             </h2>
             <p
-              className="mt-2 text-[clamp(1.25rem,3vw,1.75rem)] text-[var(--color-brand-gold)]"
+              className="mt-1 text-[clamp(1.1rem,2.5vw,1.5rem)] text-[var(--color-brand-gold)]"
               style={{ fontFamily: 'var(--font-display)' }}
             >
               {t('subtitulo')}
             </p>
-            <p className="mt-4 max-w-2xl text-[clamp(1rem,1.4vw,1.125rem)] leading-relaxed text-[var(--color-text-secondary)]">
+            <p className="mt-3 max-w-2xl text-[clamp(0.9rem,1.3vw,1.05rem)] leading-relaxed text-[var(--color-text-secondary)]">
               {t('descripcion')}
             </p>
           </Reveal>
 
+          {/* Frase de agendamiento + canales */}
+          <Reveal delay={0.08} className="mt-5 flex flex-col items-center gap-3 text-center">
+            <p
+              className="w-full max-w-3xl rounded-[var(--radius-lg)] px-6 py-2.5 text-[clamp(0.9rem,1.2vw,1.05rem)] font-medium leading-snug text-[var(--color-text-primary)]"
+              style={{ backgroundColor: 'color-mix(in srgb, var(--color-brand-gold) 12%, var(--color-card))' }}
+            >
+              {t('agendar')}
+            </p>
+            <p
+              className="text-[clamp(0.8rem,1.1vw,0.95rem)] font-semibold uppercase tracking-wider text-[var(--color-text-muted)]"
+            >
+              {t('canales')}
+            </p>
+          </Reveal>
+
           {/* Tarjetas de contacto */}
-          <div className="mt-12 grid grid-cols-[minmax(0,1fr)] gap-5 sm:grid-cols-2 sm:[grid-template-columns:repeat(2,minmax(0,1fr))]">
+          <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2 sm:[grid-template-columns:repeat(2,minmax(0,1fr))]">
             {entries.map((entry, i) => {
               const { Icon, color } = resolveIcon(entry);
               const isEmail = entry.type === 'email';
@@ -103,6 +117,11 @@ export function Contacto() {
               );
             })}
           </div>
+        </div>
+
+        {/* Logo completo en esquina inferior derecha */}
+        <div className="pointer-events-none absolute bottom-4 right-2 opacity-30 sm:bottom-6 sm:right-4 sm:opacity-40 lg:bottom-10 lg:right-8 lg:opacity-70" aria-hidden>
+          <LogoCompleto className="h-12 w-auto sm:h-16 md:h-20 lg:h-28" />
         </div>
       </div>
     </section>

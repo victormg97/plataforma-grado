@@ -164,6 +164,7 @@ export default async function RootLayout({
       lang={locale}
       className={`${displayFont.variable} ${bodyFont.variable} h-full antialiased`}
       style={getTenantCSSVars()}
+      data-scroll-behavior="smooth"
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col" style={{ fontFamily: "var(--font-body)" }} suppressHydrationWarning>

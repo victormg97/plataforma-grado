@@ -106,9 +106,18 @@ export function LandingNavbar({
     >
       <nav className="container-landing flex h-16 items-center justify-between gap-4 md:h-20">
         {/* Logo */}
-        <Link href="/landing" className="flex shrink-0 items-center" aria-label="Inicio">
+        <a
+          href="/landing"
+          className="flex shrink-0 items-center"
+          aria-label="Inicio"
+          onClick={(e) => {
+            e.preventDefault();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            window.history.pushState(null, '', '/landing');
+          }}
+        >
           {logo ?? <AppLogo variant="sidebar" />}
-        </Link>
+        </a>
 
         {/* Desktop nav links */}
         <div className="hidden items-center gap-6 lg:flex xl:gap-8">
