@@ -45,6 +45,8 @@
   "error_accion": "Could not complete the operation. Please try again.",
   "error_enlace_usado": "A used link cannot be reactivated.",
   "exito_crear": "Link created successfully.",
+  "exito_crear_copiado": "Link created and copied",
+  "enlace_copiado_desc": "The invitation link is ready to share.",
   "exito_eliminar": "Link deleted.",
   "exito_deshabilitar": "Link disabled.",
   "exito_habilitar": "Link enabled.",

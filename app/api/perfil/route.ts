@@ -19,7 +19,7 @@ export async function GET() {
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
     // For alumnos: also fetch extended data
-    if (profile.rol === 'alumno') {
+    if (profile.rol === 'alumno' || profile.rol === 'lector') {
       const { data: extra } = await supabase
         .from('alumnos_extra')
         .select('*')
@@ -131,9 +131,10 @@ export async function PATCH(request: NextRequest) {
 
     if (profileError) return NextResponse.json({ error: profileError.message }, { status: 500 });
 
-    // For alumnos: upsert editable extra fields
+    // For alumnos and lectores: upsert editable extra fields
     // RLS policy "Alumno edita sus propios campos de perfil" allows UPDATE on own row.
-    if (updatedProfile.rol === 'alumno') {
+    // Lectores also have access since the policy checks alumno_id = auth.uid().
+    if (updatedProfile.rol === 'alumno' || updatedProfile.rol === 'lector') {
       const hasExtraFields =
         body.universidad !== undefined ||
         body.año_ingreso !== undefined ||

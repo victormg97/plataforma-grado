@@ -45,6 +45,8 @@
   "error_accion": "No se pudo completar la operación. Inténtalo de nuevo.",
   "error_enlace_usado": "Un enlace usado no puede reactivarse.",
   "exito_crear": "Enlace creado correctamente.",
+  "exito_crear_copiado": "Enlace creado y copiado",
+  "enlace_copiado_desc": "El enlace de invitación está listo para compartir.",
   "exito_eliminar": "Enlace eliminado.",
   "exito_deshabilitar": "Enlace deshabilitado.",
   "exito_habilitar": "Enlace habilitado.",

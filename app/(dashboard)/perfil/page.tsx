@@ -173,6 +173,8 @@ export default function PerfilPage() {
   }, [perfilData, initialized]);
 
   const isAlumno = (perfilData?.rol ?? user?.rol) === 'alumno';
+  const isLector = (perfilData?.rol ?? user?.rol) === 'lector';
+  const showExtraFields = isAlumno || isLector;
 
   // ── Dirty detection ───────────────────────────────────────────────────────
   const isDirtyInfo = useMemo(() => {
@@ -182,13 +184,13 @@ export default function PerfilPage() {
       nombre !== savedInfo.nombre ||
       apellidos !== savedInfo.apellidos ||
       (telefono.trim() || null) !== (savedInfo.telefono.trim() || null) ||
-      (isAlumno && universidad !== savedInfo.universidad) ||
-      (isAlumno && añoIngreso !== savedInfo.añoIngreso) ||
-      (isAlumno && añoEgreso !== savedInfo.añoEgreso) ||
-      (isAlumno && haDadoExamen !== savedInfo.haDadoExamen) ||
-      (isAlumno && intentosPrueba !== savedInfo.intentosPrueba);
+      (showExtraFields && universidad !== savedInfo.universidad) ||
+      (showExtraFields && añoIngreso !== savedInfo.añoIngreso) ||
+      (showExtraFields && añoEgreso !== savedInfo.añoEgreso) ||
+      (showExtraFields && haDadoExamen !== savedInfo.haDadoExamen) ||
+      (showExtraFields && intentosPrueba !== savedInfo.intentosPrueba);
     return avatarChanged || fieldsChanged;
-  }, [initialized, pendingBlob, pendingDelete, nombre, apellidos, telefono, universidad, añoIngreso, añoEgreso, haDadoExamen, intentosPrueba, savedInfo, isAlumno]);
+  }, [initialized, pendingBlob, pendingDelete, nombre, apellidos, telefono, universidad, añoIngreso, añoEgreso, haDadoExamen, intentosPrueba, savedInfo, showExtraFields]);
 
   const isDirtyConfig = useMemo(() => {
     if (!initialized) return false;
@@ -212,7 +214,7 @@ export default function PerfilPage() {
     if (!apellidos.trim()) { toast.error(t('error_apellido')); return; }
 
     // Validación de años en front (evita round-trip innecesario al servidor)
-    if (isAlumno) {
+    if (showExtraFields) {
       const rIngreso = validarAño(añoIngreso);
       if (!rIngreso.valido) { toast.error(rIngreso.mensaje); return; }
       const rEgreso = validarAño(añoEgreso);
@@ -243,11 +245,11 @@ export default function PerfilPage() {
         nombre: nombre.trim(),
         apellidos: apellidos.trim(),
         telefono: telefono.trim() || null,
-        ...(isAlumno && { universidad: universidad.trim() || null }),
-        ...(isAlumno && { año_ingreso: añoIngreso.trim() || null }),
-        ...(isAlumno && { año_egreso: añoEgreso.trim() || null }),
-        ...(isAlumno && { ha_dado_examen: haDadoExamen }),
-        ...(isAlumno && { intentos_prueba: haDadoExamen && intentosPruebaNum ? intentosPruebaNum : null }),
+        ...(showExtraFields && { universidad: universidad.trim() || null }),
+        ...(showExtraFields && { año_ingreso: añoIngreso.trim() || null }),
+        ...(showExtraFields && { año_egreso: añoEgreso.trim() || null }),
+        ...(showExtraFields && { ha_dado_examen: haDadoExamen }),
+        ...(showExtraFields && { intentos_prueba: haDadoExamen && intentosPruebaNum ? intentosPruebaNum : null }),
       };
       if (avatarUrl !== undefined) body.avatar_url = avatarUrl;
 
@@ -414,7 +416,7 @@ export default function PerfilPage() {
               />
             </Field>
 
-            {isAlumno && (
+            {showExtraFields && (
               <>
                 <Field label={t('universidad')} hint={t('opcional')}>
                   <input

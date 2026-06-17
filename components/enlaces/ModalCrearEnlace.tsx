@@ -3,10 +3,12 @@
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
+import { Check } from 'lucide-react';
 import { Modal } from '@/components/common/Modal';
 import { Button } from '@/components/common/Button';
 import { Label } from '@/components/ui/label';
 import { AppSelect } from '@/components/common/AppSelect';
+import { construirUrlEnlace } from '@/lib/enlaces/compartir';
 import type { PersonaResumen, TipoEnlace } from '@/lib/enlaces/types';
 
 interface ModalCrearEnlaceProps {
@@ -56,7 +58,22 @@ export function ModalCrearEnlace({ open, onClose, soloAlumno, onCreated }: Modal
         body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error();
-      toast.success(t('exito_crear'));
+      const data = await res.json();
+
+      // Copiar enlace al portapapeles
+      const base = window.location.origin;
+      const url = construirUrlEnlace(base, data.code);
+      try {
+        await navigator.clipboard.writeText(url);
+        toast.success(t('exito_crear_copiado'), {
+          icon: <Check className="size-4 text-[var(--color-success)]" />,
+          description: t('enlace_copiado_desc'),
+        });
+      } catch {
+        // Fallback: si el navegador bloquea clipboard, mostrar éxito sin copia
+        toast.success(t('exito_crear'));
+      }
+
       onCreated();
       onClose();
     } catch {

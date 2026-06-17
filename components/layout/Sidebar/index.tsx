@@ -56,6 +56,9 @@ const navItems: Record<UserRol, NavItem[]> = {
     { key: 'horario',    href: '/alumno/horario', icon: <GraduationCap className="size-4" /> },
     { key: 'perfil',     href: '/alumno/perfil',  icon: <User className="size-4" /> },
   ],
+  // Lector: sin items en sidebar — su única sección (recursos) se accede
+  // directamente desde /lector. NO agregar 'perfil' aquí; el lector edita
+  // su perfil desde el menú de usuario en la Navbar (dropdown → "Editar perfil").
   lector: [],
 };
 

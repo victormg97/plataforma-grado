@@ -78,15 +78,14 @@ export async function POST(request: NextRequest) {
   };
 
   // ── 4. Completar perfil y datos extra ──
-  const profileUpdates: Record<string, string> = {};
+  // Asegurar el rol correcto (el trigger puede no reconocer 'lector' en versiones anteriores).
+  const profileUpdates: Record<string, string> = { rol: tipo };
   if (form.apellido_materno?.trim()) profileUpdates.apellido_materno = form.apellido_materno.trim();
   if (form.telefono?.trim()) {
     const tel = validarTelefono(form.telefono);
     if (tel.valido) profileUpdates.telefono = tel.normalizado;
   }
-  if (Object.keys(profileUpdates).length > 0) {
-    await admin.from('profiles').update(profileUpdates).eq('id', userId);
-  }
+  await admin.from('profiles').update(profileUpdates).eq('id', userId);
 
   if (tipo === 'alumno') {
     // Resolver el profesor asociado solo si sigue válido y activo.
