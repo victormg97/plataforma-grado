@@ -367,7 +367,7 @@ export default function SobreNosotrasImagenesPage() {
           >
             {t('titulo')}
           </h1>
-          <p className="text-sm text-[var(--color-text-muted)] mt-1 leading-relaxed max-w-lg">
+          <p className="text-sm text-[var(--color-text-muted)] mt-1 leading-relaxed">
             {t('subtitulo')}
           </p>
         </div>

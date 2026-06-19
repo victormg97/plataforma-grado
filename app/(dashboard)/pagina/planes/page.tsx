@@ -61,15 +61,22 @@ function configToForm(config: LandingPlanesConfig): FormData {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function SectionTitle({ icon: Icon, title }: { icon: React.ElementType; title: string }) {
+function SectionTitle({ icon: Icon, title, description }: { icon: React.ElementType; title: string; description?: string }) {
   return (
-    <div className="flex items-center gap-3 mb-4">
-      <div className="flex size-9 items-center justify-center rounded-[var(--radius-md)] bg-[color-mix(in_srgb,var(--color-brand-gold)_12%,transparent)]">
+    <div className="flex items-start gap-3 mb-5">
+      <div className="flex size-9 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-[color-mix(in_srgb,var(--color-brand-gold)_12%,transparent)]">
         <Icon className="size-4 text-[var(--color-brand-gold)]" />
       </div>
-      <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
-        {title}
-      </h3>
+      <div>
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
+          {title}
+        </h3>
+        {description && (
+          <p className="mt-1 text-sm text-[var(--color-text-secondary)] leading-relaxed">
+            {description}
+          </p>
+        )}
+      </div>
     </div>
   );
 }
@@ -150,33 +157,39 @@ function Toggle({
   description?: string;
 }) {
   return (
-    <label className="flex items-start gap-3 cursor-pointer group">
+    <div
+      className="flex items-center justify-between gap-4 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] px-4 py-3.5 cursor-pointer hover:border-[var(--color-brand-gold)]/40 transition-colors"
+      onClick={() => onChange(!checked)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onChange(!checked); } }}
+    >
+      <div className="min-w-0">
+        <p className="text-sm font-medium text-[var(--color-text-primary)]">
+          {label}
+        </p>
+        {description && (
+          <p className="text-xs text-[var(--color-text-muted)] mt-0.5 leading-relaxed">{description}</p>
+        )}
+      </div>
       <button
         type="button"
         role="switch"
         aria-checked={checked}
-        onClick={() => onChange(!checked)}
+        onClick={(e) => { e.stopPropagation(); onChange(!checked); }}
         className={cn(
-          'relative mt-0.5 inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors duration-200',
+          'relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors duration-200',
           checked ? 'bg-[var(--color-brand-gold)]' : 'bg-[var(--color-border)]'
         )}
       >
         <span
           className={cn(
-            'pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200',
-            checked ? 'translate-x-5.5 mt-0.5 ml-0.5' : 'translate-x-0.5 mt-0.5'
+            'pointer-events-none absolute top-0.5 left-0.5 inline-block size-5 rounded-full bg-white shadow-sm transition-transform duration-200',
+            checked && 'translate-x-5'
           )}
         />
       </button>
-      <div className="min-w-0">
-        <span className="text-sm font-medium text-[var(--color-text-primary)] group-hover:text-[var(--color-brand-gold)] transition-colors">
-          {label}
-        </span>
-        {description && (
-          <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{description}</p>
-        )}
-      </div>
-    </label>
+    </div>
   );
 }
 
@@ -335,7 +348,7 @@ export default function PlanesConfigPage() {
           >
             {t('titulo')}
           </h1>
-          <p className="text-sm text-[var(--color-text-muted)] mt-1 leading-relaxed max-w-lg">
+          <p className="text-sm text-[var(--color-text-muted)] mt-1 leading-relaxed">
             {t('subtitulo')}
           </p>
         </div>
@@ -343,41 +356,43 @@ export default function PlanesConfigPage() {
 
       {/* ── Oferta / Promoción ── */}
       <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6 space-y-5">
-        <SectionTitle icon={Tag} title={t('seccion_oferta')} />
+        <SectionTitle icon={Tag} title={t('seccion_oferta')} description={t('seccion_oferta_desc')} />
 
-        <Toggle
-          checked={effectiveForm.oferta_activa}
-          onChange={(v) => update('oferta_activa', v)}
-          label={t('oferta_activa')}
-          description={t('oferta_activa_desc')}
-        />
+        <div className="space-y-3">
+          <Toggle
+            checked={effectiveForm.oferta_activa}
+            onChange={(v) => update('oferta_activa', v)}
+            label={t('oferta_activa')}
+            description={t('oferta_activa_desc')}
+          />
 
-        {effectiveForm.oferta_activa && (
-          <div className="pl-14 space-y-4">
-            <Toggle
-              checked={effectiveForm.oferta_mes_automatico}
-              onChange={(v) => update('oferta_mes_automatico', v)}
-              label={t('oferta_mes_automatico')}
-              description={t('oferta_mes_automatico_desc')}
-            />
+          {effectiveForm.oferta_activa && (
+            <>
+              <Toggle
+                checked={effectiveForm.oferta_mes_automatico}
+                onChange={(v) => update('oferta_mes_automatico', v)}
+                label={t('oferta_mes_automatico')}
+                description={t('oferta_mes_automatico_desc')}
+              />
 
-            {!effectiveForm.oferta_mes_automatico && (
-              <div>
-                <FieldLabel>{t('oferta_texto')}</FieldLabel>
-                <TextInput
-                  value={effectiveForm.oferta_texto}
-                  onChange={(v) => update('oferta_texto', v)}
-                  placeholder={t('oferta_texto_placeholder')}
-                />
-              </div>
-            )}
-          </div>
-        )}
+              {!effectiveForm.oferta_mes_automatico && (
+                <div className="pt-2">
+                  <FieldLabel>{t('oferta_texto')}</FieldLabel>
+                  <TextInput
+                    value={effectiveForm.oferta_texto}
+                    onChange={(v) => update('oferta_texto', v)}
+                    placeholder={t('oferta_texto_placeholder')}
+                  />
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </section>
 
       {/* ── Planes de Interrogación ── */}
       <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6 space-y-5">
-        <SectionTitle icon={BookOpen} title={t('seccion_interrogaciones')} />
+        <SectionTitle icon={BookOpen} title={t('seccion_interrogaciones')} description={t('seccion_interrogaciones_desc')} />
 
         <div className="grid gap-4 sm:grid-cols-2">
           <PlanCard
@@ -409,7 +424,7 @@ export default function PlanesConfigPage() {
 
       {/* ── Tutorías Online ── */}
       <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6 space-y-5">
-        <SectionTitle icon={BookOpen} title={t('seccion_tutorias')} />
+        <SectionTitle icon={BookOpen} title={t('seccion_tutorias')} description={t('seccion_tutorias_desc')} />
 
         <div className="grid gap-4 sm:grid-cols-2">
           <PlanCard
@@ -437,7 +452,7 @@ export default function PlanesConfigPage() {
 
       {/* ── Programa Lector ── */}
       <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6 space-y-5">
-        <SectionTitle icon={GraduationCap} title={t('seccion_lector')} />
+        <SectionTitle icon={GraduationCap} title={t('seccion_lector')} description={t('seccion_lector_desc')} />
 
         <div className="max-w-xs">
           <FieldLabel>{t('precio')}</FieldLabel>
