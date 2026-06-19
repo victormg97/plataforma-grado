@@ -32,8 +32,8 @@ function PersonaImageCard({
   delay?: number;
 }) {
   return (
-    <Reveal direction="up" delay={delay} className="lg:flex-1 lg:min-h-0">
-      <div className="relative aspect-[4/3] lg:aspect-auto lg:h-full overflow-hidden rounded-[var(--radius-xl)] shadow-[var(--shadow-lg)]">
+    <Reveal direction="up" delay={delay}>
+      <div className="relative aspect-[5/4] overflow-hidden rounded-[var(--radius-xl)] shadow-[var(--shadow-lg)]">
         <Image
           src={imageUrl}
           alt={alt}
@@ -85,7 +85,7 @@ export function SobreNosotras({ imageSrc }: SobreNosotrasProps) {
             {hasDynamicImages ? (
               /* Two separate images stacked vertically with name overlays.
                  Container is height-constrained so both fit within one viewport. */
-              <div className="flex w-full max-w-md flex-col gap-3 lg:max-h-[calc(100svh-10rem)]">
+              <div className="flex w-full max-w-md flex-col gap-3">
                 <PersonaImageCard
                   imageUrl={config.persona1.imageUrl!}
                   prefijo={config.persona1.prefijo}
