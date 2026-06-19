@@ -33,22 +33,22 @@ function PersonaImageCard({
 }) {
   return (
     <Reveal direction="up" delay={delay}>
-      <div className="relative aspect-[5/4] overflow-hidden rounded-[var(--radius-xl)] shadow-[var(--shadow-lg)]">
+      <div className="relative aspect-[6/4] overflow-hidden rounded-[var(--radius-xl)] shadow-[var(--shadow-lg)]">
         <Image
           src={imageUrl}
           alt={alt}
           fill
-          sizes="(min-width: 1024px) 35vw, 80vw"
+          sizes="(min-width: 1024px) 30vw, 80vw"
           className="object-cover"
           unoptimized
         />
         {/* Name overlay at the bottom */}
-        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent px-4 pb-4 pt-10 sm:px-6 sm:pb-5 sm:pt-14">
-          <p className="text-sm font-medium uppercase tracking-wider text-white/80 sm:text-base">
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent px-4 pb-3 pt-8 sm:px-5 sm:pb-4 sm:pt-12">
+          <p className="text-xs font-medium uppercase tracking-wider text-white/80 sm:text-sm">
             {prefijo}
           </p>
           <p
-            className="text-lg font-bold text-white sm:text-xl md:text-2xl"
+            className="text-base font-bold text-white sm:text-lg md:text-xl"
             style={{ fontFamily: 'var(--font-display)' }}
           >
             {nombre}
@@ -84,8 +84,8 @@ export function SobreNosotras({ imageSrc }: SobreNosotrasProps) {
           >
             {hasDynamicImages ? (
               /* Two separate images stacked vertically with name overlays.
-                 Container is height-constrained so both fit within one viewport. */
-              <div className="flex w-full max-w-md flex-col gap-3">
+                 max-h constrains both to fit within one viewport on desktop. */
+              <div className="flex w-full max-w-sm flex-col gap-2 lg:max-h-[calc(100svh-8rem)]">
                 <PersonaImageCard
                   imageUrl={config.persona1.imageUrl!}
                   prefijo={config.persona1.prefijo}

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { toast } from 'sonner';
 import { useUserStore } from '@/stores/useUserStore';
 import { variablesDisponibles } from '@/lib/email/variables';
@@ -57,6 +57,10 @@ export default function PlantillasCorreoPage() {
   const queryClient = useQueryClient();
   const tp = useTranslations('plantillasCorreo');
   const router = useRouter();
+  const pathname = usePathname();
+
+  // Determine back path: if accessed from /pagina/*, go back to /pagina
+  const backPath = pathname.startsWith('/pagina') ? '/pagina' : '/perfil';
 
   // ── Datos: disponibilidad de correo (perfil) y plantillas ─────────────────
   const { data: perfilData, isLoading: perfilLoading } = useQuery<PerfilLite>({
@@ -196,7 +200,7 @@ export default function PlantillasCorreoPage() {
         </div>
         <p className="text-sm text-[var(--color-text-secondary)]">{tp('sin_acceso')}</p>
         <button
-          onClick={() => router.push('/perfil')}
+          onClick={() => router.push(backPath)}
           className="flex items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--color-border)] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] transition-colors"
         >
           <ArrowLeft className="size-4" />
@@ -214,7 +218,7 @@ export default function PlantillasCorreoPage() {
       {/* ── Encabezado ───────────────────────────────────────────────────── */}
       <div className="flex items-center gap-4">
         <button
-          onClick={() => router.push('/perfil')}
+          onClick={() => router.push(backPath)}
           aria-label={tp('volver')}
           className="flex size-9 items-center justify-center rounded-full text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] transition-colors"
         >

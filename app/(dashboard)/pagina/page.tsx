@@ -165,7 +165,7 @@ export default function ConfiguracionPaginaPage() {
       </div>
 
       {/* ── Grid de secciones ─────────────────────────────────────────── */}
-      <div className="grid gap-8 lg:grid-cols-2">
+      <div className="grid gap-8 lg:grid-cols-2 items-start">
         {/* ── Contenido público ── */}
         <section>
           <ConfigSectionTitle title={t('seccion_contenido')} />
