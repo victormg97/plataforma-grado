@@ -360,6 +360,122 @@ export type Database = {
         ]
       }
 
+      landing_sobre_nosotras_config: {
+        Row: {
+          id: string
+          tenant_slug: string
+          persona1_nombre: string
+          persona1_prefijo: string
+          persona1_image_path: string | null
+          persona2_nombre: string
+          persona2_prefijo: string
+          persona2_image_path: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          tenant_slug: string
+          persona1_nombre?: string
+          persona1_prefijo?: string
+          persona1_image_path?: string | null
+          persona2_nombre?: string
+          persona2_prefijo?: string
+          persona2_image_path?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          tenant_slug?: string
+          persona1_nombre?: string
+          persona1_prefijo?: string
+          persona1_image_path?: string | null
+          persona2_nombre?: string
+          persona2_prefijo?: string
+          persona2_image_path?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+
+      landing_planes_config: {
+        Row: {
+          id: string
+          tenant_slug: string
+          oferta_activa: boolean
+          oferta_texto: string | null
+          oferta_mes_automatico: boolean
+          plan1_nombre: string
+          plan1_detalle: string
+          plan1_precio: number
+          plan1_precio_antes: number | null
+          plan2_nombre: string
+          plan2_detalle: string
+          plan2_precio: number
+          plan2_precio_antes: number | null
+          tutoria1_nombre: string
+          tutoria1_detalle: string
+          tutoria1_precio: number
+          tutoria2_nombre: string
+          tutoria2_detalle: string
+          tutoria2_precio: number
+          lector_precio: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          tenant_slug: string
+          oferta_activa?: boolean
+          oferta_texto?: string | null
+          oferta_mes_automatico?: boolean
+          plan1_nombre?: string
+          plan1_detalle?: string
+          plan1_precio?: number
+          plan1_precio_antes?: number | null
+          plan2_nombre?: string
+          plan2_detalle?: string
+          plan2_precio?: number
+          plan2_precio_antes?: number | null
+          tutoria1_nombre?: string
+          tutoria1_detalle?: string
+          tutoria1_precio?: number
+          tutoria2_nombre?: string
+          tutoria2_detalle?: string
+          tutoria2_precio?: number
+          lector_precio?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          tenant_slug?: string
+          oferta_activa?: boolean
+          oferta_texto?: string | null
+          oferta_mes_automatico?: boolean
+          plan1_nombre?: string
+          plan1_detalle?: string
+          plan1_precio?: number
+          plan1_precio_antes?: number | null
+          plan2_nombre?: string
+          plan2_detalle?: string
+          plan2_precio?: number
+          plan2_precio_antes?: number | null
+          tutoria1_nombre?: string
+          tutoria1_detalle?: string
+          tutoria1_precio?: number
+          tutoria2_nombre?: string
+          tutoria2_detalle?: string
+          tutoria2_precio?: number
+          lector_precio?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+
       horarios: {
         Row: {
           activo: boolean
@@ -1793,3 +1909,5 @@ export type NotaClaseConAutor = {
 };
 
 export type TenantContactInfo = Tables<'tenant_contact_info'>;
+export type LandingPlanesConfig = Tables<'landing_planes_config'>;
+export type LandingSobreNosotrasConfig = Tables<'landing_sobre_nosotras_config'>;

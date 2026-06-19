@@ -47,6 +47,18 @@
     "casos": {
       "nombre": "CASE RESOLUTION",
       "descripcion": "In this program we accompany you in the preparation of degrees based on case resolution, strengthening legal analysis, argumentation and strategic reasoning to face each case with greater confidence"
+    },
+    "lector": {
+      "titulo": "PROGRAM",
+      "nombre": "READER",
+      "descripcion": "The perfect tool for those who prefer to study autonomously.",
+      "acceso": "Get access to our digital platform and a legal database designed to support your academic and degree exam preparation.",
+      "beneficios": {
+        "material": "Material organized according to the UCN syllabus.",
+        "apuntes": "Notes prepared by our team",
+        "recursos": "Support resources for Constitutional, Civil, Procedural and Criminal Law"
+      },
+      "imagenAlt": "Reader Program - Legal database"
     }
   },
   "tutorias": {
@@ -109,7 +121,17 @@
       "nombre": "1 HOUR SESSION",
       "detalle": "2 people",
       "precio": "$15.000"
-    }
+    },
+    "lectorTitulo": "PROGRAM",
+    "lectorNombre": "READER",
+    "lectorIncluyeTitulo": "Includes:",
+    "lectorIncluye": [
+      "Platform access.",
+      "Legal database.",
+      "Notes and study material.",
+      "Organization by subjects and content."
+    ],
+    "lectorPrecio": "$15.000"
   },
   "footer": {
     "derechos": "All rights reserved."

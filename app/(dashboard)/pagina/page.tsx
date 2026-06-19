@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useUserStore } from '@/stores/useUserStore';
-import { Loader2, Mail, Users, Globe, ChevronRight, Palette } from 'lucide-react';
+import { Loader2, Mail, Users, Globe, ChevronRight, Palette, Tag, Camera } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
@@ -86,6 +86,8 @@ export default function ConfiguracionPaginaPage() {
   const t = useTranslations('configuracionPagina');
   const tp = useTranslations('plantillasCorreo');
   const tqs = useTranslations('quienesSomos');
+  const tpl = useTranslations('planesConfig');
+  const tsn = useTranslations('sobreNosotrasConfig');
 
   // Guard: solo admins
   useEffect(() => {
@@ -113,6 +115,22 @@ export default function ConfiguracionPaginaPage() {
       title: tqs('perfil_titulo'),
       description: tqs('perfil_subtitulo'),
     },
+    {
+      href: '/pagina/planes',
+      icon: Tag,
+      iconColor: 'text-[#10b981]',
+      iconBg: 'bg-[color-mix(in_srgb,#10b981_12%,transparent)]',
+      title: tpl('navbar_label'),
+      description: tpl('subtitulo'),
+    },
+    {
+      href: '/pagina/sobre-nosotras-imagenes',
+      icon: Camera,
+      iconColor: 'text-[#8b5cf6]',
+      iconBg: 'bg-[color-mix(in_srgb,#8b5cf6_12%,transparent)]',
+      title: tsn('navbar_label'),
+      description: tsn('subtitulo'),
+    },
   ];
 
   const comunicacionCards: ConfigCard[] = [
@@ -127,7 +145,7 @@ export default function ConfiguracionPaginaPage() {
   ];
 
   return (
-    <div className="space-y-10 max-w-3xl">
+    <div className="space-y-10">
       {/* ── Header ──────────────────────────────────────────────────────── */}
       <div className="flex items-start gap-4">
         <div className="flex size-12 shrink-0 items-center justify-center rounded-[var(--radius-lg)] bg-[color-mix(in_srgb,var(--color-brand-gold)_12%,transparent)]">
@@ -146,25 +164,28 @@ export default function ConfiguracionPaginaPage() {
         </div>
       </div>
 
-      {/* ── Contenido público ─────────────────────────────────────────── */}
-      <section>
-        <ConfigSectionTitle title={t('seccion_contenido')} />
-        <div className="grid gap-3 sm:grid-cols-1">
-          {contenidoCards.map((card) => (
-            <ConfigCard key={card.href} {...card} />
-          ))}
-        </div>
-      </section>
+      {/* ── Grid de secciones ─────────────────────────────────────────── */}
+      <div className="grid gap-8 lg:grid-cols-2">
+        {/* ── Contenido público ── */}
+        <section>
+          <ConfigSectionTitle title={t('seccion_contenido')} />
+          <div className="grid gap-3">
+            {contenidoCards.map((card) => (
+              <ConfigCard key={card.href} {...card} />
+            ))}
+          </div>
+        </section>
 
-      {/* ── Comunicación ──────────────────────────────────────────────── */}
-      <section>
-        <ConfigSectionTitle title={t('seccion_comunicacion')} />
-        <div className="grid gap-3 sm:grid-cols-1">
-          {comunicacionCards.map((card) => (
-            <ConfigCard key={card.href} {...card} />
-          ))}
-        </div>
-      </section>
+        {/* ── Comunicación ── */}
+        <section>
+          <ConfigSectionTitle title={t('seccion_comunicacion')} />
+          <div className="grid gap-3">
+            {comunicacionCards.map((card) => (
+              <ConfigCard key={card.href} {...card} />
+            ))}
+          </div>
+        </section>
+      </div>
 
       {/* ── Próximamente ──────────────────────────────────────────────── */}
       <section>
@@ -173,7 +194,7 @@ export default function ConfiguracionPaginaPage() {
           className={cn(
             'flex flex-col items-center justify-center gap-3 rounded-[var(--radius-lg)]',
             'border border-dashed border-[var(--color-border)] bg-[var(--color-bg-secondary)]',
-            'px-6 py-10 text-center',
+            'px-6 py-8 text-center',
           )}
         >
           <div className="flex size-10 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--color-text-muted)_10%,transparent)]">

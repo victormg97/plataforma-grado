@@ -19,12 +19,13 @@ export default async function Home(props: LandingProps) {
   const heroImage = resolveAsset('/tenants/pregunta-estrategica/landing/hero');
   const sobreNosotrasImage = resolveAsset('/tenants/pregunta-estrategica/landing/sobre-nosotras');
   const tutoriasImage = resolveAsset('/tenants/pregunta-estrategica/landing/tutorias');
+  const lectorImage = resolveAsset('/tenants/pregunta-estrategica/landing/programa-lector');
 
   return (
     <Shell {...props}>
       <Hero imageSrc={heroImage} />
       <Features />
-      <Programas />
+      <Programas lectorImageSrc={lectorImage} />
       <Tutorias imageSrc={tutoriasImage} />
       <Planes />
       <SobreNosotras imageSrc={sobreNosotrasImage} />

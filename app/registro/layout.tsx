@@ -1,6 +1,6 @@
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import { WhoWeAre } from '@/components/common/WhoWeAre';
-import { AppLogo } from '@/components/common/AppLogo';
+import { RegistroLogo } from './RegistroLogo';
 import { tenantConfig } from '@/config';
 import { getLocale } from 'next-intl/server';
 
@@ -24,10 +24,7 @@ export default async function RegistroLayout({
     <div className="relative min-h-screen bg-[var(--color-bg-secondary)]">
       {/* Logo — esquina superior izquierda, se mueve con el scroll */}
       <div className="absolute left-4 top-4">
-        <AppLogo
-          variant="login"
-          style={{ maxHeight: 'clamp(40px, 12vw, 130px)' }}
-        />
+        <RegistroLogo />
       </div>
 
       {/* Controles — esquina superior derecha, se mueven con el scroll */}

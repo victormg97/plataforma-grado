@@ -1,16 +1,23 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { BookOpen, Mic, FileText, Briefcase } from 'lucide-react';
+import { BookOpen, Mic, FileText, Briefcase, MousePointerClick, Lightbulb, FolderOpen } from 'lucide-react';
 import { Reveal } from '../../shared/Reveal';
+
+interface ProgramasProps {
+  /** Ruta pública de la imagen del programa lector, resuelta en el servidor. null = sin imagen */
+  lectorImageSrc: string | null;
+}
 
 /**
  * Sección "Nuestros programas" — dos tarjetas (Híbrido / Intensivo)
  * sobre fondo secundario, con íconos circulares en burdeo.
  * Incluye sub-sección "Nos adaptamos a la modalidad de tu Examen de grado".
+ * Incluye sub-sección "Programa Lector" al final (ocupa un viewport).
  */
-export function Programas() {
+export function Programas({ lectorImageSrc }: ProgramasProps) {
   const t = useTranslations('landing-pregunta-estrategica.programas');
+  const hasLectorImage = lectorImageSrc !== null;
 
   const programas = [
     { key: 'hibrido', Icon: BookOpen },
@@ -20,6 +27,12 @@ export function Programas() {
   const modalidades = [
     { key: 'cedula', Icon: FileText },
     { key: 'casos', Icon: Briefcase },
+  ] as const;
+
+  const lectorBeneficios = [
+    { key: 'material', Icon: BookOpen },
+    { key: 'apuntes', Icon: Lightbulb },
+    { key: 'recursos', Icon: FolderOpen },
   ] as const;
 
   return (
@@ -117,6 +130,97 @@ export function Programas() {
                 </article>
               </Reveal>
             ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ══════════════════════════════════════════════════════════════════
+          PROGRAMA LECTOR — ocupa su propio viewport
+          ══════════════════════════════════════════════════════════════════ */}
+      <div className="relative overflow-hidden">
+        {/* ── Imagen anclada a la derecha — siempre visible, se achica responsive ── */}
+        {hasLectorImage && (
+          <div className="absolute inset-y-0 right-0 w-[15%] sm:w-[20%] md:w-[25%] lg:w-[32%] xl:w-[30%]" aria-hidden>
+            <div
+              className="absolute inset-0 bg-cover bg-right"
+              style={{ backgroundImage: `url("${lectorImageSrc}")` }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-bg)] from-15% via-[var(--color-bg)]/80 via-40% to-[var(--color-bg)]/20" />
+            {/* Degradado superior para suavizar la aparición de la imagen */}
+            <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-[var(--color-bg)] to-transparent" />
+          </div>
+        )}
+
+        <div className="container-landing relative z-10 py-10 lg:flex lg:min-h-[calc(100svh-5rem)] lg:flex-col lg:justify-center lg:py-14">
+          <div className={hasLectorImage ? 'pr-[14%] sm:pr-[18%] md:pr-[23%] lg:pr-[30%] xl:pr-[28%]' : ''}>
+            <div className="grid w-full items-center gap-10 lg:grid-cols-[1.2fr_1fr] lg:gap-14">
+              {/* ── Columna izquierda: título + descripción + beneficios ── */}
+              <div>
+                <Reveal>
+                  <p
+                    className="text-[clamp(1.1rem,2vw,1.5rem)] font-bold uppercase tracking-[0.15em] text-[var(--color-brand-gold)]"
+                    style={{ fontFamily: 'var(--font-display)' }}
+                  >
+                    {t('lector.titulo')}
+                  </p>
+                  <h3
+                    className="text-[clamp(2.5rem,7vw,4.5rem)] font-bold uppercase leading-[0.9] tracking-tight text-[var(--color-text-primary)]"
+                    style={{ fontFamily: 'var(--font-display)' }}
+                  >
+                    {t('lector.nombre')}
+                  </h3>
+
+                  {/* Línea decorativa */}
+                  <div className="mt-4 flex items-center gap-2" aria-hidden>
+                    <span className="size-2.5 shrink-0 rounded-full bg-[var(--color-text-primary)]" />
+                    <span className="h-0.5 w-full max-w-[200px] bg-[var(--color-text-primary)]" />
+                    <span className="size-2.5 shrink-0 rounded-full bg-[var(--color-text-primary)]" />
+                  </div>
+                </Reveal>
+
+                <Reveal delay={0.1}>
+                  <p className="mt-6 max-w-md text-[clamp(1rem,1.5vw,1.2rem)] leading-relaxed text-[var(--color-text-primary)]">
+                    {t('lector.descripcion')}
+                  </p>
+                </Reveal>
+
+                {/* Beneficios */}
+                <div className="mt-8 space-y-5">
+                  {lectorBeneficios.map(({ key, Icon }, i) => (
+                    <Reveal key={key} delay={0.15 + i * 0.08} direction="up">
+                      <div className="flex items-center gap-4">
+                        <span
+                          className="flex size-11 shrink-0 items-center justify-center rounded-full text-white shadow-[var(--shadow-md)]"
+                          style={{ backgroundColor: 'var(--color-brand-gold)' }}
+                        >
+                          <Icon className="size-5" />
+                        </span>
+                        <p className="text-[clamp(0.95rem,1.3vw,1.1rem)] leading-snug text-[var(--color-text-primary)]">
+                          {t(`lector.beneficios.${key}`)}
+                        </p>
+                      </div>
+                    </Reveal>
+                  ))}
+                </div>
+              </div>
+
+              {/* ── Columna derecha: tarjeta CTA ── */}
+              <div className="flex flex-col items-center gap-8">
+                <Reveal direction="left" delay={0.1}>
+                  <div className="w-full max-w-md rounded-[var(--radius-xl)] bg-[var(--color-card)] p-8 shadow-[var(--shadow-lg)]">
+                    <p className="text-center text-[clamp(1rem,1.5vw,1.2rem)] leading-relaxed text-[var(--color-text-primary)]">
+                      {t('lector.acceso')}
+                    </p>
+                    <div className="mt-5 flex justify-center">
+                      <MousePointerClick
+                        className="size-10 text-[var(--color-text-muted)]"
+                        strokeWidth={1.5}
+                      />
+                    </div>
+                  </div>
+                </Reveal>
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -3,21 +3,70 @@
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { m } from 'framer-motion';
-import { AppLogo } from '@/components/common/AppLogo';
 import { Reveal } from '../../shared/Reveal';
 import { LogoReducido } from './LogoReducido';
+import { useSobreNosotrasConfig } from '@/lib/hooks/useSobreNosotrasConfig';
+import { tenantConfig } from '@/config';
 
 const easeOut = [0.22, 1, 0.36, 1] as const;
 
 interface SobreNosotrasProps {
-  /** Ruta pública de la imagen, resuelta en el servidor. null = sin imagen */
+  /** Fallback image path from static files (used when no DB images are configured) */
   imageSrc: string | null;
+}
+
+/**
+ * Card component for each persona's image with name overlay.
+ */
+function PersonaImageCard({
+  imageUrl,
+  prefijo,
+  nombre,
+  alt,
+  delay = 0,
+}: {
+  imageUrl: string;
+  prefijo: string;
+  nombre: string;
+  alt: string;
+  delay?: number;
+}) {
+  return (
+    <Reveal direction="up" delay={delay}>
+      <div className="relative overflow-hidden rounded-[var(--radius-xl)] shadow-[var(--shadow-lg)]">
+        <Image
+          src={imageUrl}
+          alt={alt}
+          width={700}
+          height={550}
+          sizes="(min-width: 1024px) 35vw, 80vw"
+          className="h-auto w-full object-cover"
+          unoptimized
+        />
+        {/* Name overlay at the bottom */}
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent px-4 pb-4 pt-10 sm:px-6 sm:pb-5 sm:pt-14">
+          <p className="text-sm font-medium uppercase tracking-wider text-white/80 sm:text-base">
+            {prefijo}
+          </p>
+          <p
+            className="text-lg font-bold text-white sm:text-xl md:text-2xl"
+            style={{ fontFamily: 'var(--font-display)' }}
+          >
+            {nombre}
+          </p>
+        </div>
+      </div>
+    </Reveal>
+  );
 }
 
 export function SobreNosotras({ imageSrc }: SobreNosotrasProps) {
   const t = useTranslations('landing-pregunta-estrategica.sobreNosotras');
   const parrafos = t.raw('parrafos') as string[];
-  const hasImage = imageSrc !== null;
+  const { config } = useSobreNosotrasConfig(tenantConfig.id);
+
+  // Determine if we use the new two-image layout or fallback to single static image
+  const hasDynamicImages = config?.persona1.imageUrl && config?.persona2.imageUrl;
 
   return (
     <section
@@ -26,7 +75,7 @@ export function SobreNosotras({ imageSrc }: SobreNosotrasProps) {
     >
       <div className="container-landing landing-section">
         <div className="grid w-full items-center gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:gap-16">
-          {/* ── Imagen ── */}
+          {/* ── Imágenes ── */}
           <m.div
             className="flex w-full justify-center"
             initial={{ opacity: 0, x: -40 }}
@@ -34,7 +83,26 @@ export function SobreNosotras({ imageSrc }: SobreNosotrasProps) {
             viewport={{ once: true, amount: 0.2 }}
             transition={{ duration: 0.7, ease: easeOut }}
           >
-            {hasImage ? (
+            {hasDynamicImages ? (
+              /* Two separate images stacked vertically with name overlays */
+              <div className="flex w-full max-w-md flex-col gap-4">
+                <PersonaImageCard
+                  imageUrl={config.persona1.imageUrl!}
+                  prefijo={config.persona1.prefijo}
+                  nombre={config.persona1.nombre}
+                  alt={`${config.persona1.prefijo} ${config.persona1.nombre}`}
+                  delay={0}
+                />
+                <PersonaImageCard
+                  imageUrl={config.persona2.imageUrl!}
+                  prefijo={config.persona2.prefijo}
+                  nombre={config.persona2.nombre}
+                  alt={`${config.persona2.prefijo} ${config.persona2.nombre}`}
+                  delay={0.12}
+                />
+              </div>
+            ) : imageSrc ? (
+              /* Fallback: single static image (current behavior) */
               <Image
                 src={imageSrc}
                 alt={t('imagenAlt')}
@@ -44,8 +112,9 @@ export function SobreNosotras({ imageSrc }: SobreNosotrasProps) {
                 className="h-auto max-h-[78vh] w-auto rounded-[var(--radius-xl)] object-contain shadow-[var(--shadow-lg)]"
               />
             ) : (
+              /* No image at all */
               <div className="flex aspect-[4/5] w-full max-w-sm items-center justify-center rounded-[var(--radius-xl)] bg-[var(--color-card)] p-8 shadow-[var(--shadow-lg)]">
-                <AppLogo variant="login" className="max-w-[60%]" />
+                <LogoReducido className="max-w-[60%] opacity-30" />
               </div>
             )}
           </m.div>

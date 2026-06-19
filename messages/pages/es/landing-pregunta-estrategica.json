@@ -47,6 +47,18 @@
     "casos": {
       "nombre": "RESOLUCIÓN DE CASOS",
       "descripcion": "En este programa te acompañamos en la preparación de grados basados en resolución de casos, fortaleciendo el análisis jurídico, la argumentación y el razonamiento estratégico para enfrentar cada caso con mayor seguridad"
+    },
+    "lector": {
+      "titulo": "PROGRAMA",
+      "nombre": "LECTOR",
+      "descripcion": "La herramienta perfecta para quienes prefieren estudiar de forma autónoma.",
+      "acceso": "Obtén acceso a nuestra plataforma digital y a una base de datos jurídica diseñada para acompañar tu preparación académica y de examen de grado.",
+      "beneficios": {
+        "material": "Material organizado según el cedulario UCN.",
+        "apuntes": "Apuntes elaborados por nuestro equipo",
+        "recursos": "Recursos de apoyo para Constitucional, Civil, Procesal y Penal"
+      },
+      "imagenAlt": "Programa Lector - Base de datos jurídica"
     }
   },
   "tutorias": {
@@ -109,7 +121,17 @@
       "nombre": "SESIÓN 1 HORA",
       "detalle": "2 personas",
       "precio": "$15.000"
-    }
+    },
+    "lectorTitulo": "PROGRAMA",
+    "lectorNombre": "LECTOR",
+    "lectorIncluyeTitulo": "Incluye:",
+    "lectorIncluye": [
+      "Acceso a la plataforma.",
+      "Base de datos jurídica.",
+      "Apuntes y material de estudio.",
+      "Organización por materias y contenidos."
+    ],
+    "lectorPrecio": "$15.000"
   },
   "footer": {
     "derechos": "Todos los derechos reservados."
