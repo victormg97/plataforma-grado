@@ -115,11 +115,7 @@ export function RichTextEditor({ content, placeholder, onChange, readOnly = fals
       }).extend({
         inclusive: false,
       }),
-      TextStyleKit.configure({
-        fontFamily: false,
-        lineHeight: false,
-        fontSize: false,
-      }),
+      TextStyleKit,
       TextAlign.configure({ types: ['paragraph', 'heading'] }),
       Table.configure({ resizable: false }),
       TableRow,
@@ -184,7 +180,7 @@ export function RichTextEditor({ content, placeholder, onChange, readOnly = fals
   if (!editor) return null;
 
   return (
-    <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] overflow-hidden">
+    <div className="relative rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)]">
       {!readOnly && <EditorToolbar editor={editor} onOpenLinkModal={openLinkModal} />}
       <EditorContent editor={editor} />
       {!readOnly && <EditorBubbleMenu editor={editor} onOpenLinkModal={openLinkModal} />}

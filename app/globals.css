@@ -283,6 +283,14 @@
   pointer-events: none;
 }
 
+/* TipTap BubbleMenu — ensure it renders above fixed sidebar (z-50) */
+[data-tippy-root],
+.tippy-box,
+div[style*="position: fixed"][data-radix-popper-content-wrapper],
+div[style*="position: fixed"] > [role="toolbar"] {
+  z-index: 99980 !important;
+}
+
 /* Rich-text styles for ProseMirror (editor) and rendered note content */
 .ProseMirror,
 .tiptap-content {

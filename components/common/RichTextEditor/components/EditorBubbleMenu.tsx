@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useRef } from 'react';
 import { BubbleMenu } from '@tiptap/react/menus';
 import type { Editor } from '@tiptap/react';
 import {
@@ -62,6 +62,8 @@ export function EditorBubbleMenu({ editor, onOpenLinkModal }: EditorBubbleMenuPr
   const t = useTranslations('notas');
   const [showTextColor, setShowTextColor] = useState(false);
   const [showHighlight, setShowHighlight] = useState(false);
+  const textColorBtnRef = useRef<HTMLDivElement>(null);
+  const highlightBtnRef = useRef<HTMLDivElement>(null);
 
   const closeAll = useCallback(() => {
     setShowTextColor(false);
@@ -75,16 +77,16 @@ export function EditorBubbleMenu({ editor, onOpenLinkModal }: EditorBubbleMenuPr
     <BubbleMenu
       editor={editor}
       options={{
+        strategy: 'fixed',
         placement: 'top',
         offset: 8,
         flip: true,
         shift: { padding: 12 },
       }}
-      appendTo={() => document.body}
       shouldShow={({ editor: ed, state }) => {
         if (state.selection.empty) return false;
         if (ed.isActive('codeBlock')) return false;
-        // Don't show when cursor is inside a link — let LinkPopover handle it
+        // Don't show when the selection is entirely within a link
         if (ed.isActive('link')) return false;
         return true;
       }}
@@ -137,7 +139,7 @@ export function EditorBubbleMenu({ editor, onOpenLinkModal }: EditorBubbleMenuPr
         <div className="h-5 w-px bg-[var(--color-border)] mx-0.5 shrink-0" />
 
         {/* Text Color */}
-        <div className="relative">
+        <div className="relative" ref={textColorBtnRef}>
           <BubbleButton
             onClick={() => { setShowHighlight(false); setShowTextColor(!showTextColor); }}
             active={!!currentTextColor}
@@ -149,6 +151,7 @@ export function EditorBubbleMenu({ editor, onOpenLinkModal }: EditorBubbleMenuPr
             <ColorPickerPanel
               mode="text"
               currentColor={currentTextColor}
+              triggerRef={textColorBtnRef}
               onSelect={(color) => {
                 if (color) {
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -164,7 +167,7 @@ export function EditorBubbleMenu({ editor, onOpenLinkModal }: EditorBubbleMenuPr
         </div>
 
         {/* Background/Highlight */}
-        <div className="relative">
+        <div className="relative" ref={highlightBtnRef}>
           <BubbleButton
             onClick={() => { setShowTextColor(false); setShowHighlight(!showHighlight); }}
             active={!!currentBgColor}
@@ -176,6 +179,7 @@ export function EditorBubbleMenu({ editor, onOpenLinkModal }: EditorBubbleMenuPr
             <ColorPickerPanel
               mode="background"
               currentColor={currentBgColor}
+              triggerRef={highlightBtnRef}
               onSelect={(color) => {
                 if (color) {
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any

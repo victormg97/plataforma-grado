@@ -628,6 +628,8 @@
     "limpiar_formato": "Clear formatting",
     "color_predeterminado": "Default color",
     "sin_resaltado": "No highlight",
+    "fuente_defecto": "Font",
+    "tamano_defecto": "Size",
     "advertencia_enlace_titulo": "External link",
     "advertencia_enlace_desc": "You are about to open an external link. Make sure you trust the source before continuing.",
     "advertencia_enlace_destino": "Destination",

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useLayoutEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
@@ -22,6 +23,8 @@ interface ColorPickerPanelProps {
   onSelect: (color: string) => void;
   onClose: () => void;
   mode: 'text' | 'background';
+  /** Ref to the trigger button — used to position the portal */
+  triggerRef: React.RefObject<HTMLElement | null>;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -43,25 +46,62 @@ function hsvToHex(h: number, s: number, v: number): string {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function ColorPickerPanel({ currentColor, onSelect, onClose, mode }: ColorPickerPanelProps) {
+export function ColorPickerPanel({ currentColor, onSelect, onClose, mode, triggerRef }: ColorPickerPanelProps) {
   const t = useTranslations('notas');
   const [hue, setHue] = useState(0);
   const [customColor, setCustomColor] = useState(currentColor || '#000000');
   const satBrightRef = useRef<HTMLDivElement>(null);
   const hueRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const dragging = useRef<'sb' | 'hue' | null>(null);
+  const [mounted, setMounted] = useState(false);
+  const [pos, setPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
 
-  // Saturation-Brightness state
   const [sat, setSat] = useState(1);
   const [bright, setBright] = useState(1);
 
-  // Sync customColor when sat/bright/hue change from dragging
+  useEffect(() => { setMounted(true); }, []); // eslint-disable-line react-hooks/set-state-in-effect
+
+  // Position the panel below the trigger
+  useLayoutEffect(() => {
+    if (!triggerRef.current) return;
+    const rect = triggerRef.current.getBoundingClientRect();
+    const panelWidth = 260;
+    let left = rect.left + rect.width / 2 - panelWidth / 2;
+    // Clamp so it doesn't overflow viewport
+    left = Math.max(8, Math.min(left, window.innerWidth - panelWidth - 8));
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const top = spaceBelow > 380 ? rect.bottom + 6 : rect.top - 380;
+    setPos({ top: Math.max(8, top), left });
+  }, [triggerRef]);
+
+  // Sync customColor when dragging
   useEffect(() => {
     if (dragging.current) {
       const hex = hsvToHex(hue, sat, bright);
       setCustomColor(hex);
     }
   }, [hue, sat, bright]);
+
+  // Close on outside click (capture phase to catch events before preventDefault)
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (
+        !panelRef.current?.contains(e.target as Node) &&
+        !triggerRef.current?.contains(e.target as Node)
+      ) {
+        onClose();
+      }
+    };
+    // Use capture phase and a small delay so mount doesn't immediately close
+    const timer = setTimeout(() => {
+      document.addEventListener('mousedown', handler, true);
+    }, 10);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('mousedown', handler, true);
+    };
+  }, [onClose, triggerRef]);
 
   const handleSBMove = useCallback((e: MouseEvent | React.MouseEvent) => {
     if (!satBrightRef.current) return;
@@ -79,7 +119,6 @@ export function ColorPickerPanel({ currentColor, onSelect, onClose, mode }: Colo
     setHue(Math.round(x * 360));
   }, []);
 
-  // Mouse handlers
   const startDrag = useCallback((target: 'sb' | 'hue', e: React.MouseEvent) => {
     e.preventDefault();
     dragging.current = target;
@@ -115,15 +154,18 @@ export function ColorPickerPanel({ currentColor, onSelect, onClose, mode }: Colo
 
   const handleHexInput = (value: string) => {
     setCustomColor(value);
-    // Auto-apply if it's a valid hex
     if (/^#[0-9a-fA-F]{6}$/.test(value)) {
       onSelect(value);
     }
   };
 
-  return (
+  if (!mounted || typeof document === 'undefined') return null;
+
+  return createPortal(
     <div
-      className="absolute top-full left-1/2 -translate-x-1/2 mt-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] shadow-[var(--shadow-lg)] z-50 w-[260px] overflow-hidden"
+      ref={panelRef}
+      style={{ position: 'fixed', top: pos.top, left: pos.left, zIndex: 99995 }}
+      className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] shadow-[var(--shadow-lg)] w-[260px] overflow-hidden"
       onMouseDown={(e) => e.preventDefault()}
     >
       {/* Header */}
@@ -148,11 +190,8 @@ export function ColorPickerPanel({ currentColor, onSelect, onClose, mode }: Colo
           style={{ backgroundColor: `hsl(${hue}, 100%, 50%)` }}
           onMouseDown={(e) => startDrag('sb', e)}
         >
-          {/* White gradient (left to right) */}
           <div className="absolute inset-0 bg-gradient-to-r from-white to-transparent" />
-          {/* Black gradient (top to bottom) */}
           <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black" />
-          {/* Selector dot */}
           <div
             className="absolute size-3.5 rounded-full border-2 border-white shadow-[0_0_2px_rgba(0,0,0,0.5)] -translate-x-1/2 -translate-y-1/2 pointer-events-none"
             style={{ left: `${sat * 100}%`, top: `${(1 - bright) * 100}%` }}
@@ -222,6 +261,7 @@ export function ColorPickerPanel({ currentColor, onSelect, onClose, mode }: Colo
           {mode === 'text' ? t('color_predeterminado') : t('sin_resaltado')}
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

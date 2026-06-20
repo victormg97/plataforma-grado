@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef } from 'react';
 import type { Editor } from '@tiptap/react';
 import {
   Bold, Italic, Strikethrough, List, ListOrdered,
@@ -29,6 +29,8 @@ export function EditorToolbar({ editor, onOpenLinkModal }: EditorToolbarProps) {
   const t = useTranslations('notas');
   const [showTextColor, setShowTextColor] = useState(false);
   const [showHighlight, setShowHighlight] = useState(false);
+  const textColorBtnRef = useRef<HTMLDivElement>(null);
+  const highlightBtnRef = useRef<HTMLDivElement>(null);
 
   const currentTextColor = editor.getAttributes('textStyle').color ?? '';
   const currentBgColor = editor.getAttributes('textStyle').backgroundColor ?? '';
@@ -62,6 +64,55 @@ export function EditorToolbar({ editor, onOpenLinkModal }: EditorToolbarProps) {
     }
   };
 
+  // Font family options
+  const fontFamilyOptions = useMemo(() => [
+    { value: '', label: t('fuente_defecto'), className: 'text-sm' },
+    { value: 'Inter, sans-serif', label: 'Inter', className: 'text-sm font-[Inter]' },
+    { value: 'Georgia, serif', label: 'Georgia', className: 'text-sm font-serif' },
+    { value: 'monospace', label: 'Monospace', className: 'text-sm font-mono' },
+    { value: 'system-ui, sans-serif', label: 'System UI', className: 'text-sm' },
+    { value: 'Arial, sans-serif', label: 'Arial', className: 'text-sm' },
+    { value: 'Times New Roman, serif', label: 'Times New Roman', className: 'text-sm font-serif' },
+    { value: 'Courier New, monospace', label: 'Courier New', className: 'text-sm font-mono' },
+  ], [t]);
+
+  const currentFontFamily = editor.getAttributes('textStyle').fontFamily ?? '';
+
+  // Font size options
+  const fontSizeOptions = useMemo(() => [
+    { value: '', label: t('tamano_defecto'), className: 'text-sm' },
+    { value: '12px', label: '12', className: 'text-[12px]' },
+    { value: '14px', label: '14', className: 'text-[14px]' },
+    { value: '16px', label: '16', className: 'text-[16px]' },
+    { value: '18px', label: '18', className: 'text-[18px]' },
+    { value: '20px', label: '20', className: 'text-[20px]' },
+    { value: '24px', label: '24', className: 'text-[24px]' },
+    { value: '28px', label: '28', className: 'text-[28px]' },
+    { value: '32px', label: '32', className: 'text-[32px]' },
+  ], [t]);
+
+  const currentFontSize = editor.getAttributes('textStyle').fontSize ?? '';
+
+  const handleFontFamilyChange = (val: string) => {
+    if (val) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (editor.chain().focus() as any).setFontFamily(val).run();
+    } else {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (editor.chain().focus() as any).unsetFontFamily().run();
+    }
+  };
+
+  const handleFontSizeChange = (val: string) => {
+    if (val) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (editor.chain().focus() as any).setFontSize(val).run();
+    } else {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (editor.chain().focus() as any).unsetFontSize().run();
+    }
+  };
+
   return (
     <div className="flex flex-wrap items-center gap-0.5 border-b border-[var(--color-border)] px-2 py-1.5 bg-[var(--color-bg-secondary)]">
 
@@ -70,6 +121,20 @@ export function EditorToolbar({ editor, onOpenLinkModal }: EditorToolbarProps) {
         value={headingValue}
         onChange={handleHeadingChange}
         options={headingOptions}
+      />
+
+      {/* ── Font family ── */}
+      <HeadingSelect
+        value={currentFontFamily}
+        onChange={handleFontFamilyChange}
+        options={fontFamilyOptions}
+      />
+
+      {/* ── Font size ── */}
+      <HeadingSelect
+        value={currentFontSize}
+        onChange={handleFontSizeChange}
+        options={fontSizeOptions}
       />
 
       <Divider />
@@ -112,7 +177,7 @@ export function EditorToolbar({ editor, onOpenLinkModal }: EditorToolbarProps) {
       </ToolbarButton>
 
       {/* ── Colors ── */}
-      <div className="relative">
+      <div className="relative" ref={textColorBtnRef}>
         <ToolbarButton
           onClick={() => { setShowHighlight(false); setShowTextColor(!showTextColor); }}
           active={!!currentTextColor}
@@ -124,6 +189,7 @@ export function EditorToolbar({ editor, onOpenLinkModal }: EditorToolbarProps) {
           <ColorPickerPanel
             mode="text"
             currentColor={currentTextColor}
+            triggerRef={textColorBtnRef}
             onSelect={(color) => {
               if (color) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -137,7 +203,7 @@ export function EditorToolbar({ editor, onOpenLinkModal }: EditorToolbarProps) {
           />
         )}
       </div>
-      <div className="relative">
+      <div className="relative" ref={highlightBtnRef}>
         <ToolbarButton
           onClick={() => { setShowTextColor(false); setShowHighlight(!showHighlight); }}
           active={!!currentBgColor}
@@ -149,6 +215,7 @@ export function EditorToolbar({ editor, onOpenLinkModal }: EditorToolbarProps) {
           <ColorPickerPanel
             mode="background"
             currentColor={currentBgColor}
+            triggerRef={highlightBtnRef}
             onSelect={(color) => {
               if (color) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
