@@ -80,9 +80,12 @@ export function EditorBubbleMenu({ editor, onOpenLinkModal }: EditorBubbleMenuPr
         flip: true,
         shift: { padding: 12 },
       }}
+      appendTo={() => document.body}
       shouldShow={({ editor: ed, state }) => {
         if (state.selection.empty) return false;
         if (ed.isActive('codeBlock')) return false;
+        // Don't show when cursor is inside a link — let LinkPopover handle it
+        if (ed.isActive('link')) return false;
         return true;
       }}
     >

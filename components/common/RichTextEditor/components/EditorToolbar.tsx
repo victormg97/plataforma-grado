@@ -1,18 +1,19 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import type { Editor } from '@tiptap/react';
 import {
   Bold, Italic, Strikethrough, List, ListOrdered,
   Link as LinkIcon, Undo, Redo, Code,
   AlignLeft, AlignCenter, AlignRight, AlignJustify,
   IndentIncrease, IndentDecrease,
-  Quote,
+  Quote, Palette, Highlighter,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { ToolbarButton } from './ToolbarButton';
 import { HeadingSelect } from './HeadingSelect';
 import { TableSizePicker } from './TableSizePicker';
+import { ColorPickerPanel } from './ColorPickerPanel';
 import { Divider } from './Divider';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -26,6 +27,11 @@ export interface EditorToolbarProps {
 
 export function EditorToolbar({ editor, onOpenLinkModal }: EditorToolbarProps) {
   const t = useTranslations('notas');
+  const [showTextColor, setShowTextColor] = useState(false);
+  const [showHighlight, setShowHighlight] = useState(false);
+
+  const currentTextColor = editor.getAttributes('textStyle').color ?? '';
+  const currentBgColor = editor.getAttributes('textStyle').backgroundColor ?? '';
 
   // Heading dropdown value
   const headingValue = editor.isActive('heading', { level: 1 })
@@ -104,6 +110,58 @@ export function EditorToolbar({ editor, onOpenLinkModal }: EditorToolbarProps) {
       >
         <Quote className="size-4" />
       </ToolbarButton>
+
+      {/* ── Colors ── */}
+      <div className="relative">
+        <ToolbarButton
+          onClick={() => { setShowHighlight(false); setShowTextColor(!showTextColor); }}
+          active={!!currentTextColor}
+          title={t('color_texto')}
+        >
+          <Palette className="size-4" />
+        </ToolbarButton>
+        {showTextColor && (
+          <ColorPickerPanel
+            mode="text"
+            currentColor={currentTextColor}
+            onSelect={(color) => {
+              if (color) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (editor.chain().focus() as any).setColor(color).run();
+              } else {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (editor.chain().focus() as any).unsetColor().run();
+              }
+            }}
+            onClose={() => setShowTextColor(false)}
+          />
+        )}
+      </div>
+      <div className="relative">
+        <ToolbarButton
+          onClick={() => { setShowTextColor(false); setShowHighlight(!showHighlight); }}
+          active={!!currentBgColor}
+          title={t('resaltar')}
+        >
+          <Highlighter className="size-4" />
+        </ToolbarButton>
+        {showHighlight && (
+          <ColorPickerPanel
+            mode="background"
+            currentColor={currentBgColor}
+            onSelect={(color) => {
+              if (color) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (editor.chain().focus() as any).setBackgroundColor(color).run();
+              } else {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (editor.chain().focus() as any).unsetBackgroundColor().run();
+              }
+            }}
+            onClose={() => setShowHighlight(false)}
+          />
+        )}
+      </div>
 
       <Divider />
 
