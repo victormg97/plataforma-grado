@@ -557,7 +557,8 @@
       "programa_asignado": "Your professor assigned a class program to you",
       "solicitud_cambio_horario": "requested a schedule change",
       "cambio_horario_aceptado": "Schedule change accepted",
-      "cambio_horario_rechazado": "Schedule change rejected"
+      "cambio_horario_rechazado": "Schedule change rejected",
+      "nueva_nota_clase": "left a note on a class"
     },
     "mensajes": {
       "alumno_generico": "The student",
@@ -617,6 +618,11 @@
     "sangria_aumentar": "Increase indent",
     "sangria_reducir": "Decrease indent",
     "insertar_tabla": "Insert table",
+    "tabla_tamano": "{rows} × {cols}",
+    "enlace_editar": "Edit link",
+    "enlace_abrir_externo": "Open in new tab",
+    "enlace_eliminar": "Remove link",
+    "enlace_guardar": "Save",
     "advertencia_enlace_titulo": "External link",
     "advertencia_enlace_desc": "You are about to open an external link. Make sure you trust the source before continuing.",
     "advertencia_enlace_destino": "Destination",

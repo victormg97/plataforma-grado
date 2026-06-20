@@ -7,14 +7,14 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Bell, CheckCircle2, XCircle, ArrowLeftRight,
   CalendarPlus, CalendarClock, CalendarOff, ClipboardList,
-  Calendar, Clock, Trash2, ChevronLeft, ChevronRight, Mail,
+  Calendar, Clock, Trash2, ChevronLeft, ChevronRight, Mail, StickyNote,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card } from '@/components/common/Card';
 import { AppSelect } from '@/components/common/AppSelect';
-import { buildAlumnoHorarioDetailHref } from '@/lib/utils/horarioNavigation';
+import { buildAlumnoHorarioDetailHref, buildClaseDetailHref } from '@/lib/utils/horarioNavigation';
 import { useUIStore } from '@/stores/useUIStore';
 import { useUserStore } from '@/stores/useUserStore';
 import { ModalRespuestaSolicitud } from '@/components/notificaciones/ModalRespuestaSolicitud';
@@ -34,6 +34,7 @@ type Notificacion = {
   alumno_id: string | null;
   programa_id: string | null;
   solicitud_id: string | null;
+  nota_clase_id: string | null;
   alumno: { id: string; nombre: string; apellido: string } | null;
   horario: { id: string; fecha: string; hora_inicio: string; hora_fin: string; titulo: string | null; descripcion: string | null } | null;
   solicitud: {
@@ -81,6 +82,7 @@ const TIPO_ICON: Record<TipoNotificacion, { icon: React.ElementType; color: stri
   cambio_horario_rechazado: { icon: XCircle,       color: 'var(--color-error)' },
   invitacion_acceso:        { icon: Mail,          color: 'var(--color-brand-gold)' },
   bienvenida_registro:      { icon: Mail,          color: 'var(--color-brand-gold)' },
+  nueva_nota_clase:         { icon: StickyNote,    color: 'var(--color-brand-gold)' },
 };
 
 // (tipos are now fetched dynamically from the API)
@@ -308,6 +310,17 @@ export function NotificacionesFullView({ role }: NotificacionesFullViewProps) {
     }
 
     // Default navigation
+
+    // Handle nueva_nota_clase — navigate directly to the note
+    if (n.tipo === 'nueva_nota_clase' && n.horario_id && n.nota_clase_id) {
+      if (user?.rol === 'alumno') {
+        router.push(buildAlumnoHorarioDetailHref(n.horario_id, currentPath, n.nota_clase_id));
+      } else {
+        router.push(buildClaseDetailHref(n.horario_id, user?.rol === 'admin' ? 'admin' : 'profesor', currentPath, n.nota_clase_id));
+      }
+      return;
+    }
+
     if (n.horario_id) {
       if (user?.rol === 'alumno') {
         router.push(buildAlumnoHorarioDetailHref(n.horario_id, currentPath));
@@ -329,7 +342,8 @@ export function NotificacionesFullView({ role }: NotificacionesFullViewProps) {
       return `${alumnoNombre} ${tn(`tipos.${n.tipo}`)}`;
     }
 
-    if (n.tipo === 'programa_asignado') {
+    // For program assignments and class notes, use the stored message
+    if (n.tipo === 'programa_asignado' || n.tipo === 'nueva_nota_clase') {
       return n.mensaje || tn(`tipos.${n.tipo}`);
     }
 

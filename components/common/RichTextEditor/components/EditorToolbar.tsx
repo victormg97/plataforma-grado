@@ -1,16 +1,18 @@
 'use client';
 
+import { useMemo } from 'react';
 import type { Editor } from '@tiptap/react';
 import {
   Bold, Italic, Strikethrough, List, ListOrdered,
   Link as LinkIcon, Undo, Redo, Code,
   AlignLeft, AlignCenter, AlignRight, AlignJustify,
   IndentIncrease, IndentDecrease,
-  Quote, Table as TableIcon,
-  ChevronDown,
+  Quote,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { ToolbarButton } from './ToolbarButton';
+import { HeadingSelect } from './HeadingSelect';
+import { TableSizePicker } from './TableSizePicker';
 import { Divider } from './Divider';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -34,36 +36,35 @@ export function EditorToolbar({ editor, onOpenLinkModal }: EditorToolbarProps) {
     ? '3'
     : '0';
 
+  // Heading options with size classes matching the rendered note output
+  const headingOptions = useMemo(() => [
+    { value: '0', label: t('parrafo'), className: 'text-sm' },
+    { value: '1', label: t('titulo_1'), className: 'text-xl font-bold' },
+    { value: '2', label: t('titulo_2'), className: 'text-lg font-bold' },
+    { value: '3', label: t('titulo_3'), className: 'text-base font-semibold' },
+  ], [t]);
+
+  const handleHeadingChange = (val: string) => {
+    if (val === '0') {
+      editor.chain().focus().setParagraph().run();
+    } else {
+      editor
+        .chain()
+        .focus()
+        .toggleHeading({ level: parseInt(val) as 1 | 2 | 3 })
+        .run();
+    }
+  };
+
   return (
     <div className="flex flex-wrap items-center gap-0.5 border-b border-[var(--color-border)] px-2 py-1.5 bg-[var(--color-bg-secondary)]">
 
       {/* ── Heading dropdown ── */}
-      <div className="relative flex items-center">
-        <select
-          value={headingValue}
-          onMouseDown={(e) => e.stopPropagation()}
-          onChange={(e) => {
-            editor.chain().focus();
-            const val = e.target.value;
-            if (val === '0') {
-              editor.chain().focus().setParagraph().run();
-            } else {
-              editor
-                .chain()
-                .focus()
-                .toggleHeading({ level: parseInt(val) as 1 | 2 | 3 })
-                .run();
-            }
-          }}
-          className="h-8 appearance-none rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-bg-primary)] pl-2 pr-6 text-xs text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-gold)]/30 cursor-pointer hover:bg-[var(--color-bg-secondary)] transition-colors"
-        >
-          <option value="0">{t('parrafo')}</option>
-          <option value="1">{t('titulo_1')}</option>
-          <option value="2">{t('titulo_2')}</option>
-          <option value="3">{t('titulo_3')}</option>
-        </select>
-        <ChevronDown className="pointer-events-none absolute right-1.5 size-3 text-[var(--color-text-muted)]" />
-      </div>
+      <HeadingSelect
+        value={headingValue}
+        onChange={handleHeadingChange}
+        options={headingOptions}
+      />
 
       <Divider />
 
@@ -186,18 +187,15 @@ export function EditorToolbar({ editor, onOpenLinkModal }: EditorToolbarProps) {
       >
         <LinkIcon className="size-4" />
       </ToolbarButton>
-      <ToolbarButton
-        onClick={() =>
+      <TableSizePicker
+        onInsert={(rows, cols) =>
           editor
             .chain()
             .focus()
-            .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+            .insertTable({ rows, cols, withHeaderRow: true })
             .run()
         }
-        title={t('insertar_tabla')}
-      >
-        <TableIcon className="size-4" />
-      </ToolbarButton>
+      />
 
       <Divider />
 

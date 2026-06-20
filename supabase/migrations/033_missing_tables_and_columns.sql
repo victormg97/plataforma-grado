@@ -40,10 +40,55 @@ DO $$ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies
     WHERE schemaname = 'public' AND tablename = 'invitations'
-      AND policyname = 'Admins can manage invitations'
+      AND policyname = 'Admins can read invitations'
   ) THEN
-    CREATE POLICY "Admins can manage invitations"
-      ON public.invitations FOR ALL
+    CREATE POLICY "Admins can read invitations"
+      ON public.invitations FOR SELECT
+      USING (
+        (SELECT rol FROM public.profiles WHERE id = auth.uid()) = 'admin'
+      );
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'invitations'
+      AND policyname = 'Admins can insert invitations'
+  ) THEN
+    CREATE POLICY "Admins can insert invitations"
+      ON public.invitations FOR INSERT
+      WITH CHECK (
+        (SELECT rol FROM public.profiles WHERE id = auth.uid()) = 'admin'
+      );
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'invitations'
+      AND policyname = 'Admins can update invitations'
+  ) THEN
+    CREATE POLICY "Admins can update invitations"
+      ON public.invitations FOR UPDATE
+      USING (
+        (SELECT rol FROM public.profiles WHERE id = auth.uid()) = 'admin'
+      )
+      WITH CHECK (
+        (SELECT rol FROM public.profiles WHERE id = auth.uid()) = 'admin'
+      );
+  END IF;
+END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'invitations'
+      AND policyname = 'Admins can delete invitations'
+  ) THEN
+    CREATE POLICY "Admins can delete invitations"
+      ON public.invitations FOR DELETE
       USING (
         (SELECT rol FROM public.profiles WHERE id = auth.uid()) = 'admin'
       );

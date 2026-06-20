@@ -781,6 +781,7 @@ export type Database = {
           id: string
           leida: boolean
           mensaje: string
+          nota_clase_id: string | null
           programa_id: string | null
           solicitud_id: string | null
           tipo: Database["public"]["Enums"]["tipo_notificacion"]
@@ -793,6 +794,7 @@ export type Database = {
           id?: string
           leida?: boolean
           mensaje: string
+          nota_clase_id?: string | null
           programa_id?: string | null
           solicitud_id?: string | null
           tipo: Database["public"]["Enums"]["tipo_notificacion"]
@@ -805,6 +807,7 @@ export type Database = {
           id?: string
           leida?: boolean
           mensaje?: string
+          nota_clase_id?: string | null
           programa_id?: string | null
           solicitud_id?: string | null
           tipo?: Database["public"]["Enums"]["tipo_notificacion"]
@@ -1681,6 +1684,7 @@ export type Database = {
         | "cambio_horario_rechazado"
         | "invitacion_acceso"
         | "bienvenida_registro"
+        | "nueva_nota_clase"
       user_rol: "admin" | "profesor" | "alumno" | "lector"
     }
     CompositeTypes: {
@@ -1829,6 +1833,7 @@ export const Constants = {
         "cambio_horario_rechazado",
         "invitacion_acceso",
         "bienvenida_registro",
+        "nueva_nota_clase",
       ],
       user_rol: ["admin", "profesor", "alumno"],
     },
@@ -1903,6 +1908,7 @@ export type NotaClaseConAutor = {
     id: string;
     nombre: string;
     apellido: string;
+    apellido_materno: string | null;
     avatar_url: string | null;
     rol: UserRol;
   };

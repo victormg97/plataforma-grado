@@ -1,14 +1,14 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, forwardRef } from 'react';
 import { format } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
-import { Pencil, Trash2, User } from 'lucide-react';
-import Image from 'next/image';
+import { Pencil, Trash2 } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
 import { NotaEditor } from '@/components/notas/NotaEditor';
 import { LinkWarningModal } from '@/components/notas/LinkWarningModal';
-import type { NotaClaseConAutor } from '@/lib/supabase/types';
+import { Avatar } from '@/components/common/Avatar';
+import type { NotaClaseConAutor, UserRol } from '@/lib/supabase/types';
 
 // ─── localStorage helpers for trusted professors ──────────────────────────────
 const TRUST_KEY = 'nota_trusted_professors';
@@ -39,19 +39,38 @@ type PendingLink = { url: string };
 type NotaCardProps = {
   nota: NotaClaseConAutor;
   isOwn: boolean;
+  viewerRol: UserRol;
   onUpdate: (id: string, contenido: string) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
   updating?: boolean;
   deleting?: boolean;
+  highlight?: boolean;
 };
 
-export function NotaCard({ nota, isOwn, onUpdate, onDelete, updating, deleting }: NotaCardProps) {
+export const NotaCard = forwardRef<HTMLDivElement, NotaCardProps>(function NotaCard(
+  { nota, isOwn, viewerRol, onUpdate, onDelete, updating, deleting, highlight },
+  ref
+) {
   const [editing, setEditing] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [pendingLink, setPendingLink] = useState<PendingLink | null>(null);
+  const [showHighlight, setShowHighlight] = useState(false);
   const t = useTranslations('notas');
   const locale = useLocale();
   const dateFnsLocale = locale === 'en' ? enUS : es;
+
+  // Trigger highlight animation after mount
+  useEffect(() => {
+    if (!highlight) return;
+    // Small delay so the scroll finishes before the glow starts
+    const timer = setTimeout(() => setShowHighlight(true), 400);
+    // Remove highlight after animation completes
+    const removeTimer = setTimeout(() => setShowHighlight(false), 2800);
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(removeTimer);
+    };
+  }, [highlight]);
 
   const handleContentClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
@@ -102,8 +121,19 @@ export function NotaCard({ nota, isOwn, onUpdate, onDelete, updating, deleting }
     setConfirmDelete(false);
   };
 
-  const rolLabel = nota.autor.rol === 'profesor' ? t('profesor') : t('alumno');
-  const authorFullName = `${nota.autor.nombre} ${nota.autor.apellido}`.trim();
+  const rolLabel = (() => {
+    const autorRol = nota.autor.rol;
+    // For alumnos viewing notes: admin appears as "Profesor"
+    if (viewerRol === 'alumno' && autorRol === 'admin') return t('profesor');
+    if (autorRol === 'profesor' || autorRol === 'admin') return t('profesor');
+    return t('alumno');
+  })();
+
+  // Full name: nombre + apellido + apellido_materno (if exists)
+  const authorFullName = [nota.autor.nombre, nota.autor.apellido, nota.autor.apellido_materno]
+    .filter(Boolean)
+    .join(' ')
+    .trim();
 
   return (
     <>
@@ -117,20 +147,25 @@ export function NotaCard({ nota, isOwn, onUpdate, onDelete, updating, deleting }
         onCancel={() => setPendingLink(null)}
       />
     )}
-    <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-primary)] overflow-hidden">
+    <div
+      ref={ref}
+      className={`rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-primary)] overflow-hidden transition-shadow duration-500 ${
+        showHighlight ? 'ring-2 ring-[var(--color-brand-gold)] shadow-[0_0_12px_var(--color-brand-gold-muted)]' : ''
+      }`}
+    >
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2 bg-[var(--color-bg-secondary)]">
         <div className="flex items-center gap-2 min-w-0">
-          <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[var(--color-brand-gold-muted)]">
-            {nota.autor.avatar_url ? (
-              <Image src={nota.autor.avatar_url} alt="" width={28} height={28} className="size-7 rounded-full object-cover" />
-            ) : (
-              <User className="size-3.5 text-[var(--color-brand-gold)]" />
-            )}
-          </div>
+          <Avatar
+            nombre={nota.autor.nombre}
+            apellido={nota.autor.apellido}
+            avatarUrl={nota.autor.avatar_url}
+            size="sm"
+            className="!size-7 shrink-0 text-[10px]"
+          />
           <div className="min-w-0">
             <p className="text-sm font-medium text-[var(--color-text-primary)] truncate">
-              {nota.autor.nombre} {nota.autor.apellido}
+              {authorFullName}
             </p>
             <p className="text-[10px] text-[var(--color-text-muted)]">
               {rolLabel} · {format(new Date(nota.created_at), locale === 'en' ? "MMM d, yyyy 'at' HH:mm" : "d MMM yyyy, HH:mm", { locale: dateFnsLocale })}
@@ -210,4 +245,4 @@ export function NotaCard({ nota, isOwn, onUpdate, onDelete, updating, deleting }
     </div>
     </>
   );
-}
+});

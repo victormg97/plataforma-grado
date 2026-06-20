@@ -4,6 +4,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { Search, StickyNote, Plus, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
+import { useSearchParams } from 'next/navigation';
 import { NotaEditor } from '@/components/notas/NotaEditor';
 import { NotaCard } from '@/components/notas/NotaCard';
 import { useNotasClase } from '@/lib/hooks/useNotasClase';
@@ -15,6 +16,8 @@ type NotasSectionProps = {
 
 export function NotasSection({ horarioId }: NotasSectionProps) {
   const { user } = useUserStore();
+  const searchParams = useSearchParams();
+  const highlightNotaId = searchParams.get('nota_id');
   const {
     notas,
     allNotas,
@@ -32,7 +35,23 @@ export function NotasSection({ horarioId }: NotasSectionProps) {
   const [showEditor, setShowEditor] = useState(false);
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const notaRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const hasScrolled = useRef(false);
   const t = useTranslations('notas');
+
+  // Scroll to highlighted note once notes are loaded
+  useEffect(() => {
+    if (!highlightNotaId || loading || hasScrolled.current || notas.length === 0) return;
+
+    const el = notaRefs.current.get(highlightNotaId);
+    if (el) {
+      hasScrolled.current = true;
+      // Small delay to ensure DOM is painted
+      requestAnimationFrame(() => {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+    }
+  }, [highlightNotaId, loading, notas]);
 
   // Debounced search (300ms)
   const handleSearchChange = useCallback(
@@ -77,6 +96,14 @@ export function NotasSection({ horarioId }: NotasSectionProps) {
       toast.error(t('error_eliminar'));
     }
   };
+
+  const setNotaRef = useCallback((id: string, el: HTMLDivElement | null) => {
+    if (el) {
+      notaRefs.current.set(id, el);
+    } else {
+      notaRefs.current.delete(id);
+    }
+  }, []);
 
   return (
     <div className="space-y-4">
@@ -164,12 +191,15 @@ export function NotasSection({ horarioId }: NotasSectionProps) {
           {notas.map((nota) => (
             <NotaCard
               key={nota.id}
+              ref={(el) => setNotaRef(nota.id, el)}
               nota={nota}
               isOwn={nota.autor_id === user?.id}
+              viewerRol={user?.rol ?? 'alumno'}
               onUpdate={handleUpdate}
               onDelete={handleDelete}
               updating={actualizando}
               deleting={eliminando}
+              highlight={nota.id === highlightNotaId}
             />
           ))}
         </div>

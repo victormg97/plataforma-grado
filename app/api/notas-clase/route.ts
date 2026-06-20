@@ -79,5 +79,68 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  // ── Create notifications for other participants ──────────────────────────
+  // Determine who should be notified (everyone involved except the author)
+  const destinatarios: string[] = [];
+
+  // Always notify the student if the author is not the student
+  if (horario.alumno_id && horario.alumno_id !== user.id) {
+    destinatarios.push(horario.alumno_id);
+  }
+
+  // Always notify the professor if the author is not the professor
+  if (horario.profesor_id && horario.profesor_id !== user.id) {
+    destinatarios.push(horario.profesor_id);
+  }
+
+  // If author is the student or professor, also notify admins
+  if (profile?.rol !== 'admin') {
+    const { data: admins } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('rol', 'admin');
+    if (admins) {
+      for (const admin of admins) {
+        if (admin.id !== user.id && !destinatarios.includes(admin.id)) {
+          destinatarios.push(admin.id);
+        }
+      }
+    }
+  }
+
+  // Get author name for the notification message
+  const { data: autorProfile } = await supabase
+    .from('profiles')
+    .select('nombre, apellido')
+    .eq('id', user.id)
+    .single();
+
+  const autorNombre = autorProfile
+    ? `${autorProfile.nombre} ${autorProfile.apellido}`.trim()
+    : 'Un usuario';
+
+  // Build a short snippet of the note content (strip HTML, max 60 chars)
+  const snippet = contenido
+    .replace(/<[^>]*>/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 60);
+
+  const mensaje = `${autorNombre} dejó una nota: "${snippet}${contenido.replace(/<[^>]*>/g, '').trim().length > 60 ? '…' : ''}"`;
+
+  // Insert notifications for all destinatarios
+  if (destinatarios.length > 0) {
+    const notificaciones = destinatarios.map((destinatario_id) => ({
+      destinatario_id,
+      tipo: 'nueva_nota_clase' as const,
+      mensaje,
+      horario_id,
+      nota_clase_id: data.id,
+      alumno_id: horario.alumno_id,
+    }));
+
+    await supabase.from('notificaciones').insert(notificaciones);
+  }
+
   return NextResponse.json(data, { status: 201 });
 }

@@ -11,6 +11,7 @@ import { Table, TableRow, TableCell, TableHeader } from '@tiptap/extension-table
 import { useTranslations } from 'next-intl';
 import { LinkModal } from '@/components/notas/LinkModal';
 import { EditorToolbar } from './components/EditorToolbar';
+import { LinkPopover } from './components/LinkPopover';
 
 // ─── Extend Commands type for indent/outdent ─────────────────────────────────
 declare module '@tiptap/core' {
@@ -98,7 +99,10 @@ export function RichTextEditor({ content, placeholder, onChange, readOnly = fals
 
   const editor = useEditor({
     extensions: [
-      StarterKit.configure({ heading: { levels: [1, 2, 3] } }),
+      StarterKit.configure({
+        heading: { levels: [1, 2, 3] },
+        link: false, // We configure Link separately below with custom options
+      }),
       Placeholder.configure({ placeholder: placeholder ?? t('placeholder') }),
       Link.configure({
         openOnClick: false,
@@ -174,6 +178,7 @@ export function RichTextEditor({ content, placeholder, onChange, readOnly = fals
     <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] overflow-hidden">
       {!readOnly && <EditorToolbar editor={editor} onOpenLinkModal={openLinkModal} />}
       <EditorContent editor={editor} />
+      {!readOnly && <LinkPopover editor={editor} />}
       {linkModalOpen && (
         <LinkModal
           onClose={() => setLinkModalOpen(false)}

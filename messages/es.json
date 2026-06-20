@@ -557,7 +557,8 @@
       "programa_asignado": "Tu profesor te asignó un programa de clases",
       "solicitud_cambio_horario": "solicitó un cambio de horario",
       "cambio_horario_aceptado": "Cambio de horario aceptado",
-      "cambio_horario_rechazado": "Cambio de horario rechazado"
+      "cambio_horario_rechazado": "Cambio de horario rechazado",
+      "nueva_nota_clase": "dejó una nota en una clase"
     },
     "mensajes": {
       "alumno_generico": "El alumno",
@@ -617,6 +618,11 @@
     "sangria_aumentar": "Aumentar sangría",
     "sangria_reducir": "Reducir sangría",
     "insertar_tabla": "Insertar tabla",
+    "tabla_tamano": "{rows} × {cols}",
+    "enlace_editar": "Editar enlace",
+    "enlace_abrir_externo": "Abrir en nueva pestaña",
+    "enlace_eliminar": "Eliminar enlace",
+    "enlace_guardar": "Guardar",
     "advertencia_enlace_titulo": "Enlace externo",
     "advertencia_enlace_desc": "Estás a punto de abrir un enlace externo. Verifica que confías en la fuente antes de continuar.",
     "advertencia_enlace_destino": "Destino",
