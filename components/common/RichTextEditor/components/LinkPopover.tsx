@@ -170,6 +170,10 @@ export function LinkPopover({ editor }: LinkPopoverProps) {
   }, [editing]);
 
   const handleEdit = () => {
+    // Mark as editing BEFORE the chain so selectionUpdate doesn't reset us
+    editingRef.current = true;
+    setEditing(true);
+
     // Extend selection to the full link range so we can read the text
     editor.chain().focus().extendMarkRange('link').run();
 
@@ -180,7 +184,6 @@ export function LinkPopover({ editor }: LinkPopoverProps) {
     const { from, to } = editor.state.selection;
     const linkText = editor.state.doc.textBetween(from, to, '');
     setText(linkText);
-    setEditing(true);
   };
 
   const handleSave = () => {

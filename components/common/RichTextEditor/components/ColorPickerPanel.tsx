@@ -85,7 +85,7 @@ export function ColorPickerPanel({ currentColor, onSelect, onClose, mode, trigge
 
   // Close on outside click (capture phase to catch events before preventDefault)
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
+    const handler = (e: PointerEvent) => {
       if (
         !panelRef.current?.contains(e.target as Node) &&
         !triggerRef.current?.contains(e.target as Node)
@@ -93,13 +93,18 @@ export function ColorPickerPanel({ currentColor, onSelect, onClose, mode, trigge
         onClose();
       }
     };
-    // Use capture phase and a small delay so mount doesn't immediately close
+    const keyHandler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    // Use pointerdown in capture phase — fires before any preventDefault
     const timer = setTimeout(() => {
-      document.addEventListener('mousedown', handler, true);
-    }, 10);
+      document.addEventListener('pointerdown', handler, true);
+      document.addEventListener('keydown', keyHandler);
+    }, 50);
     return () => {
       clearTimeout(timer);
-      document.removeEventListener('mousedown', handler, true);
+      document.removeEventListener('pointerdown', handler, true);
+      document.removeEventListener('keydown', keyHandler);
     };
   }, [onClose, triggerRef]);
 
@@ -141,10 +146,12 @@ export function ColorPickerPanel({ currentColor, onSelect, onClose, mode, trigge
   const handlePresetClick = (color: string) => {
     setCustomColor(color);
     onSelect(color);
+    onClose();
   };
 
   const handleCustomApply = () => {
     onSelect(customColor);
+    onClose();
   };
 
   const handleRemoveColor = () => {
