@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 import type { Editor } from '@tiptap/react';
 import { ExternalLink, Pencil, Trash2, Check, X } from 'lucide-react';
@@ -24,8 +24,29 @@ export function LinkPopover({ editor }: LinkPopoverProps) {
   const popoverRef = useRef<HTMLDivElement>(null);
   const urlInputRef = useRef<HTMLInputElement>(null);
   const [mounted, setMounted] = useState(false);
+  const editingRef = useRef(false);
+
+  // Keep ref in sync so event handlers see latest value
+  editingRef.current = editing;
 
   useEffect(() => { setMounted(true); }, []); // eslint-disable-line react-hooks/set-state-in-effect
+
+  // Clamp the popover position so it stays within the viewport
+  const clampPosition = useCallback((top: number, centerX: number) => {
+    const padding = 12;
+    const popoverWidth = popoverRef.current?.offsetWidth ?? 280;
+    const halfW = popoverWidth / 2;
+
+    let left = centerX;
+    // Clamp horizontally
+    if (left - halfW < padding) {
+      left = halfW + padding;
+    } else if (left + halfW > window.innerWidth - padding) {
+      left = window.innerWidth - padding - halfW;
+    }
+
+    return { top, left };
+  }, []);
 
   const updatePosition = useCallback(() => {
     if (!editor.isActive('link')) {
@@ -33,31 +54,61 @@ export function LinkPopover({ editor }: LinkPopoverProps) {
       return;
     }
 
-    // Get the DOM position of the link
-    const { view } = editor;
-    const { from, to } = editor.state.selection;
+    const { view, state } = editor;
+    const { from, to } = state.selection;
+
+    // Find the full mark range for the link
+    const $from = state.selection.$from;
+    const linkMark = $from.marks().find((m) => m.type.name === 'link');
+    if (!linkMark) {
+      setVisible(false);
+      return;
+    }
+
     const start = view.coordsAtPos(from);
     const end = view.coordsAtPos(to);
     const centerX = (start.left + end.left) / 2;
     const bottomY = Math.max(start.bottom, end.bottom);
 
-    setPosition({ top: bottomY + 8, left: centerX });
+    setPosition(clampPosition(bottomY + 8, centerX));
     setVisible(true);
 
     // Get current link attributes
     const attrs = editor.getAttributes('link');
     setUrl(attrs.href ?? '');
-    const selectedText = editor.state.doc.textBetween(from, to, '');
+    const selectedText = state.doc.textBetween(from, to, '');
     setText(selectedText);
-  }, [editor]);
+  }, [editor, clampPosition]);
+
+  // Re-clamp after the popover renders (when we know its actual width)
+  useLayoutEffect(() => {
+    if (!visible || !popoverRef.current) return;
+    // Re-clamp with actual width
+    const rect = popoverRef.current.getBoundingClientRect();
+    const padding = 12;
+    const halfW = rect.width / 2;
+    const currentLeft = position.left;
+
+    let newLeft = currentLeft;
+    if (currentLeft - halfW < padding) {
+      newLeft = halfW + padding;
+    } else if (currentLeft + halfW > window.innerWidth - padding) {
+      newLeft = window.innerWidth - padding - halfW;
+    }
+
+    if (newLeft !== currentLeft) {
+      setPosition((prev) => ({ ...prev, left: newLeft }));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible, editing]);
 
   // Listen to selection changes
   useEffect(() => {
     const handleSelectionUpdate = () => {
-      if (editor.isActive('link') && !editor.state.selection.empty) {
-        updatePosition();
-      } else if (editor.isActive('link')) {
-        // Cursor is inside a link but no selection — find the link mark range
+      // Don't dismiss if we're in edit mode (user is typing in input fields)
+      if (editingRef.current) return;
+
+      if (editor.isActive('link')) {
         const { $from } = editor.state.selection;
         const linkMark = $from.marks().find((m) => m.type.name === 'link');
         if (linkMark) {
@@ -68,22 +119,24 @@ export function LinkPopover({ editor }: LinkPopoverProps) {
       } else {
         setVisible(false);
       }
-      setEditing(false);
     };
 
-    editor.on('selectionUpdate', handleSelectionUpdate);
-    editor.on('blur', () => {
+    const handleBlur = () => {
       // Delay hiding to allow clicking on the popover
       setTimeout(() => {
         if (!popoverRef.current?.contains(document.activeElement)) {
           setVisible(false);
           setEditing(false);
         }
-      }, 150);
-    });
+      }, 200);
+    };
+
+    editor.on('selectionUpdate', handleSelectionUpdate);
+    editor.on('blur', handleBlur);
 
     return () => {
       editor.off('selectionUpdate', handleSelectionUpdate);
+      editor.off('blur', handleBlur);
     };
   }, [editor, updatePosition]);
 
@@ -109,10 +162,22 @@ export function LinkPopover({ editor }: LinkPopoverProps) {
   // Focus URL input when entering edit mode
   useEffect(() => {
     if (editing) {
-      urlInputRef.current?.focus();
-      urlInputRef.current?.select();
+      setTimeout(() => {
+        urlInputRef.current?.focus();
+        urlInputRef.current?.select();
+      }, 50);
     }
   }, [editing]);
+
+  const handleEdit = () => {
+    // Re-read current values before entering edit mode
+    const attrs = editor.getAttributes('link');
+    setUrl(attrs.href ?? '');
+    const { from, to } = editor.state.selection;
+    const selectedText = editor.state.doc.textBetween(from, to, '');
+    setText(selectedText || url);
+    setEditing(true);
+  };
 
   const handleSave = () => {
     const trimmedUrl = url.trim();
@@ -120,10 +185,9 @@ export function LinkPopover({ editor }: LinkPopoverProps) {
 
     const href = trimmedUrl.startsWith('http') ? trimmedUrl : `https://${trimmedUrl}`;
 
-    // Update the link href
+    // Update the link href and optionally the text
     editor.chain().focus().extendMarkRange('link').setLink({ href }).run();
 
-    // If text changed, replace the link text
     const { from, to } = editor.state.selection;
     const currentText = editor.state.doc.textBetween(from, to, '');
     if (text.trim() && text.trim() !== currentText) {
@@ -133,6 +197,7 @@ export function LinkPopover({ editor }: LinkPopoverProps) {
     }
 
     setEditing(false);
+    setVisible(false);
   };
 
   const handleRemove = () => {
@@ -155,6 +220,7 @@ export function LinkPopover({ editor }: LinkPopoverProps) {
     if (e.key === 'Escape') {
       e.preventDefault();
       setEditing(false);
+      setVisible(false);
     }
   };
 
@@ -170,7 +236,7 @@ export function LinkPopover({ editor }: LinkPopoverProps) {
         transform: 'translateX(-50%)',
         zIndex: 99990,
       }}
-      className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-primary)] shadow-[var(--shadow-lg)] overflow-hidden animate-in fade-in-0 zoom-in-95 duration-100 min-w-[240px] max-w-[360px]"
+      className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-primary)] shadow-[var(--shadow-lg)] overflow-hidden animate-in fade-in-0 zoom-in-95 duration-100 w-[min(320px,calc(100vw-24px))]"
     >
       {editing ? (
         /* ── Edit Mode ── */
@@ -224,13 +290,13 @@ export function LinkPopover({ editor }: LinkPopoverProps) {
       ) : (
         /* ── View Mode ── */
         <div className="flex items-center gap-1 px-2 py-1.5">
-          <span className="flex-1 truncate text-sm text-[var(--color-brand-gold)] px-1">
+          <span className="flex-1 min-w-0 truncate text-sm text-[var(--color-brand-gold)] px-1">
             {url}
           </span>
           <button
             type="button"
-            onMouseDown={(e) => { e.preventDefault(); setEditing(true); }}
-            className="flex items-center justify-center size-7 rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]"
+            onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); handleEdit(); }}
+            className="flex items-center justify-center size-7 shrink-0 rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]"
             aria-label={t('enlace_editar')}
             title={t('enlace_editar')}
           >
@@ -239,7 +305,7 @@ export function LinkPopover({ editor }: LinkPopoverProps) {
           <button
             type="button"
             onMouseDown={(e) => { e.preventDefault(); handleOpen(); }}
-            className="flex items-center justify-center size-7 rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]"
+            className="flex items-center justify-center size-7 shrink-0 rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]"
             aria-label={t('enlace_abrir_externo')}
             title={t('enlace_abrir_externo')}
           >
@@ -248,7 +314,7 @@ export function LinkPopover({ editor }: LinkPopoverProps) {
           <button
             type="button"
             onMouseDown={(e) => { e.preventDefault(); handleRemove(); }}
-            className="flex items-center justify-center size-7 rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:bg-red-50 hover:text-[var(--color-error)] dark:hover:bg-red-950/20"
+            className="flex items-center justify-center size-7 shrink-0 rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:bg-red-50 hover:text-[var(--color-error)] dark:hover:bg-red-950/20"
             aria-label={t('enlace_eliminar')}
             title={t('enlace_eliminar')}
           >

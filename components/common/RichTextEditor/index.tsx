@@ -110,6 +110,8 @@ export function RichTextEditor({ content, placeholder, onChange, readOnly = fals
           class: 'text-[var(--color-brand-gold)] underline cursor-pointer',
           rel: 'noopener noreferrer nofollow',
         },
+      }).extend({
+        inclusive: false,
       }),
       TextAlign.configure({ types: ['paragraph', 'heading'] }),
       Table.configure({ resizable: false }),
