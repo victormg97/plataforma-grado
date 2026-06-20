@@ -170,12 +170,16 @@ export function LinkPopover({ editor }: LinkPopoverProps) {
   }, [editing]);
 
   const handleEdit = () => {
-    // Re-read current values before entering edit mode
+    // Extend selection to the full link range so we can read the text
+    editor.chain().focus().extendMarkRange('link').run();
+
     const attrs = editor.getAttributes('link');
     setUrl(attrs.href ?? '');
+
+    // Now selection covers the full link text
     const { from, to } = editor.state.selection;
-    const selectedText = editor.state.doc.textBetween(from, to, '');
-    setText(selectedText || url);
+    const linkText = editor.state.doc.textBetween(from, to, '');
+    setText(linkText);
     setEditing(true);
   };
 
@@ -236,7 +240,7 @@ export function LinkPopover({ editor }: LinkPopoverProps) {
         transform: 'translateX(-50%)',
         zIndex: 99990,
       }}
-      className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-primary)] shadow-[var(--shadow-lg)] overflow-hidden animate-in fade-in-0 zoom-in-95 duration-100 w-[min(320px,calc(100vw-24px))]"
+      className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] shadow-[var(--shadow-lg)] overflow-hidden animate-in fade-in-0 zoom-in-95 duration-100 w-[min(320px,calc(100vw-24px))] backdrop-blur-none"
     >
       {editing ? (
         /* ── Edit Mode ── */

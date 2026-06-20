@@ -6,11 +6,13 @@ import { Extension, type CommandProps } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import Link from '@tiptap/extension-link';
+import { TextStyleKit } from '@tiptap/extension-text-style';
 import TextAlign from '@tiptap/extension-text-align';
 import { Table, TableRow, TableCell, TableHeader } from '@tiptap/extension-table';
 import { useTranslations } from 'next-intl';
 import { LinkModal } from '@/components/notas/LinkModal';
 import { EditorToolbar } from './components/EditorToolbar';
+import { EditorBubbleMenu } from './components/EditorBubbleMenu';
 import { LinkPopover } from './components/LinkPopover';
 
 // ─── Extend Commands type for indent/outdent ─────────────────────────────────
@@ -113,6 +115,11 @@ export function RichTextEditor({ content, placeholder, onChange, readOnly = fals
       }).extend({
         inclusive: false,
       }),
+      TextStyleKit.configure({
+        fontFamily: false,
+        lineHeight: false,
+        fontSize: false,
+      }),
       TextAlign.configure({ types: ['paragraph', 'heading'] }),
       Table.configure({ resizable: false }),
       TableRow,
@@ -180,6 +187,7 @@ export function RichTextEditor({ content, placeholder, onChange, readOnly = fals
     <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] overflow-hidden">
       {!readOnly && <EditorToolbar editor={editor} onOpenLinkModal={openLinkModal} />}
       <EditorContent editor={editor} />
+      {!readOnly && <EditorBubbleMenu editor={editor} onOpenLinkModal={openLinkModal} />}
       {!readOnly && <LinkPopover editor={editor} />}
       {linkModalOpen && (
         <LinkModal
