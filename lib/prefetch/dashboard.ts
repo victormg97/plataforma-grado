@@ -53,6 +53,7 @@ export async function prefetchDashboardData(userId: string, rol: UserRol) {
         notas: r.notas,
         paso_prueba: r.paso_prueba ?? false,
         fecha_prueba: r.fecha_prueba,
+        last_sign_in_at: r.last_sign_in_at ?? null,
       }));
       queryClient.setQueryData(['admin-alumnos'], alumnos);
 

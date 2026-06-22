@@ -3,6 +3,7 @@
 import { useLocale, useTranslations } from 'next-intl';
 import { formatDistanceToNow, format, differenceInDays } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
+import { Tooltip } from '@/components/common/Tooltip';
 
 interface LastAccessBadgeProps {
   dateStr?: string | null;
@@ -10,6 +11,7 @@ interface LastAccessBadgeProps {
 
 /**
  * Shows the last access time in a human-friendly compact format.
+ * - < 1 day: "Hoy"
  * - < 7 days: relative (e.g. "hace 2 días")
  * - >= 7 days: short date (e.g. "16 jun")
  * - null: dash
@@ -44,9 +46,13 @@ export function LastAccessBadge({ dateStr }: LastAccessBadgeProps) {
       ? 'text-[var(--color-text-muted)]'
       : 'text-[var(--color-text-secondary)]';
 
+  const fullDate = format(date, locale === 'en' ? "EEEE, MMMM d yyyy 'at' HH:mm" : "EEEE d 'de' MMMM yyyy, HH:mm", { locale: dateFnsLocale });
+
   return (
-    <span className={`text-xs whitespace-nowrap ${colorClass}`} title={format(date, 'PPpp', { locale: dateFnsLocale })}>
-      {text}
-    </span>
+    <Tooltip content={fullDate} position="top">
+      <span className={`text-xs whitespace-nowrap cursor-default ${colorClass}`}>
+        {text}
+      </span>
+    </Tooltip>
   );
 }
