@@ -11,6 +11,7 @@ export type LectorAdmin = {
   avatar_url: string | null;
   activo: boolean;
   created_at: string;
+  last_sign_in_at: string | null;
 };
 
 export async function GET(_req: NextRequest) {
@@ -28,11 +29,7 @@ export async function GET(_req: NextRequest) {
     return NextResponse.json({ error: 'Solo admin' }, { status: 403 });
   }
 
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('id, nombre, apellido, apellido_materno, email, telefono, avatar_url, activo, created_at')
-    .eq('rol', 'lector')
-    .order('nombre', { ascending: true });
+  const { data, error } = await supabase.rpc('get_lectores_admin');
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 

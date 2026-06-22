@@ -24,6 +24,7 @@ export type AlumnoAdmin = {
   fecha_prueba: string | null;
   estado_cuenta?: 'Pendiente' | 'Activo';
   estado: 'activo' | 'pendiente' | 'bloqueado' | 'graduado';
+  last_sign_in_at?: string | null;
 };
 
 interface AlumnoActionsProps {

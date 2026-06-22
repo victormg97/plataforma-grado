@@ -1559,6 +1559,21 @@ export type Database = {
           }
       get_is_prueba_locked: { Args: { p_prueba_id: string }; Returns: boolean }
       get_notas_clase: { Args: { p_horario_id: string }; Returns: Json }
+      get_lectores_admin: {
+        Args: Record<string, never>
+        Returns: {
+          activo: boolean
+          apellido: string
+          apellido_materno: string | null
+          avatar_url: string | null
+          created_at: string
+          email: string
+          id: string
+          last_sign_in_at: string | null
+          nombre: string
+          telefono: string | null
+        }[]
+      }
       get_alumnos_admin: {
         Args: { p_estado?: string | null; p_profesor_id?: string | null; p_q?: string | null }
         Returns: {
@@ -1572,6 +1587,7 @@ export type Database = {
           fecha_ingreso: string | null
           fecha_prueba: string | null
           id: string
+          last_sign_in_at: string | null
           nombre: string
           notas: string | null
           paso_prueba: boolean
@@ -1597,6 +1613,7 @@ export type Database = {
           ha_dado_examen: boolean
           id: string
           intentos_prueba: number | null
+          last_sign_in_at: string | null
           nombre: string
           notas: string | null
           paso_prueba: boolean

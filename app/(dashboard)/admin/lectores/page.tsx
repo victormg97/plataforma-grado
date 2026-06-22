@@ -12,6 +12,7 @@ import { Button } from '@/components/common/Button';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
 import { Avatar } from '@/components/common/Avatar';
 import { Tooltip } from '@/components/common/Tooltip';
+import { LastAccessBadge } from '@/components/common/LastAccessBadge';
 import { useQueryParam } from '@/lib/hooks/useQueryParam';
 import type { LectorAdmin } from '@/app/api/admin/lectores/route';
 
@@ -158,7 +159,8 @@ function AdminLectoresContent() {
                     <tr className="border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-left text-xs font-semibold uppercase text-[var(--color-text-muted)]">
                       <th className="px-4 py-3">{tl('col_nombre')}</th>
                       <th className="px-4 py-3">{tl('col_email')}</th>
-                      <th className="px-4 py-3 hidden lg:table-cell">{tl('col_telefono')}</th>
+                      <th className="px-4 py-3 hidden lg:table-cell">{tl('col_ultimo_acceso')}</th>
+                      <th className="px-4 py-3 hidden xl:table-cell">{tl('col_telefono')}</th>
                       <th className="px-4 py-3 text-right">{tc('acciones')}</th>
                     </tr>
                   </thead>
@@ -177,7 +179,10 @@ function AdminLectoresContent() {
                           </div>
                         </td>
                         <td className="px-4 py-3 text-[var(--color-text-muted)]">{l.email}</td>
-                        <td className="px-4 py-3 hidden lg:table-cell text-[var(--color-text-muted)]">
+                        <td className="px-4 py-3 hidden lg:table-cell">
+                          <LastAccessBadge dateStr={l.last_sign_in_at} />
+                        </td>
+                        <td className="px-4 py-3 hidden xl:table-cell text-[var(--color-text-muted)]">
                           {l.telefono || '—'}
                         </td>
                         <td className="px-4 py-3 text-right">

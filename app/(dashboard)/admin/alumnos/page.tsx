@@ -286,7 +286,8 @@ function AdminAlumnosContent() {
                   <th className="px-4 py-3">{ta('col_alumno')}</th>
                   <th className="px-4 py-3">{ta('col_profesor')}</th>
                   <th className="px-4 py-3">{tc('estado')}</th>
-                  <th className="px-4 py-3 hidden lg:table-cell">{ta('col_universidad')}</th>
+                  <th className="px-4 py-3 hidden lg:table-cell">{ta('col_ultimo_acceso')}</th>
+                  <th className="px-4 py-3 hidden xl:table-cell">{ta('col_universidad')}</th>
                   <th className="px-4 py-3 text-right">{ta('col_acciones')}</th>
                 </tr>
               </thead>

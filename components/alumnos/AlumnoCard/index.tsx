@@ -7,6 +7,7 @@ import { GraduationCap, KeyRound } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Avatar } from '@/components/common/Avatar';
 import { StatusBadge } from '@/components/common/StatusBadge';
+import { LastAccessBadge } from '@/components/common/LastAccessBadge';
 import { Button } from '@/components/common/Button';
 import { Tooltip } from '@/components/common/Tooltip';
 import type { EstadoAsistencia } from '@/lib/supabase/types';
@@ -20,6 +21,7 @@ export type AlumnoConExtra = {
   avatar_url?: string | null;
   activo?: boolean;
   rol?: string;
+  last_sign_in_at?: string | null;
   alumnos_extra: {
     paso_prueba?: boolean;
     profesor_id?: string | null;
@@ -93,6 +95,14 @@ export function AlumnoCard({ alumno, onViewFicha, onGestionarAcceso, isOwn = tru
         <p className="mt-2 text-xs text-[var(--color-text-muted)]">
           {t('ficha_asignado_a')}: <span className="font-medium">{alumno.profesor_nombre}</span>
         </p>
+      )}
+
+      {/* Last access */}
+      {alumno.last_sign_in_at && (
+        <div className="mt-2 flex items-center gap-1.5 text-xs text-[var(--color-text-muted)]">
+          <span>{t('ultimo_acceso')}:</span>
+          <LastAccessBadge dateStr={alumno.last_sign_in_at} />
+        </div>
       )}
 
       {isGraduado && (

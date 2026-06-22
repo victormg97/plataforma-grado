@@ -2,6 +2,7 @@
 
 import { Avatar } from '@/components/common/Avatar';
 import { StatusBadge } from '@/components/common/StatusBadge';
+import { LastAccessBadge } from '@/components/common/LastAccessBadge';
 import { AlumnoActions, type AlumnoAdmin } from './AlumnoActions';
 
 type AlumnoStatus = 'pendiente' | 'bloqueado' | 'graduado' | 'activo';
@@ -49,7 +50,10 @@ export function AlumnoTableRow({
       <td className="px-4 py-3">
         <StatusBadge status={status} />
       </td>
-      <td className="px-4 py-3 hidden lg:table-cell text-[var(--color-text-muted)]">
+      <td className="px-4 py-3 hidden lg:table-cell">
+        <LastAccessBadge dateStr={alumno.last_sign_in_at} />
+      </td>
+      <td className="px-4 py-3 hidden xl:table-cell text-[var(--color-text-muted)]">
         {alumno.universidad || '—'}
       </td>
       <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
