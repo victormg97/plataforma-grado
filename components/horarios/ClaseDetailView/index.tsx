@@ -23,6 +23,7 @@ import type { HorarioConAsistencia } from '@/lib/hooks/useHorarios';
 import { Button } from '@/components/common/Button';
 import { cn } from '@/lib/utils';
 import { useCalificarPrueba } from '@/lib/hooks/usePruebas';
+import { useClaseTimeStatus } from '@/lib/hooks/useServerTime';
 
 const inputCls = cn(
   'w-full rounded-[var(--radius-md)] border border-[var(--color-border)]',
@@ -226,9 +227,14 @@ export function ClaseDetailView({ rol }: ClaseDetailViewProps) {
 
   const estado = horario?.asistencia?.[0]?.estado || 'pendiente';
   const asistenciaId = horario?.asistencia?.[0]?.id;
-  const today = new Date().toISOString().split('T')[0];
-  const isPast = horario ? horario.fecha < today : false;
-  const showNotas = horario && (estado === 'confirmado' || estado === 'no_asistio') && isPast;
+
+  // Use server time (Chile TZ) to determine if class is in progress or past
+  const { enCurso, yaPaso } = useClaseTimeStatus(
+    horario?.fecha ?? '',
+    horario?.hora_inicio ?? '',
+    horario?.hora_fin ?? '',
+  );
+  const showNotas = horario && (estado === 'confirmado' || estado === 'no_asistio') && (enCurso || yaPaso);
 
   // Status change options for profesor/admin
   const estadoOptions = [
