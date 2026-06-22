@@ -96,6 +96,14 @@ export async function prefetchDashboardData(userId: string, rol: UserRol) {
         recursos: recursos.recursos ?? [],
         carpetas: recursos.carpetas ?? [],
       });
+
+      // Recursos sort preference — avoids flash of re-ordering on initial load
+      const { data: adminSortPref } = await supabase
+        .from('user_recursos_preferences')
+        .select('sort_by')
+        .eq('user_id', userId)
+        .maybeSingle();
+      queryClient.setQueryData(['recursos_sort_pref', userId], adminSortPref?.sort_by ?? 'created_at_desc');
     }
   }
 
@@ -148,6 +156,14 @@ export async function prefetchDashboardData(userId: string, rol: UserRol) {
         recursos: recursos.recursos ?? [],
         carpetas: recursos.carpetas ?? [],
       });
+
+      // Recursos sort preference — avoids flash of re-ordering on initial load
+      const { data: profSortPref } = await supabase
+        .from('user_recursos_preferences')
+        .select('sort_by')
+        .eq('user_id', userId)
+        .maybeSingle();
+      queryClient.setQueryData(['recursos_sort_pref', userId], profSortPref?.sort_by ?? 'created_at_desc');
     }
   }
 
@@ -188,6 +204,14 @@ export async function prefetchDashboardData(userId: string, rol: UserRol) {
         recursos: recursosAlumno.recursos ?? [],
         carpetas: recursosAlumno.carpetas ?? [],
       });
+
+      // Recursos sort preference
+      const { data: alumnoSortPref } = await supabase
+        .from('user_recursos_preferences')
+        .select('sort_by')
+        .eq('user_id', userId)
+        .maybeSingle();
+      queryClient.setQueryData(['recursos_sort_pref', userId], alumnoSortPref?.sort_by ?? 'created_at_desc');
     }
   }
 
@@ -202,6 +226,14 @@ export async function prefetchDashboardData(userId: string, rol: UserRol) {
         recursos: recursos.recursos ?? [],
         carpetas: recursos.carpetas ?? [],
       });
+
+      // Recursos sort preference
+      const { data: lectorSortPref } = await supabase
+        .from('user_recursos_preferences')
+        .select('sort_by')
+        .eq('user_id', userId)
+        .maybeSingle();
+      queryClient.setQueryData(['recursos_sort_pref', userId], lectorSortPref?.sort_by ?? 'created_at_desc');
     }
   }
 
