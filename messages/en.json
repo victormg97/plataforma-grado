@@ -1318,7 +1318,8 @@
       "solicitud_cambio_horario": "Schedule change request",
       "programa_asignado": "Program assignment",
       "nueva_clase": "New class scheduled",
-      "invitacion_acceso": "Access invitation"
+      "invitacion_acceso": "Access invitation",
+      "nueva_nota_clase": "New class note"
     },
     "asunto_label": "Subject",
     "asunto_placeholder": "Write the email subject…",
@@ -1340,7 +1341,9 @@
       "hora_fin_propuesta": "Proposed end time for the change",
       "nota_alumno": "Message left by the student",
       "enlace_acceso": "Link for the user to set up their access",
-      "email_acceso": "Email the user will sign in with"
+      "email_acceso": "Email the user will sign in with",
+      "contenido_nota": "Content of the note left on the class",
+      "nombre_autor": "Name of the person who wrote the note"
     },
     "cuerpo": {
       "modoLabel": "Body editing mode",

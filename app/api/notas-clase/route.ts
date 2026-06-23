@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { sendNotificationEmail } from '@/lib/email/emailService';
 
 // GET /api/notas-clase?horario_id=xxx
 export async function GET(request: NextRequest) {
@@ -140,6 +141,60 @@ export async function POST(request: NextRequest) {
     }));
 
     await supabase.from('notificaciones').insert(notificaciones);
+  }
+
+  // ── Send email to student when note is from profesor/admin ────────────────
+  // One-way: only profesor/admin → alumno triggers email, not alumno → profesor
+  if (
+    (profile?.rol === 'profesor' || profile?.rol === 'admin') &&
+    horario.alumno_id &&
+    horario.alumno_id !== user.id
+  ) {
+    // Get student profile for email and language
+    const { data: alumnoProfile } = await supabase
+      .from('profiles')
+      .select('email, nombre, apellido, idioma')
+      .eq('id', horario.alumno_id)
+      .single();
+
+    if (alumnoProfile) {
+      // Get class details for the email
+      const { data: horarioDetail } = await supabase
+        .from('horarios')
+        .select('titulo, fecha, hora_inicio, hora_fin')
+        .eq('id', horario_id)
+        .single();
+
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? '';
+      // Link goes directly to the class with the note highlighted
+      const enlaceClase = `${appUrl}/alumno/horario?id=${horario_id}&nota_id=${data.id}`;
+
+      // Strip HTML for a plain-text-ish version, but keep it for the email body highlight
+      const contenidoParaCorreo = contenido
+        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+        .trim();
+
+      void sendNotificationEmail({
+        tipo: 'nueva_nota_clase',
+        originadorId: user.id,
+        destinatarioId: horario.alumno_id,
+        destinatarioEmail: alumnoProfile.email,
+        destinatarioIdioma: alumnoProfile.idioma,
+        variables: {
+          nombre_destinatario: `${alumnoProfile.nombre} ${alumnoProfile.apellido}`.trim(),
+          nombre_autor: autorNombre,
+          contenido_nota: contenidoParaCorreo,
+          titulo_clase: horarioDetail?.titulo ?? '',
+          fecha: horarioDetail?.fecha ?? '',
+          hora_inicio: horarioDetail?.hora_inicio?.slice(0, 5) ?? '',
+          hora_fin: horarioDetail?.hora_fin?.slice(0, 5) ?? '',
+          enlace_clase: enlaceClase,
+        },
+        horarioId: horario_id,
+        eventoId: `nueva_nota_clase:${data.id}`,
+      }).catch(() => {});
+    }
   }
 
   return NextResponse.json(data, { status: 201 });

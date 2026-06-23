@@ -1318,7 +1318,8 @@
       "solicitud_cambio_horario": "Solicitud de cambio de horario",
       "programa_asignado": "Asignación de programa",
       "nueva_clase": "Nueva clase agendada",
-      "invitacion_acceso": "Invitación de acceso"
+      "invitacion_acceso": "Invitación de acceso",
+      "nueva_nota_clase": "Nueva nota en clase"
     },
     "asunto_label": "Asunto",
     "asunto_placeholder": "Escribe el asunto del correo…",
@@ -1340,7 +1341,9 @@
       "hora_fin_propuesta": "Hora de término propuesta para el cambio",
       "nota_alumno": "Mensaje que dejó el alumno",
       "enlace_acceso": "Enlace para configurar el acceso del usuario",
-      "email_acceso": "Correo con el que el usuario accederá"
+      "email_acceso": "Correo con el que el usuario accederá",
+      "contenido_nota": "Contenido de la nota dejada en la clase",
+      "nombre_autor": "Nombre de quien escribió la nota"
     },
     "cuerpo": {
       "modoLabel": "Modo de edición del cuerpo",

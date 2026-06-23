@@ -97,6 +97,18 @@ const CLAVES_BIENVENIDA_REGISTRO = [
 ] as const satisfies readonly (keyof VariablesCorreo)[];
 
 /**
+ * Claves base de las Variables_Dinamicas específicas del tipo
+ * `nueva_nota_clase`.
+ *
+ * Incluye el contenido de la nota, el nombre del autor y las variables comunes
+ * de la clase asociada.
+ */
+const CLAVES_NUEVA_NOTA_CLASE = [
+  'contenido_nota',
+  'nombre_autor',
+] as const satisfies readonly (keyof VariablesCorreo)[];
+
+/**
  * Conjunto completo de claves conocidas por el motor (las 14 claves de
  * `VariablesCorreo`).
  *
@@ -110,6 +122,7 @@ const CLAVES_CONOCIDAS = [
   ...CLAVES_SOLICITUD_CAMBIO,
   ...CLAVES_INVITACION,
   ...CLAVES_BIENVENIDA_REGISTRO,
+  ...CLAVES_NUEVA_NOTA_CLASE,
 ] as const satisfies readonly (keyof VariablesCorreo)[];
 
 /** Construye el token insertable (`{clave}`) a partir de una clave base. */
@@ -152,6 +165,9 @@ export function variablesDisponibles(tipo: TipoCorreo): DefinicionVariable[] {
       break;
     case 'nueva_clase':
       claves = CLAVES_COMUNES;
+      break;
+    case 'nueva_nota_clase':
+      claves = ['nombre_destinatario', 'nombre_autor', 'contenido_nota', 'titulo_clase', 'fecha', 'hora_inicio', 'hora_fin', 'enlace_clase'];
       break;
     default:
       claves = CLAVES_COMUNES;
