@@ -33,7 +33,12 @@ function PersonaImageCard({
 }) {
   return (
     <Reveal direction="up" delay={delay}>
-      <div className="relative aspect-[6/4] overflow-hidden rounded-[var(--radius-xl)] shadow-[var(--shadow-lg)]">
+      {/* On mobile the page scrolls, so a natural aspect ratio is fine.
+          On desktop (lg) each card is sized to a fraction of the viewport
+          height (clamped) so the two stacked images ALWAYS fit within a
+          single viewport, regardless of screen size or OS display scaling.
+          object-cover handles the cropping gracefully. */}
+      <div className="relative aspect-[6/4] w-full overflow-hidden rounded-[var(--radius-xl)] shadow-[var(--shadow-lg)] lg:aspect-auto lg:h-[clamp(140px,calc((100svh-16rem)/2),320px)]">
         <Image
           src={imageUrl}
           alt={alt}
@@ -84,8 +89,9 @@ export function SobreNosotras({ imageSrc }: SobreNosotrasProps) {
           >
             {hasDynamicImages ? (
               /* Two separate images stacked vertically with name overlays.
-                 max-h constrains both to fit within one viewport on desktop. */
-              <div className="flex w-full max-w-sm flex-col gap-2 lg:max-h-[calc(100svh-8rem)]">
+                 Each card self-constrains to a fraction of the viewport
+                 height on desktop, so the pair never overflows the screen. */
+              <div className="flex w-full max-w-sm flex-col gap-3">
                 <PersonaImageCard
                   imageUrl={config.persona1.imageUrl!}
                   prefijo={config.persona1.prefijo}
@@ -109,7 +115,7 @@ export function SobreNosotras({ imageSrc }: SobreNosotrasProps) {
                 width={700}
                 height={1100}
                 sizes="(min-width: 1024px) 40vw, 90vw"
-                className="h-auto max-h-[78vh] w-auto rounded-[var(--radius-xl)] object-contain shadow-[var(--shadow-lg)]"
+                className="h-auto max-h-[78svh] w-auto rounded-[var(--radius-xl)] object-contain shadow-[var(--shadow-lg)]"
               />
             ) : (
               /* No image at all */
