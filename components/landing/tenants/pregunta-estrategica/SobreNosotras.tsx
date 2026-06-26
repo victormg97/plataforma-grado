@@ -38,12 +38,12 @@ function PersonaImageCard({
           height (clamped) so the two stacked images ALWAYS fit within a
           single viewport, regardless of screen size or OS display scaling.
           object-cover handles the cropping gracefully. */}
-      <div className="relative aspect-[6/4] w-full overflow-hidden rounded-[var(--radius-xl)] shadow-[var(--shadow-lg)] lg:aspect-auto lg:h-[clamp(170px,calc((100svh-12rem)/2),380px)]">
+      <div className="relative aspect-[6/4] w-full overflow-hidden rounded-[var(--radius-xl)] shadow-[var(--shadow-lg)] lg:aspect-auto lg:h-[clamp(200px,calc((100svh-9rem)/2),360px)]">
         <Image
           src={imageUrl}
           alt={alt}
           fill
-          sizes="(min-width: 1024px) 45vw, 90vw"
+          sizes="(min-width: 1024px) 32vw, 85vw"
           /* object-top: anchor to the top so faces stay visible when the
              card is shorter than the photo (instead of cropping the center). */
           className="object-cover object-top"
@@ -80,7 +80,7 @@ export function SobreNosotras({ imageSrc }: SobreNosotrasProps) {
       className="scroll-mt-20 bg-[var(--color-section-alt)]"
     >
       <div className="container-landing landing-section">
-        <div className="grid w-full items-center gap-10 lg:grid-cols-2 lg:gap-12">
+        <div className="grid w-full items-center gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:gap-16">
           {/* ── Imágenes ── */}
           <m.div
             className="flex w-full justify-center"
@@ -93,7 +93,7 @@ export function SobreNosotras({ imageSrc }: SobreNosotrasProps) {
               /* Two separate images stacked vertically with name overlays.
                  Each card self-constrains to a fraction of the viewport
                  height on desktop, so the pair never overflows the screen. */
-              <div className="flex w-full max-w-md flex-col gap-3 lg:max-w-none">
+              <div className="flex w-full max-w-sm flex-col gap-3">
                 <PersonaImageCard
                   imageUrl={config.persona1.imageUrl!}
                   prefijo={config.persona1.prefijo}
