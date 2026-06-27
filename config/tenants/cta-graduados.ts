@@ -24,6 +24,9 @@ const config: TenantConfigInput = {
     display: 'Playfair Display',
     body: 'DM Sans',
   },
+  metadata: {
+    favicon: '/tenants/cta-graduados/favicon.ico',
+  },
 };
 
 export default config;

@@ -146,9 +146,19 @@ function getTenantThemeCSS(): string {
 export const metadata: Metadata = {
   title: `${tenantConfig.nombre} — ${tenantConfig.descripcion}`,
   description: tenantConfig.descripcion,
-  icons: {
-    icon: tenantConfig.metadata?.favicon || '/favicon.ico',
-  },
+  icons: (() => {
+    // Per-tenant favicon. Driven entirely from metadata (no app/favicon.ico
+    // convention file) so each deploy shows its own icon. We register the same
+    // source for `icon`, `shortcut` and `apple` because mobile browsers
+    // (Chrome/Edge/Safari on Android & iOS) prefer the apple-touch / shortcut
+    // icons over the standard <link rel="icon">.
+    const favicon = tenantConfig.metadata?.favicon || '/tenants/cta-graduados/favicon.ico';
+    return {
+      icon: favicon,
+      shortcut: favicon,
+      apple: favicon,
+    };
+  })(),
 };
 
 export default async function RootLayout({
