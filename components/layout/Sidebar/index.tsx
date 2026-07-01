@@ -169,7 +169,10 @@ export function Sidebar() {
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto space-y-1 p-3">
           {items.map((item) => {
-            const isActive = item.href === '/admin'
+            // Root dashboard routes (/admin, /alumno, /profesor) need exact match
+            // to avoid being highlighted when visiting sub-pages like /alumno/perfil
+            const isRootDashboard = item.href === '/admin' || item.href === '/alumno' || item.href === '/profesor';
+            const isActive = isRootDashboard
               ? pathname === item.href
               : pathname.startsWith(item.href);
             return (
