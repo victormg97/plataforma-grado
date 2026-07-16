@@ -162,8 +162,8 @@ export function MoverRecursoModal({ recurso, carpeta, carpetas, onClose, onMove,
           </div>
         )}
 
-        {/* Folder list */}
-        <div className="space-y-1 max-h-[300px] overflow-y-auto">
+        {/* Folder list — fixed height so the modal doesn't resize when navigating */}
+        <div className="space-y-1 h-[300px] overflow-y-auto">
           {currentSubfolders.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-6 text-center">
               <FolderOpen className="size-8 text-[var(--color-text-muted)]" />
