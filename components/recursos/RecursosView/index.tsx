@@ -52,6 +52,9 @@ export function RecursosView({ rol }: RecursosViewProps) {
   const [editTarget, setEditTarget] = useState<RecursoItem | null>(null);
   const [moveTarget, setMoveTarget] = useState<RecursoItem | null>(null);
 
+  // Folder move state
+  const [moveCarpetaTarget, setMoveCarpetaTarget] = useState<CarpetaItem | null>(null);
+
   // Folder navigation state
   const [currentCarpetaId, setCurrentCarpetaId] = useState<string | null>(null);
   const [carpetaModalMode, setCarpetaModalMode] = useState<'create' | 'rename' | null>(null);
@@ -357,12 +360,53 @@ export function RecursosView({ rol }: RecursosViewProps) {
         .eq('id', id);
       if (error) throw error;
     },
-    onSuccess: () => {
-      toast.success(t('exito_movido'));
+    onSuccess: (_, { id, carpetaId: _carpetaId }) => {
+      const previousCarpetaId = moveTarget?.carpeta_id ?? null;
       queryClient.invalidateQueries({ queryKey: ['recursos'] });
       setMoveTarget(null);
+      toast.success(t('exito_movido'), {
+        action: {
+          label: t('deshacer'),
+          onClick: () => {
+            supabase
+              .from('recursos_compartidos')
+              .update({ carpeta_id: previousCarpetaId })
+              .eq('id', id)
+              .then(() => queryClient.invalidateQueries({ queryKey: ['recursos'] }));
+          },
+        },
+      });
     },
-    onError: () => toast.error(t('error_mover')),
+    onError: () => { toast.error(t('error_mover')); setMoveTarget(null); },
+  });
+
+  // ── Mutation: move folder to another folder ───────────────────────
+  const moveCarpetaMutation = useMutation({
+    mutationFn: async ({ id, parentId }: { id: string; parentId: string | null }) => {
+      const { error } = await supabase
+        .from('carpetas_recursos')
+        .update({ parent_id: parentId })
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: (_, { id, parentId: _parentId }) => {
+      const previousParentId = moveCarpetaTarget?.parent_id ?? null;
+      queryClient.invalidateQueries({ queryKey: ['recursos'] });
+      setMoveCarpetaTarget(null);
+      toast.success(t('carpeta_movida'), {
+        action: {
+          label: t('deshacer'),
+          onClick: () => {
+            supabase
+              .from('carpetas_recursos')
+              .update({ parent_id: previousParentId })
+              .eq('id', id)
+              .then(() => queryClient.invalidateQueries({ queryKey: ['recursos'] }));
+          },
+        },
+      });
+    },
+    onError: () => { toast.error(t('error_mover_carpeta')); setMoveCarpetaTarget(null); },
   });
 
   // ── Mutation: create folder ───────────────────────────────────────
@@ -754,6 +798,7 @@ export function RecursosView({ rol }: RecursosViewProps) {
                   onRename={(carpeta) => { setRenamingCarpeta(carpeta); setCarpetaModalMode('rename'); }}
                   onDelete={(carpeta) => setDeleteCarpetaTarget(carpeta)}
                   onEditPermisos={(carpeta) => setEditPermisosCarpeta(carpeta)}
+                  onMove={canUpload ? (carpeta) => setMoveCarpetaTarget(carpeta) : undefined}
                 />
               ))}
             </div>
@@ -831,6 +876,19 @@ export function RecursosView({ rol }: RecursosViewProps) {
           onClose={() => setMoveTarget(null)}
           onMove={async (carpetaId) => {
             await moveMutation.mutateAsync({ id: moveTarget.id, carpetaId });
+          }}
+        />
+      )}
+
+      {/* Move folder */}
+      {moveCarpetaTarget && (
+        <MoverRecursoModal
+          carpeta={moveCarpetaTarget}
+          carpetas={allCarpetas.filter((c) => rol === 'admin' || c.creada_por === user?.id)}
+          moving={moveCarpetaMutation.isPending}
+          onClose={() => setMoveCarpetaTarget(null)}
+          onMove={async (parentId) => {
+            await moveCarpetaMutation.mutateAsync({ id: moveCarpetaTarget.id, parentId });
           }}
         />
       )}

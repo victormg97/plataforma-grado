@@ -1,6 +1,6 @@
 'use client';
 
-import { Folder, Pencil, Trash2, Globe, Users, Settings2 } from 'lucide-react';
+import { Folder, Pencil, Trash2, Globe, Users, Settings2, FolderInput } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import { CardActions, type CardAction } from '@/components/common/CardActions';
@@ -34,9 +34,10 @@ interface CarpetaCardProps {
   onRename: (carpeta: CarpetaItem) => void;
   onDelete: (carpeta: CarpetaItem) => void;
   onEditPermisos: (carpeta: CarpetaItem) => void;
+  onMove?: (carpeta: CarpetaItem) => void;
 }
 
-export function CarpetaCard({ carpeta, canManage, showPermisoBadge = true, onClick, onRename, onDelete, onEditPermisos }: CarpetaCardProps) {
+export function CarpetaCard({ carpeta, canManage, showPermisoBadge = true, onClick, onRename, onDelete, onEditPermisos, onMove }: CarpetaCardProps) {
   const t = useTranslations('recursos');
 
   // Use recursive count (all subfolders) if available, fall back to direct count
@@ -55,6 +56,12 @@ export function CarpetaCard({ carpeta, canManage, showPermisoBadge = true, onCli
       onClick: () => onEditPermisos(carpeta),
     },
     {
+      key: 'mover',
+      label: t('mover_carpeta_accion'),
+      icon: <FolderInput className="size-4" />,
+      onClick: () => onMove?.(carpeta),
+    },
+    {
       key: 'renombrar',
       label: t('renombrar_carpeta'),
       icon: <Pencil className="size-4" />,
@@ -67,7 +74,7 @@ export function CarpetaCard({ carpeta, canManage, showPermisoBadge = true, onCli
       onClick: () => onDelete(carpeta),
       danger: true,
     },
-  ];
+  ].filter((a) => a.key !== 'mover' || !!onMove);
 
   return (
     <div
