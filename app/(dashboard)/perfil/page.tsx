@@ -369,7 +369,7 @@ export default function PerfilPage() {
         <div className="space-y-8">
 
           {/* ── Avatar ─────────────────────────────────────────────────────── */}
-          <div className="flex items-center gap-5 pb-8 border-b border-[var(--color-border)]">
+          <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-center sm:gap-5 pb-8 border-b border-[var(--color-border)]">
             <AvatarUploadSection
               avatarUrl={currentAvatarUrl}
               nombre={nombre || user.nombre}
@@ -379,25 +379,26 @@ export default function PerfilPage() {
               hasSavedAvatar={hasSavedAvatar}
               size="xl"
             />
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 text-center sm:text-left">
               <p className="text-xl font-semibold text-[var(--color-text-primary)]">{displayName}</p>
               <p className="text-sm text-[var(--color-text-muted)] capitalize mt-0.5">{perfilData?.rol ?? user.rol}</p>
             </div>
             {isProfesorOrAdmin && (
-              <CalendarColorPicker
-                currentColor={perfilData?.color_calendario ?? user.color_calendario ?? null}
-                onSelect={async (color) => {
-                  try {
-                    const res = await fetch('/api/perfil', {
-                      method: 'PATCH',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ color_calendario: color }),
-                    });
-                    if (res.ok) {
-                      const updated: Profile = await res.json();
-                      setUser(updated);
-                      queryClient.invalidateQueries({ queryKey: ['perfil'] });
-                      toast.success(t('color_guardado'));
+              <div className="w-full flex justify-center sm:w-auto sm:justify-end">
+                <CalendarColorPicker
+                  currentColor={perfilData?.color_calendario ?? user.color_calendario ?? null}
+                  onSelect={async (color) => {
+                    try {
+                      const res = await fetch('/api/perfil', {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ color_calendario: color }),
+                      });
+                      if (res.ok) {
+                        const updated: Profile = await res.json();
+                        setUser(updated);
+                        queryClient.invalidateQueries({ queryKey: ['perfil'] });
+                        toast.success(t('color_guardado'));
                     }
                   } catch { /* silent */ }
                 }}
@@ -417,6 +418,7 @@ export default function PerfilPage() {
                   } catch { /* silent */ }
                 }}
               />
+              </div>
             )}
           </div>
 
