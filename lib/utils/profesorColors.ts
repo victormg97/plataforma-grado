@@ -1,66 +1,31 @@
 /**
- * Deterministic color assignment for professors in the admin calendar.
+ * Color assignment for professors in the admin calendar.
  *
  * Strategy:
- * - First 7 professors get curated colors from CSS variables (--color-profe-1..7)
- * - Additional professors get algorithmically generated colors based on their ID
- * - Colors are deterministic: same professor ID always gets the same color
- * - Generated colors use HSL with high saturation and good contrast against white text
+ * 1. If a professor has a stored color (color_calendario), use it.
+ * 2. Otherwise, fall back to a brand default color.
+ *
+ * The fallback color is --color-brand-gold (resolved at runtime) so that
+ * professors without a custom color get the tenant's brand color by default.
  */
 
 import { resolveCssVar } from '@/lib/utils/cssTokens';
 
-// Curated palette — these are the "premium" colors defined in globals.css
-const CURATED_CSS_VARS = [
-  '--color-profe-1',
-  '--color-profe-2',
-  '--color-profe-3',
-  '--color-profe-4',
-  '--color-profe-5',
-  '--color-profe-6',
-  '--color-profe-7',
-] as const;
-
-const CURATED_COLORS = [
-  { bg: 'var(--color-profe-1)', text: 'var(--color-brand-black)' },
-  { bg: 'var(--color-profe-2)', text: 'var(--color-brand-white)' },
-  { bg: 'var(--color-profe-3)', text: 'var(--color-brand-white)' },
-  { bg: 'var(--color-profe-4)', text: 'var(--color-brand-white)' },
-  { bg: 'var(--color-profe-5)', text: 'var(--color-brand-white)' },
-  { bg: 'var(--color-profe-6)', text: 'var(--color-brand-white)' },
-  { bg: 'var(--color-profe-7)', text: 'var(--color-brand-white)' },
-];
+/** Default brand color used for professors who haven't chosen a custom color. */
+const DEFAULT_COLOR_VAR = '--color-brand-gold';
 
 /**
- * Simple deterministic hash from a string (profesor ID) to a number.
- * Uses djb2 algorithm — fast and produces good distribution.
+ * Determine whether white or dark text has better contrast against a bg color.
+ * Uses relative luminance formula.
  */
-function hashString(str: string): number {
-  let hash = 5381;
-  for (let i = 0; i < str.length; i++) {
-    hash = ((hash << 5) + hash) + str.charCodeAt(i);
-    hash = hash & hash; // Convert to 32-bit integer
-  }
-  return Math.abs(hash);
-}
-
-/**
- * Generate a visually distinct HSL color from a profesor ID.
- * Uses golden angle distribution for hue to maximize visual separation.
- * Keeps saturation high (60-75%) and lightness in a range that works
- * with white text (40-55%).
- */
-function generateColor(profesorId: string, index: number): { bg: string; text: string } {
-  const hash = hashString(profesorId);
-
-  // Use golden angle (137.5°) offset by the hash for good hue distribution
-  // This ensures even sequential IDs get visually distinct colors
-  const hue = (hash * 137.508 + index * 47) % 360;
-  const saturation = 55 + (hash % 20); // 55-75%
-  const lightness = 42 + (hash % 13);  // 42-55% — dark enough for white text
-
-  const bg = `hsl(${Math.round(hue)}, ${saturation}%, ${lightness}%)`;
-  return { bg, text: '#FFFFFF' };
+function getContrastText(hex: string): string {
+  const clean = hex.replace('#', '');
+  if (clean.length !== 6) return '#FFFFFF';
+  const r = parseInt(clean.slice(0, 2), 16) / 255;
+  const g = parseInt(clean.slice(2, 4), 16) / 255;
+  const b = parseInt(clean.slice(4, 6), 16) / 255;
+  const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  return luminance > 0.45 ? '#1a1a1a' : '#FFFFFF';
 }
 
 export interface ProfesorColor {
@@ -70,23 +35,28 @@ export interface ProfesorColor {
 }
 
 /**
- * Build a color map for a list of professor IDs.
- * First 7 get curated colors, the rest get generated ones.
+ * Build a color map for a list of professor IDs using their stored colors.
  *
- * The assignment is stable: it's based on the sorted order of IDs,
- * so the same set of professors always gets the same color assignment.
+ * @param profesorIds - All professor IDs present in the horarios
+ * @param storedColors - Map of profesorId → stored hex color (from DB)
  */
-export function buildProfesorColorMap(profesorIds: string[]): Record<string, ProfesorColor> {
+export function buildProfesorColorMap(
+  profesorIds: string[],
+  storedColors?: Record<string, string | null>
+): Record<string, ProfesorColor> {
   const uniqueIds = [...new Set(profesorIds)];
   const map: Record<string, ProfesorColor> = {};
+  const defaultBg = `var(${DEFAULT_COLOR_VAR})`;
 
-  uniqueIds.forEach((id, i) => {
-    if (i < CURATED_COLORS.length) {
-      const curated = CURATED_COLORS[i];
-      map[id] = { bg: curated.bg, border: curated.bg, text: curated.text };
+  uniqueIds.forEach((id) => {
+    const stored = storedColors?.[id];
+    if (stored) {
+      // Professor chose a custom color
+      const text = getContrastText(stored);
+      map[id] = { bg: stored, border: stored, text };
     } else {
-      const generated = generateColor(id, i);
-      map[id] = { bg: generated.bg, border: generated.bg, text: generated.text };
+      // No custom color: use brand color with dark text (gold is light)
+      map[id] = { bg: defaultBg, border: defaultBg, text: 'var(--color-brand-black)' };
     }
   });
 
@@ -96,19 +66,23 @@ export function buildProfesorColorMap(profesorIds: string[]): Record<string, Pro
 /**
  * Build a hex color map for PDF export.
  * Resolves CSS variables to actual hex values at call time.
- * For generated colors (beyond 7), returns the HSL string directly
- * (jsPDF/canvas can handle HSL).
+ *
+ * @param profesorIds - All professor IDs
+ * @param storedColors - Map of profesorId → stored hex color
  */
-export function buildProfesorHexMap(profesorIds: string[]): Record<string, string> {
+export function buildProfesorHexMap(
+  profesorIds: string[],
+  storedColors?: Record<string, string | null>
+): Record<string, string> {
   const uniqueIds = [...new Set(profesorIds)];
   const map: Record<string, string> = {};
 
-  uniqueIds.forEach((id, i) => {
-    if (i < CURATED_CSS_VARS.length) {
-      map[id] = resolveCssVar(CURATED_CSS_VARS[i]);
+  uniqueIds.forEach((id) => {
+    const stored = storedColors?.[id];
+    if (stored) {
+      map[id] = stored;
     } else {
-      const generated = generateColor(id, i);
-      map[id] = generated.bg;
+      map[id] = resolveCssVar(DEFAULT_COLOR_VAR);
     }
   });
 

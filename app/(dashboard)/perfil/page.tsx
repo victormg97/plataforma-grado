@@ -13,8 +13,9 @@ import { cn } from '@/lib/utils';
 import { validarAño } from '@/lib/validations/año';
 import {
   User, Lock, Eye, EyeOff, Globe,
-  ArrowLeft, Save, Loader2, ClipboardCheck, Settings2,
+  ArrowLeft, Save, Loader2, ClipboardCheck, Settings2, Mail,
 } from 'lucide-react';
+import { CalendarColorPicker } from '@/components/common/CalendarColorPicker';
 import type { Profile, AlumnoExtra } from '@/lib/supabase/types';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -24,6 +25,8 @@ type PerfilResponse = Profile & {
   duracion_clase_default_min?: number;
   cancellation_deadline_hours?: number;
   email_disponible?: boolean;
+  enviar_correo_al_asignar?: boolean;
+  recordatorio_cooldown_minutos?: number;
   alumno_extra: Pick<AlumnoExtra, 'universidad' | 'año_ingreso' | 'año_egreso' | 'ha_dado_examen' | 'intentos_prueba'> | null;
 };
 
@@ -376,10 +379,45 @@ export default function PerfilPage() {
               hasSavedAvatar={hasSavedAvatar}
               size="xl"
             />
-            <div>
+            <div className="flex-1 min-w-0">
               <p className="text-xl font-semibold text-[var(--color-text-primary)]">{displayName}</p>
               <p className="text-sm text-[var(--color-text-muted)] capitalize mt-0.5">{perfilData?.rol ?? user.rol}</p>
             </div>
+            {isProfesorOrAdmin && (
+              <CalendarColorPicker
+                currentColor={perfilData?.color_calendario ?? user.color_calendario ?? null}
+                onSelect={async (color) => {
+                  try {
+                    const res = await fetch('/api/perfil', {
+                      method: 'PATCH',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ color_calendario: color }),
+                    });
+                    if (res.ok) {
+                      const updated: Profile = await res.json();
+                      setUser(updated);
+                      queryClient.invalidateQueries({ queryKey: ['perfil'] });
+                      toast.success(t('color_guardado'));
+                    }
+                  } catch { /* silent */ }
+                }}
+                onReset={async () => {
+                  try {
+                    const res = await fetch('/api/perfil', {
+                      method: 'PATCH',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ color_calendario: null }),
+                    });
+                    if (res.ok) {
+                      const updated: Profile = await res.json();
+                      setUser(updated);
+                      queryClient.invalidateQueries({ queryKey: ['perfil'] });
+                      toast.success(t('color_restablecido'));
+                    }
+                  } catch { /* silent */ }
+                }}
+              />
+            )}
           </div>
 
           {/* ── Información personal ──────────────────────────────────────── */}
@@ -550,6 +588,83 @@ export default function PerfilPage() {
 
               <SaveBar saving={savingConfig} label={savingConfig ? tc('cargando') : t('guardar')} disabled={!isDirtyConfig} />
             </form>
+          )}
+
+          {/* ── Configuración de correos (profesor/admin) ─────────────────── */}
+          {isProfesorOrAdmin && (
+            <div className="space-y-6 pb-8 border-b border-[var(--color-border)]">
+              <SectionTitle icon={Mail} title={t('configuracion_correos')} />
+
+              <Field label={t('enviar_correo_al_asignar')} hint={t('enviar_correo_al_asignar_hint')} inline>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={perfilData?.enviar_correo_al_asignar ?? true}
+                  onClick={async () => {
+                    const newValue = !(perfilData?.enviar_correo_al_asignar ?? true);
+                    try {
+                      const res = await fetch('/api/perfil', {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ enviar_correo_al_asignar: newValue }),
+                      });
+                      if (res.ok) {
+                        const updated: Profile = await res.json();
+                        setUser(updated);
+                        queryClient.invalidateQueries({ queryKey: ['perfil'] });
+                        toast.success(t('exito_perfil'));
+                      }
+                    } catch { /* silent */ }
+                  }}
+                  className={cn(
+                    'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-gold)] focus:ring-offset-2',
+                    (perfilData?.enviar_correo_al_asignar ?? true)
+                      ? 'bg-[var(--color-brand-gold)]'
+                      : 'bg-[var(--color-border-strong)]',
+                  )}
+                >
+                  <span
+                    className={cn(
+                      'pointer-events-none inline-block size-5 transform rounded-full bg-white shadow ring-0 transition duration-200',
+                      (perfilData?.enviar_correo_al_asignar ?? true) ? 'translate-x-5' : 'translate-x-0',
+                    )}
+                  />
+                </button>
+              </Field>
+
+              {(perfilData?.rol ?? user.rol) === 'admin' && (
+                <Field label={t('recordatorio_cooldown')} hint={t('recordatorio_cooldown_hint')} inline>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="number"
+                      min={1}
+                      max={10080}
+                      step={1}
+                      defaultValue={perfilData?.recordatorio_cooldown_minutos ?? 60}
+                      onBlur={async (e) => {
+                        const val = Number(e.target.value);
+                        if (!val || val < 1 || val > 10080) return;
+                        try {
+                          const res = await fetch('/api/perfil', {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ recordatorio_cooldown_minutos: val }),
+                          });
+                          if (res.ok) {
+                            const updated: Profile = await res.json();
+                            setUser(updated);
+                            queryClient.invalidateQueries({ queryKey: ['perfil'] });
+                            toast.success(t('exito_perfil'));
+                          }
+                        } catch { /* silent */ }
+                      }}
+                      className={cn(inputCls, 'w-28')}
+                    />
+                    <span className="text-sm text-[var(--color-text-muted)]">{t('minutos')}</span>
+                  </div>
+                </Field>
+              )}
+            </div>
           )}
 
           {/* ── Preferencias ─────────────────────────────────────────────── */}

@@ -164,6 +164,7 @@ export function variablesDisponibles(tipo: TipoCorreo): DefinicionVariable[] {
       claves = ['nombre_destinatario', ...CLAVES_BIENVENIDA_REGISTRO];
       break;
     case 'nueva_clase':
+    case 'recordatorio_clase':
       claves = CLAVES_COMUNES;
       break;
     case 'nueva_nota_clase':

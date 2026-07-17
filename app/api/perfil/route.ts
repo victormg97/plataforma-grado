@@ -93,6 +93,17 @@ export async function PATCH(request: NextRequest) {
       if (tema === 'light' || tema === 'dark') profileUpdate.tema = tema;
     }
 
+    if (body.color_calendario !== undefined) {
+      if (body.color_calendario === null) {
+        profileUpdate.color_calendario = null;
+      } else {
+        const color = String(body.color_calendario).trim();
+        if (/^#[0-9a-fA-F]{6}$/.test(color)) {
+          profileUpdate.color_calendario = color;
+        }
+      }
+    }
+
     if (body.duracion_clase_default_min !== undefined || body.cancellation_deadline_hours !== undefined) {
       const { data: currentProfile } = await supabase
         .from('profiles')
@@ -119,6 +130,34 @@ export async function PATCH(request: NextRequest) {
           }
           profileUpdate.cancellation_deadline_hours = val;
         }
+      }
+    }
+
+    // enviar_correo_al_asignar: profesor/admin toggle
+    if (body.enviar_correo_al_asignar !== undefined) {
+      const { data: currentProfile } = await supabase
+        .from('profiles')
+        .select('rol')
+        .eq('id', user.id)
+        .single();
+      if (currentProfile?.rol === 'profesor' || currentProfile?.rol === 'admin') {
+        profileUpdate.enviar_correo_al_asignar = Boolean(body.enviar_correo_al_asignar);
+      }
+    }
+
+    // recordatorio_cooldown_minutos: admin-only setting
+    if (body.recordatorio_cooldown_minutos !== undefined) {
+      const { data: currentProfile } = await supabase
+        .from('profiles')
+        .select('rol')
+        .eq('id', user.id)
+        .single();
+      if (currentProfile?.rol === 'admin') {
+        const val = Number(body.recordatorio_cooldown_minutos);
+        if (!Number.isInteger(val) || val < 1 || val > 10080) {
+          return NextResponse.json({ error: 'recordatorio_cooldown_minutos debe ser un entero entre 1 y 10080' }, { status: 400 });
+        }
+        profileUpdate.recordatorio_cooldown_minutos = val;
       }
     }
 

@@ -47,7 +47,7 @@ type HorarioGlobal = {
   activo: boolean;
   asistencia: { id: string; estado: EstadoAsistencia; nota_alumno: string | null }[];
   alumno: { id: string; nombre: string; apellido: string; email: string; avatar_url: string | null } | null;
-  profesor: { id: string; nombre: string; apellido: string; avatar_url: string | null } | null;
+  profesor: { id: string; nombre: string; apellido: string; avatar_url: string | null; color_calendario: string | null } | null;
   pruebas?: { id: string; nota: number | null }[];
 };
 
@@ -55,7 +55,7 @@ async function fetchAdminHorarios() {
   const supabase = createClient();
   const { data, error } = await supabase
     .from('horarios')
-    .select('*, asistencia:asistencia!asistencia_horario_id_fkey(*), alumno:profiles!horarios_alumno_id_fkey(*), profesor:profiles!horarios_profesor_id_fkey(id, nombre, apellido, avatar_url), pruebas:pruebas!pruebas_horario_id_fkey(id, nota)')
+    .select('*, asistencia:asistencia!asistencia_horario_id_fkey(*), alumno:profiles!horarios_alumno_id_fkey(*), profesor:profiles!horarios_profesor_id_fkey(id, nombre, apellido, avatar_url, color_calendario), pruebas:pruebas!pruebas_horario_id_fkey(id, nota)')
     .eq('activo', true)
     .order('fecha', { ascending: true });
   if (error) throw new Error(error.message);
@@ -162,16 +162,28 @@ export function CalendarioAdmin() {
     return () => { supabase.removeChannel(channel); };
   }, [queryClient]);
 
-  // Build color map per professor (deterministic, scales beyond 7)
+  // Build color map per professor using their stored colors
   const profesorColorMap = useMemo(() => {
     const uniqueIds = [...new Set(horarios.map((h) => h.profesor_id))];
-    return buildProfesorColorMap(uniqueIds);
+    const storedColors: Record<string, string | null> = {};
+    for (const h of horarios) {
+      if (h.profesor && !(h.profesor_id in storedColors)) {
+        storedColors[h.profesor_id] = h.profesor.color_calendario;
+      }
+    }
+    return buildProfesorColorMap(uniqueIds, storedColors);
   }, [horarios]);
 
   // Hex colour map per professor (for PDF export)
   const profesorHexMap = useMemo(() => {
     const uniqueIds = [...new Set(horarios.map((h) => h.profesor_id))];
-    return buildProfesorHexMap(uniqueIds);
+    const storedColors: Record<string, string | null> = {};
+    for (const h of horarios) {
+      if (h.profesor && !(h.profesor_id in storedColors)) {
+        storedColors[h.profesor_id] = h.profesor.color_calendario;
+      }
+    }
+    return buildProfesorHexMap(uniqueIds, storedColors);
   }, [horarios]);
 
   // Normalised events for PDF export
@@ -206,7 +218,7 @@ export function CalendarioAdmin() {
   const events = useMemo(
     () =>
       filteredHorarios.map((h) => {
-        const colors = profesorColorMap[h.profesor_id] || { bg: 'var(--color-profe-1)', border: 'var(--color-profe-1)', text: 'var(--color-brand-black)' };
+        const colors = profesorColorMap[h.profesor_id] || { bg: 'var(--color-brand-gold)', border: 'var(--color-brand-gold)', text: 'var(--color-brand-black)' };
         return {
           id: h.id,
           title: `${h.titulo} - ${h.alumno?.nombre || 'Sin alumno'}`,

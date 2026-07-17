@@ -268,6 +268,14 @@
       "exito": "Solicitud enviada. Tu profesor fue notificado.",
       "error": "Error al solicitar cambio",
       "error_cargar": "Error al cargar horarios disponibles"
+    },
+    "recordatorio": {
+      "boton": "Enviar recordatorio",
+      "enviado": "Recordatorio enviado al alumno",
+      "no_enviado": "El recordatorio no se pudo enviar. Intenta más tarde.",
+      "error": "Error al enviar el recordatorio",
+      "cooldown_error": "Debes esperar {minutos} minutos antes de enviar otro recordatorio",
+      "cooldown_hint": "Disponible en {minutos} min"
     }
   },
   "asistencia": {
@@ -535,7 +543,17 @@
     "cancellation_deadline": "Límite de cancelación",
     "cancellation_deadline_hint": "Horas antes del inicio en que los alumnos ya no pueden cambiar su asistencia (0 = hasta el inicio)",
     "horas": "horas",
-    "configuracion_clases": "Configuración de clases"
+    "configuracion_clases": "Configuración de clases",
+    "color_calendario": "Color en agenda",
+    "colores_sugeridos": "Colores sugeridos",
+    "color_restablecer": "Restablecer color por defecto",
+    "color_guardado": "Color de calendario actualizado",
+    "color_restablecido": "Color restablecido al predeterminado",
+    "configuracion_correos": "Configuración de correos",
+    "enviar_correo_al_asignar": "Enviar correo al asignar clase",
+    "enviar_correo_al_asignar_hint": "Envía un correo automático al alumno cuando le asignas una clase nueva",
+    "recordatorio_cooldown": "Intervalo mínimo entre recordatorios",
+    "recordatorio_cooldown_hint": "Tiempo mínimo (en minutos) que debe pasar entre cada correo de recordatorio para la misma clase"
   },
   "notificaciones": {
     "titulo": "Notificaciones",
@@ -561,7 +579,8 @@
       "solicitud_cambio_horario": "solicitó un cambio de horario",
       "cambio_horario_aceptado": "Cambio de horario aceptado",
       "cambio_horario_rechazado": "Cambio de horario rechazado",
-      "nueva_nota_clase": "dejó una nota en una clase"
+      "nueva_nota_clase": "dejó una nota en una clase",
+      "recordatorio_clase": "Recordatorio de clase"
     },
     "mensajes": {
       "alumno_generico": "El alumno",
@@ -1329,7 +1348,9 @@
       "programa_asignado": "Asignación de programa",
       "nueva_clase": "Nueva clase agendada",
       "invitacion_acceso": "Invitación de acceso",
-      "nueva_nota_clase": "Nueva nota en clase"
+      "bienvenida_registro": "Bienvenida de registro",
+      "nueva_nota_clase": "Nueva nota en clase",
+      "recordatorio_clase": "Recordatorio de clase"
     },
     "asunto_label": "Asunto",
     "asunto_placeholder": "Escribe el asunto del correo…",

@@ -972,13 +972,16 @@ export type Database = {
           apellido_materno: string | null
           avatar_url: string | null
           cancellation_deadline_hours: number
+          color_calendario: string | null
           created_at: string
           duracion_clase_default_min: number
           email: string
+          enviar_correo_al_asignar: boolean
           id: string
           idioma: string | null
           nombre: string
           puede_crear_alumno: boolean | null
+          recordatorio_cooldown_minutos: number
           rol: Database["public"]["Enums"]["user_rol"]
           telefono: string | null
           tema: string | null
@@ -991,13 +994,16 @@ export type Database = {
           apellido_materno?: string | null
           avatar_url?: string | null
           cancellation_deadline_hours?: number
+          color_calendario?: string | null
           created_at?: string
           duracion_clase_default_min?: number
           email: string
+          enviar_correo_al_asignar?: boolean
           id: string
           idioma?: string | null
           nombre: string
           puede_crear_alumno?: boolean | null
+          recordatorio_cooldown_minutos?: number
           rol?: Database["public"]["Enums"]["user_rol"]
           telefono?: string | null
           tema?: string | null
@@ -1010,13 +1016,16 @@ export type Database = {
           apellido_materno?: string | null
           avatar_url?: string | null
           cancellation_deadline_hours?: number
+          color_calendario?: string | null
           created_at?: string
           duracion_clase_default_min?: number
           email?: string
+          enviar_correo_al_asignar?: boolean
           id?: string
           idioma?: string | null
           nombre?: string
           puede_crear_alumno?: boolean | null
+          recordatorio_cooldown_minutos?: number
           rol?: Database["public"]["Enums"]["user_rol"]
           telefono?: string | null
           tema?: string | null
@@ -1458,6 +1467,52 @@ export type Database = {
           },
         ]
       }
+      email_recordatorios: {
+        Row: {
+          id: string
+          horario_id: string
+          alumno_id: string
+          enviado_por: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          horario_id: string
+          alumno_id: string
+          enviado_por: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          horario_id?: string
+          alumno_id?: string
+          enviado_por?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_recordatorios_horario_id_fkey"
+            columns: ["horario_id"]
+            isOneToOne: false
+            referencedRelation: "horarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_recordatorios_alumno_id_fkey"
+            columns: ["alumno_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_recordatorios_enviado_por_fkey"
+            columns: ["enviado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tenant_contact_info: {
         Row: {
           id: string
@@ -1702,6 +1757,7 @@ export type Database = {
         | "invitacion_acceso"
         | "bienvenida_registro"
         | "nueva_nota_clase"
+        | "recordatorio_clase"
       user_rol: "admin" | "profesor" | "alumno" | "lector"
     }
     CompositeTypes: {
@@ -1851,6 +1907,7 @@ export const Constants = {
         "invitacion_acceso",
         "bienvenida_registro",
         "nueva_nota_clase",
+        "recordatorio_clase",
       ],
       user_rol: ["admin", "profesor", "alumno"],
     },

@@ -114,6 +114,16 @@ export async function POST(request: NextRequest) {
   // de envío no revierte el horario ya persistido (Requisito 18.1, 18.6, 18.7).
   void (async () => {
     const admin = createAdminClient();
+
+    // Check if the professor/admin has email sending enabled
+    const { data: originadorProfile } = await admin
+      .from('profiles')
+      .select('enviar_correo_al_asignar')
+      .eq('id', profesorId)
+      .single();
+
+    if (originadorProfile?.enviar_correo_al_asignar === false) return;
+
     const { data: alumno } = await admin
       .from('profiles')
       .select('email, idioma, nombre, apellido, apellido_materno')

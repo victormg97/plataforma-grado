@@ -268,6 +268,14 @@
       "exito": "Request sent. Your teacher has been notified.",
       "error": "Error requesting change",
       "error_cargar": "Error loading available schedules"
+    },
+    "recordatorio": {
+      "boton": "Send reminder",
+      "enviado": "Reminder sent to student",
+      "no_enviado": "Reminder could not be sent. Try again later.",
+      "error": "Error sending reminder",
+      "cooldown_error": "You must wait {minutos} minutes before sending another reminder",
+      "cooldown_hint": "Available in {minutos} min"
     }
   },
   "asistencia": {
@@ -535,7 +543,17 @@
     "cancellation_deadline": "Cancellation deadline",
     "cancellation_deadline_hint": "Hours before class start after which students can no longer change their attendance (0 = until class starts)",
     "horas": "hours",
-    "configuracion_clases": "Class settings"
+    "configuracion_clases": "Class settings",
+    "color_calendario": "Calendar color",
+    "colores_sugeridos": "Suggested colors",
+    "color_restablecer": "Reset to default color",
+    "color_guardado": "Calendar color updated",
+    "color_restablecido": "Color reset to default",
+    "configuracion_correos": "Email settings",
+    "enviar_correo_al_asignar": "Send email on class assignment",
+    "enviar_correo_al_asignar_hint": "Automatically sends an email to the student when you assign them a new class",
+    "recordatorio_cooldown": "Minimum interval between reminders",
+    "recordatorio_cooldown_hint": "Minimum time (in minutes) between each reminder email for the same class"
   },
   "notificaciones": {
     "titulo": "Notifications",
@@ -561,7 +579,8 @@
       "solicitud_cambio_horario": "requested a schedule change",
       "cambio_horario_aceptado": "Schedule change accepted",
       "cambio_horario_rechazado": "Schedule change rejected",
-      "nueva_nota_clase": "left a note on a class"
+      "nueva_nota_clase": "left a note on a class",
+      "recordatorio_clase": "Class reminder"
     },
     "mensajes": {
       "alumno_generico": "The student",
@@ -1329,7 +1348,9 @@
       "programa_asignado": "Program assignment",
       "nueva_clase": "New class scheduled",
       "invitacion_acceso": "Access invitation",
-      "nueva_nota_clase": "New class note"
+      "nueva_nota_clase": "New class note",
+      "bienvenida_registro": "Welcome email",
+      "recordatorio_clase": "Class reminder"
     },
     "asunto_label": "Subject",
     "asunto_placeholder": "Write the email subject…",

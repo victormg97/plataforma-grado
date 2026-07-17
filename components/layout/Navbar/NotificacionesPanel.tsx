@@ -64,6 +64,7 @@ const TIPO_ICON: Record<TipoNotificacion, { icon: React.ElementType; color: stri
   invitacion_acceso:        { icon: Mail,          color: 'var(--color-brand-gold)' },
   bienvenida_registro:      { icon: Mail,          color: 'var(--color-brand-gold)' },
   nueva_nota_clase:         { icon: StickyNote,    color: 'var(--color-brand-gold)' },
+  recordatorio_clase:       { icon: Mail,          color: 'var(--color-brand-gold)' },
 };
 
 type TranslateFn = (key: string, values?: Record<string, string | number>) => string;

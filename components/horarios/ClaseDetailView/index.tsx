@@ -24,6 +24,7 @@ import { Button } from '@/components/common/Button';
 import { cn } from '@/lib/utils';
 import { useCalificarPrueba } from '@/lib/hooks/usePruebas';
 import { useClaseTimeStatus } from '@/lib/hooks/useServerTime';
+import { ReminderButton } from './ReminderButton';
 
 const inputCls = cn(
   'w-full rounded-[var(--radius-md)] border border-[var(--color-border)]',
@@ -416,6 +417,11 @@ export function ClaseDetailView({ rol }: ClaseDetailViewProps) {
             {(horario.pruebas?.length ?? 0) > 0 && (
               <GradeInlineForm horario={horario} tc={tc} th={t} pruebaTerm={pruebaTerm} />
             )}
+
+            {/* Email reminder button */}
+            <div className="pt-3 border-t border-[var(--color-border)]">
+              <ReminderButton horarioId={horario.id} />
+            </div>
           </div>
         </Card>
 
