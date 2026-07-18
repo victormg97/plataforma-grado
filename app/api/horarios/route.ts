@@ -109,28 +109,33 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  // Envía el correo `nueva_clase` al alumno y registra el resultado.
-  // Se espera al resultado para informar al usuario si el correo fue enviado.
-  let emailEnviado = false;
+  // Envía el correo `nueva_clase` al alumno de forma NO bloqueante (fire-and-forget).
+  // La respuesta se envía de inmediato; el correo se procesa en background.
+  // Se incluye `email_intentado` para que el frontend muestre un toast optimista.
+  let emailIntentado = false;
 
-  try {
-    const admin = createAdminClient();
+  const admin = createAdminClient();
 
-    // Check if the professor/admin has email sending enabled
-    const { data: originadorProfile } = await admin
-      .from('profiles')
-      .select('enviar_correo_al_asignar')
-      .eq('id', profesorId)
-      .single();
+  // Check if the professor/admin has email sending enabled
+  const { data: originadorProfile } = await admin
+    .from('profiles')
+    .select('enviar_correo_al_asignar')
+    .eq('id', profesorId)
+    .single();
 
-    if (originadorProfile?.enviar_correo_al_asignar !== false) {
-      const { data: alumno } = await admin
-        .from('profiles')
-        .select('email, idioma, nombre, apellido, apellido_materno')
-        .eq('id', body.alumno_id)
-        .single();
+  if (originadorProfile?.enviar_correo_al_asignar !== false) {
+    emailIntentado = true;
 
-      if (alumno?.email) {
+    // Fire-and-forget: no await, no blocking
+    void (async () => {
+      try {
+        const { data: alumno } = await admin
+          .from('profiles')
+          .select('email, idioma, nombre, apellido, apellido_materno')
+          .eq('id', body.alumno_id)
+          .single();
+        if (!alumno?.email) return;
+
         const nombreAlumno = [alumno.nombre, alumno.apellido, alumno.apellido_materno].filter(Boolean).join(' ').trim();
 
         const solicitud: SolicitudCorreo = {
@@ -154,21 +159,20 @@ export async function POST(request: NextRequest) {
         };
 
         const resultado = await sendNotificationEmail(solicitud);
-        emailEnviado = resultado === 'enviado';
 
         // Register in email_recordatorios so it counts in the reminder counter
-        if (emailEnviado) {
+        if (resultado === 'enviado') {
           await admin.from('email_recordatorios').insert({
             horario_id: horario.id,
             alumno_id: body.alumno_id,
-            enviado_por: user.id,
+            enviado_por: user!.id,
           });
         }
+      } catch {
+        // Email failure is non-fatal
       }
-    }
-  } catch {
-    // Email failure never blocks class creation
+    })();
   }
 
-  return NextResponse.json({ ...horario, email_enviado: emailEnviado }, { status: 201 });
+  return NextResponse.json({ ...horario, email_intentado: emailIntentado }, { status: 201 });
 }

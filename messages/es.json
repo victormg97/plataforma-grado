@@ -176,7 +176,7 @@
     "pedir_cambio": "Pedir cambio de horario",
     "sin_horarios": "No hay clases programadas",
     "exito_creado": "Clase creada exitosamente",
-    "correo_enviado_alumno": "📧 Se envió el correo de clase al alumno",
+    "correo_enviado_alumno": "📧 Se está enviando el correo de clase al alumno",
     "exito_actualizado": "Horario actualizado",
     "exito_eliminado": "Horario eliminado",
     "error_guardar": "Error al guardar",

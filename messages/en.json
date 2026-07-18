@@ -176,7 +176,7 @@
     "pedir_cambio": "Request schedule change",
     "sin_horarios": "No classes scheduled",
     "exito_creado": "Class created successfully",
-    "correo_enviado_alumno": "📧 Class email sent to student",
+    "correo_enviado_alumno": "📧 Sending class email to student",
     "exito_actualizado": "Schedule updated",
     "exito_eliminado": "Schedule deleted",
     "error_guardar": "Error saving",
