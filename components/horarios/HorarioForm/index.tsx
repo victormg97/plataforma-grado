@@ -299,7 +299,13 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
         throw new Error(err.error || 'Error al guardar');
       }
 
+      const responseData = await res.json();
       toast.success(isEditing ? t('exito_actualizado') : t('exito_creado'));
+
+      // Show email sent toast when creating a new class
+      if (!isEditing && responseData.email_enviado) {
+        toast.success(t('correo_enviado_alumno'), { duration: 5000 });
+      }
       // Invalidate all horarios and asistencia caches (affects profesor calendar + alumno schedule)
       queryClient.invalidateQueries({ queryKey: ['horarios'] });
       queryClient.invalidateQueries({ queryKey: ['admin-horarios'] });

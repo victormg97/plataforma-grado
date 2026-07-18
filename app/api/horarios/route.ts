@@ -109,10 +109,11 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  // Dispara el correo `nueva_clase` al alumno de forma NO bloqueante
-  // (fire-and-forget). La respuesta de creación no espera al correo y un fallo
-  // de envío no revierte el horario ya persistido (Requisito 18.1, 18.6, 18.7).
-  void (async () => {
+  // Envía el correo `nueva_clase` al alumno y registra el resultado.
+  // Se espera al resultado para informar al usuario si el correo fue enviado.
+  let emailEnviado = false;
+
+  try {
     const admin = createAdminClient();
 
     // Check if the professor/admin has email sending enabled
@@ -122,40 +123,52 @@ export async function POST(request: NextRequest) {
       .eq('id', profesorId)
       .single();
 
-    if (originadorProfile?.enviar_correo_al_asignar === false) return;
+    if (originadorProfile?.enviar_correo_al_asignar !== false) {
+      const { data: alumno } = await admin
+        .from('profiles')
+        .select('email, idioma, nombre, apellido, apellido_materno')
+        .eq('id', body.alumno_id)
+        .single();
 
-    const { data: alumno } = await admin
-      .from('profiles')
-      .select('email, idioma, nombre, apellido, apellido_materno')
-      .eq('id', body.alumno_id)
-      .single();
-    if (!alumno?.email) return;
+      if (alumno?.email) {
+        const nombreAlumno = [alumno.nombre, alumno.apellido, alumno.apellido_materno].filter(Boolean).join(' ').trim();
 
-    const nombreAlumno = [alumno.nombre, alumno.apellido, alumno.apellido_materno].filter(Boolean).join(' ').trim();
+        const solicitud: SolicitudCorreo = {
+          tipo: 'nueva_clase',
+          originadorId: profesorId,
+          destinatarioId: body.alumno_id,
+          destinatarioEmail: alumno.email,
+          destinatarioIdioma: alumno.idioma,
+          variables: {
+            nombre_destinatario: nombreAlumno,
+            nombre_alumno: nombreAlumno,
+            titulo_clase: horario.titulo,
+            descripcion_clase: horario.descripcion ?? '',
+            fecha: horario.fecha,
+            hora_inicio: horario.hora_inicio?.slice(0, 5) ?? '',
+            hora_fin: horario.hora_fin?.slice(0, 5) ?? '',
+            enlace_clase: buildEnlaceClase(horario.id, 'alumno'),
+          },
+          horarioId: horario.id,
+          eventoId: `nueva_clase:${horario.id}`,
+        };
 
-    const solicitud: SolicitudCorreo = {
-      tipo: 'nueva_clase',
-      originadorId: profesorId,
-      destinatarioId: body.alumno_id,
-      destinatarioEmail: alumno.email,
-      destinatarioIdioma: alumno.idioma,
-      variables: {
-        nombre_destinatario: nombreAlumno,
-        nombre_alumno: nombreAlumno,
-        titulo_clase: horario.titulo,
-        descripcion_clase: horario.descripcion ?? '',
-        fecha: horario.fecha,
-        hora_inicio: horario.hora_inicio?.slice(0, 5) ?? '',
-        hora_fin: horario.hora_fin?.slice(0, 5) ?? '',
-        // El destinatario es el alumno → enlace a la vista de la clase del alumno.
-        enlace_clase: buildEnlaceClase(horario.id, 'alumno'),
-      },
-      horarioId: horario.id,
-      eventoId: `nueva_clase:${horario.id}`,
-    };
+        const resultado = await sendNotificationEmail(solicitud);
+        emailEnviado = resultado === 'enviado';
 
-    await sendNotificationEmail(solicitud);
-  })().catch(() => {});
+        // Register in email_recordatorios so it counts in the reminder counter
+        if (emailEnviado) {
+          await admin.from('email_recordatorios').insert({
+            horario_id: horario.id,
+            alumno_id: body.alumno_id,
+            enviado_por: user.id,
+          });
+        }
+      }
+    }
+  } catch {
+    // Email failure never blocks class creation
+  }
 
-  return NextResponse.json(horario, { status: 201 });
+  return NextResponse.json({ ...horario, email_enviado: emailEnviado }, { status: 201 });
 }

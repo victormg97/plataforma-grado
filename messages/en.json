@@ -176,6 +176,7 @@
     "pedir_cambio": "Request schedule change",
     "sin_horarios": "No classes scheduled",
     "exito_creado": "Class created successfully",
+    "correo_enviado_alumno": "📧 Class email sent to student",
     "exito_actualizado": "Schedule updated",
     "exito_eliminado": "Schedule deleted",
     "error_guardar": "Error saving",
@@ -275,7 +276,12 @@
       "no_enviado": "Reminder could not be sent. Try again later.",
       "error": "Error sending reminder",
       "cooldown_error": "You must wait {minutos} minutes before sending another reminder",
-      "cooldown_hint": "Available in {minutos} min"
+      "cooldown_hint": "Available in {minutos} min",
+      "clase_pasada": "Cannot send reminder because the class has already passed",
+      "confirmar_titulo": "Send class reminder",
+      "confirmar_desc": "A reminder email will be sent to the student with the details of this class.",
+      "confirmar_desc_con_envios": "{count} email(s) have been sent about this class. Send another reminder?",
+      "confirmar_enviar": "Send email"
     }
   },
   "asistencia": {

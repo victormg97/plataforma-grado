@@ -56,6 +56,12 @@ export async function POST(
     return NextResponse.json({ error: 'Sin permisos sobre esta clase' }, { status: 403 });
   }
 
+  // Block reminders for past classes
+  const claseDatetime = new Date(`${horario.fecha}T${horario.hora_fin}`);
+  if (claseDatetime < new Date()) {
+    return NextResponse.json({ error: 'clase_pasada' }, { status: 400 });
+  }
+
   // Get the cooldown setting from the admin (first admin found or the requesting user)
   const { data: adminSettings } = await admin
     .from('profiles')
@@ -183,13 +189,17 @@ export async function GET(
   // Get the horario to know the alumno_id
   const { data: horario } = await admin
     .from('horarios')
-    .select('alumno_id')
+    .select('alumno_id, fecha, hora_fin')
     .eq('id', horarioId)
     .single();
 
   if (!horario) {
     return NextResponse.json({ error: 'Clase no encontrada' }, { status: 404 });
   }
+
+  // Check if class is in the past
+  const claseDatetime = new Date(`${horario.fecha}T${horario.hora_fin}`);
+  const clasePasada = claseDatetime < new Date();
 
   // Get cooldown from admin
   const { data: adminSettings } = await admin
@@ -234,8 +244,9 @@ export async function GET(
 
   return NextResponse.json({
     total_enviados: count ?? 0,
-    puede_enviar,
+    puede_enviar: puede_enviar && !clasePasada,
     minutos_restantes,
     cooldown_minutos: cooldownMinutos,
+    clase_pasada: clasePasada,
   });
 }

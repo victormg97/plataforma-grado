@@ -176,6 +176,7 @@
     "pedir_cambio": "Pedir cambio de horario",
     "sin_horarios": "No hay clases programadas",
     "exito_creado": "Clase creada exitosamente",
+    "correo_enviado_alumno": "📧 Se envió el correo de clase al alumno",
     "exito_actualizado": "Horario actualizado",
     "exito_eliminado": "Horario eliminado",
     "error_guardar": "Error al guardar",
@@ -275,7 +276,12 @@
       "no_enviado": "El recordatorio no se pudo enviar. Intenta más tarde.",
       "error": "Error al enviar el recordatorio",
       "cooldown_error": "Debes esperar {minutos} minutos antes de enviar otro recordatorio",
-      "cooldown_hint": "Disponible en {minutos} min"
+      "cooldown_hint": "Disponible en {minutos} min",
+      "clase_pasada": "No se puede enviar recordatorio porque la clase ya pasó",
+      "confirmar_titulo": "Enviar recordatorio de clase",
+      "confirmar_desc": "Se enviará un correo de recordatorio al alumno con los detalles de esta clase.",
+      "confirmar_desc_con_envios": "Se han enviado {count} correo(s) sobre esta clase. ¿Enviar otro recordatorio?",
+      "confirmar_enviar": "Enviar correo"
     }
   },
   "asistencia": {
