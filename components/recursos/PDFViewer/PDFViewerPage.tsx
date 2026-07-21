@@ -147,7 +147,6 @@ function PDFViewerContent({ url, titulo, canDownload, onDownload, onBack, t }: P
     PDFSlickViewer,
   } = usePDFSlick(url, {
     scaleValue: 'page-width',
-    thumbnailWidth: 150,
   });
 
   const pageNumber = usePDFSlickStore((s) => s.pageNumber);
@@ -371,8 +370,8 @@ function PDFViewerContent({ url, titulo, canDownload, onDownload, onBack, t }: P
       <div className="relative flex flex-1 overflow-hidden">
         {/* Thumbnails sidebar — always mounted, visually toggled */}
         <div className={cn(
-          'shrink-0 overflow-y-auto border-r border-[var(--color-border)] bg-[var(--color-bg)] transition-[width,padding] duration-200',
-          showThumbnails ? 'w-44 p-2 lg:w-52' : 'w-0 border-r-0',
+          'relative z-10 shrink-0 overflow-hidden border-r border-[var(--color-border)] bg-[var(--color-bg)] transition-[width,padding] duration-200',
+          showThumbnails ? 'w-44 p-2 lg:w-52 overflow-y-auto' : 'w-0 border-r-0',
         )}>
           <PDFSlickThumbnails {...{ thumbsRef, usePDFSlickStore, className: 'flex flex-col items-center gap-2' }}>
             {({ pageNumber: thumbPage, width, height, src, pageLabel, loaded }) => (

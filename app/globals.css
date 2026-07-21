@@ -481,3 +481,27 @@ div[style*="position: fixed"] > [role="toolbar"] {
     transform: translateY(0);
   }
 }
+
+/* PDFSlick thumbnail overrides — ensure thumbnails render inside sidebar */
+.pdfSlickThumbsContainer {
+  position: relative !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  width: 100% !important;
+  left: auto !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: none !important;
+}
+
+.pdfSlickThumbsContainer > div,
+.pdfSlickThumbsContainer .thumbnail {
+  position: relative !important;
+  display: inline-block !important;
+  margin: 0 auto !important;
+  left: auto !important;
+  top: auto !important;
+}
