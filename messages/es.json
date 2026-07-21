@@ -1274,7 +1274,16 @@
     "pdf_pagina_anterior": "Página anterior",
     "pdf_pagina_siguiente": "Página siguiente",
     "pdf_zoom_mas": "Acercar",
-    "pdf_zoom_menos": "Alejar"
+    "pdf_zoom_menos": "Alejar",
+    "pdf_miniaturas": "Miniaturas de páginas",
+    "pdf_buscar": "Buscar en documento",
+    "pdf_buscar_placeholder": "Buscar texto...",
+    "pdf_buscar_anterior": "Resultado anterior",
+    "pdf_buscar_siguiente": "Siguiente resultado",
+    "pdf_ir_pagina": "Ir a página",
+    "pdf_de": "de",
+    "pdf_zoom_valor": "Nivel de zoom",
+    "pdf_pagina": "Página"
   },
   "pagos": {
     "titulo": "Pagos",

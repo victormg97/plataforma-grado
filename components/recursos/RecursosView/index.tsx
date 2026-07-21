@@ -21,6 +21,7 @@ import { CarpetaPermisosModal } from '@/components/recursos/CarpetaPermisosModal
 import { MoverRecursoModal } from '@/components/recursos/MoverRecursoModal';
 import { RecursoUploader } from '@/components/recursos/RecursoUploader';
 import { RecursoEditModal } from '@/components/recursos/RecursoEditModal';
+import { useQueryParam } from '@/lib/hooks/useQueryParam';
 import type { UserRol } from '@/lib/supabase/types';
 
 interface Alumno {
@@ -57,8 +58,10 @@ export function RecursosView({ rol }: RecursosViewProps) {
   // Folder move state
   const [moveCarpetaTarget, setMoveCarpetaTarget] = useState<CarpetaItem | null>(null);
 
-  // Folder navigation state
-  const [currentCarpetaId, setCurrentCarpetaId] = useState<string | null>(null);
+  // Folder navigation state (persisted in URL for proper back-navigation)
+  const [carpetaParam, setCarpetaParam] = useQueryParam('carpeta');
+  const currentCarpetaId = carpetaParam ?? null;
+  const setCurrentCarpetaId = (id: string | null) => setCarpetaParam(id);
   const [carpetaModalMode, setCarpetaModalMode] = useState<'create' | 'rename' | null>(null);
   const [renamingCarpeta, setRenamingCarpeta] = useState<CarpetaItem | null>(null);
   const [deleteCarpetaTarget, setDeleteCarpetaTarget] = useState<CarpetaItem | null>(null);

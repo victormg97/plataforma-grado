@@ -1274,7 +1274,16 @@
     "pdf_pagina_anterior": "Previous page",
     "pdf_pagina_siguiente": "Next page",
     "pdf_zoom_mas": "Zoom in",
-    "pdf_zoom_menos": "Zoom out"
+    "pdf_zoom_menos": "Zoom out",
+    "pdf_miniaturas": "Page thumbnails",
+    "pdf_buscar": "Search in document",
+    "pdf_buscar_placeholder": "Search text...",
+    "pdf_buscar_anterior": "Previous result",
+    "pdf_buscar_siguiente": "Next result",
+    "pdf_ir_pagina": "Go to page",
+    "pdf_de": "of",
+    "pdf_zoom_valor": "Zoom level",
+    "pdf_pagina": "Page"
   },
   "pagos": {
     "titulo": "Payments",
