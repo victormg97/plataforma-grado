@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Link2, Video, Users, Globe, FolderInput } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -74,6 +74,12 @@ export function RecursoCard({
   const fileInfo  = recurso.tipo === 'archivo' ? getFileInfo(fileName) : null;
   const ext       = recurso.storage_path ? getExtension(recurso.storage_path) : '';
 
+  // Prefetch PDF viewer route for instant navigation
+  const isPdf = recurso.tipo === 'archivo' && recurso.storage_path && getExtension(recurso.storage_path) === 'pdf';
+  useEffect(() => {
+    if (isPdf) router.prefetch(`/recursos/pdf/${recurso.id}`);
+  }, [isPdf, recurso.id, router]);
+
   const iconEl = fileInfo
     ? <fileInfo.Icon className={cn('size-5', fileInfo.iconColor)} />
     : (() => {
@@ -90,7 +96,6 @@ export function RecursoCard({
   const canDownload = rol !== 'alumno' || !recurso.bloquear_descarga;
 
   // ── Primary action (tap anywhere on card) ────────────────────────────────
-  const isPdf = recurso.tipo === 'archivo' && recurso.storage_path && getExtension(recurso.storage_path) === 'pdf';
 
   const handlePrimaryAction = () => {
     if (recurso.tipo === 'archivo') {

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { FileText, Download, FolderInput, Pencil, Trash2, Globe, Users, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -11,6 +11,7 @@ import { es } from 'date-fns/locale';
 import { CardActions, type CardAction } from '@/components/common/CardActions';
 import type { RecursoItem } from '@/components/recursos/RecursoCard';
 import type { UserRol } from '@/lib/supabase/types';
+import { getThumbnailFromCache, setThumbnailInCache, hasThumbnailInCache } from '@/lib/utils/pdfThumbnailCache';
 
 // Cache signed URLs for 50 min
 const SIGNED_URL_STALE_MS = 50 * 60 * 1000;
@@ -36,15 +37,17 @@ export function PDFThumbnailCard({
   onMove,
 }: PDFThumbnailCardProps) {
   const t = useTranslations('recursos');
-  const router = useRouter();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [thumbnailReady, setThumbnailReady] = useState(false);
+  const [thumbnailReady, setThumbnailReady] = useState(() => hasThumbnailInCache(recurso.id));
   const [thumbnailError, setThumbnailError] = useState(false);
+  const [cachedSrc, setCachedSrc] = useState<string | null>(() => getThumbnailFromCache(recurso.id));
   const [isVisible, setIsVisible] = useState(false);
 
   const canManage = rol === 'admin' || (rol === 'profesor' && uploaderIdMatch);
   const canDownload = rol !== 'alumno' || !recurso.bloquear_descarga;
+
+  const pdfViewerHref = `/recursos/pdf/${recurso.id}`;
 
   // Intersection observer for lazy loading thumbnails
   useEffect(() => {
@@ -81,7 +84,8 @@ export function PDFThumbnailCard({
 
   // Render first page thumbnail on canvas using pdfjs-dist
   useEffect(() => {
-    if (!signedUrl || !canvasRef.current || !isVisible) return;
+    // Skip if already cached
+    if (cachedSrc || !signedUrl || !canvasRef.current || !isVisible) return;
 
     let cancelled = false;
 
@@ -114,6 +118,10 @@ export function PDFThumbnailCard({
 
         await page.render({ canvasContext: ctx, canvas, viewport: scaledViewport }).promise;
         if (!cancelled) {
+          // Cache the rendered thumbnail as data URL
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+          setThumbnailInCache(recurso.id, dataUrl);
+          setCachedSrc(dataUrl);
           setThumbnailReady(true);
         }
       } catch {
@@ -125,12 +133,7 @@ export function PDFThumbnailCard({
 
     renderThumbnail();
     return () => { cancelled = true; };
-  }, [signedUrl, isVisible]);
-
-  // Navigate to full PDF viewer
-  const handleOpen = () => {
-    router.push(`/recursos/pdf/${recurso.id}`);
-  };
+  }, [signedUrl, isVisible, cachedSrc, recurso.id]);
 
   // Build actions for the ellipsis menu
   const actions: CardAction[] = [];
@@ -178,10 +181,10 @@ export function PDFThumbnailCard({
       role="article"
       className="group relative flex flex-col overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg)] shadow-[var(--shadow-sm)] transition-all hover:border-[var(--color-border-strong)] hover:shadow-[var(--shadow-md)]"
     >
-      {/* Thumbnail area — clickable */}
-      <button
-        type="button"
-        onClick={handleOpen}
+      {/* Thumbnail area — clickable Link with prefetch */}
+      <Link
+        href={pdfViewerHref}
+        prefetch={true}
         className="relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden bg-[var(--color-bg-secondary)] cursor-pointer"
       >
         {!thumbnailReady && !thumbnailError && (
@@ -195,26 +198,34 @@ export function PDFThumbnailCard({
             <span className="text-xs text-[var(--color-text-muted)]">PDF</span>
           </div>
         )}
-        <canvas
-          ref={canvasRef}
-          className={cn(
-            'max-h-full max-w-full object-contain transition-opacity',
-            thumbnailReady ? 'opacity-100' : 'opacity-0',
-          )}
-          style={{ width: '100%', height: 'auto' }}
-        />
+        {cachedSrc ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={cachedSrc}
+            alt={recurso.titulo}
+            className="max-h-full max-w-full object-contain"
+            style={{ width: '100%', height: 'auto' }}
+          />
+        ) : (
+          <canvas
+            ref={canvasRef}
+            className={cn(
+              'max-h-full max-w-full object-contain transition-opacity',
+              thumbnailReady ? 'opacity-100' : 'opacity-0',
+            )}
+            style={{ width: '100%', height: 'auto' }}
+          />
+        )}
         {/* Hover overlay */}
         <div className="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/5" />
-      </button>
+      </Link>
 
       {/* Info footer */}
       <div className="flex items-start gap-2 p-3">
-        <div
-          className="flex-1 min-w-0 cursor-pointer"
-          onClick={handleOpen}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => { if (e.key === 'Enter') handleOpen(); }}
+        <Link
+          href={pdfViewerHref}
+          prefetch={true}
+          className="flex-1 min-w-0"
         >
           <p className="truncate text-sm font-semibold text-[var(--color-text-primary)] group-hover:text-[var(--color-brand-gold)] transition-colors">
             {recurso.titulo}
@@ -240,7 +251,7 @@ export function PDFThumbnailCard({
               </span>
             )}
           </div>
-        </div>
+        </Link>
 
         {/* Actions menu */}
         {actions.length > 0 && (
