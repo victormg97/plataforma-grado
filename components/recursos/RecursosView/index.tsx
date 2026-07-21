@@ -21,7 +21,7 @@ import { CarpetaPermisosModal } from '@/components/recursos/CarpetaPermisosModal
 import { MoverRecursoModal } from '@/components/recursos/MoverRecursoModal';
 import { RecursoUploader } from '@/components/recursos/RecursoUploader';
 import { RecursoEditModal } from '@/components/recursos/RecursoEditModal';
-import { useQueryParam } from '@/lib/hooks/useQueryParam';
+import { useSearchParams } from 'next/navigation';
 import type { UserRol } from '@/lib/supabase/types';
 
 interface Alumno {
@@ -59,9 +59,27 @@ export function RecursosView({ rol }: RecursosViewProps) {
   const [moveCarpetaTarget, setMoveCarpetaTarget] = useState<CarpetaItem | null>(null);
 
   // Folder navigation state (persisted in URL for proper back-navigation)
-  const [carpetaParam, setCarpetaParam] = useQueryParam('carpeta');
-  const currentCarpetaId = carpetaParam ?? null;
-  const setCurrentCarpetaId = (id: string | null) => setCarpetaParam(id);
+  // Uses useState for instant UI + history.pushState for URL persistence (no router delay)
+  const searchParams = useSearchParams();
+  const [currentCarpetaId, setCurrentCarpetaIdRaw] = useState<string | null>(
+    () => searchParams.get('carpeta') ?? null
+  );
+  const setCurrentCarpetaId = (id: string | null) => {
+    setCurrentCarpetaIdRaw(id);
+    // Sync to URL using pushState (not router.replace) for instant nav + proper history
+    const url = new URL(window.location.href);
+    if (id) { url.searchParams.set('carpeta', id); } else { url.searchParams.delete('carpeta'); }
+    window.history.pushState(null, '', url.toString());
+  };
+  // Listen for popstate (browser back/forward) to sync state
+  useEffect(() => {
+    const handler = () => {
+      const params = new URLSearchParams(window.location.search);
+      setCurrentCarpetaIdRaw(params.get('carpeta') ?? null);
+    };
+    window.addEventListener('popstate', handler);
+    return () => window.removeEventListener('popstate', handler);
+  }, []);
   const [carpetaModalMode, setCarpetaModalMode] = useState<'create' | 'rename' | null>(null);
   const [renamingCarpeta, setRenamingCarpeta] = useState<CarpetaItem | null>(null);
   const [deleteCarpetaTarget, setDeleteCarpetaTarget] = useState<CarpetaItem | null>(null);
@@ -556,12 +574,17 @@ export function RecursosView({ rol }: RecursosViewProps) {
         />
       )}
 
-      {/* Breadcrumb navigation — hidden while searching */}
-      {!isSearching && (breadcrumb.length > 0 || currentCarpetaId) && (
-        <nav className="flex flex-wrap items-center gap-x-1 gap-y-1 text-xs sm:text-sm">
+      {/* Breadcrumb navigation — always visible (hidden only while searching) */}
+      {!isSearching && (
+        <nav className="flex flex-wrap items-center gap-x-1 gap-y-1 text-xs sm:text-sm min-h-[1.5rem]">
           <button
             onClick={() => setCurrentCarpetaId(null)}
-            className="flex items-center gap-1 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
+            className={cn(
+              'flex items-center gap-1 transition-colors',
+              !currentCarpetaId
+                ? 'font-semibold text-[var(--color-text-primary)]'
+                : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]',
+            )}
           >
             <Home className="size-3.5 shrink-0" />
             {t('titulo')}

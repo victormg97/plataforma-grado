@@ -21,9 +21,11 @@ export default async function RecursoPDFPage({ params }: Props) {
   if (!profile) redirect('/login');
 
   return (
-    <PDFViewerPage
-      recursoId={id}
-      rol={profile.rol as 'admin' | 'profesor' | 'alumno' | 'lector'}
-    />
+    <div className="-mt-4 -mb-[var(--container-padding)]">
+      <PDFViewerPage
+        recursoId={id}
+        rol={profile.rol as 'admin' | 'profesor' | 'alumno' | 'lector'}
+      />
+    </div>
   );
 }

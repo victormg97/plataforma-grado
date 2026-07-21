@@ -1283,7 +1283,14 @@
     "pdf_ir_pagina": "Go to page",
     "pdf_de": "of",
     "pdf_zoom_valor": "Zoom level",
-    "pdf_pagina": "Page"
+    "pdf_pagina": "Page",
+    "pdf_opciones": "More options",
+    "pdf_presentacion": "Presentation mode",
+    "pdf_imprimir": "Print",
+    "pdf_primera_pagina": "Go to first page",
+    "pdf_ultima_pagina": "Go to last page",
+    "pdf_rotar_derecha": "Rotate clockwise",
+    "pdf_rotar_izquierda": "Rotate counterclockwise"
   },
   "pagos": {
     "titulo": "Payments",

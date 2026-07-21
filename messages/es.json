@@ -1283,7 +1283,14 @@
     "pdf_ir_pagina": "Ir a página",
     "pdf_de": "de",
     "pdf_zoom_valor": "Nivel de zoom",
-    "pdf_pagina": "Página"
+    "pdf_pagina": "Página",
+    "pdf_opciones": "Más opciones",
+    "pdf_presentacion": "Modo presentación",
+    "pdf_imprimir": "Imprimir",
+    "pdf_primera_pagina": "Ir a primera página",
+    "pdf_ultima_pagina": "Ir a última página",
+    "pdf_rotar_derecha": "Rotar a la derecha",
+    "pdf_rotar_izquierda": "Rotar a la izquierda"
   },
   "pagos": {
     "titulo": "Pagos",
