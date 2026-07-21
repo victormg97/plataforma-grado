@@ -24,7 +24,7 @@ import {
   RotateCw,
   RotateCcw,
 } from 'lucide-react';
-import { usePDFSlick } from '@pdfslick/react';
+import { usePDFSlick, PDFSlickThumbnails } from '@pdfslick/react';
 import '@pdfslick/react/dist/pdf_viewer.css';
 import { cn } from '@/lib/utils';
 import type { UserRol } from '@/lib/supabase/types';
@@ -158,7 +158,10 @@ function PDFViewerContent({ url, titulo, canDownload, onDownload, onBack, t }: P
   const isDocumentLoaded = usePDFSlickStore((s) => s.isDocumentLoaded);
 
   // UI state
-  const [showThumbnails, setShowThumbnails] = useState(true);
+  const [showThumbnails, setShowThumbnails] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('pdf-thumbs-open') === '1';
+  });
   const [showSearch, setShowSearch] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -260,7 +263,7 @@ function PDFViewerContent({ url, titulo, canDownload, onDownload, onBack, t }: P
           <button onClick={onBack} className="flex size-8 shrink-0 items-center justify-center rounded-[var(--radius-md)] text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]" title={t('pdf_volver')}>
             <ArrowLeft className="size-4" />
           </button>
-          <button onClick={() => setShowThumbnails((v) => !v)} className={cn('flex size-8 shrink-0 items-center justify-center rounded-[var(--radius-md)] transition-colors', showThumbnails ? 'bg-[var(--color-brand-gold-muted)] text-[var(--color-brand-gold)]' : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]')} title={t('pdf_miniaturas')}>
+          <button onClick={() => setShowThumbnails((v) => { const next = !v; localStorage.setItem('pdf-thumbs-open', next ? '1' : '0'); return next; })} className={cn('flex size-8 shrink-0 items-center justify-center rounded-[var(--radius-md)] transition-colors', showThumbnails ? 'bg-[var(--color-brand-gold-muted)] text-[var(--color-brand-gold)]' : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]')} title={t('pdf_miniaturas')}>
             {showThumbnails ? <PanelLeftClose className="size-4" /> : <PanelLeftOpen className="size-4" />}
           </button>
           <span className="truncate text-sm font-semibold text-[var(--color-text-primary)] hidden sm:block">{titulo}</span>
@@ -366,9 +369,47 @@ function PDFViewerContent({ url, titulo, canDownload, onDownload, onBack, t }: P
 
       {/* Main content: thumbnails sidebar + PDF viewer */}
       <div className="relative flex flex-1 overflow-hidden">
-        {/* Thumbnails sidebar — always mounted so thumbsRef stays connected */}
-        <div className={cn('shrink-0 overflow-y-auto border-r border-[var(--color-border)] bg-[var(--color-bg)] p-2 transition-all', showThumbnails ? 'w-44 lg:w-52' : 'w-0 p-0 border-r-0 overflow-hidden')}>
-          <div ref={thumbsRef} className="flex flex-col items-center gap-2" />
+        {/* Thumbnails sidebar — always mounted, visually toggled */}
+        <div className={cn(
+          'shrink-0 overflow-y-auto border-r border-[var(--color-border)] bg-[var(--color-bg)] transition-[width,padding] duration-200',
+          showThumbnails ? 'w-44 p-2 lg:w-52' : 'w-0 border-r-0',
+        )}>
+          <PDFSlickThumbnails {...{ thumbsRef, usePDFSlickStore, className: 'flex flex-col items-center gap-2' }}>
+            {({ pageNumber: thumbPage, width, height, src, pageLabel, loaded }) => (
+              <button
+                type="button"
+                onClick={() => pdfSlick?.gotoPage(thumbPage)}
+                className={cn(
+                  'relative mx-auto rounded-[var(--radius-sm)] p-0.5 transition-all shrink-0',
+                  loaded && thumbPage === pageNumber
+                    ? 'ring-2 ring-[var(--color-brand-gold)] shadow-[var(--shadow-sm)]'
+                    : 'hover:ring-1 hover:ring-[var(--color-border-strong)]',
+                )}
+              >
+                <div
+                  className={cn(
+                    'overflow-hidden rounded-[var(--radius-xs)] border',
+                    loaded && thumbPage === pageNumber
+                      ? 'border-[var(--color-brand-gold)]'
+                      : 'border-[var(--color-border)]',
+                    !loaded && 'bg-[var(--color-bg-secondary)] animate-pulse',
+                  )}
+                  style={{ width: `${width}px`, height: `${height}px` }}
+                >
+                  {src && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={src} width={width} height={height} alt={`${t('pdf_pagina')} ${thumbPage}`} className="block" />
+                  )}
+                </div>
+                <span className={cn(
+                  'mt-1 block text-center text-[10px] tabular-nums',
+                  thumbPage === pageNumber ? 'font-semibold text-[var(--color-brand-gold)]' : 'text-[var(--color-text-muted)]',
+                )}>
+                  {pageLabel ?? thumbPage}
+                </span>
+              </button>
+            )}
+          </PDFSlickThumbnails>
         </div>
 
         {/* PDF viewer */}
