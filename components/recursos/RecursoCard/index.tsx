@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Link2, Video, Users, Globe, FolderInput } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
@@ -64,6 +65,7 @@ export function RecursoCard({
   onMove,
 }: RecursoCardProps) {
   const t = useTranslations('recursos');
+  const router = useRouter();
   const [showPreview, setShowPreview] = useState(false);
   const [showLinkModal, setShowLinkModal] = useState(false);
 
@@ -88,10 +90,18 @@ export function RecursoCard({
   const canDownload = rol !== 'alumno' || !recurso.bloquear_descarga;
 
   // ── Primary action (tap anywhere on card) ────────────────────────────────
+  const isPdf = recurso.tipo === 'archivo' && recurso.storage_path && getExtension(recurso.storage_path) === 'pdf';
+
   const handlePrimaryAction = () => {
     if (recurso.tipo === 'archivo') {
-      if (canPreview) setShowPreview(true);
-      else if (canDownload) onDownload?.(recurso);
+      if (isPdf) {
+        // Navigate to full-page PDF viewer
+        router.push(`/recursos/pdf/${recurso.id}`);
+      } else if (canPreview) {
+        setShowPreview(true);
+      } else if (canDownload) {
+        onDownload?.(recurso);
+      }
     } else if (recurso.tipo === 'video') {
       setShowPreview(true);
     } else if (recurso.tipo === 'enlace') {

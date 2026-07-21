@@ -14,6 +14,8 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
 import { RecursoCard, type RecursoItem } from '@/components/recursos/RecursoCard';
 import { CarpetaCard, type CarpetaItem } from '@/components/recursos/CarpetaCard';
+import { PDFThumbnailCard } from '@/components/recursos/PDFViewer';
+import { getExtension } from '@/lib/utils/fileInfo';
 import { CarpetaModal } from '@/components/recursos/CarpetaModal';
 import { CarpetaPermisosModal } from '@/components/recursos/CarpetaPermisosModal';
 import { MoverRecursoModal } from '@/components/recursos/MoverRecursoModal';
@@ -725,24 +727,57 @@ export function RecursosView({ rol }: RecursosViewProps) {
       ) : isSearching ? (
         /* ── Search mode: files only, across all folders ── */
         searchResults.length > 0 ? (
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            {searchResults.map((recurso) => (
-              <RecursoCard
-                key={recurso.id}
-                recurso={recurso}
-                rol={rol}
-                userId={user?.id ?? ''}
-                uploaderIdMatch={recurso.subido_por === user?.id}
-                onDelete={(id) => {
-                  const r = allRecursos.find((x) => x.id === id);
-                  if (r) setDeleteTarget(r);
-                }}
-                onEdit={(r) => setEditTarget(r)}
-                onDownload={handleDownload}
-                onMove={canUpload ? (r) => setMoveTarget(r) : undefined}
-              />
-            ))}
-          </div>
+          (() => {
+            const pdfResults = searchResults.filter(
+              (r) => r.tipo === 'archivo' && r.storage_path && getExtension(r.storage_path) === 'pdf'
+            );
+            const otherResults = searchResults.filter(
+              (r) => !(r.tipo === 'archivo' && r.storage_path && getExtension(r.storage_path) === 'pdf')
+            );
+            return (
+              <div className="space-y-4">
+                {pdfResults.length > 0 && (
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                    {pdfResults.map((recurso) => (
+                      <PDFThumbnailCard
+                        key={recurso.id}
+                        recurso={recurso}
+                        rol={rol}
+                        uploaderIdMatch={recurso.subido_por === user?.id}
+                        onDelete={(id) => {
+                          const r = allRecursos.find((x) => x.id === id);
+                          if (r) setDeleteTarget(r);
+                        }}
+                        onEdit={(r) => setEditTarget(r)}
+                        onDownload={handleDownload}
+                        onMove={canUpload ? (r) => setMoveTarget(r) : undefined}
+                      />
+                    ))}
+                  </div>
+                )}
+                {otherResults.length > 0 && (
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                    {otherResults.map((recurso) => (
+                      <RecursoCard
+                        key={recurso.id}
+                        recurso={recurso}
+                        rol={rol}
+                        userId={user?.id ?? ''}
+                        uploaderIdMatch={recurso.subido_por === user?.id}
+                        onDelete={(id) => {
+                          const r = allRecursos.find((x) => x.id === id);
+                          if (r) setDeleteTarget(r);
+                        }}
+                        onEdit={(r) => setEditTarget(r)}
+                        onDownload={handleDownload}
+                        onMove={canUpload ? (r) => setMoveTarget(r) : undefined}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })()
         ) : (
           <div className="flex flex-col items-center gap-4 rounded-[var(--radius-xl)] border border-dashed border-[var(--color-border)] bg-[var(--color-bg-secondary)] py-16 px-8 text-center">
             <div className="flex size-14 items-center justify-center rounded-[var(--radius-xl)] bg-[var(--color-brand-gold-muted)]">
@@ -805,26 +840,61 @@ export function RecursosView({ rol }: RecursosViewProps) {
           )}
 
           {/* Resources grid */}
-          {filteredRecursos.length > 0 && (
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              {filteredRecursos.map((recurso) => (
-                <RecursoCard
-                  key={recurso.id}
-                  recurso={recurso}
-                  rol={rol}
-                  userId={user?.id ?? ''}
-                  uploaderIdMatch={recurso.subido_por === user?.id}
-                  onDelete={(id) => {
-                    const r = allRecursos.find((x) => x.id === id);
-                    if (r) setDeleteTarget(r);
-                  }}
-                  onEdit={(r) => setEditTarget(r)}
-                  onDownload={handleDownload}
-                  onMove={canUpload ? (r) => setMoveTarget(r) : undefined}
-                />
-              ))}
-            </div>
-          )}
+          {filteredRecursos.length > 0 && (() => {
+            const pdfRecursos = filteredRecursos.filter(
+              (r) => r.tipo === 'archivo' && r.storage_path && getExtension(r.storage_path) === 'pdf'
+            );
+            const otherRecursos = filteredRecursos.filter(
+              (r) => !(r.tipo === 'archivo' && r.storage_path && getExtension(r.storage_path) === 'pdf')
+            );
+
+            return (
+              <>
+                {/* PDF thumbnail grid */}
+                {pdfRecursos.length > 0 && (
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                    {pdfRecursos.map((recurso) => (
+                      <PDFThumbnailCard
+                        key={recurso.id}
+                        recurso={recurso}
+                        rol={rol}
+                        uploaderIdMatch={recurso.subido_por === user?.id}
+                        onDelete={(id) => {
+                          const r = allRecursos.find((x) => x.id === id);
+                          if (r) setDeleteTarget(r);
+                        }}
+                        onEdit={(r) => setEditTarget(r)}
+                        onDownload={handleDownload}
+                        onMove={canUpload ? (r) => setMoveTarget(r) : undefined}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {/* Non-PDF resources grid */}
+                {otherRecursos.length > 0 && (
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                    {otherRecursos.map((recurso) => (
+                      <RecursoCard
+                        key={recurso.id}
+                        recurso={recurso}
+                        rol={rol}
+                        userId={user?.id ?? ''}
+                        uploaderIdMatch={recurso.subido_por === user?.id}
+                        onDelete={(id) => {
+                          const r = allRecursos.find((x) => x.id === id);
+                          if (r) setDeleteTarget(r);
+                        }}
+                        onEdit={(r) => setEditTarget(r)}
+                        onDownload={handleDownload}
+                        onMove={canUpload ? (r) => setMoveTarget(r) : undefined}
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
+            );
+          })()}
 
           {/* Empty filtered state */}
           {filteredRecursos.length === 0 && activeTab !== 'todos' && (

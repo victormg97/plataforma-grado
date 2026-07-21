@@ -1266,7 +1266,15 @@
     "buscar_sin_resultados": "No se encontraron archivos para \"{query}\"",
     "todos_mis_alumnos": "Todos mis alumnos",
     "todos_app": "Todos los alumnos",
-    "todos_app_desc": "Todos los alumnos de la plataforma podrán ver este recurso, sin importar a qué profesor estén asignados."
+    "todos_app_desc": "Todos los alumnos de la plataforma podrán ver este recurso, sin importar a qué profesor estén asignados.",
+    "pdf_cargando": "Cargando documento...",
+    "pdf_error": "No se pudo cargar el documento PDF",
+    "pdf_volver": "Volver",
+    "pdf_documento": "Documento PDF",
+    "pdf_pagina_anterior": "Página anterior",
+    "pdf_pagina_siguiente": "Página siguiente",
+    "pdf_zoom_mas": "Acercar",
+    "pdf_zoom_menos": "Alejar"
   },
   "pagos": {
     "titulo": "Pagos",

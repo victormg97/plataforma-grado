@@ -13,6 +13,11 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  webpack: (config) => {
+    // Required for @pdfslick/react — resolves canvas dependency used by pdfjs-dist
+    config.resolve.alias.canvas = false;
+    return config;
+  },
 };
 
 export default withNextIntl(nextConfig);

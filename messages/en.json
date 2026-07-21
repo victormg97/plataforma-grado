@@ -1266,7 +1266,15 @@
     "buscar_sin_resultados": "No files found for \"{query}\"",
     "todos_mis_alumnos": "All my students",
     "todos_app": "All students",
-    "todos_app_desc": "All students on the platform will be able to see this resource, regardless of which teacher they are assigned to."
+    "todos_app_desc": "All students on the platform will be able to see this resource, regardless of which teacher they are assigned to.",
+    "pdf_cargando": "Loading document...",
+    "pdf_error": "Could not load the PDF document",
+    "pdf_volver": "Go back",
+    "pdf_documento": "PDF Document",
+    "pdf_pagina_anterior": "Previous page",
+    "pdf_pagina_siguiente": "Next page",
+    "pdf_zoom_mas": "Zoom in",
+    "pdf_zoom_menos": "Zoom out"
   },
   "pagos": {
     "titulo": "Payments",
