@@ -205,7 +205,7 @@ export function RecursoCard({
         {/* Content */}
         <div className="flex flex-col flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <Tooltip content={recurso.titulo} position="bottom">
+            <Tooltip content={recurso.titulo} position="bottom" className="min-w-0 truncate">
               <span className="truncate text-sm font-semibold text-[var(--color-text-primary)]">
                 {recurso.titulo}
               </span>

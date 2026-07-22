@@ -228,7 +228,7 @@ export function PDFThumbnailCard({
           prefetch={true}
           className="flex-1 min-w-0"
         >
-          <Tooltip content={recurso.titulo} position="bottom">
+          <Tooltip content={recurso.titulo} position="bottom" className="min-w-0 max-w-full">
             <p className="truncate text-sm font-semibold text-[var(--color-text-primary)] group-hover:text-[var(--color-brand-gold)] transition-colors">
               {recurso.titulo}
             </p>
