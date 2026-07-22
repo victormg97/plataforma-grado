@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { CardActions, type CardAction } from '@/components/common/CardActions';
+import { Tooltip } from '@/components/common/Tooltip';
 import type { RecursoItem } from '@/components/recursos/RecursoCard';
 import type { UserRol } from '@/lib/supabase/types';
 import { getThumbnailFromCache, setThumbnailInCache, hasThumbnailInCache } from '@/lib/utils/pdfThumbnailCache';
@@ -227,9 +228,11 @@ export function PDFThumbnailCard({
           prefetch={true}
           className="flex-1 min-w-0"
         >
-          <p className="truncate text-sm font-semibold text-[var(--color-text-primary)] group-hover:text-[var(--color-brand-gold)] transition-colors">
-            {recurso.titulo}
-          </p>
+          <Tooltip content={recurso.titulo} position="bottom">
+            <p className="truncate text-sm font-semibold text-[var(--color-text-primary)] group-hover:text-[var(--color-brand-gold)] transition-colors">
+              {recurso.titulo}
+            </p>
+          </Tooltip>
           <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5">
             <span className="text-[11px] text-[var(--color-text-muted)]">
               {format(new Date(recurso.created_at), 'd MMM yyyy', { locale: es })}

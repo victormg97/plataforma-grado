@@ -27,6 +27,7 @@ import {
 import { usePDFSlick, PDFSlickThumbnails } from '@pdfslick/react';
 import '@pdfslick/react/dist/pdf_viewer.css';
 import { cn } from '@/lib/utils';
+import { Tooltip } from '@/components/common/Tooltip';
 import type { UserRol } from '@/lib/supabase/types';
 import { downloadRecurso } from '@/lib/utils/downloadRecurso';
 import { toast } from 'sonner';
@@ -216,6 +217,30 @@ function PDFViewerContent({ url, titulo, canDownload, onDownload, onBack, t }: P
   const enterPresentationMode = () => { if (pdfSlick) pdfSlick.requestPresentationMode(); setShowMoreMenu(false); };
   const handlePrint = () => { if (pdfSlick) pdfSlick.triggerPrinting(); setShowMoreMenu(false); };
 
+  // Presentation mode keyboard navigation
+  useEffect(() => {
+    const handleFullscreenKeydown = (e: KeyboardEvent) => {
+      if (!document.fullscreenElement || !pdfSlick) return;
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ' || e.key === 'PageDown') {
+        e.preventDefault();
+        pdfSlick.gotoPage(Math.min(pdfSlick.viewer.currentPageNumber + 1, numPages));
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'PageUp') {
+        e.preventDefault();
+        pdfSlick.gotoPage(Math.max(pdfSlick.viewer.currentPageNumber - 1, 1));
+      } else if (e.key === 'Home') {
+        e.preventDefault();
+        pdfSlick.gotoPage(1);
+      } else if (e.key === 'End') {
+        e.preventDefault();
+        pdfSlick.gotoPage(numPages);
+      } else if (e.key === 'Escape') {
+        document.exitFullscreen();
+      }
+    };
+    document.addEventListener('keydown', handleFullscreenKeydown);
+    return () => document.removeEventListener('keydown', handleFullscreenKeydown);
+  }, [pdfSlick, numPages]);
+
   // Search
   const handleSearch = useCallback(() => {
     if (!pdfSlick || !searchQuery.trim()) return;
@@ -259,58 +284,76 @@ function PDFViewerContent({ url, titulo, canDownload, onDownload, onBack, t }: P
       <div className="flex items-center gap-1 border-b border-[var(--color-border)] bg-[var(--color-bg)] px-2 py-1.5 sm:gap-2 sm:px-3">
         {/* Left: back + thumbnails toggle + title */}
         <div className="flex items-center gap-1 min-w-0 flex-1">
-          <button onClick={onBack} className="flex size-8 shrink-0 items-center justify-center rounded-[var(--radius-md)] text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]" title={t('pdf_volver')}>
-            <ArrowLeft className="size-4" />
-          </button>
-          <button onClick={() => setShowThumbnails((v) => { const next = !v; localStorage.setItem('pdf-thumbs-open', next ? '1' : '0'); return next; })} className={cn('flex size-8 shrink-0 items-center justify-center rounded-[var(--radius-md)] transition-colors', showThumbnails ? 'bg-[var(--color-brand-gold-muted)] text-[var(--color-brand-gold)]' : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]')} title={t('pdf_miniaturas')}>
-            {showThumbnails ? <PanelLeftClose className="size-4" /> : <PanelLeftOpen className="size-4" />}
-          </button>
+          <Tooltip content={t('pdf_volver')} position="bottom">
+            <button onClick={onBack} className="flex size-8 shrink-0 items-center justify-center rounded-[var(--radius-md)] text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]">
+              <ArrowLeft className="size-4" />
+            </button>
+          </Tooltip>
+          <Tooltip content={t('pdf_miniaturas')} position="bottom">
+            <button onClick={() => setShowThumbnails((v) => { const next = !v; localStorage.setItem('pdf-thumbs-open', next ? '1' : '0'); return next; })} className={cn('flex size-8 shrink-0 items-center justify-center rounded-[var(--radius-md)] transition-colors', showThumbnails ? 'bg-[var(--color-brand-gold-muted)] text-[var(--color-brand-gold)]' : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]')}>
+              {showThumbnails ? <PanelLeftClose className="size-4" /> : <PanelLeftOpen className="size-4" />}
+            </button>
+          </Tooltip>
           <span className="truncate text-sm font-semibold text-[var(--color-text-primary)] hidden sm:block">{titulo}</span>
         </div>
 
         {/* Center: page navigation */}
         <div className="flex items-center gap-0.5 shrink-0">
-          <button onClick={goToPrevPage} disabled={pageNumber <= 1} className="flex size-7 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-bg-secondary)] disabled:opacity-30" title={t('pdf_pagina_anterior')}>
-            <ChevronLeft className="size-4" />
-          </button>
+          <Tooltip content={t('pdf_pagina_anterior')} position="bottom">
+            <button onClick={goToPrevPage} disabled={pageNumber <= 1} className="flex size-7 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-bg-secondary)] disabled:opacity-30">
+              <ChevronLeft className="size-4" />
+            </button>
+          </Tooltip>
           {isDocumentLoaded && (
             <div className="flex items-center gap-1 text-xs text-[var(--color-text-muted)] tabular-nums whitespace-nowrap">
               <input ref={pageInputRef} type="text" inputMode="numeric" value={isEditingPage ? pageInput : String(pageNumber)} onChange={(e) => { setPageInput(e.target.value); setIsEditingPage(true); }} onFocus={() => { setIsEditingPage(true); setPageInput(String(pageNumber)); pageInputRef.current?.select(); }} onBlur={handlePageSubmit} onKeyDown={(e) => { if (e.key === 'Enter') { handlePageSubmit(); pageInputRef.current?.blur(); } }} className="w-8 rounded border border-[var(--color-border)] bg-[var(--color-bg)] px-1 py-0.5 text-center text-xs text-[var(--color-text-primary)] outline-none focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold-muted)]" aria-label={t('pdf_ir_pagina')} />
               <span>{t('pdf_de')} {numPages}</span>
             </div>
           )}
-          <button onClick={goToNextPage} disabled={pageNumber >= numPages} className="flex size-7 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-bg-secondary)] disabled:opacity-30" title={t('pdf_pagina_siguiente')}>
-            <ChevronRight className="size-4" />
-          </button>
+          <Tooltip content={t('pdf_pagina_siguiente')} position="bottom">
+            <button onClick={goToNextPage} disabled={pageNumber >= numPages} className="flex size-7 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-bg-secondary)] disabled:opacity-30">
+              <ChevronRight className="size-4" />
+            </button>
+          </Tooltip>
         </div>
 
         {/* Right: zoom + search + more */}
         <div className="flex items-center gap-0.5 shrink-0">
-          <button onClick={zoomOut} className="flex size-7 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-bg-secondary)]" title={t('pdf_zoom_menos')}>
-            <ZoomOut className="size-3.5" />
-          </button>
+          <Tooltip content={t('pdf_zoom_menos')} position="bottom">
+            <button onClick={zoomOut} className="flex size-7 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-bg-secondary)]">
+              <ZoomOut className="size-3.5" />
+            </button>
+          </Tooltip>
           <input ref={zoomInputRef} type="text" inputMode="numeric" value={isEditingZoom ? zoomInput : `${Math.round(scale * 100)}%`} onChange={(e) => { setZoomInput(e.target.value.replace('%', '')); setIsEditingZoom(true); }} onFocus={() => { setIsEditingZoom(true); setZoomInput(String(Math.round(scale * 100))); zoomInputRef.current?.select(); }} onBlur={handleZoomSubmit} onKeyDown={(e) => { if (e.key === 'Enter') { handleZoomSubmit(); zoomInputRef.current?.blur(); } }} className="w-12 rounded border border-[var(--color-border)] bg-[var(--color-bg)] px-1 py-0.5 text-center text-xs text-[var(--color-text-primary)] outline-none focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold-muted)]" aria-label={t('pdf_zoom_valor')} />
-          <button onClick={zoomIn} className="flex size-7 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-bg-secondary)]" title={t('pdf_zoom_mas')}>
-            <ZoomIn className="size-3.5" />
-          </button>
+          <Tooltip content={t('pdf_zoom_mas')} position="bottom">
+            <button onClick={zoomIn} className="flex size-7 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-bg-secondary)]">
+              <ZoomIn className="size-3.5" />
+            </button>
+          </Tooltip>
 
           <div className="mx-0.5 h-5 w-px bg-[var(--color-border)] hidden sm:block" />
 
-          <button onClick={() => setShowSearch((v) => !v)} className={cn('flex size-7 items-center justify-center rounded-[var(--radius-sm)] transition-colors', showSearch ? 'bg-[var(--color-brand-gold-muted)] text-[var(--color-brand-gold)]' : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]')} title={t('pdf_buscar')}>
-            <Search className="size-3.5" />
-          </button>
+          <Tooltip content={t('pdf_buscar')} position="bottom">
+            <button onClick={() => setShowSearch((v) => !v)} className={cn('flex size-7 items-center justify-center rounded-[var(--radius-sm)] transition-colors', showSearch ? 'bg-[var(--color-brand-gold-muted)] text-[var(--color-brand-gold)]' : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]')}>
+              <Search className="size-3.5" />
+            </button>
+          </Tooltip>
 
           {canDownload && (
-            <button onClick={onDownload} className="flex size-7 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]" title={t('descargar')}>
-              <Download className="size-3.5" />
-            </button>
+            <Tooltip content={t('descargar')} position="bottom">
+              <button onClick={onDownload} className="flex size-7 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]">
+                <Download className="size-3.5" />
+              </button>
+            </Tooltip>
           )}
 
           {/* More options menu */}
           <div className="relative" ref={moreMenuRef}>
-            <button onClick={() => setShowMoreMenu((v) => !v)} className={cn('flex size-7 items-center justify-center rounded-[var(--radius-sm)] transition-colors', showMoreMenu ? 'bg-[var(--color-brand-gold-muted)] text-[var(--color-brand-gold)]' : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]')} title={t('pdf_opciones')}>
-              <MoreVertical className="size-3.5" />
-            </button>
+            <Tooltip content={t('pdf_opciones')} position="bottom">
+              <button onClick={() => setShowMoreMenu((v) => !v)} className={cn('flex size-7 items-center justify-center rounded-[var(--radius-sm)] transition-colors', showMoreMenu ? 'bg-[var(--color-brand-gold-muted)] text-[var(--color-brand-gold)]' : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]')}>
+                <MoreVertical className="size-3.5" />
+              </button>
+            </Tooltip>
             {showMoreMenu && (
               <div className="absolute right-0 top-full z-50 mt-1 min-w-[180px] rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg)] py-1 shadow-[var(--shadow-lg)]">
                 <button onClick={enterPresentationMode} className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] text-left">
@@ -353,12 +396,16 @@ function PDFViewerContent({ url, titulo, canDownload, onDownload, onBack, t }: P
           <Search className="size-3.5 shrink-0 text-[var(--color-text-muted)]" />
           <input ref={searchInputRef} type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.shiftKey ? handleSearchPrev() : (searchQuery ? handleSearchNext() : handleSearch()); } }} placeholder={t('pdf_buscar_placeholder')} className="flex-1 bg-transparent text-sm text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)]" />
           <div className="flex items-center gap-0.5">
-            <button onClick={handleSearchPrev} disabled={!searchQuery} className="flex size-6 items-center justify-center rounded text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] disabled:opacity-30" title={t('pdf_buscar_anterior')}>
-              <ChevronLeft className="size-3.5" />
-            </button>
-            <button onClick={handleSearchNext} disabled={!searchQuery} className="flex size-6 items-center justify-center rounded text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] disabled:opacity-30" title={t('pdf_buscar_siguiente')}>
-              <ChevronRight className="size-3.5" />
-            </button>
+            <Tooltip content={t('pdf_buscar_anterior')} position="bottom">
+              <button onClick={handleSearchPrev} disabled={!searchQuery} className="flex size-6 items-center justify-center rounded text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] disabled:opacity-30">
+                <ChevronLeft className="size-3.5" />
+              </button>
+            </Tooltip>
+            <Tooltip content={t('pdf_buscar_siguiente')} position="bottom">
+              <button onClick={handleSearchNext} disabled={!searchQuery} className="flex size-6 items-center justify-center rounded text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] disabled:opacity-30">
+                <ChevronRight className="size-3.5" />
+              </button>
+            </Tooltip>
           </div>
           <button onClick={closeSearch} className="flex size-6 items-center justify-center rounded text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]">
             <X className="size-3.5" />

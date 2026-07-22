@@ -10,6 +10,7 @@ import { es } from 'date-fns/locale';
 import { getFileInfo, getExtension } from '@/lib/utils/fileInfo';
 import { RecursoPreviewModal } from '@/components/recursos/RecursoPreviewModal';
 import { ExternalLinkModal } from '@/components/common/ExternalLinkModal';
+import { Tooltip } from '@/components/common/Tooltip';
 import {
   CardActions as RecursoCardActions,
   Eye,
@@ -204,9 +205,11 @@ export function RecursoCard({
         {/* Content */}
         <div className="flex flex-col flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="truncate text-sm font-semibold text-[var(--color-text-primary)]">
-              {recurso.titulo}
-            </span>
+            <Tooltip content={recurso.titulo} position="bottom">
+              <span className="truncate text-sm font-semibold text-[var(--color-text-primary)]">
+                {recurso.titulo}
+              </span>
+            </Tooltip>
             {recurso.tipo === 'archivo' && fileInfo && ext && (
               <span className={cn(
                 'flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide',
