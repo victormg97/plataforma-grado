@@ -137,6 +137,11 @@ export function RecursoUploader({ alumnos, onSuccess, defaultCarpetaId, rol = 'p
             );
           }
 
+          // Generate thumbnail for PDF files in background (fire-and-forget)
+          if (ext?.toLowerCase() === 'pdf' && rec) {
+            fetch(`/api/recursos/${rec.id}/thumbnail`, { method: 'POST' }).catch(() => {});
+          }
+
           setUploadProgress((p) => ({ ...p, [entry.displayName]: 100 }));
         }
       } else {

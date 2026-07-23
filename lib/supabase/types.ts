@@ -1242,6 +1242,7 @@ export type Database = {
           para_todos_app: boolean
           storage_path: string | null
           subido_por: string
+          thumbnail_path: string | null
           tipo: string
           titulo: string
           updated_at: string
@@ -1257,6 +1258,7 @@ export type Database = {
           para_todos_app?: boolean
           storage_path?: string | null
           subido_por: string
+          thumbnail_path?: string | null
           tipo: string
           titulo: string
           updated_at?: string
@@ -1272,6 +1274,7 @@ export type Database = {
           para_todos_app?: boolean
           storage_path?: string | null
           subido_por?: string
+          thumbnail_path?: string | null
           tipo?: string
           titulo?: string
           updated_at?: string

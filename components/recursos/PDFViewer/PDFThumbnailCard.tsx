@@ -50,6 +50,24 @@ export function PDFThumbnailCard({
 
   const pdfViewerHref = `/recursos/pdf/${recurso.id}`;
 
+  // If server-generated thumbnail exists, use it directly (instant load)
+  const hasServerThumbnail = !!recurso.thumbnail_path;
+
+  // Fetch the public URL for the server thumbnail
+  const { data: serverThumbnailUrl } = useQuery({
+    queryKey: ['thumbnail-url', recurso.id],
+    queryFn: async () => {
+      const res = await fetch(`/api/recursos/${recurso.id}/thumbnail-url`);
+      if (!res.ok) return null;
+      const { url } = await res.json();
+      return url as string;
+    },
+    enabled: hasServerThumbnail,
+    staleTime: SIGNED_URL_STALE_MS,
+    gcTime: SIGNED_URL_GC_MS,
+    retry: 1,
+  });
+
   // Intersection observer for lazy loading thumbnails
   useEffect(() => {
     const el = containerRef.current;
@@ -68,7 +86,7 @@ export function PDFThumbnailCard({
     return () => observer.disconnect();
   }, []);
 
-  // Fetch signed URL for this PDF (only when visible)
+  // Fetch signed URL for this PDF (only when visible AND no server thumbnail)
   const { data: signedUrl } = useQuery({
     queryKey: ['signed-url', recurso.id],
     queryFn: async () => {
@@ -77,16 +95,16 @@ export function PDFThumbnailCard({
       const { url } = await res.json();
       return url as string;
     },
-    enabled: isVisible,
+    enabled: isVisible && !hasServerThumbnail,
     staleTime: SIGNED_URL_STALE_MS,
     gcTime: SIGNED_URL_GC_MS,
     retry: 1,
   });
 
-  // Render first page thumbnail on canvas using pdfjs-dist
+  // Render first page thumbnail on canvas using pdfjs-dist (fallback only)
   useEffect(() => {
-    // Skip if already cached
-    if (cachedSrc || !signedUrl || !canvasRef.current || !isVisible) return;
+    // Skip if server thumbnail available or already cached
+    if (hasServerThumbnail || cachedSrc || !signedUrl || !canvasRef.current || !isVisible) return;
 
     let cancelled = false;
 
@@ -188,18 +206,37 @@ export function PDFThumbnailCard({
         prefetch={true}
         className="relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden bg-[var(--color-bg-secondary)] cursor-pointer"
       >
-        {!thumbnailReady && !thumbnailError && (
+        {/* Server thumbnail (fastest - just an image) */}
+        {hasServerThumbnail && serverThumbnailUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={serverThumbnailUrl}
+            alt={recurso.titulo}
+            className="max-h-full max-w-full object-contain"
+            style={{ width: '100%', height: 'auto' }}
+          />
+        )}
+        {/* Server thumbnail loading */}
+        {hasServerThumbnail && !serverThumbnailUrl && (
           <div className="absolute inset-0 flex items-center justify-center">
             <Loader2 className="size-5 animate-spin text-[var(--color-text-muted)]" />
           </div>
         )}
-        {thumbnailError && (
+        {/* Client-side fallback: loading spinner */}
+        {!hasServerThumbnail && !thumbnailReady && !thumbnailError && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Loader2 className="size-5 animate-spin text-[var(--color-text-muted)]" />
+          </div>
+        )}
+        {/* Client-side fallback: error */}
+        {!hasServerThumbnail && thumbnailError && (
           <div className="flex flex-col items-center gap-2">
             <FileText className="size-8 text-[#E44D26]" />
             <span className="text-xs text-[var(--color-text-muted)]">PDF</span>
           </div>
         )}
-        {cachedSrc ? (
+        {/* Client-side fallback: cached image or canvas */}
+        {!hasServerThumbnail && (cachedSrc ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={cachedSrc}
@@ -216,7 +253,7 @@ export function PDFThumbnailCard({
             )}
             style={{ width: '100%', height: 'auto' }}
           />
-        )}
+        ))}
         {/* Hover overlay */}
         <div className="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/5" />
       </Link>

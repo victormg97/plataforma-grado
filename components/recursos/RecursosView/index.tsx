@@ -332,6 +332,10 @@ export function RecursosView({ rol }: RecursosViewProps) {
       if (recurso.tipo === 'archivo' && recurso.storage_path) {
         await supabase.storage.from('recursos').remove([recurso.storage_path]);
       }
+      // Also delete the pre-generated thumbnail if it exists
+      if (recurso.thumbnail_path) {
+        await supabase.storage.from('recursos-thumbnails').remove([recurso.thumbnail_path]);
+      }
       const { error } = await supabase.from('recursos_compartidos').delete().eq('id', recurso.id);
       if (error) throw error;
     },

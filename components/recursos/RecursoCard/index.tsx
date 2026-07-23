@@ -30,6 +30,7 @@ export interface RecursoItem {
   tipo: 'archivo' | 'enlace' | 'video';
   url?: string | null;
   storage_path?: string | null;
+  thumbnail_path?: string | null;
   para_todos: boolean;
   para_todos_app?: boolean;
   bloquear_descarga?: boolean;
