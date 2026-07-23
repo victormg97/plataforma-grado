@@ -278,8 +278,47 @@ function PDFViewerContent({ url, titulo, canDownload, onDownload, onBack, t }: P
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [zoomIn, zoomOut, showSearch, showMoreMenu, closeSearch]);
 
+  // Pinch-to-zoom on touch devices — controls PDF scale, not browser zoom
+  useEffect(() => {
+    if (!pdfSlick) return;
+    let lastDistance = 0;
+    let initialScale = 1;
+
+    const getDistance = (t1: Touch, t2: Touch) =>
+      Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        lastDistance = getDistance(e.touches[0], e.touches[1]);
+        initialScale = pdfSlick.viewer.currentScale;
+      }
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.touches.length !== 2 || !lastDistance) return;
+      e.preventDefault();
+      const distance = getDistance(e.touches[0], e.touches[1]);
+      const ratio = distance / lastDistance;
+      const newScale = Math.min(Math.max(initialScale * ratio, 0.25), 5);
+      pdfSlick.currentScale = newScale;
+    };
+
+    const onTouchEnd = () => { lastDistance = 0; };
+
+    const el = document.querySelector('.pdfSlick');
+    if (!el) return;
+    el.addEventListener('touchstart', onTouchStart as EventListener, { passive: false });
+    el.addEventListener('touchmove', onTouchMove as EventListener, { passive: false });
+    el.addEventListener('touchend', onTouchEnd as EventListener);
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart as EventListener);
+      el.removeEventListener('touchmove', onTouchMove as EventListener);
+      el.removeEventListener('touchend', onTouchEnd as EventListener);
+    };
+  }, [pdfSlick]);
+
   return (
-    <div className="flex h-[calc(100dvh-5.5rem)] flex-col overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] shadow-[var(--shadow-md)]">
+    <div className="flex h-[calc(100dvh-5.5rem)] flex-col overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] shadow-[var(--shadow-md)] touch-manipulation">
       {/* Toolbar */}
       <div className="flex items-center gap-1 border-b border-[var(--color-border)] bg-[var(--color-bg)] px-2 py-1.5 sm:gap-2 sm:px-3">
         {/* Left: back + thumbnails toggle + title */}
@@ -290,7 +329,7 @@ function PDFViewerContent({ url, titulo, canDownload, onDownload, onBack, t }: P
             </button>
           </Tooltip>
           <Tooltip content={t('pdf_miniaturas')} position="bottom">
-            <button onClick={() => setShowThumbnails((v) => { const next = !v; localStorage.setItem('pdf-thumbs-open', next ? '1' : '0'); return next; })} className={cn('flex size-8 shrink-0 items-center justify-center rounded-[var(--radius-md)] transition-colors', showThumbnails ? 'bg-[var(--color-brand-gold-muted)] text-[var(--color-brand-gold)]' : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]')}>
+            <button onClick={() => setShowThumbnails((v) => { const next = !v; localStorage.setItem('pdf-thumbs-open', next ? '1' : '0'); return next; })} className={cn('hidden sm:flex size-8 shrink-0 items-center justify-center rounded-[var(--radius-md)] transition-colors', showThumbnails ? 'bg-[var(--color-brand-gold-muted)] text-[var(--color-brand-gold)]' : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]')}>
               {showThumbnails ? <PanelLeftClose className="size-4" /> : <PanelLeftOpen className="size-4" />}
             </button>
           </Tooltip>
@@ -334,14 +373,14 @@ function PDFViewerContent({ url, titulo, canDownload, onDownload, onBack, t }: P
           <div className="mx-0.5 h-5 w-px bg-[var(--color-border)] hidden sm:block" />
 
           <Tooltip content={t('pdf_buscar')} position="bottom">
-            <button onClick={() => setShowSearch((v) => !v)} className={cn('flex size-7 items-center justify-center rounded-[var(--radius-sm)] transition-colors', showSearch ? 'bg-[var(--color-brand-gold-muted)] text-[var(--color-brand-gold)]' : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]')}>
+            <button onClick={() => setShowSearch((v) => !v)} className={cn('hidden sm:flex size-7 items-center justify-center rounded-[var(--radius-sm)] transition-colors', showSearch ? 'bg-[var(--color-brand-gold-muted)] text-[var(--color-brand-gold)]' : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]')}>
               <Search className="size-3.5" />
             </button>
           </Tooltip>
 
           {canDownload && (
             <Tooltip content={t('descargar')} position="bottom">
-              <button onClick={onDownload} className="flex size-7 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]">
+              <button onClick={onDownload} className="hidden sm:flex size-7 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]">
                 <Download className="size-3.5" />
               </button>
             </Tooltip>
@@ -356,6 +395,18 @@ function PDFViewerContent({ url, titulo, canDownload, onDownload, onBack, t }: P
             </Tooltip>
             {showMoreMenu && (
               <div className="absolute right-0 top-full z-50 mt-1 min-w-[180px] rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg)] py-1 shadow-[var(--shadow-lg)]">
+                {/* Mobile-only: search and download */}
+                <button onClick={() => { setShowSearch((v) => !v); setShowMoreMenu(false); }} className="flex sm:hidden w-full items-center gap-2.5 px-3 py-2 text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] text-left">
+                  <Search className="size-4 text-[var(--color-text-muted)]" />
+                  {t('pdf_buscar')}
+                </button>
+                {canDownload && (
+                  <button onClick={() => { onDownload(); setShowMoreMenu(false); }} className="flex sm:hidden w-full items-center gap-2.5 px-3 py-2 text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] text-left">
+                    <Download className="size-4 text-[var(--color-text-muted)]" />
+                    {t('descargar')}
+                  </button>
+                )}
+                <div className="my-1 h-px bg-[var(--color-border)] sm:hidden" />
                 <button onClick={enterPresentationMode} className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] text-left">
                   <Maximize className="size-4 text-[var(--color-text-muted)]" />
                   {t('pdf_presentacion')}
@@ -459,7 +510,7 @@ function PDFViewerContent({ url, titulo, canDownload, onDownload, onBack, t }: P
         </div>
 
         {/* PDF viewer */}
-        <div className="relative flex-1 overflow-hidden pdfSlick">
+        <div className="relative flex-1 overflow-hidden pdfSlick touch-pan-y">
           {!isDocumentLoaded && (
             <div className="absolute inset-0 z-10 flex items-center justify-center bg-[var(--color-bg-secondary)]">
               <Loader2 className="size-8 animate-spin text-[var(--color-brand-gold)]" />

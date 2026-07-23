@@ -717,7 +717,7 @@ export function RecursosView({ rol }: RecursosViewProps) {
       </div>
 
       {/* Filter tabs */}
-      <div className="no-scrollbar flex gap-1 overflow-x-auto border-b border-[var(--color-border)]">
+      <div className="no-scrollbar flex gap-1 overflow-x-auto overflow-y-hidden overscroll-x-contain touch-pan-x border-b border-[var(--color-border)]">
         {TABS.map(({ key, label }) => {
           const source = isSearching ? searchBase : currentRecursos;
           const count = key === 'todos' ? source.length : source.filter((r) => r.tipo === key).length;
