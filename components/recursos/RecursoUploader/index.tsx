@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 
 import { FileDropZone, type FileEntry } from './components/FileDropZone';
 import { AlumnoAssignmentSelector, type VisibilidadMode } from './components/AlumnoAssignmentSelector';
+import { generateAndUploadThumbnail } from '@/lib/utils/generatePdfThumbnail';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -139,7 +140,7 @@ export function RecursoUploader({ alumnos, onSuccess, defaultCarpetaId, rol = 'p
 
           // Generate thumbnail for PDF files in background (fire-and-forget)
           if (ext?.toLowerCase() === 'pdf' && rec) {
-            fetch(`/api/recursos/${rec.id}/thumbnail`, { method: 'POST' }).catch(() => {});
+            generateAndUploadThumbnail(entry.file, rec.id).catch(() => {});
           }
 
           setUploadProgress((p) => ({ ...p, [entry.displayName]: 100 }));

@@ -3,28 +3,25 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 /**
+ * GET /api/recursos/generate-all-thumbnails
+ *
+ * Admin-only endpoint that returns the list of PDFs that need thumbnails.
+ * The actual rendering happens client-side (browser has canvas support).
+ *
  * POST /api/recursos/generate-all-thumbnails
  *
- * Admin-only batch endpoint that generates thumbnails for PDFs
- * that don't have one yet. Processes a batch of `limit` PDFs per call
- * to stay within Vercel's timeout limits.
- *
- * Query params:
- *   - limit: number of PDFs to process per call (default 5)
- *
- * Call repeatedly until `remaining` is 0.
+ * Receives a thumbnail image blob from the client and uploads it.
+ * Body: FormData with 'file' (WebP blob) and 'recursoId' (string)
  */
-export const maxDuration = 60; // Vercel Pro allows up to 60s
+export const maxDuration = 60;
 
-export async function POST(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   const supabase = await createClient();
   const adminClient = createAdminClient();
 
   // Auth + admin check
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { data: profile } = await adminClient
     .from('profiles')
@@ -32,110 +29,69 @@ export async function POST(req: NextRequest) {
     .eq('id', user.id)
     .single();
 
-  if (profile?.rol !== 'admin') {
-    return NextResponse.json({ error: 'Admin only' }, { status: 403 });
-  }
+  if (profile?.rol !== 'admin') return NextResponse.json({ error: 'Admin only' }, { status: 403 });
 
-  const limit = parseInt(req.nextUrl.searchParams.get('limit') ?? '5', 10);
-
-  // Get PDFs without thumbnails (limited batch)
+  // Get PDFs without thumbnails
   const { data: recursos, error } = await adminClient
     .from('recursos_compartidos')
     .select('id, storage_path, titulo')
     .eq('tipo', 'archivo')
     .ilike('storage_path', '%.pdf')
     .is('thumbnail_path', null)
-    .limit(limit);
+    .order('created_at', { ascending: false });
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  return NextResponse.json({ recursos: recursos ?? [], total: recursos?.length ?? 0 });
+}
+
+export async function POST(req: NextRequest) {
+  const supabase = await createClient();
+  const adminClient = createAdminClient();
+
+  // Auth + admin check
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { data: profile } = await adminClient
+    .from('profiles')
+    .select('rol')
+    .eq('id', user.id)
+    .single();
+
+  if (profile?.rol !== 'admin') return NextResponse.json({ error: 'Admin only' }, { status: 403 });
+
+  // Parse FormData
+  const formData = await req.formData();
+  const file = formData.get('file') as Blob | null;
+  const recursoId = formData.get('recursoId') as string | null;
+
+  if (!file || !recursoId) {
+    return NextResponse.json({ error: 'Missing file or recursoId' }, { status: 400 });
   }
 
-  if (!recursos || recursos.length === 0) {
-    return NextResponse.json({ message: 'All done', remaining: 0, success: 0, failed: 0 });
+  // Upload to thumbnails bucket
+  const thumbnailPath = `${recursoId}.webp`;
+  const { error: uploadErr } = await adminClient.storage
+    .from('recursos-thumbnails')
+    .upload(thumbnailPath, file, {
+      contentType: 'image/webp',
+      upsert: true,
+    });
+
+  if (uploadErr) {
+    return NextResponse.json({ error: uploadErr.message }, { status: 500 });
   }
 
-  // Count total remaining
-  const { count } = await adminClient
+  // Update DB
+  const { error: updateErr } = await adminClient
     .from('recursos_compartidos')
-    .select('id', { count: 'exact', head: true })
-    .eq('tipo', 'archivo')
-    .ilike('storage_path', '%.pdf')
-    .is('thumbnail_path', null);
+    .update({ thumbnail_path: thumbnailPath })
+    .eq('id', recursoId);
 
-  let success = 0;
-  let failed = 0;
-  const processed: string[] = [];
-
-  for (const recurso of recursos) {
-    try {
-      // Download PDF
-      const { data: fileData, error: dlError } = await adminClient.storage
-        .from('recursos')
-        .download(recurso.storage_path!);
-
-      if (dlError || !fileData) {
-        failed++;
-        continue;
-      }
-
-      const arrayBuffer = await fileData.arrayBuffer();
-
-      // Render first page
-      const pdfjsLib = await import('pdfjs-dist');
-      const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) });
-      const pdf = await loadingTask.promise;
-      const page = await pdf.getPage(1);
-
-      const targetWidth = 400;
-      const viewport = page.getViewport({ scale: 1 });
-      const scale = targetWidth / viewport.width;
-      const scaledViewport = page.getViewport({ scale });
-
-      const canvas = new OffscreenCanvas(
-        Math.round(scaledViewport.width),
-        Math.round(scaledViewport.height)
-      );
-      const ctx = canvas.getContext('2d');
-      if (!ctx) { failed++; continue; }
-
-      await page.render({
-        canvasContext: ctx as unknown as CanvasRenderingContext2D,
-        canvas: canvas as unknown as HTMLCanvasElement,
-        viewport: scaledViewport,
-      }).promise;
-
-      // Convert to WebP
-      const blob = await canvas.convertToBlob({ type: 'image/webp', quality: 0.8 });
-
-      // Upload
-      const thumbnailPath = `${recurso.id}.webp`;
-      const { error: uploadErr } = await adminClient.storage
-        .from('recursos-thumbnails')
-        .upload(thumbnailPath, blob, {
-          contentType: 'image/webp',
-          upsert: true,
-        });
-
-      if (uploadErr) { failed++; continue; }
-
-      // Update DB
-      await adminClient
-        .from('recursos_compartidos')
-        .update({ thumbnail_path: thumbnailPath })
-        .eq('id', recurso.id);
-
-      success++;
-      processed.push(recurso.titulo);
-    } catch {
-      failed++;
-    }
+  if (updateErr) {
+    return NextResponse.json({ error: updateErr.message }, { status: 500 });
   }
 
-  return NextResponse.json({
-    remaining: (count ?? 0) - success,
-    success,
-    failed,
-    processed,
-  });
+  return NextResponse.json({ success: true, thumbnail_path: thumbnailPath });
 }

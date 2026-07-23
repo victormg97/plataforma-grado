@@ -1,87 +1,81 @@
 /**
  * Script: Generate thumbnails for all existing PDF resources.
  *
- * This script calls the batch API endpoint repeatedly until all PDFs
- * have thumbnails. It works against a running instance of the app
- * (local dev server or production Vercel deployment).
+ * Since thumbnail rendering requires a browser canvas (not available
+ * in Node.js serverless), this migration is done from the browser.
  *
- * Usage:
- *   1. Start the dev server: npm run dev
- *   2. In another terminal: npx tsx scripts/generate-pdf-thumbnails.ts
+ * ═══════════════════════════════════════════════════════════════════
+ * HOW TO RUN (after deploying to Vercel):
+ * ═══════════════════════════════════════════════════════════════════
  *
- *   Or against production (after deploy):
- *   npx tsx scripts/generate-pdf-thumbnails.ts https://your-app.vercel.app
+ * 1. Log in to the app as admin
+ * 2. Open browser DevTools console (F12 → Console)
+ * 3. Paste and run this script:
  *
- * Requirements:
- *   - The app must be running (local or production)
- *   - You must be logged in as admin (the script uses a session cookie)
- *
- * Alternative: Use the admin panel directly — the endpoint can be called
- * from the browser console while logged in as admin:
- *
- *   async function generateAll() {
- *     let remaining = 1;
- *     while (remaining > 0) {
- *       const res = await fetch('/api/recursos/generate-all-thumbnails?limit=5', { method: 'POST' });
- *       const data = await res.json();
- *       console.log(data);
- *       remaining = data.remaining ?? 0;
- *       if (data.failed > 0) await new Promise(r => setTimeout(r, 2000));
- *     }
- *     console.log('✅ Done!');
- *   }
- *   generateAll();
+ * ─────────────────────────────────────────────────────────────────
+async function migrateThumbnails() {
+  console.log('🔍 Fetching PDFs without thumbnails...');
+  const listRes = await fetch('/api/recursos/generate-all-thumbnails');
+  const { recursos, total } = await listRes.json();
+  if (!total) { console.log('✅ All PDFs already have thumbnails!'); return; }
+  console.log(`📄 Found ${total} PDFs to process.\n`);
+
+  const pdfjsLib = await import('https://cdn.jsdelivr.net/npm/pdfjs-dist@4.9.155/+esm');
+  pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
+
+  let success = 0, failed = 0;
+
+  for (let i = 0; i < recursos.length; i++) {
+    const r = recursos[i];
+    try {
+      // Get signed URL for the PDF
+      const dlRes = await fetch(`/api/recursos/${r.id}/download`);
+      if (!dlRes.ok) throw new Error('download API failed');
+      const { url } = await dlRes.json();
+
+      // Load & render first page
+      const pdf = await pdfjsLib.getDocument(url).promise;
+      const page = await pdf.getPage(1);
+      const vp = page.getViewport({ scale: 400 / page.getViewport({ scale: 1 }).width });
+
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(vp.width);
+      canvas.height = Math.round(vp.height);
+      const ctx = canvas.getContext('2d');
+      await page.render({ canvasContext: ctx, canvas, viewport: vp }).promise;
+
+      // Convert to WebP blob
+      const blob = await new Promise(res => canvas.toBlob(res, 'image/webp', 0.8));
+
+      // Upload
+      const fd = new FormData();
+      fd.append('file', blob);
+      fd.append('recursoId', r.id);
+      const upRes = await fetch('/api/recursos/generate-all-thumbnails', { method: 'POST', body: fd });
+      if (!upRes.ok) throw new Error('upload failed');
+
+      success++;
+      console.log(`  [${i+1}/${total}] ✅ ${r.titulo}`);
+    } catch (e) {
+      failed++;
+      console.log(`  [${i+1}/${total}] ❌ ${r.titulo}: ${e.message}`);
+    }
+    // Small delay to not overwhelm the server
+    await new Promise(r => setTimeout(r, 500));
+  }
+  console.log(`\n🏁 Done! ${success} generated, ${failed} failed.`);
+}
+migrateThumbnails();
+ * ─────────────────────────────────────────────────────────────────
  */
 
-const BASE_URL = process.argv[2] || 'http://localhost:3000';
-const BATCH_SIZE = 5;
-const DELAY_BETWEEN_BATCHES_MS = 1000;
-
-async function main() {
-  console.log(`🚀 Generating PDF thumbnails via: ${BASE_URL}`);
-  console.log(`   Batch size: ${BATCH_SIZE}\n`);
-
-  let remaining = Infinity;
-  let totalSuccess = 0;
-  let totalFailed = 0;
-  let batch = 1;
-
-  while (remaining > 0) {
-    console.log(`📦 Batch ${batch}...`);
-
-    const res = await fetch(`${BASE_URL}/api/recursos/generate-all-thumbnails?limit=${BATCH_SIZE}`, {
-      method: 'POST',
-      credentials: 'include',
-    });
-
-    if (!res.ok) {
-      console.error(`❌ Request failed: ${res.status} ${res.statusText}`);
-      const text = await res.text();
-      console.error(text);
-      break;
-    }
-
-    const data = await res.json();
-    remaining = data.remaining ?? 0;
-    totalSuccess += data.success ?? 0;
-    totalFailed += data.failed ?? 0;
-
-    if (data.processed?.length) {
-      data.processed.forEach((t: string) => console.log(`   ✅ ${t}`));
-    }
-    if (data.failed > 0) {
-      console.log(`   ⚠️  ${data.failed} failed in this batch`);
-    }
-
-    console.log(`   → ${remaining} remaining\n`);
-
-    if (remaining > 0) {
-      await new Promise((r) => setTimeout(r, DELAY_BETWEEN_BATCHES_MS));
-    }
-    batch++;
-  }
-
-  console.log(`\n🏁 Complete! ${totalSuccess} generated, ${totalFailed} failed.`);
-}
-
-main().catch(console.error);
+console.log(`
+╔══════════════════════════════════════════════════════════════╗
+║  This script runs in the BROWSER, not Node.js.              ║
+║                                                             ║
+║  1. Deploy to Vercel                                        ║
+║  2. Log in as admin                                         ║
+║  3. Open DevTools Console (F12)                             ║
+║  4. Copy the script from the top of this file and paste it  ║
+╚══════════════════════════════════════════════════════════════╝
+`);
