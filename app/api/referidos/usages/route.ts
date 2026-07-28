@@ -33,9 +33,21 @@ export async function GET(_req: NextRequest) {
     .eq('tenant', tenantConfig.id)
     .order('used_at', { ascending: false })
 
-  // Non-admin: only own usages (where you are the referred user)
+  // Non-admin: get usages where MY referral code was used (people I referred)
   if (!isAdmin) {
-    query = query.eq('referred_user_id', user.id)
+    // First, get the current user's referral code ID
+    const { data: myCode } = await supabase
+      .from('user_referral_codes')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('tenant', tenantConfig.id)
+      .maybeSingle()
+
+    if (!myCode) {
+      return NextResponse.json([])
+    }
+
+    query = query.eq('user_referral_code_id', myCode.id)
   }
 
   const { data: usages, error } = await query

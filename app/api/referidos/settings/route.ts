@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { tenantConfig } from '@/config'
 import type { ReferralSettings } from '@/lib/referidos/types'
 
@@ -33,6 +34,7 @@ export async function GET(_req: NextRequest) {
       discount_codes_display_name: 'Código de Descuento',
       show_rewards_to_user: true,
       show_referral_count_to_user: true,
+      user_welcome_message: '',
     }
     return NextResponse.json(defaultSettings)
   }
@@ -62,10 +64,14 @@ export async function PUT(req: NextRequest) {
   
   const { id: _id, tenant: _tenant, created_at: _created_at, platform_enabled: _platform_enabled, ...updateData } = body
 
-  const { data, error } = await supabase
+  const admin = createAdminClient()
+
+  const { data, error } = await admin
     .from('referral_settings')
-    .update(updateData)
-    .eq('tenant', tenantConfig.id)
+    .upsert(
+      { ...updateData, tenant: tenantConfig.id },
+      { onConflict: 'tenant' }
+    )
     .select()
     .single()
 

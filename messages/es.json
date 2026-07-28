@@ -1465,7 +1465,9 @@
     "subtitulo": "Personaliza el contenido público, comunicaciones y apariencia de tu sitio",
     "navbar_label": "Configurar página",
     "seccion_contenido": "Contenido público",
-    "seccion_comunicacion": "Comunicación",
+    "seccion_comunicacion": "Comunicación y engagement",
+    "seccion_referidos": "Sistema de Referidos",
+    "seccion_referidos_desc": "Configura códigos, recompensas y reglas del sistema de referidos",
     "seccion_proximamente": "Próximamente",
     "proximamente_titulo": "Más opciones en camino",
     "proximamente_desc": "Aquí aparecerán nuevas configuraciones de página como temas, textos de bienvenida y más"
@@ -1564,6 +1566,11 @@
     "mostrar_recompensas_usuario_desc": "Los alumnos y lectores verán sus recompensas activas e historial",
     "mostrar_conteo_usuario": "Mostrar conteo de referidos",
     "mostrar_conteo_usuario_desc": "Los alumnos y lectores verán cuántas personas han usado su código",
+    "mensaje_bienvenida": "Mensaje de bienvenida para usuarios",
+    "mensaje_bienvenida_desc": "Este mensaje se muestra a alumnos y lectores en su página de referidos. Explica cómo funciona el sistema y motiva a compartir.",
+    "mensaje_bienvenida_placeholder": "Ej: ¡Comparte tu código con amigos! Cuando se registren, ambos recibirán beneficios exclusivos.",
+    "como_funciona": "¿Cómo funciona?",
+    "subtitulo_alumno": "Comparte tu código y obtén recompensas",
     "guardar": "Guardar cambios",
     "guardado_ok": "Cambios guardados",
     "guardando": "Guardando...",
@@ -1645,6 +1652,11 @@
     "icono_premio": "Premio",
     "icono_corazon": "Corazón",
     "icono_trofeo": "Trofeo",
-    "icono_usuarios": "Usuarios"
+    "icono_usuarios": "Usuarios",
+    "columna_nombre": "Nombre",
+    "columna_fecha_registro": "Fecha de registro",
+    "columna_recompensa": "Recompensa aplicada",
+    "premio_por_referido": "Premio por cada referido exitoso",
+    "sin_recompensas_activas": "No hay recompensas activas configuradas actualmente"
   }
 }

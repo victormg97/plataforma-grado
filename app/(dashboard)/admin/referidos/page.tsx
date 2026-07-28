@@ -1,17 +1,20 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
-import { Settings, ArrowLeft } from 'lucide-react';
+import { toast } from 'sonner';
+import { Settings, ArrowLeft, Plus, Trash2, Pencil } from 'lucide-react';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Button } from '@/components/common/Button';
 import { Card } from '@/components/common/Card';
+import { ConfirmDeleteModal } from '@/components/common/ConfirmDeleteModal';
 import { SistemaDesactivadoBanner } from '@/components/referidos/SistemaDesactivadoBanner';
+import { ModalCodigoDescuento } from '@/components/referidos/ModalCodigoDescuento';
 import { useUser } from '@/lib/hooks/useUser';
 import { getRolRedirectPath } from '@/lib/auth/helpers';
-import type { ReferralSettings } from '@/lib/referidos/types';
+import type { ReferralSettings, DiscountCode } from '@/lib/referidos/types';
 
 type Tab = 'codigos' | 'usos' | 'estadisticas' | 'descuentos';
 
@@ -20,10 +23,16 @@ export default function AdminReferidosPage() {
   const tc = useTranslations('common');
   const router = useRouter();
   const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
   const { user } = useUser();
 
   const tab = (searchParams.get('tab') as Tab) ?? 'codigos';
   const from = searchParams.get('from');
+
+  // Discount code modal state
+  const [dcModalOpen, setDcModalOpen] = useState(false);
+  const [editingDc, setEditingDc] = useState<DiscountCode | null>(null);
+  const [deletingDc, setDeletingDc] = useState<DiscountCode | null>(null);
 
   useEffect(() => {
     if (user && user.rol !== 'admin') {
@@ -50,7 +59,7 @@ export default function AdminReferidosPage() {
       if (!res.ok) throw new Error();
       return res.json();
     },
-    enabled: user?.rol === 'admin' && tab === 'codigos',
+    enabled: user?.rol === 'admin',
   });
 
   const { data: usages = [], isLoading: usagesLoading } = useQuery({
@@ -61,7 +70,7 @@ export default function AdminReferidosPage() {
       if (!res.ok) throw new Error();
       return res.json();
     },
-    enabled: user?.rol === 'admin' && tab === 'usos',
+    enabled: user?.rol === 'admin',
   });
 
   const { data: discountCodes = [], isLoading: discountLoading } = useQuery({
@@ -289,45 +298,98 @@ export default function AdminReferidosPage() {
               <div className="size-7 animate-spin rounded-full border-4 border-[var(--color-brand-gold)] border-t-transparent" />
             </div>
           ) : (
-            <Card>
-              {discountCodes.length === 0 ? (
-                <p className="py-8 text-center text-sm text-[var(--color-text-muted)]">{t('sin_codigos_descuento')}</p>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-[var(--color-border)]">
-                        <th className="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">{t('columna_codigo')}</th>
-                        <th className="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">{t('fecha_inicio')}</th>
-                        <th className="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">{t('fecha_termino')}</th>
-                        <th className="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">{t('columna_estado', { fallback: 'Estado' })}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {discountCodes.map((dc: { id: string; code: string; start_date: string | null; end_date: string | null; is_active: boolean; manual_override: boolean | null }) => {
-                        const active = dc.manual_override !== null
-                          ? dc.manual_override
-                          : dc.is_active && (!dc.start_date || new Date(dc.start_date) <= new Date()) && (!dc.end_date || new Date(dc.end_date) >= new Date());
-                        return (
-                          <tr key={dc.id} className="border-b border-[var(--color-border)] last:border-0 hover:bg-[var(--color-bg-secondary)]">
-                            <td className="px-4 py-3">
-                              <span className="font-mono font-bold tracking-wider text-[var(--color-brand-gold)]">{dc.code}</span>
-                            </td>
-                            <td className="px-4 py-3 text-[var(--color-text-muted)]">{dc.start_date ? new Date(dc.start_date).toLocaleDateString('es-CL') : '—'}</td>
-                            <td className="px-4 py-3 text-[var(--color-text-muted)]">{dc.end_date ? new Date(dc.end_date).toLocaleDateString('es-CL') : '—'}</td>
-                            <td className="px-4 py-3">
-                              <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${active ? 'bg-[var(--color-success)]/10 text-[var(--color-success)]' : 'bg-[var(--color-error)]/10 text-[var(--color-error)]'}`}>
-                                {active ? t('estado_activo') : t('estado_inactivo')}
-                              </span>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </Card>
+            <div className="space-y-4">
+              <div className="flex justify-end">
+                <Button onClick={() => { setEditingDc(null); setDcModalOpen(true); }}>
+                  <Plus className="mr-1.5 size-4" />
+                  {t('crear_codigo_descuento')}
+                </Button>
+              </div>
+
+              <Card>
+                {discountCodes.length === 0 ? (
+                  <p className="py-8 text-center text-sm text-[var(--color-text-muted)]">{t('sin_codigos_descuento')}</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-[var(--color-border)]">
+                          <th className="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">{t('columna_codigo')}</th>
+                          <th className="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">{t('fecha_inicio')}</th>
+                          <th className="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">{t('fecha_termino')}</th>
+                          <th className="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">{t('usos')}</th>
+                          <th className="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">{t('estado_activo')}</th>
+                          <th className="px-4 py-3 text-right font-medium text-[var(--color-text-secondary)]" />
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {discountCodes.map((dc: DiscountCode & { usage_count?: number }) => {
+                          const active = dc.manual_override !== null
+                            ? dc.manual_override
+                            : dc.is_active && (!dc.start_date || new Date(dc.start_date) <= new Date()) && (!dc.end_date || new Date(dc.end_date) >= new Date());
+                          return (
+                            <tr key={dc.id} className="border-b border-[var(--color-border)] last:border-0 hover:bg-[var(--color-bg-secondary)]">
+                              <td className="px-4 py-3">
+                                <span className="font-mono font-bold tracking-wider text-[var(--color-brand-gold)]">{dc.code}</span>
+                              </td>
+                              <td className="px-4 py-3 text-[var(--color-text-muted)]">{dc.start_date ? new Date(dc.start_date).toLocaleDateString('es-CL') : '—'}</td>
+                              <td className="px-4 py-3 text-[var(--color-text-muted)]">{dc.end_date ? new Date(dc.end_date).toLocaleDateString('es-CL') : '—'}</td>
+                              <td className="px-4 py-3 text-[var(--color-text-primary)]">{dc.usage_count ?? 0}</td>
+                              <td className="px-4 py-3">
+                                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${active ? 'bg-[var(--color-success)]/10 text-[var(--color-success)]' : 'bg-[var(--color-error)]/10 text-[var(--color-error)]'}`}>
+                                  {active ? t('estado_activo') : t('estado_inactivo')}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-right">
+                                <div className="flex items-center justify-end gap-1">
+                                  <button
+                                    onClick={() => { setEditingDc(dc); setDcModalOpen(true); }}
+                                    className="rounded-[var(--radius-sm)] p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]"
+                                  >
+                                    <Pencil className="size-3.5" />
+                                  </button>
+                                  <button
+                                    onClick={() => setDeletingDc(dc)}
+                                    className="rounded-[var(--radius-sm)] p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-error)]/10 hover:text-[var(--color-error)]"
+                                  >
+                                    <Trash2 className="size-3.5" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </Card>
+
+              <ModalCodigoDescuento
+                open={dcModalOpen}
+                onClose={() => { setDcModalOpen(false); setEditingDc(null); }}
+                code={editingDc}
+              />
+
+              <ConfirmDeleteModal
+                open={deletingDc !== null}
+                onClose={() => setDeletingDc(null)}
+                onConfirm={async () => {
+                  if (!deletingDc) return;
+                  try {
+                    const res = await fetch(`/api/referidos/discount-codes/${deletingDc.id}`, { method: 'DELETE' });
+                    if (!res.ok) throw new Error();
+                    toast.success(t('exito_codigo_eliminado'));
+                    queryClient.invalidateQueries({ queryKey: ['discount-codes'] });
+                  } catch {
+                    toast.error(t('error_codigo'));
+                  }
+                  setDeletingDc(null);
+                }}
+                entityName={deletingDc?.code ?? ''}
+                entityType={t('eliminar_regla').toLowerCase()}
+              />
+            </div>
           )
         )}
       </div>

@@ -63,12 +63,12 @@ export function RecompensasCard({ rules, usages, userId, showRewards, showCount 
                  {rules.filter(r => r.rule_type === 'referrer').map(r => (
                     <li key={r.id} className="flex items-start gap-2 text-sm text-[var(--color-text-primary)] border border-[var(--color-border)] p-3 rounded-[var(--radius-md)]">
                       <Gift className="size-4 text-[var(--color-brand-gold)] mt-0.5 shrink-0" />
-                      <span>Premio por cada referido exitoso</span>
+                      <span>{t('premio_por_referido')}</span>
                     </li>
                  ))}
                </ul>
             ) : (
-              <p className="text-sm text-[var(--color-text-muted)]">No hay recompensas activas configuradas actualmente.</p>
+              <p className="text-sm text-[var(--color-text-muted)]">{t('sin_recompensas_activas')}</p>
             )}
           </div>
         )}

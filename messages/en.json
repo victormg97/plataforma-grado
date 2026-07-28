@@ -1465,7 +1465,9 @@
     "subtitulo": "Customize the public content, communications and appearance of your site",
     "navbar_label": "Page settings",
     "seccion_contenido": "Public content",
-    "seccion_comunicacion": "Communication",
+    "seccion_comunicacion": "Communication & engagement",
+    "seccion_referidos": "Referral System",
+    "seccion_referidos_desc": "Configure codes, rewards and referral system rules",
     "seccion_proximamente": "Coming soon",
     "proximamente_titulo": "More options on the way",
     "proximamente_desc": "New page settings like themes, welcome texts and more will appear here"
@@ -1560,6 +1562,11 @@
     "mostrar_recompensas_usuario_desc": "Students and readers will see their active rewards and history",
     "mostrar_conteo_usuario": "Show referral count",
     "mostrar_conteo_usuario_desc": "Students and readers will see how many people have used their code",
+    "mensaje_bienvenida": "Welcome message for users",
+    "mensaje_bienvenida_desc": "This message is shown to students and readers on their referrals page. Explain how the system works and motivate sharing.",
+    "mensaje_bienvenida_placeholder": "E.g.: Share your code with friends! When they register, you both get exclusive benefits.",
+    "como_funciona": "How does it work?",
+    "subtitulo_alumno": "Share your code and earn rewards",
     "guardar": "Save changes",
     "guardado_ok": "Changes saved",
     "guardando": "Saving...",
@@ -1641,6 +1648,11 @@
     "icono_premio": "Award",
     "icono_corazon": "Heart",
     "icono_trofeo": "Trophy",
-    "icono_usuarios": "Users"
+    "icono_usuarios": "Users",
+    "columna_nombre": "Name",
+    "columna_fecha_registro": "Registration date",
+    "columna_recompensa": "Reward applied",
+    "premio_por_referido": "Reward per successful referral",
+    "sin_recompensas_activas": "No active rewards configured yet"
   }
 }

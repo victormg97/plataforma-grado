@@ -52,7 +52,7 @@ export default function ProfesorReferidosPage() {
   });
 
   const { data: usages = [] } = useQuery({
-    queryKey: ['referral-usages'],
+    queryKey: ['my-referral-usages'],
     staleTime: 30_000,
     queryFn: async () => {
       const res = await fetch('/api/referidos/usages');

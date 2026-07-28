@@ -138,7 +138,48 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'ENLACE_USADO' }, { status: 409 });
   }
 
-  // ── 6. Establecer sesión (cookies SSR) ──
+  // ── 6. Generar código de referido para el nuevo usuario (fire-and-forget) ──
+  // Solo si el sistema está activo para el tenant. No bloquea registro si falla.
+  void (async () => {
+    try {
+      const { data: refSettings } = await admin
+        .from('referral_settings')
+        .select('platform_enabled, tenant_enabled')
+        .eq('tenant', process.env.NEXT_PUBLIC_TENANT_ID || 'cta-graduados')
+        .maybeSingle();
+
+      if (!refSettings?.platform_enabled) return;
+
+      const { generateUserReferralCode } = await import('@/lib/referidos/codeGenerator');
+      const tenantId = process.env.NEXT_PUBLIC_TENANT_ID || 'cta-graduados';
+
+      // Get existing codes for uniqueness check
+      const { data: existing } = await admin
+        .from('user_referral_codes')
+        .select('code')
+        .eq('tenant', tenantId);
+
+      const existingSet = new Set((existing || []).map((r: { code: string }) => r.code));
+      const apellidoMaterno = form.apellido_materno?.trim() || null;
+
+      // Try up to 3 times (code collisions are extremely unlikely)
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const generatedCode = generateUserReferralCode(nombre, apellido, existingSet, apellidoMaterno);
+        const { data: result } = await admin.rpc('assign_user_referral_code', {
+          p_tenant: tenantId,
+          p_user_id: userId,
+          p_code: generatedCode,
+        });
+        if (result?.success) break;
+        if (result?.error !== 'CODE_COLLISION') break;
+        existingSet.add(generatedCode);
+      }
+    } catch {
+      // Non-critical: code will be assigned on first visit to referidos page
+    }
+  })();
+
+  // ── 7. Establecer sesión (cookies SSR) ──
   const supabase = await createClient();
   const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
   if (signInError) {
@@ -149,7 +190,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // ── 7. Correo de bienvenida (fire-and-forget; un fallo no revierte nada) ──
+  // ── 8. Correo de bienvenida (fire-and-forget; un fallo no revierte nada) ──
   // Flujo de auto-registro: el usuario ya eligió su contraseña y tiene sesión.
   // Se usa la plantilla `bienvenida_registro` con descripción de acceso según rol.
   const { DESCRIPCION_ACCESO_ES } = await import('@/lib/email/templates/bienvenidaRegistro');
@@ -168,7 +209,7 @@ export async function POST(request: NextRequest) {
     eventoId: `registro:${userId}`,
   }).catch(() => {});
 
-  // ── 8. Aplicar código referido si fue provisto (fire-and-forget) ──
+  // ── 9. Aplicar código referido si fue provisto (fire-and-forget) ──
   const codigoReferido: string | undefined =
     typeof body.codigoReferido === 'string' && body.codigoReferido.trim()
       ? body.codigoReferido.trim().toUpperCase()
@@ -180,7 +221,7 @@ export async function POST(request: NextRequest) {
     const applyReq = new Request('http://internal/api/referidos/apply', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-internal-apply': '1' },
-      body: JSON.stringify({ referredUserId: userId, code: codigoReferido }),
+      body: JSON.stringify({ referred_user_id: userId, code: codigoReferido, tenant: process.env.NEXT_PUBLIC_TENANT_ID || 'cta-graduados' }),
     });
     void applyReferral(applyReq as never).catch(() => {});
   }

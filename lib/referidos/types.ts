@@ -11,6 +11,7 @@ export type ReferralSettings = {
   discount_codes_display_name: string
   show_rewards_to_user: boolean
   show_referral_count_to_user: boolean
+  user_welcome_message: string
   created_at: string
   updated_at: string
 }

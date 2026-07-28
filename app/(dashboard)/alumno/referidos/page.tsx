@@ -4,8 +4,9 @@ import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Sparkles } from 'lucide-react';
 import { PageHeader } from '@/components/common/PageHeader';
+import { Card } from '@/components/common/Card';
 import { MiCodigoCard } from '@/components/referidos/MiCodigoCard';
 import { ListaReferidos } from '@/components/referidos/ListaReferidos';
 import { RecompensasCard } from '@/components/referidos/RecompensasCard';
@@ -82,6 +83,7 @@ export default function AlumnoReferidosPage() {
   if (!user || user.rol !== 'alumno') return null;
 
   const systemActive = settings?.platform_enabled && settings?.tenant_enabled;
+  const displayName = settings?.display_name || t('titulo');
 
   return (
     <div>
@@ -93,15 +95,12 @@ export default function AlumnoReferidosPage() {
         {tc('volver')}
       </button>
 
-      <PageHeader
-        title={settings?.display_name || t('titulo')}
-        subtitle={t('subtitulo')}
-      />
+      <PageHeader title={displayName} subtitle={t('subtitulo_alumno')} />
 
       {!systemActive && (
         <div className="mt-[var(--space-md)]">
           <SistemaDesactivadoBanner
-            displayName={settings?.display_name || t('titulo')}
+            displayName={displayName}
             isAdmin={false}
           />
         </div>
@@ -109,18 +108,42 @@ export default function AlumnoReferidosPage() {
 
       {systemActive && (
         <div className="mt-[var(--space-lg)] space-y-[var(--space-lg)]">
+          {/* ── Welcome context card ── */}
+          {settings?.user_welcome_message && (
+            <Card className="relative overflow-hidden border-[var(--color-brand-gold)]/20 bg-gradient-to-br from-[var(--color-bg)] to-[color-mix(in_srgb,var(--color-brand-gold)_4%,var(--color-bg))]">
+              <div className="flex gap-4 p-[var(--space-lg)]">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--color-brand-gold)_12%,transparent)]">
+                  <Sparkles className="size-5 text-[var(--color-brand-gold)]" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-sm font-semibold text-[var(--color-text-primary)] mb-1">
+                    {t('como_funciona')}
+                  </h3>
+                  <p className="text-sm leading-relaxed text-[var(--color-text-secondary)] whitespace-pre-line">
+                    {settings.user_welcome_message}
+                  </p>
+                </div>
+              </div>
+              {/* Decorative accent line */}
+              <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-[var(--color-brand-gold)] to-transparent opacity-40" />
+            </Card>
+          )}
+
+          {/* ── Code card ── */}
           {myCode && (
             <MiCodigoCard
               code={myCode.code}
-              displayName={settings?.display_name || t('titulo')}
+              displayName={displayName}
               disabled={false}
             />
           )}
 
+          {/* ── Referral list ── */}
           {settings?.show_referral_count_to_user && (
             <ListaReferidos usages={usages} showRewards={settings?.show_rewards_to_user ?? false} />
           )}
 
+          {/* ── Rewards ── */}
           {settings?.show_rewards_to_user && user && (
             <RecompensasCard
               rules={rules}

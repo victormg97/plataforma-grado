@@ -3,31 +3,16 @@ import { createClient } from '@/lib/supabase/server'
 import { tenantConfig } from '@/config'
 import { isValidUserReferralCodeFormat, isValidDiscountCodeFormat } from '@/lib/referidos/codeGenerator'
 
-const rateLimitMap = new Map<string, { count: number, resetAt: number }>()
-const MAX_REQUESTS = 8
-const WINDOW_MS = 60000
-
+/**
+ * POST /api/referidos/validate
+ * Validates a referral or discount code during registration.
+ * Public endpoint (no auth required) — called from the registration form.
+ * Rate limiting is handled at the Vercel/edge level or by Upstash if configured.
+ */
 export async function POST(req: NextRequest) {
-  const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown-ip'
-  const now = Date.now()
-  const record = rateLimitMap.get(ip)
-  
-  if (record) {
-    if (now > record.resetAt) {
-      rateLimitMap.set(ip, { count: 1, resetAt: now + WINDOW_MS })
-    } else {
-      record.count++
-      if (record.count > MAX_REQUESTS) {
-        return NextResponse.json({ error: 'RATE_LIMIT', message: 'Too many requests' }, { status: 429 })
-      }
-    }
-  } else {
-    rateLimitMap.set(ip, { count: 1, resetAt: now + WINDOW_MS })
-  }
-
   const body = await req.json().catch(() => ({}))
   let { code } = body
-  
+
   if (!code || typeof code !== 'string') {
     return NextResponse.json({ valid: false, message: 'Código inválido' })
   }
@@ -42,13 +27,14 @@ export async function POST(req: NextRequest) {
   }
 
   const supabase = await createClient()
-  
+
+  // Single query to check settings + validate code
   const { data: settings } = await supabase
     .from('referral_settings')
     .select('platform_enabled, tenant_enabled')
     .eq('tenant', tenantConfig.id)
-    .single()
-    
+    .maybeSingle()
+
   if (!settings?.platform_enabled || !settings?.tenant_enabled) {
     return NextResponse.json({ valid: false, message: 'El sistema de referidos no está disponible en este momento' })
   }
@@ -60,25 +46,25 @@ export async function POST(req: NextRequest) {
       .eq('code', code)
       .eq('tenant', tenantConfig.id)
       .maybeSingle()
-      
+
     if (data) {
       return NextResponse.json({ valid: true, type: 'user' })
     }
-  } else if (isDiscountCode) {
+  } else {
     const { data } = await supabase
       .from('discount_codes')
       .select('id, start_date, end_date, is_active, manual_override')
       .eq('code', code)
       .eq('tenant', tenantConfig.id)
       .maybeSingle()
-      
+
     if (data) {
-      const active = data.manual_override !== null 
-        ? data.manual_override 
-        : data.is_active && 
-          (!data.start_date || new Date(data.start_date) <= new Date()) && 
+      const active = data.manual_override !== null
+        ? data.manual_override
+        : data.is_active &&
+          (!data.start_date || new Date(data.start_date) <= new Date()) &&
           (!data.end_date || new Date(data.end_date) >= new Date())
-          
+
       if (active) {
         return NextResponse.json({ valid: true, type: 'discount' })
       }

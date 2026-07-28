@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useUserStore } from '@/stores/useUserStore';
-import { Loader2, Mail, Users, Globe, ChevronRight, Palette, Tag, Camera } from 'lucide-react';
+import { Loader2, Mail, Users, Globe, ChevronRight, Palette, Tag, Camera, Gift } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
@@ -141,6 +141,14 @@ export default function ConfiguracionPaginaPage() {
       iconBg: 'bg-[color-mix(in_srgb,#6366f1_12%,transparent)]',
       title: tp('titulo'),
       description: tp('subtitulo'),
+    },
+    {
+      href: '/admin/referidos/configuracion',
+      icon: Gift,
+      iconColor: 'text-[#f59e0b]',
+      iconBg: 'bg-[color-mix(in_srgb,#f59e0b_12%,transparent)]',
+      title: t('seccion_referidos'),
+      description: t('seccion_referidos_desc'),
     },
   ];
 

@@ -36,10 +36,10 @@ export function ListaReferidos({ usages, showRewards }: ListaReferidosProps) {
           <table className="w-full text-sm text-left">
             <thead>
               <tr className="border-b border-[var(--color-border)]">
-                <th className="px-4 py-3 font-medium text-[var(--color-text-secondary)]">Nombre</th>
-                <th className="px-4 py-3 font-medium text-[var(--color-text-secondary)]">Fecha de registro</th>
+                <th className="px-4 py-3 font-medium text-[var(--color-text-secondary)]">{t('columna_nombre')}</th>
+                <th className="px-4 py-3 font-medium text-[var(--color-text-secondary)]">{t('columna_fecha_registro')}</th>
                 {showRewards && (
-                  <th className="px-4 py-3 font-medium text-[var(--color-text-secondary)]">Recompensa aplicada</th>
+                  <th className="px-4 py-3 font-medium text-[var(--color-text-secondary)]">{t('columna_recompensa')}</th>
                 )}
               </tr>
             </thead>
