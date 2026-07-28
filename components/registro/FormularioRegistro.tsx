@@ -1,10 +1,10 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
-import { Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/common/Button';
@@ -23,12 +23,15 @@ import { validarAño } from '@/lib/validations/año';
 interface FormularioRegistroProps {
   code: string;
   tipo: TipoRegistro;
+  referralEnabled?: boolean;
+  referralDisplayName?: string;
 }
 
 type Campos = Partial<RegistroFormData>;
 
-export function FormularioRegistro({ code, tipo }: FormularioRegistroProps) {
+export function FormularioRegistro({ code, tipo, referralEnabled = false, referralDisplayName }: FormularioRegistroProps) {
   const t = useTranslations('registro');
+  const tRef = useTranslations('referidos');
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -37,6 +40,32 @@ export function FormularioRegistro({ code, tipo }: FormularioRegistroProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Referral code state
+  const [codigoReferido, setCodigoReferido] = useState('');
+  type CodeStatus = 'idle' | 'validating' | 'valid' | 'invalid';
+  const [codeStatus, setCodeStatus] = useState<CodeStatus>('idle');
+
+  const validateCodeOnBlur = useCallback(async () => {
+    const val = codigoReferido.trim().toUpperCase();
+    if (!val) { setCodeStatus('idle'); return; }
+    // Fast pattern check before any network request
+    const isUserCodePattern = /^[A-Z]{2}-[A-Z0-9]{4}$/.test(val);
+    const isDiscountPattern = /^[A-Z0-9]{6}$/.test(val);
+    if (!isUserCodePattern && !isDiscountPattern) { setCodeStatus('invalid'); return; }
+    setCodeStatus('validating');
+    try {
+      const res = await fetch('/api/referidos/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: val }),
+      });
+      const data = await res.json().catch(() => ({}));
+      setCodeStatus(data?.valid === true ? 'valid' : 'invalid');
+    } catch {
+      setCodeStatus('idle');
+    }
+  }, [codigoReferido]);
 
   const obligatorios = CAMPOS_OBLIGATORIOS[tipo] as readonly string[];
 
@@ -111,7 +140,11 @@ export function FormularioRegistro({ code, tipo }: FormularioRegistroProps) {
       const res = await fetch('/api/registro', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code, datos: form }),
+        body: JSON.stringify({
+          code,
+          datos: form,
+          ...(referralEnabled && codigoReferido.trim() ? { codigoReferido: codigoReferido.trim().toUpperCase() } : {}),
+        }),
       });
       const data = await res.json().catch(() => ({}));
 
@@ -268,6 +301,45 @@ export function FormularioRegistro({ code, tipo }: FormularioRegistroProps) {
                 </p>
             )}
           </div>
+        </div>
+      )}
+
+      {/* Código Referido (opcional) */}
+      {referralEnabled && (
+        <div className="space-y-1.5">
+          <Label htmlFor="codigo-referido" className="text-[var(--color-text-secondary)]">
+            {tRef('campo_codigo_referido', { nombre: referralDisplayName ?? tRef('titulo') })}
+          </Label>
+          <div className="relative">
+            <Input
+              id="codigo-referido"
+              type="text"
+              value={codigoReferido}
+              onChange={(e) => {
+                setCodigoReferido(e.target.value.toUpperCase());
+                setCodeStatus('idle');
+              }}
+              onBlur={validateCodeOnBlur}
+              onKeyDown={handleEnter}
+              enterKeyHint="next"
+              placeholder={tRef('campo_codigo_referido_placeholder')}
+              className="h-11 pr-9"
+              maxLength={10}
+              autoComplete="off"
+            />
+            {codeStatus === 'validating' && (
+              <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 size-4 animate-spin text-[var(--color-text-muted)]" />
+            )}
+            {codeStatus === 'valid' && (
+              <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-[var(--color-success)]" />
+            )}
+          </div>
+          {codeStatus === 'valid' && (
+            <p className="text-xs text-[var(--color-success)]">{tRef('codigo_valido')}</p>
+          )}
+          {codeStatus === 'invalid' && (
+            <p className="text-xs text-[var(--color-error)]">{tRef('codigo_invalido')}</p>
+          )}
         </div>
       )}
 

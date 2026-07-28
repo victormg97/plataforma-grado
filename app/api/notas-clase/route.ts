@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { sendNotificationEmail } from '@/lib/email/emailService';
+import { formatFechaEmail } from '@/lib/email/formatDate';
+import { truncateNoteForEmail } from '@/lib/email/truncateNote';
 
 // GET /api/notas-clase?horario_id=xxx
 export async function GET(request: NextRequest) {
@@ -169,11 +171,27 @@ export async function POST(request: NextRequest) {
       // Link goes directly to the class with the note highlighted
       const enlaceClase = `${appUrl}/alumno/horario?id=${horario_id}&nota_id=${data.id}`;
 
-      // Strip HTML for a plain-text-ish version, but keep it for the email body highlight
-      const contenidoParaCorreo = contenido
+      // Strip scripts/styles but keep the rest for the email body highlight
+      const contenidoSanitizado = contenido
         .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
         .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
         .trim();
+
+      // Truncar dinámicamente la nota para incentivar al alumno a entrar a la app.
+      // Leer el límite personalizado del autor (plantilla customizada) si existe.
+      let maxChars: number | undefined;
+      const { data: plantillaPersonalizada } = await supabase
+        .from('email_plantillas')
+        .select('max_caracteres_nota')
+        .eq('user_id', user.id)
+        .eq('tipo', 'nueva_nota_clase')
+        .maybeSingle();
+
+      if (plantillaPersonalizada?.max_caracteres_nota != null) {
+        maxChars = plantillaPersonalizada.max_caracteres_nota;
+      }
+
+      const { html: contenidoTruncado } = truncateNoteForEmail(contenidoSanitizado, maxChars);
 
       void sendNotificationEmail({
         tipo: 'nueva_nota_clase',
@@ -184,9 +202,9 @@ export async function POST(request: NextRequest) {
         variables: {
           nombre_destinatario: `${alumnoProfile.nombre} ${alumnoProfile.apellido}`.trim(),
           nombre_autor: autorNombre,
-          contenido_nota: contenidoParaCorreo,
+          contenido_nota: contenidoTruncado,
           titulo_clase: horarioDetail?.titulo ?? '',
-          fecha: horarioDetail?.fecha ?? '',
+          fecha: formatFechaEmail(horarioDetail?.fecha),
           hora_inicio: horarioDetail?.hora_inicio?.slice(0, 5) ?? '',
           hora_fin: horarioDetail?.hora_fin?.slice(0, 5) ?? '',
           enlace_clase: enlaceClase,

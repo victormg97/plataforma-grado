@@ -29,6 +29,10 @@ export type TipoCorreo = (typeof TIPOS_CORREO)[number];
  * Esquema de validación para la edición de una plantilla de correo (Requisito 7.6).
  * - `asunto`: requerido, no vacío tras trim, entre 1 y 200 caracteres.
  * - `cuerpo_html`: requerido, no vacío tras trim.
+ * - `max_caracteres_nota`: opcional, solo para tipo `nueva_nota_clase`.
+ *   - null/undefined: usar default del sistema (600 caracteres).
+ *   - 0: mostrar la nota completa sin truncar.
+ *   - número > 0: truncar al indicar ese número de caracteres.
  * El uso de `.trim()` garantiza el rechazo de cadenas compuestas solo por espacios.
  */
 export const emailPlantillaSchema = z.object({
@@ -41,6 +45,12 @@ export const emailPlantillaSchema = z.object({
     .string({ error: 'El cuerpo del correo es requerido' })
     .trim()
     .min(1, 'El cuerpo del correo es requerido'),
+  max_caracteres_nota: z
+    .number()
+    .int()
+    .min(0, 'El valor debe ser 0 o mayor')
+    .nullable()
+    .optional(),
 });
 
 /** Tipo inferido de los datos validados de una plantilla de correo. */

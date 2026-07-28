@@ -52,6 +52,8 @@ next-env.d.ts
 CLAUDE.md
 AGENTS.md
 /.agents/
+.mcp.json
+graphify-out/
 
 # VSCode / IDE
 .vscode/
@@ -71,3 +73,9 @@ architecture-graph.html
 # Seed files (contain passwords/test data — keep local only)
 supabase/seed.sql
 supabase/seeds/
+
+# Supabase CLI temp files
+supabase/.temp/
+
+# Temporary SQL files
+check_enum.sql

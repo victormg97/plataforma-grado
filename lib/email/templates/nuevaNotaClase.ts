@@ -47,8 +47,8 @@ const cuerpoEs = renderLayout({
 </td>
 </tr>
 </table>
-<p style="margin:0 0 20px 0;font-size:14px;color:#7b8794;">Puedes ver la nota completa y responder desde la plataforma.</p>
-${renderBoton({ href: '{enlace_clase}', texto: 'Ver la nota' })}
+<p style="margin:0 0 20px 0;font-size:14px;color:#7b8794;">Ingresa a la plataforma para ver la nota completa con su formato original.</p>
+${renderBoton({ href: '{enlace_clase}', texto: 'Ver la nota completa' })}
 `,
 });
 
@@ -65,8 +65,8 @@ const cuerpoEn = renderLayout({
 </td>
 </tr>
 </table>
-<p style="margin:0 0 20px 0;font-size:14px;color:#7b8794;">You can view the full note and reply from the platform.</p>
-${renderBoton({ href: '{enlace_clase}', texto: 'View note' })}
+<p style="margin:0 0 20px 0;font-size:14px;color:#7b8794;">Log in to the platform to view the full note with its original formatting.</p>
+${renderBoton({ href: '{enlace_clase}', texto: 'View full note' })}
 `,
 });
 

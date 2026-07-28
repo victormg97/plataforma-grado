@@ -41,6 +41,18 @@ export default function RegistroPage({ params }: { params: Promise<{ code: strin
     retry: false,
   });
 
+  const { data: referralSettings } = useQuery({
+    queryKey: ['referral-settings-public'],
+    staleTime: 5 * 60_000,
+    queryFn: async () => {
+      const res = await fetch('/api/referidos/settings');
+      if (!res.ok) return null;
+      return res.json();
+    },
+  });
+
+  const referralEnabled = !!(referralSettings?.platform_enabled && referralSettings?.tenant_enabled);
+
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center gap-4 py-16">
@@ -91,7 +103,12 @@ export default function RegistroPage({ params }: { params: Promise<{ code: strin
             {googleHabilitado && <BloqueGoogle code={code} />}
 
             <div className={googleHabilitado ? 'mt-4' : ''}>
-              <FormularioRegistro code={code} tipo={tipo} />
+              <FormularioRegistro
+                code={code}
+                tipo={tipo}
+                referralEnabled={referralEnabled}
+                referralDisplayName={referralSettings?.display_name}
+              />
             </div>
           </motion.div>
         )}

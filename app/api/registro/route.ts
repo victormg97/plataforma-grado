@@ -168,6 +168,23 @@ export async function POST(request: NextRequest) {
     eventoId: `registro:${userId}`,
   }).catch(() => {});
 
+  // ── 8. Aplicar código referido si fue provisto (fire-and-forget) ──
+  const codigoReferido: string | undefined =
+    typeof body.codigoReferido === 'string' && body.codigoReferido.trim()
+      ? body.codigoReferido.trim().toUpperCase()
+      : undefined;
+
+  if (codigoReferido) {
+    // Import and call directly to avoid self-referencing fetch
+    const { POST: applyReferral } = await import('@/app/api/referidos/apply/route');
+    const applyReq = new Request('http://internal/api/referidos/apply', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-internal-apply': '1' },
+      body: JSON.stringify({ referredUserId: userId, code: codigoReferido }),
+    });
+    void applyReferral(applyReq as never).catch(() => {});
+  }
+
   const redirectPath = tipo === 'profesor' ? '/profesor' : tipo === 'lector' ? '/lector' : '/alumno';
   return NextResponse.json({ ok: true, redirectPath }, { status: 200 });
 }

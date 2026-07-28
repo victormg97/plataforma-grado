@@ -1,0 +1,112 @@
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
+import { useTranslations } from 'next-intl';
+import { ArrowLeft } from 'lucide-react';
+import { PageHeader } from '@/components/common/PageHeader';
+import { MiCodigoCard } from '@/components/referidos/MiCodigoCard';
+import { ListaReferidos } from '@/components/referidos/ListaReferidos';
+import { SistemaDesactivadoBanner } from '@/components/referidos/SistemaDesactivadoBanner';
+import { useUser } from '@/lib/hooks/useUser';
+import { getRolRedirectPath } from '@/lib/auth/helpers';
+import type { ReferralSettings } from '@/lib/referidos/types';
+
+export default function ProfesorReferidosPage() {
+  const t = useTranslations('referidos');
+  const tc = useTranslations('common');
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { user } = useUser();
+
+  const from = searchParams.get('from');
+
+  useEffect(() => {
+    if (user && user.rol !== 'profesor') {
+      router.replace(getRolRedirectPath(user.rol));
+    }
+  }, [user, router]);
+
+  const { data: settings } = useQuery<ReferralSettings>({
+    queryKey: ['referral-settings'],
+    staleTime: 5 * 60_000,
+    queryFn: async () => {
+      const res = await fetch('/api/referidos/settings');
+      if (!res.ok) throw new Error();
+      return res.json();
+    },
+    enabled: !!user,
+  });
+
+  const { data: myCode } = useQuery<{ code: string } | null>({
+    queryKey: ['my-referral-code'],
+    staleTime: 10 * 60_000,
+    queryFn: async () => {
+      const res = await fetch('/api/referidos/codes');
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      return Array.isArray(data) && data.length > 0 ? data[0] : null;
+    },
+    enabled: !!user && user.rol === 'profesor',
+  });
+
+  const { data: usages = [] } = useQuery({
+    queryKey: ['referral-usages'],
+    staleTime: 30_000,
+    queryFn: async () => {
+      const res = await fetch('/api/referidos/usages');
+      if (!res.ok) throw new Error();
+      return res.json();
+    },
+    enabled: !!user && user.rol === 'profesor',
+  });
+
+  const handleVolver = () => {
+    if (from) router.push(from);
+    else router.back();
+  };
+
+  if (!user || user.rol !== 'profesor') return null;
+
+  const systemActive = settings?.platform_enabled && settings?.tenant_enabled;
+
+  return (
+    <div>
+      <button
+        onClick={handleVolver}
+        className="mb-3 inline-flex items-center gap-1.5 text-sm text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text-primary)]"
+      >
+        <ArrowLeft className="size-4" />
+        {tc('volver')}
+      </button>
+
+      <PageHeader
+        title={settings?.display_name || t('titulo')}
+        subtitle={t('subtitulo')}
+      />
+
+      {!systemActive && (
+        <div className="mt-[var(--space-md)]">
+          <SistemaDesactivadoBanner
+            displayName={settings?.display_name || t('titulo')}
+            isAdmin={false}
+          />
+        </div>
+      )}
+
+      {systemActive && (
+        <div className="mt-[var(--space-lg)] space-y-[var(--space-lg)]">
+          {myCode && (
+            <MiCodigoCard
+              code={myCode.code}
+              displayName={settings?.display_name || t('titulo')}
+              disabled={false}
+            />
+          )}
+          <ListaReferidos usages={usages} showRewards={false} />
+        </div>
+      )}
+    </div>
+  );
+}

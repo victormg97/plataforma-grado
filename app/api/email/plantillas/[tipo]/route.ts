@@ -100,7 +100,7 @@ export async function PUT(
     );
   }
 
-  const { asunto, cuerpo_html } = parsed.data;
+  const { asunto, cuerpo_html, max_caracteres_nota } = parsed.data;
 
   const { data, error } = await supabase
     .from('email_plantillas')
@@ -110,6 +110,7 @@ export async function PUT(
         tipo,
         asunto,
         cuerpo_html,
+        max_caracteres_nota: max_caracteres_nota ?? null,
         updated_at: new Date().toISOString(),
       },
       { onConflict: 'user_id,tipo' }

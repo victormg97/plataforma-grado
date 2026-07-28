@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { sendNotificationEmail } from '@/lib/email/emailService';
 import { buildEnlaceClase } from '@/lib/email/classLink';
+import { formatFechaEmail } from '@/lib/email/formatDate';
 import type { SolicitudCorreo } from '@/lib/email/types';
 
 /**
@@ -122,7 +123,7 @@ export async function POST(
       nombre_alumno: nombreAlumno,
       titulo_clase: horario.titulo,
       descripcion_clase: horario.descripcion ?? '',
-      fecha: horario.fecha,
+      fecha: formatFechaEmail(horario.fecha),
       hora_inicio: horario.hora_inicio?.slice(0, 5) ?? '',
       hora_fin: horario.hora_fin?.slice(0, 5) ?? '',
       enlace_clase: buildEnlaceClase(horario.id, 'alumno'),

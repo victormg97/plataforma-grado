@@ -43,7 +43,7 @@ export async function GET() {
     // Plantillas personalizadas del usuario (vía RLS con el client server normal).
     const { data: personalizadas, error: plantillasError } = await supabase
       .from('email_plantillas')
-      .select('tipo, asunto, cuerpo_html')
+      .select('tipo, asunto, cuerpo_html, max_caracteres_nota')
       .eq('user_id', user.id);
 
     if (plantillasError) {
@@ -63,6 +63,7 @@ export async function GET() {
           personalizada: true,
           asunto: personalizada.asunto,
           cuerpo_html: personalizada.cuerpo_html,
+          max_caracteres_nota: personalizada.max_caracteres_nota ?? null,
         };
       }
       const def = getDefaultTemplate(tipo, profile.idioma ?? 'es');
@@ -71,6 +72,7 @@ export async function GET() {
         personalizada: false,
         asunto: def.asunto,
         cuerpo_html: def.cuerpoHtml,
+        max_caracteres_nota: null,
       };
     });
 

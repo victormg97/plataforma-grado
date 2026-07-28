@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { validateEstadoChange } from '@/lib/validations/asistencia';
 import { sendNotificationEmail } from '@/lib/email/emailService';
 import { buildEnlaceClase } from '@/lib/email/classLink';
+import { formatFechaEmail } from '@/lib/email/formatDate';
 import type { SolicitudCorreo, TipoCorreo } from '@/lib/email/types';
 
 export async function PATCH(
@@ -229,7 +230,7 @@ export async function PATCH(
             nombre_alumno: nombreAlumno,
             titulo_clase: horarioData?.titulo ?? horario?.titulo ?? '',
             descripcion_clase: horarioData?.descripcion ?? '',
-            fecha: horarioData?.fecha ?? '',
+            fecha: formatFechaEmail(horarioData?.fecha),
             hora_inicio: horarioData?.hora_inicio?.slice(0, 5) ?? '',
             hora_fin: horarioData?.hora_fin?.slice(0, 5) ?? '',
             enlace_clase: buildEnlaceClase(existing.horario_id, rolDestinatario),

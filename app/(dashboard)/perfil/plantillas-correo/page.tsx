@@ -20,6 +20,7 @@ interface PlantillaItem {
   personalizada: boolean;
   asunto: string;
   cuerpo_html: string;
+  max_caracteres_nota: number | null;
 }
 
 interface PlantillasResponse {
@@ -87,6 +88,7 @@ export default function PlantillasCorreoPage() {
   const [tipoSeleccionado, setTipoSeleccionado] = useState<TipoCorreo>(TIPOS_CORREO[0]);
   const [asunto, setAsunto] = useState('');
   const [cuerpoHtml, setCuerpoHtml] = useState('');
+  const [maxCaracteresNota, setMaxCaracteresNota] = useState<number | null>(null);
   // Modo del campo de cuerpo: inicia en edición (Requisito 17.2). Alternar no muta `cuerpoHtml` (Requisito 17.4).
   const [modoCuerpo, setModoCuerpo] = useState<'editor' | 'preview'>('editor');
 
@@ -102,9 +104,10 @@ export default function PlantillasCorreoPage() {
     if (plantillaActual) {
       setAsunto(plantillaActual.asunto);
       setCuerpoHtml(plantillaActual.cuerpo_html);
+      setMaxCaracteresNota(plantillaActual.max_caracteres_nota);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tipoSeleccionado, plantillaActual?.asunto, plantillaActual?.cuerpo_html]);
+  }, [tipoSeleccionado, plantillaActual?.asunto, plantillaActual?.cuerpo_html, plantillaActual?.max_caracteres_nota]);
 
   // ── Inserción de variables en la posición del cursor del campo activo ─────
   function insertarToken(token: string) {
@@ -136,10 +139,15 @@ export default function PlantillasCorreoPage() {
   // ── Mutaciones ────────────────────────────────────────────────────────────
   const guardarMutation = useMutation({
     mutationFn: async () => {
+      const payload: Record<string, unknown> = { asunto, cuerpo_html: cuerpoHtml };
+      // Solo enviar max_caracteres_nota si es el tipo nueva_nota_clase
+      if (tipoSeleccionado === 'nueva_nota_clase') {
+        payload.max_caracteres_nota = maxCaracteresNota;
+      }
       const res = await fetch(`/api/email/plantillas/${tipoSeleccionado}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ asunto, cuerpo_html: cuerpoHtml }),
+        body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error('Error al guardar la plantilla');
       return res.json();
@@ -337,6 +345,30 @@ export default function PlantillasCorreoPage() {
               />
             )}
           </div>
+
+          {/* ── Config. truncado nota (solo para nueva_nota_clase) ─────── */}
+          {tipoSeleccionado === 'nueva_nota_clase' && (
+            <div className="space-y-1.5 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4">
+              <label htmlFor="max-caracteres-nota" className="text-sm font-medium text-[var(--color-text-primary)]">
+                {tp('max_caracteres_nota_label')}
+              </label>
+              <p className="text-xs text-[var(--color-text-muted)]">
+                {tp('max_caracteres_nota_help')}
+              </p>
+              <input
+                id="max-caracteres-nota"
+                type="number"
+                min={0}
+                value={maxCaracteresNota ?? ''}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setMaxCaracteresNota(val === '' ? null : parseInt(val, 10));
+                }}
+                placeholder="600"
+                className={cn(inputCls, 'max-w-[200px]')}
+              />
+            </div>
+          )}
 
           {/* ── Acciones ─────────────────────────────────────────────────── */}
           <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-[var(--color-border)]">

@@ -23,6 +23,13 @@ import {
   CreditCard,
   BookMarked,
   Link2,
+  Gift,
+  Star,
+  Zap,
+  Award,
+  Heart,
+  Trophy,
+  Share2
 } from 'lucide-react';
 import type { UserRol } from '@/lib/supabase/types';
 import { createClient } from '@/lib/supabase/client';
@@ -72,6 +79,31 @@ export function Sidebar() {
 
   const isAdmin = user?.rol === 'admin';
   const isProfesorOrAdmin = user?.rol === 'admin' || user?.rol === 'profesor';
+
+  const { data: referralSettings } = useQuery({
+    queryKey: ['referral-settings'],
+    staleTime: 5 * 60_000,
+    queryFn: async () => {
+      const res = await fetch('/api/referidos/settings');
+      if (!res.ok) throw new Error();
+      return res.json();
+    }
+  });
+
+  const getReferralIcon = (iconName?: string) => {
+    switch (iconName) {
+      case 'star': return <Star className="size-4" />;
+      case 'zap': return <Zap className="size-4" />;
+      case 'share-2': return <Share2 className="size-4" />;
+      case 'award': return <Award className="size-4" />;
+      case 'heart': return <Heart className="size-4" />;
+      case 'trophy': return <Trophy className="size-4" />;
+      case 'users': return <Users className="size-4" />;
+      case 'gift':
+      default:
+        return <Gift className="size-4" />;
+    }
+  };
 
   // Consulta ligera para saber si hay lectores (solo admin, staleTime largo)
   const { data: hasLectores } = useQuery({
@@ -196,6 +228,25 @@ export function Sidebar() {
 
         {/* Bottom section: enlaces + recursos */}
         <div className="border-t border-[var(--color-border)] p-3 space-y-1">
+          {(() => {
+            const showReferral = referralSettings && referralSettings.platform_enabled && (
+              isAdmin || referralSettings.tenant_enabled
+            );
+            const isLectorAllowed = user?.rol !== 'lector' || referralSettings?.reader_role_enabled;
+            
+            if (showReferral && isLectorAllowed && user) {
+              const refHref = `/${user.rol}/referidos`;
+              const isActive = pathname.startsWith(refHref);
+              const label = referralSettings.display_name || t('referidos');
+              return navLink(
+                refHref,
+                isActive,
+                getReferralIcon(referralSettings.icon),
+                label
+              );
+            }
+            return null;
+          })()}
           {isProfesorOrAdmin && navLink(
             enlacesHref,
             isEnlacesActive,

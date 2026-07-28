@@ -1381,6 +1381,7 @@ export type Database = {
           tipo: Database["public"]["Enums"]["tipo_notificacion"]
           asunto: string
           cuerpo_html: string
+          max_caracteres_nota: number | null
           created_at: string
           updated_at: string
         }
@@ -1390,6 +1391,7 @@ export type Database = {
           tipo: Database["public"]["Enums"]["tipo_notificacion"]
           asunto: string
           cuerpo_html: string
+          max_caracteres_nota?: number | null
           created_at?: string
           updated_at?: string
         }
@@ -1399,6 +1401,7 @@ export type Database = {
           tipo?: Database["public"]["Enums"]["tipo_notificacion"]
           asunto?: string
           cuerpo_html?: string
+          max_caracteres_nota?: number | null
           created_at?: string
           updated_at?: string
         }
@@ -1581,7 +1584,251 @@ export type Database = {
           }
         ]
       }
+      referral_settings: {
+        Row: {
+          id: string
+          tenant: string
+          platform_enabled: boolean
+          tenant_enabled: boolean
+          display_name: string
+          icon: string
+          reader_role_enabled: boolean
+          discount_codes_module_enabled: boolean
+          discount_codes_display_name: string
+          show_rewards_to_user: boolean
+          show_referral_count_to_user: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          tenant: string
+          platform_enabled?: boolean
+          tenant_enabled?: boolean
+          display_name?: string
+          icon?: string
+          reader_role_enabled?: boolean
+          discount_codes_module_enabled?: boolean
+          discount_codes_display_name?: string
+          show_rewards_to_user?: boolean
+          show_referral_count_to_user?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          tenant?: string
+          platform_enabled?: boolean
+          tenant_enabled?: boolean
+          display_name?: string
+          icon?: string
+          reader_role_enabled?: boolean
+          discount_codes_module_enabled?: boolean
+          discount_codes_display_name?: string
+          show_rewards_to_user?: boolean
+          show_referral_count_to_user?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      referral_reward_rules: {
+        Row: {
+          id: string
+          tenant: string
+          rule_type: 'referred_new' | 'referrer' | 'volume_goal'
+          reward_type: 'fixed_amount' | 'percentage' | 'free_session' | 'custom'
+          reward_value: number
+          duration_cycles: number
+          pack_size: number
+          max_discount_per_cycle: number
+          volume_target: number | null
+          volume_period: 'weekly' | 'monthly' | 'quarterly' | null
+          volume_reward_description: string | null
+          sort_order: number
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          tenant: string
+          rule_type: 'referred_new' | 'referrer' | 'volume_goal'
+          reward_type: 'fixed_amount' | 'percentage' | 'free_session' | 'custom'
+          reward_value?: number
+          duration_cycles?: number
+          pack_size?: number
+          max_discount_per_cycle?: number
+          volume_target?: number | null
+          volume_period?: 'weekly' | 'monthly' | 'quarterly' | null
+          volume_reward_description?: string | null
+          sort_order?: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          tenant?: string
+          rule_type?: 'referred_new' | 'referrer' | 'volume_goal'
+          reward_type?: 'fixed_amount' | 'percentage' | 'free_session' | 'custom'
+          reward_value?: number
+          duration_cycles?: number
+          pack_size?: number
+          max_discount_per_cycle?: number
+          volume_target?: number | null
+          volume_period?: 'weekly' | 'monthly' | 'quarterly' | null
+          volume_reward_description?: string | null
+          sort_order?: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_referral_codes: {
+        Row: {
+          id: string
+          user_id: string
+          tenant: string
+          code: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          tenant: string
+          code: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          tenant?: string
+          code?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_referral_codes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discount_codes: {
+        Row: {
+          id: string
+          tenant: string
+          code: string
+          start_date: string | null
+          end_date: string | null
+          is_active: boolean
+          manual_override: boolean | null
+          reward_rule_id: string | null
+          created_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          tenant: string
+          code: string
+          start_date?: string | null
+          end_date?: string | null
+          is_active?: boolean
+          manual_override?: boolean | null
+          reward_rule_id?: string | null
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          tenant?: string
+          code?: string
+          start_date?: string | null
+          end_date?: string | null
+          is_active?: boolean
+          manual_override?: boolean | null
+          reward_rule_id?: string | null
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discount_codes_reward_rule_id_fkey"
+            columns: ["reward_rule_id"]
+            isOneToOne: false
+            referencedRelation: "referral_reward_rules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discount_codes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referral_usages: {
+        Row: {
+          id: string
+          tenant: string
+          referred_user_id: string
+          user_referral_code_id: string | null
+          discount_code_id: string | null
+          used_at: string
+          rewards_applied: import('./types').Json
+        }
+        Insert: {
+          id?: string
+          tenant: string
+          referred_user_id: string
+          user_referral_code_id?: string | null
+          discount_code_id?: string | null
+          used_at?: string
+          rewards_applied?: import('./types').Json
+        }
+        Update: {
+          id?: string
+          tenant?: string
+          referred_user_id?: string
+          user_referral_code_id?: string | null
+          discount_code_id?: string | null
+          used_at?: string
+          rewards_applied?: import('./types').Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_usages_referred_user_id_fkey"
+            columns: ["referred_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referral_usages_user_referral_code_id_fkey"
+            columns: ["user_referral_code_id"]
+            isOneToOne: false
+            referencedRelation: "user_referral_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referral_usages_discount_code_id_fkey"
+            columns: ["discount_code_id"]
+            isOneToOne: false
+            referencedRelation: "discount_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
+
     Views: {
       [_ in never]: never
     }
@@ -1912,7 +2159,7 @@ export const Constants = {
         "nueva_nota_clase",
         "recordatorio_clase",
       ],
-      user_rol: ["admin", "profesor", "alumno"],
+      user_rol: ["admin", "profesor", "alumno", "lector"],
     },
   },
 } as const
@@ -1994,3 +2241,11 @@ export type NotaClaseConAutor = {
 export type TenantContactInfo = Tables<'tenant_contact_info'>;
 export type LandingPlanesConfig = Tables<'landing_planes_config'>;
 export type LandingSobreNosotrasConfig = Tables<'landing_sobre_nosotras_config'>;
+
+// ─── Referral System type aliases ────────────────────────────────────────────
+
+export type UserReferralCode = Tables<'user_referral_codes'>;
+export type ReferralSettingsRow = Tables<'referral_settings'>;
+export type ReferralRewardRuleRow = Tables<'referral_reward_rules'>;
+export type DiscountCodeRow = Tables<'discount_codes'>;
+export type ReferralUsageRow = Tables<'referral_usages'>;
