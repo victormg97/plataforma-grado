@@ -45,7 +45,7 @@ export default function RegistroPage({ params }: { params: Promise<{ code: strin
     queryKey: ['referral-settings-public'],
     staleTime: 5 * 60_000,
     queryFn: async () => {
-      const res = await fetch('/api/referidos/settings');
+      const res = await fetch('/api/referidos/public-settings');
       if (!res.ok) return null;
       return res.json();
     },
