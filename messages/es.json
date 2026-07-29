@@ -1548,6 +1548,7 @@
     "ir_a_configuracion": "Ir a Configuración",
     "campo_codigo_referido": "Código de {nombre}",
     "campo_codigo_referido_placeholder": "Ej: VM-9JK2",
+    "campo_codigo_tooltip": "Si alguien te compartió un código, ingrésalo aquí para obtener beneficios (opcional)",
     "codigo_valido": "Código válido ✓",
     "codigo_invalido": "Código no válido o inactivo",
     "validando": "Validando...",

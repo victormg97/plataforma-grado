@@ -1544,6 +1544,7 @@
     "ir_a_configuracion": "Go to Settings",
     "campo_codigo_referido": "{nombre} Code",
     "campo_codigo_referido_placeholder": "E.g.: VM-9JK2",
+    "campo_codigo_tooltip": "If someone shared a code with you, enter it here for benefits (optional)",
     "codigo_valido": "Valid code ✓",
     "codigo_invalido": "Invalid or inactive code",
     "validando": "Validating...",

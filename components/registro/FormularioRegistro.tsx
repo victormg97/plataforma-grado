@@ -4,10 +4,11 @@ import { useMemo, useRef, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
-import { Eye, EyeOff, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle, CheckCircle2, Loader2, Info } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/common/Button';
+import { Tooltip } from '@/components/common/Tooltip';
 import { TerminosAceptacion } from '@/components/auth/TerminosAceptacion';
 import {
   CAMPOS_OBLIGATORIOS,
@@ -307,9 +308,14 @@ export function FormularioRegistro({ code, tipo, referralEnabled = false, referr
       {/* Código Referido (opcional) */}
       {referralEnabled && (
         <div className="space-y-1.5">
-          <Label htmlFor="codigo-referido" className="text-[var(--color-text-secondary)]">
-            {tRef('campo_codigo_referido', { nombre: referralDisplayName ?? tRef('titulo') })}
-          </Label>
+          <div className="flex items-center gap-1.5">
+            <Label htmlFor="codigo-referido" className="text-[var(--color-text-secondary)]">
+              {referralDisplayName ?? tRef('titulo')}
+            </Label>
+            <Tooltip content={tRef('campo_codigo_tooltip')} position="top">
+              <Info className="size-3.5 text-[var(--color-text-muted)] cursor-help" />
+            </Tooltip>
+          </div>
           <div className="relative">
             <Input
               id="codigo-referido"
