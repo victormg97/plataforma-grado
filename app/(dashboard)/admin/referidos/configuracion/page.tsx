@@ -197,6 +197,7 @@ export default function ConfiguracionReferidosPage() {
                 value={settings.icon}
                 options={REFERRAL_ICON_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
                 onChange={(v) => updateMutation.mutate({ icon: v })}
+                className="w-full max-w-xs"
               />
             </div>
 

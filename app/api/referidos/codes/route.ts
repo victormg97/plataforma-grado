@@ -26,7 +26,7 @@ export async function GET(_req: NextRequest) {
     .from('user_referral_codes')
     .select(`
       *,
-      profiles:user_id (id, nombre, apellido, email, rol, avatar_url),
+      profiles:user_id (id, nombre, apellido, apellido_materno, email, rol, avatar_url),
       referral_usages!user_referral_code_id (count)
     `)
     .eq('tenant', tenantConfig.id)
