@@ -74,7 +74,9 @@ function loadDraft(): FormState | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
-    return JSON.parse(raw) as FormState;
+    const parsed = JSON.parse(raw);
+    // Merge with defaults to handle fields added in later versions
+    return { ...DEFAULT_STATE, ...parsed };
   } catch {
     return null;
   }
