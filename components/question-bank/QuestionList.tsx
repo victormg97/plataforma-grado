@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
   Search, Filter, ChevronLeft, ChevronRight, Edit, Trash2, Copy, Upload
@@ -61,9 +61,10 @@ export function QuestionList({ categories, tags: _tags, onEdit }: QuestionListPr
   if (statusFilter) queryParams.set('status', statusFilter);
   if (tagFilter.length > 0) queryParams.set('tagIds', tagFilter.join(','));
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isFetching } = useQuery({
     queryKey: ['qb-questions', queryParams.toString()],
     staleTime: 30_000,
+    placeholderData: keepPreviousData,
     queryFn: async () => {
       const res = await fetch(`/api/question-bank/questions?${queryParams.toString()}`);
       if (!res.ok) throw new Error();
@@ -233,7 +234,7 @@ export function QuestionList({ categories, tags: _tags, onEdit }: QuestionListPr
       )}
 
       {/* Questions list */}
-      {isLoading ? (
+      {isLoading && !data ? (
         <div className="flex justify-center py-12">
           <div className="size-7 animate-spin rounded-full border-4 border-[var(--color-brand-gold)] border-t-transparent" />
         </div>
