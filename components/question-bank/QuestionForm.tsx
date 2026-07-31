@@ -246,13 +246,20 @@ export function QuestionForm({ categories, tags, editId, onSaved }: QuestionForm
       return res.json();
     },
     onSuccess: () => {
-      toast.success(t('guardada_ok'));
+      toast.success(t('guardada_ok'), {
+        action: {
+          label: t('ver_guardadas'),
+          onClick: () => onSaved(),
+        },
+      });
       queryClient.invalidateQueries({ queryKey: ['qb-questions'] });
       if (!editId) {
         applyState(DEFAULT_STATE);
         clearDraft();
+      } else {
+        // When editing, go back to list after save
+        onSaved();
       }
-      onSaved();
     },
     onError: (err: Error) => {
       toast.error(err.message || t('error_guardar'));

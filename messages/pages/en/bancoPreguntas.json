@@ -43,6 +43,7 @@
   "guardar": "Save question",
   "guardando": "Saving...",
   "guardada_ok": "Question saved successfully",
+  "ver_guardadas": "View question",
   "error_guardar": "Error saving question",
   "limpiar": "Clear form",
   "formulario_limpiado": "Form cleared",

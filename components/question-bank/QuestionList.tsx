@@ -61,9 +61,11 @@ export function QuestionList({ categories, tags: _tags, onEdit }: QuestionListPr
   if (statusFilter) queryParams.set('status', statusFilter);
   if (tagFilter.length > 0) queryParams.set('tagIds', tagFilter.join(','));
 
-  const { data, isLoading, isFetching } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['qb-questions', queryParams.toString()],
-    staleTime: 30_000,
+    staleTime: 60_000,
+    gcTime: 5 * 60_000,
+    refetchOnWindowFocus: false,
     placeholderData: keepPreviousData,
     queryFn: async () => {
       const res = await fetch(`/api/question-bank/questions?${queryParams.toString()}`);
