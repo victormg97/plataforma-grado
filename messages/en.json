@@ -623,6 +623,7 @@
     "encabezado": "Heading",
     "lista": "Bullet list",
     "lista_numerada": "Numbered list",
+    "lista_romana": "Roman numeral list (I, II, III...)",
     "tachado": "Strikethrough",
     "codigo": "Code",
     "enlace": "Link",

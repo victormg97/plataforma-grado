@@ -623,6 +623,7 @@
     "encabezado": "Título",
     "lista": "Lista",
     "lista_numerada": "Lista numerada",
+    "lista_romana": "Lista romana (I, II, III...)",
     "tachado": "Tachado",
     "codigo": "Código",
     "enlace": "Enlace",

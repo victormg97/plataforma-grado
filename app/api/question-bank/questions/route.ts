@@ -33,6 +33,7 @@ export async function GET(req: NextRequest) {
   const status = searchParams.get('status') || null;
   const dateFrom = searchParams.get('dateFrom') || null;
   const dateTo = searchParams.get('dateTo') || null;
+  const subjectId = searchParams.get('subjectId') || null;
 
   const { data, error } = await supabase.rpc('get_qb_questions', {
     p_tenant: tenantConfig.id,
@@ -44,6 +45,7 @@ export async function GET(req: NextRequest) {
     p_status: status,
     p_date_from: dateFrom,
     p_date_to: dateTo,
+    p_subject_id: subjectId,
     p_page: page,
     p_page_size: pageSize,
   });

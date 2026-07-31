@@ -10,17 +10,24 @@ import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { RichTextEditor } from '@/components/common/RichTextEditor';
 import { Tooltip } from '@/components/common/Tooltip';
+import { ConfirmModal } from '@/components/common/ConfirmModal';
 import { suggestTagsForText, type SuggestionSource } from '@/lib/question-bank/suggestions';
 import { useUiPreference } from '@/lib/hooks/useUiPreference';
-import type { QbCategory, QbTag, QbQuestionType, QbDifficulty } from '@/lib/supabase/types';
+import type { QbCategory, QbTag, QbSubject, QbQuestionType, QbDifficulty } from '@/lib/supabase/types';
 import { questionTypes, difficulties } from '@/lib/validations/question-bank.schema';
 
 // Difficulty options including null (unrated)
 type DifficultyOption = QbDifficulty | null;
 
+interface MatchingPair {
+  left: string;
+  right: string;
+}
+
 interface QuestionFormProps {
   categories: QbCategory[];
   tags: QbTag[];
+  subjects: QbSubject[];
   editId: string | null;
   onSaved: () => void;
   onCancelEdit: () => void;
@@ -40,7 +47,9 @@ interface FormState {
   trueFalseAnswer: boolean;
   modelAnswer: string;
   fillBlankAnswers: string[];
+  matchingPairs: MatchingPair[];
   explanation: string;
+  subjectId: string | null;
   categoryId: string | null;
   selectedTagIds: string[];
   difficulty: DifficultyOption;
@@ -53,7 +62,9 @@ const DEFAULT_STATE: FormState = {
   trueFalseAnswer: true,
   modelAnswer: '',
   fillBlankAnswers: [''],
+  matchingPairs: [{ left: '', right: '' }, { left: '', right: '' }],
   explanation: '',
+  subjectId: null,
   categoryId: null,
   selectedTagIds: [],
   difficulty: null,
@@ -79,7 +90,7 @@ function clearDraft() {
   try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
 }
 
-export function QuestionForm({ categories, tags, editId, onSaved, onCancelEdit }: QuestionFormProps) {
+export function QuestionForm({ categories, tags, subjects, editId, onSaved, onCancelEdit }: QuestionFormProps) {
   const t = useTranslations('bancoPreguntas');
   const queryClient = useQueryClient();
 
@@ -97,15 +108,19 @@ export function QuestionForm({ categories, tags, editId, onSaved, onCancelEdit }
   const [trueFalseAnswer, setTrueFalseAnswer] = useState<boolean>(initialState.trueFalseAnswer);
   const [modelAnswer, setModelAnswer] = useState(initialState.modelAnswer);
   const [fillBlankAnswers, setFillBlankAnswers] = useState<string[]>(initialState.fillBlankAnswers);
+  const [matchingPairs, setMatchingPairs] = useState<MatchingPair[]>(initialState.matchingPairs);
   const [explanation, setExplanation] = useState(initialState.explanation);
   // Explanation open/close state persisted per-user in DB
   const [explanationOpen, setExplanationOpen] = useUiPreference<boolean>('qb_explanation_open', false);
+  const [subjectId, setSubjectId] = useState<string | null>(initialState.subjectId);
   const [categoryId, setCategoryId] = useState<string | null>(initialState.categoryId);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>(initialState.selectedTagIds);
   const [difficulty, setDifficulty] = useState<DifficultyOption>(initialState.difficulty);
   const [tagSearch, setTagSearch] = useState('');
   const [categorySearch, setCategorySearch] = useState('');
+  const [subjectSearch, setSubjectSearch] = useState('');
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
+  const [subjectDropdownOpen, setSubjectDropdownOpen] = useState(false);
   const [tagDropdownOpen, setTagDropdownOpen] = useState(false);
 
   // Auto-save to localStorage on every state change (debounced)
@@ -116,12 +131,12 @@ export function QuestionForm({ categories, tags, editId, onSaved, onCancelEdit }
     saveTimeoutRef.current = setTimeout(() => {
       saveDraft({
         type, content, options, trueFalseAnswer, modelAnswer,
-        fillBlankAnswers, explanation,
-        categoryId, selectedTagIds, difficulty,
+        fillBlankAnswers, matchingPairs, explanation,
+        subjectId, categoryId, selectedTagIds, difficulty,
       });
     }, 500);
     return () => { if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current); };
-  }, [type, content, options, trueFalseAnswer, modelAnswer, fillBlankAnswers, explanation, categoryId, selectedTagIds, difficulty, editId]);
+  }, [type, content, options, trueFalseAnswer, modelAnswer, fillBlankAnswers, matchingPairs, explanation, subjectId, categoryId, selectedTagIds, difficulty, editId]);
   // Load question data for editing
   const { data: editData } = useQuery({
     queryKey: ['qb-question', editId],
@@ -142,6 +157,7 @@ export function QuestionForm({ categories, tags, editId, onSaved, onCancelEdit }
       setExplanation(editData.explanation || '');
       if (editData.explanation) setExplanationOpen(true);
       setCategoryId(editData.category_id);
+      setSubjectId(editData.subject_id || null);
       setDifficulty(editData.difficulty);
       setSelectedTagIds(editData.tags?.map((t: { id: string }) => t.id) || []);
 
@@ -154,6 +170,8 @@ export function QuestionForm({ categories, tags, editId, onSaved, onCancelEdit }
         setModelAnswer(editData.options?.model_answer || '');
       } else if (editData.type === 'fill_blank') {
         setFillBlankAnswers(editData.options?.blanks?.[0]?.accepted_answers || ['']);
+      } else if (editData.type === 'matching') {
+        setMatchingPairs(editData.options?.pairs || [{ left: '', right: '' }, { left: '', right: '' }]);
       }
     }
   }, [editData]);
@@ -181,6 +199,38 @@ export function QuestionForm({ categories, tags, editId, onSaved, onCancelEdit }
     return stripped.length === 0;
   };
 
+  // Form-level validation for the save button
+  const isFormValid = useMemo(() => {
+    if (isContentEmpty(content)) return false;
+
+    switch (type) {
+      case 'single_choice': {
+        const filled = options.filter(o => o.text.trim());
+        if (filled.length < 2) return false;
+        return filled.some(o => o.is_correct);
+      }
+      case 'multiple_choice': {
+        const filled = options.filter(o => o.text.trim());
+        if (filled.length < 2) return false;
+        return filled.some(o => o.is_correct);
+      }
+      case 'true_false':
+        return true; // always has a valid answer
+      case 'open_ended':
+        return true; // content is enough
+      case 'fill_blank': {
+        const hasAnswer = fillBlankAnswers.some(a => a.trim());
+        return hasAnswer;
+      }
+      case 'matching': {
+        const validPairs = matchingPairs.filter(p => p.left.trim() && p.right.trim());
+        return validPairs.length >= 2;
+      }
+      default:
+        return true;
+    }
+  }, [content, type, options, fillBlankAnswers, matchingPairs]);
+
   // Auto-suggestions
   const categorySources: SuggestionSource[] = useMemo(() => {
     return categories.map(c => ({ id: c.id, name: c.name, keywords: c.keywords || [] }));
@@ -206,14 +256,12 @@ export function QuestionForm({ categories, tags, editId, onSaved, onCancelEdit }
     switch (type) {
       case 'single_choice':
       case 'multiple_choice':
-        // Only include options with actual text
         return options.filter(o => o.text.trim());
       case 'true_false':
         return { correct_answer: trueFalseAnswer };
       case 'open_ended':
         return { model_answer: modelAnswer || undefined };
       case 'fill_blank': {
-        // Each answer field can contain multiple answers separated by ;
         const blanks = fillBlankAnswers
           .map((ans, idx) => ({
             position: idx,
@@ -222,8 +270,12 @@ export function QuestionForm({ categories, tags, editId, onSaved, onCancelEdit }
           .filter(b => b.accepted_answers.length > 0);
         return { blanks: blanks.length > 0 ? blanks : [{ position: 0, accepted_answers: [] }] };
       }
+      case 'matching': {
+        const pairs = matchingPairs.filter(p => p.left.trim() && p.right.trim());
+        return { pairs };
+      }
     }
-  }, [type, options, trueFalseAnswer, modelAnswer, fillBlankAnswers]);
+  }, [type, options, trueFalseAnswer, modelAnswer, fillBlankAnswers, matchingPairs]);
 
   // Save mutation — always saves as 'active'
   const saveMutation = useMutation({
@@ -233,6 +285,7 @@ export function QuestionForm({ categories, tags, editId, onSaved, onCancelEdit }
         content,
         options: buildOptionsPayload(),
         explanation: explanationOpen ? explanation : null,
+        subject_id: subjectId,
         category_id: categoryId,
         tag_ids: selectedTagIds,
         difficulty: difficulty,
@@ -277,7 +330,7 @@ export function QuestionForm({ categories, tags, editId, onSaved, onCancelEdit }
     },
   });
 
-  // Create category inline
+  // Create category inline (optimistic)
   const createCategory = useMutation({
     mutationFn: async (name: string) => {
       const res = await fetch('/api/question-bank/categories', {
@@ -288,14 +341,70 @@ export function QuestionForm({ categories, tags, editId, onSaved, onCancelEdit }
       if (!res.ok) throw new Error();
       return res.json();
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['qb-categories'] });
-      setCategoryId(data.id);
+    onMutate: async (name) => {
+      // Optimistic: add temp item to cache
+      const tempId = `temp-${Date.now()}`;
+      queryClient.setQueryData(['qb-categories'], (old: QbCategory[] | undefined) => [
+        ...(old || []),
+        { id: tempId, tenant: '', name, keywords: [], created_at: '', updated_at: '' },
+      ]);
+      setCategoryId(tempId);
       setCategorySearch('');
+      setCategoryDropdownOpen(false);
+      return { tempId };
+    },
+    onSuccess: (data, _name, context) => {
+      // Replace temp with real data
+      queryClient.setQueryData(['qb-categories'], (old: QbCategory[] | undefined) =>
+        (old || []).map(c => c.id === context?.tempId ? data : c)
+      );
+      setCategoryId(data.id);
+    },
+    onError: (_err, _name, context) => {
+      queryClient.setQueryData(['qb-categories'], (old: QbCategory[] | undefined) =>
+        (old || []).filter(c => c.id !== context?.tempId)
+      );
+      setCategoryId(null);
     },
   });
 
-  // Create tag inline
+  // Create subject inline (optimistic)
+  const createSubject = useMutation({
+    mutationFn: async (name: string) => {
+      const res = await fetch('/api/question-bank/subjects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      });
+      if (!res.ok) throw new Error();
+      return res.json();
+    },
+    onMutate: async (name) => {
+      const tempId = `temp-${Date.now()}`;
+      queryClient.setQueryData(['qb-subjects'], (old: QbSubject[] | undefined) => [
+        ...(old || []),
+        { id: tempId, tenant: '', name, keywords: [], created_at: '', updated_at: '' },
+      ]);
+      setSubjectId(tempId);
+      setSubjectSearch('');
+      setSubjectDropdownOpen(false);
+      return { tempId };
+    },
+    onSuccess: (data, _name, context) => {
+      queryClient.setQueryData(['qb-subjects'], (old: QbSubject[] | undefined) =>
+        (old || []).map(s => s.id === context?.tempId ? data : s)
+      );
+      setSubjectId(data.id);
+    },
+    onError: (_err, _name, context) => {
+      queryClient.setQueryData(['qb-subjects'], (old: QbSubject[] | undefined) =>
+        (old || []).filter(s => s.id !== context?.tempId)
+      );
+      setSubjectId(null);
+    },
+  });
+
+  // Create tag inline (optimistic)
   const createTag = useMutation({
     mutationFn: async (name: string) => {
       const res = await fetch('/api/question-bank/tags', {
@@ -306,10 +415,53 @@ export function QuestionForm({ categories, tags, editId, onSaved, onCancelEdit }
       if (!res.ok) throw new Error();
       return res.json();
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['qb-tags'] });
-      setSelectedTagIds(prev => [...prev, data.id]);
+    onMutate: async (name) => {
+      const tempId = `temp-${Date.now()}`;
+      queryClient.setQueryData(['qb-tags'], (old: QbTag[] | undefined) => [
+        ...(old || []),
+        { id: tempId, tenant: '', name, keywords: [], created_at: '', updated_at: '' },
+      ]);
+      setSelectedTagIds(prev => [...prev, tempId]);
       setTagSearch('');
+      setTagDropdownOpen(false);
+      return { tempId };
+    },
+    onSuccess: (data, _name, context) => {
+      queryClient.setQueryData(['qb-tags'], (old: QbTag[] | undefined) =>
+        (old || []).map(t => t.id === context?.tempId ? data : t)
+      );
+      setSelectedTagIds(prev => prev.map(id => id === context?.tempId ? data.id : id));
+    },
+    onError: (_err, _name, context) => {
+      queryClient.setQueryData(['qb-tags'], (old: QbTag[] | undefined) =>
+        (old || []).filter(t => t.id !== context?.tempId)
+      );
+      setSelectedTagIds(prev => prev.filter(id => id !== context?.tempId));
+    },
+  });
+
+  // Delete category/subject with confirmation
+  const [deletingItem, setDeletingItem] = useState<{ type: 'category' | 'subject'; id: string; name: string } | null>(null);
+
+  const deleteItemMutation = useMutation({
+    mutationFn: async ({ type: itemType, id }: { type: 'category' | 'subject'; id: string }) => {
+      const endpoint = itemType === 'category' ? 'categories' : 'subjects';
+      const res = await fetch(`/api/question-bank/${endpoint}/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error();
+    },
+    onSuccess: (_data, variables) => {
+      if (variables.type === 'category') {
+        queryClient.invalidateQueries({ queryKey: ['qb-categories'] });
+        if (categoryId === variables.id) setCategoryId(null);
+      } else {
+        queryClient.invalidateQueries({ queryKey: ['qb-subjects'] });
+        if (subjectId === variables.id) setSubjectId(null);
+      }
+      setDeletingItem(null);
+      toast.success(t('eliminada_ok'));
+    },
+    onError: () => {
+      toast.error(t('error_eliminar'));
     },
   });
 
@@ -321,7 +473,9 @@ export function QuestionForm({ categories, tags, editId, onSaved, onCancelEdit }
     setTrueFalseAnswer(s.trueFalseAnswer);
     setModelAnswer(s.modelAnswer);
     setFillBlankAnswers(s.fillBlankAnswers);
+    setMatchingPairs(s.matchingPairs);
     setExplanation(s.explanation);
+    setSubjectId(s.subjectId);
     setCategoryId(s.categoryId);
     setSelectedTagIds(s.selectedTagIds);
     setDifficulty(s.difficulty);
@@ -330,9 +484,9 @@ export function QuestionForm({ categories, tags, editId, onSaved, onCancelEdit }
   // Get current state as a snapshot (for undo)
   const getSnapshot = useCallback((): FormState => ({
     type, content, options, trueFalseAnswer, modelAnswer,
-    fillBlankAnswers, explanation,
-    categoryId, selectedTagIds, difficulty,
-  }), [type, content, options, trueFalseAnswer, modelAnswer, fillBlankAnswers, explanation, categoryId, selectedTagIds, difficulty]);
+    fillBlankAnswers, matchingPairs, explanation,
+    subjectId, categoryId, selectedTagIds, difficulty,
+  }), [type, content, options, trueFalseAnswer, modelAnswer, fillBlankAnswers, matchingPairs, explanation, subjectId, categoryId, selectedTagIds, difficulty]);
 
   // Clear form with undo toast
   const handleClear = useCallback(() => {
@@ -364,8 +518,15 @@ export function QuestionForm({ categories, tags, editId, onSaved, onCancelEdit }
     ? categories.filter(c => c.name.toLowerCase().includes(categorySearch.toLowerCase()))
     : categories;
 
+  const filteredSubjects = subjectSearch.trim()
+    ? subjects.filter(s => s.name.toLowerCase().includes(subjectSearch.toLowerCase()))
+    : subjects;
+
   const showCreateCategory = categorySearch.trim() &&
     !categories.some(c => c.name.toLowerCase() === categorySearch.trim().toLowerCase());
+
+  const showCreateSubject = subjectSearch.trim() &&
+    !subjects.some(s => s.name.toLowerCase() === subjectSearch.trim().toLowerCase());
 
   const showCreateTag = tagSearch.trim() &&
     !tags.some(t => t.name.toLowerCase() === tagSearch.trim().toLowerCase());
@@ -386,7 +547,7 @@ export function QuestionForm({ categories, tags, editId, onSaved, onCancelEdit }
         size="sm"
         onClick={() => saveMutation.mutate()}
         loading={saveMutation.isPending}
-        disabled={isContentEmpty(content)}
+        disabled={!isFormValid}
       >
         {saveMutation.isPending ? t('guardando') : editId ? t('guardar_cambios') : t('guardar')}
       </Button>
@@ -607,6 +768,70 @@ export function QuestionForm({ categories, tags, editId, onSaved, onCancelEdit }
         </Card>
       )}
 
+      {/* Matching pairs (two-column, auto-expanding) */}
+      {type === 'matching' && (
+        <Card className="p-[var(--space-lg)]">
+          <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-3">
+            {t('matching_par')}es
+          </label>
+          <div className="space-y-3">
+            {matchingPairs.map((pair, idx) => (
+              <div key={idx} className="grid grid-cols-2 gap-3 items-center">
+                <input
+                  type="text"
+                  value={pair.left}
+                  onChange={(e) => {
+                    const newVal = e.target.value;
+                    setMatchingPairs(prev => {
+                      const updated = prev.map((p, i) => i === idx ? { ...p, left: newVal } : p);
+                      if (idx === prev.length - 1 && newVal.trim()) {
+                        updated.push({ left: '', right: '' });
+                      }
+                      return updated;
+                    });
+                  }}
+                  placeholder={`${t('matching_concepto')} ${idx + 1}`}
+                  className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
+                />
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={pair.right}
+                    onChange={(e) => {
+                      const newVal = e.target.value;
+                      setMatchingPairs(prev => {
+                        const updated = prev.map((p, i) => i === idx ? { ...p, right: newVal } : p);
+                        if (idx === prev.length - 1 && newVal.trim()) {
+                          updated.push({ left: '', right: '' });
+                        }
+                        return updated;
+                      });
+                    }}
+                    placeholder={`${t('matching_definicion')} ${idx + 1}`}
+                    className="flex-1 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
+                  />
+                  {matchingPairs.length > 2 && idx < matchingPairs.length - 1 && (
+                    <button
+                      type="button"
+                      onClick={() => setMatchingPairs(prev => {
+                        const filtered = prev.filter((_, i) => i !== idx);
+                        if (filtered[filtered.length - 1]?.left.trim() || filtered[filtered.length - 1]?.right.trim()) {
+                          filtered.push({ left: '', right: '' });
+                        }
+                        return filtered;
+                      })}
+                      className="text-[var(--color-text-muted)] hover:text-[var(--color-error)] transition-colors shrink-0"
+                    >
+                      <X className="size-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
       {/* Explanation (collapsible with animation) */}
       <Card className="p-[var(--space-lg)]">
         <button
@@ -645,8 +870,74 @@ export function QuestionForm({ categories, tags, editId, onSaved, onCancelEdit }
         </AnimatePresence>
       </Card>
 
-      {/* Metadata: category, tags, difficulty, status */}
+      {/* Metadata: materia, category, tags, difficulty */}
       <Card className="p-[var(--space-lg)] space-y-5">
+        {/* Subject (Materia) */}
+        <div>
+          <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5">
+            {t('materia')}
+          </label>
+          <div className="relative">
+            <input
+              type="text"
+              value={subjectSearch || subjects.find(s => s.id === subjectId)?.name || ''}
+              onChange={(e) => {
+                setSubjectSearch(e.target.value);
+                setSubjectDropdownOpen(true);
+                if (!e.target.value) setSubjectId(null);
+              }}
+              onFocus={() => {
+                setSubjectSearch(subjects.find(s => s.id === subjectId)?.name || '');
+                setSubjectDropdownOpen(true);
+              }}
+              onBlur={() => setTimeout(() => setSubjectDropdownOpen(false), 200)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && subjectSearch.trim() && showCreateSubject) {
+                  e.preventDefault();
+                  createSubject.mutate(subjectSearch.trim());
+                }
+              }}
+              placeholder={t('materia_placeholder')}
+              className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
+            />
+            {subjectDropdownOpen && (filteredSubjects.length > 0 || showCreateSubject) && (
+              <div className="absolute z-10 mt-1 w-full max-h-[200px] overflow-y-auto rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] shadow-[var(--shadow-lg)]">
+                {filteredSubjects.map(s => (
+                  <div key={s.id} className="flex items-center group">
+                    <button
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => { setSubjectId(s.id); setSubjectSearch(''); setSubjectDropdownOpen(false); }}
+                      className="flex-1 px-3 py-2 text-left text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] transition-colors"
+                    >
+                      {s.name}
+                    </button>
+                    <button
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => { setSubjectDropdownOpen(false); setDeletingItem({ type: 'subject', id: s.id, name: s.name }); }}
+                      className="px-2 py-2 text-[var(--color-text-muted)] opacity-0 group-hover:opacity-100 hover:text-[var(--color-error)] transition-all"
+                    >
+                      <X className="size-3.5" />
+                    </button>
+                  </div>
+                ))}
+                {showCreateSubject && (
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => createSubject.mutate(subjectSearch.trim())}
+                    className="w-full px-3 py-2 text-left text-sm text-[var(--color-brand-gold)] font-medium hover:bg-[var(--color-bg-secondary)] transition-colors"
+                  >
+                    <Plus className="inline size-3.5 mr-1" />
+                    {t('crear_materia', { name: subjectSearch.trim() })}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Category */}
         <div>
           <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5">
@@ -669,21 +960,36 @@ export function QuestionForm({ categories, tags, editId, onSaved, onCancelEdit }
                 // Delay to allow click on dropdown items
                 setTimeout(() => setCategoryDropdownOpen(false), 200);
               }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && categorySearch.trim() && showCreateCategory) {
+                  e.preventDefault();
+                  createCategory.mutate(categorySearch.trim());
+                }
+              }}
               placeholder={t('categoria_placeholder')}
               className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
             />
             {categoryDropdownOpen && (filteredCategories.length > 0 || showCreateCategory) && (
               <div className="absolute z-10 mt-1 w-full max-h-[200px] overflow-y-auto rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] shadow-[var(--shadow-lg)]">
                 {filteredCategories.map(c => (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => { setCategoryId(c.id); setCategorySearch(''); setCategoryDropdownOpen(false); }}
-                    className="w-full px-3 py-2 text-left text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] transition-colors"
-                  >
-                    {c.name}
-                  </button>
+                  <div key={c.id} className="flex items-center group">
+                    <button
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => { setCategoryId(c.id); setCategorySearch(''); setCategoryDropdownOpen(false); }}
+                      className="flex-1 px-3 py-2 text-left text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] transition-colors"
+                    >
+                      {c.name}
+                    </button>
+                    <button
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => { setCategoryDropdownOpen(false); setDeletingItem({ type: 'category', id: c.id, name: c.name }); }}
+                      className="px-2 py-2 text-[var(--color-text-muted)] opacity-0 group-hover:opacity-100 hover:text-[var(--color-error)] transition-all"
+                    >
+                      <X className="size-3.5" />
+                    </button>
+                  </div>
                 ))}
                 {showCreateCategory && (
                   <button
@@ -755,6 +1061,12 @@ export function QuestionForm({ categories, tags, editId, onSaved, onCancelEdit }
               onChange={(e) => { setTagSearch(e.target.value); setTagDropdownOpen(true); }}
               onFocus={() => setTagDropdownOpen(true)}
               onBlur={() => setTimeout(() => setTagDropdownOpen(false), 200)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && tagSearch.trim() && showCreateTag) {
+                  e.preventDefault();
+                  createTag.mutate(tagSearch.trim());
+                }
+              }}
               placeholder={t('tags_placeholder')}
               className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
             />
@@ -845,6 +1157,17 @@ export function QuestionForm({ categories, tags, editId, onSaved, onCancelEdit }
 
       {/* Bottom action bar */}
       <ActionBar />
+
+      {/* Delete confirmation for categories/subjects */}
+      <ConfirmModal
+        open={deletingItem !== null}
+        onClose={() => setDeletingItem(null)}
+        onConfirm={() => { if (deletingItem) deleteItemMutation.mutate(deletingItem); }}
+        title={`${t('confirmar_eliminar_item')}`}
+        description={`"${deletingItem?.name}" — ${t('confirmar_eliminar_item_desc')}`}
+        confirmText={t('eliminar')}
+        loading={deleteItemMutation.isPending}
+      />
     </div>
   );
 }

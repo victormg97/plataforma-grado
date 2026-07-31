@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 // ─── Enums ────────────────────────────────────────────────────────────────────
 
-export const questionTypes = ['single_choice', 'multiple_choice', 'true_false', 'open_ended', 'fill_blank'] as const;
+export const questionTypes = ['single_choice', 'multiple_choice', 'true_false', 'open_ended', 'fill_blank', 'matching'] as const;
 export const difficulties = ['easy', 'medium', 'hard'] as const;
 export const statuses = ['draft', 'active'] as const;
 
@@ -28,6 +28,15 @@ const fillBlankOptionsSchema = z.object({
   })).min(1, 'Al menos un espacio en blanco'),
 });
 
+const matchingPairSchema = z.object({
+  left: z.string().min(1, 'El concepto es requerido'),
+  right: z.string().min(1, 'La definición es requerida'),
+});
+
+const matchingOptionsSchema = z.object({
+  pairs: z.array(matchingPairSchema).min(2, 'Mínimo 2 pares'),
+});
+
 // ─── Main question schema ─────────────────────────────────────────────────────
 
 export const questionSchema = z.object({
@@ -35,6 +44,7 @@ export const questionSchema = z.object({
   content: z.string().min(1, 'El texto de la pregunta es requerido'),
   options: z.unknown(), // Validated dynamically based on type
   explanation: z.string().nullable().optional(),
+  subject_id: z.string().uuid().nullable().optional(),
   category_id: z.string().uuid().nullable().optional(),
   tag_ids: z.array(z.string().uuid()).optional().default([]),
   difficulty: z.enum(difficulties).nullable().optional().default(null),
@@ -84,6 +94,13 @@ export const questionSchema = z.object({
       const result = fillBlankOptionsSchema.safeParse(data.options);
       if (!result.success) {
         ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Debe definir al menos un espacio en blanco con respuestas válidas', path: ['options'] });
+      }
+      break;
+    }
+    case 'matching': {
+      const result = matchingOptionsSchema.safeParse(data.options);
+      if (!result.success) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Debe haber al menos 2 pares de emparejamiento', path: ['options'] });
       }
       break;
     }

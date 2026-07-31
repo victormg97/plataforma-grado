@@ -10,7 +10,7 @@ import { useUser } from '@/lib/hooks/useUser';
 import { getRolRedirectPath } from '@/lib/auth/helpers';
 import { QuestionForm } from '@/components/question-bank/QuestionForm';
 import { QuestionList } from '@/components/question-bank/QuestionList';
-import type { QbCategory, QbTag } from '@/lib/supabase/types';
+import type { QbCategory, QbTag, QbSubject } from '@/lib/supabase/types';
 
 type Tab = 'agregar' | 'guardadas';
 
@@ -60,6 +60,17 @@ export default function BancoPreguntasPage() {
     staleTime: 60_000,
     queryFn: async () => {
       const res = await fetch('/api/question-bank/tags');
+      if (!res.ok) throw new Error();
+      return res.json();
+    },
+    enabled: !!user && user.rol === 'admin',
+  });
+
+  const { data: subjects = [] } = useQuery<QbSubject[]>({
+    queryKey: ['qb-subjects'],
+    staleTime: 60_000,
+    queryFn: async () => {
+      const res = await fetch('/api/question-bank/subjects');
       if (!res.ok) throw new Error();
       return res.json();
     },
@@ -147,6 +158,7 @@ export default function BancoPreguntasPage() {
           <QuestionForm
             categories={categories}
             tags={tags}
+            subjects={subjects}
             editId={editId}
             onSaved={() => { setTab('guardadas'); setEditId(null); }}
             onCancelEdit={() => setEditId(null)}

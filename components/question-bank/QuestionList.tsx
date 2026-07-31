@@ -346,6 +346,11 @@ export function QuestionList({ categories, tags: _tags, onEdit }: QuestionListPr
                         {q.category_name}
                       </span>
                     )}
+                    {q.status === 'draft' && (
+                      <span className="rounded-full bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 px-2 py-0.5 text-[10px] font-medium">
+                        {t('estado_draft')}
+                      </span>
+                    )}
                   </div>
                 </button>
                 {/* Footer: date + actions */}

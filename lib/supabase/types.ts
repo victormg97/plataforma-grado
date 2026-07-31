@@ -1879,6 +1879,33 @@ export type Database = {
         }
         Relationships: []
       }
+      qb_subjects: {
+        Row: {
+          id: string
+          tenant: string
+          name: string
+          keywords: string[]
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          tenant: string
+          name: string
+          keywords?: string[]
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          tenant?: string
+          name?: string
+          keywords?: string[]
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       qb_tags: {
         Row: {
           id: string
@@ -1915,6 +1942,7 @@ export type Database = {
           options: import('./types').Json
           explanation: string | null
           category_id: string | null
+          subject_id: string | null
           difficulty: string | null
           status: string
           import_batch_id: string | null
@@ -1931,6 +1959,7 @@ export type Database = {
           content: string
           options?: import('./types').Json
           explanation?: string | null
+          subject_id?: string | null
           category_id?: string | null
           difficulty?: string | null
           status?: string
@@ -1947,6 +1976,7 @@ export type Database = {
           content?: string
           options?: import('./types').Json
           explanation?: string | null
+          subject_id?: string | null
           category_id?: string | null
           difficulty?: string | null
           status?: string
@@ -2220,6 +2250,7 @@ export type Database = {
           p_status?: string | null
           p_date_from?: string | null
           p_date_to?: string | null
+          p_subject_id?: string | null
           p_page?: number
           p_page_size?: number
         }
@@ -2492,7 +2523,7 @@ export type ReferralUsageRow = Tables<'referral_usages'>;
 
 // ─── Question Bank type aliases ──────────────────────────────────────────────
 
-export type QbQuestionType = 'single_choice' | 'multiple_choice' | 'true_false' | 'open_ended' | 'fill_blank';
+export type QbQuestionType = 'single_choice' | 'multiple_choice' | 'true_false' | 'open_ended' | 'fill_blank' | 'matching';
 export type QbDifficulty = 'easy' | 'medium' | 'hard';
 export type QbStatus = 'draft' | 'active';
 
@@ -2500,6 +2531,15 @@ export type QbQuestionBankSettings = {
   id: string;
   tenant: string;
   question_bank_enabled: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type QbSubject = {
+  id: string;
+  tenant: string;
+  name: string;
+  keywords: string[];
   created_at: string;
   updated_at: string;
 };
@@ -2539,13 +2579,23 @@ export type QbFillBlankOptions = {
   blanks: Array<{ position: number; accepted_answers: string[] }>;
 };
 
+export type QbMatchingPair = {
+  left: string;
+  right: string;
+};
+
+export type QbMatchingOptions = {
+  pairs: QbMatchingPair[];
+};
+
 export type QbQuestion = {
   id: string;
   tenant: string;
   type: QbQuestionType;
   content: string;
-  options: QbQuestionOption[] | QbTrueFalseOptions | QbOpenEndedOptions | QbFillBlankOptions;
+  options: QbQuestionOption[] | QbTrueFalseOptions | QbOpenEndedOptions | QbFillBlankOptions | QbMatchingOptions;
   explanation: string | null;
+  subject_id: string | null;
   category_id: string | null;
   difficulty: QbDifficulty | null;
   status: QbStatus;
@@ -2557,6 +2607,7 @@ export type QbQuestion = {
 };
 
 export type QbQuestionWithRelations = QbQuestion & {
+  subject_name: string | null;
   category_name: string | null;
   created_by_nombre: string | null;
   created_by_apellido: string | null;

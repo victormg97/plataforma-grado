@@ -8,6 +8,7 @@ import Placeholder from '@tiptap/extension-placeholder';
 import Link from '@tiptap/extension-link';
 import { TextStyleKit } from '@tiptap/extension-text-style';
 import TextAlign from '@tiptap/extension-text-align';
+import OrderedList from '@tiptap/extension-ordered-list';
 import { Table, TableRow, TableCell, TableHeader } from '@tiptap/extension-table';
 import { useTranslations } from 'next-intl';
 import { LinkModal } from '@/components/notas/LinkModal';
@@ -104,6 +105,22 @@ export function RichTextEditor({ content, placeholder, onChange, readOnly = fals
       StarterKit.configure({
         heading: { levels: [1, 2, 3] },
         link: false, // We configure Link separately below with custom options
+        orderedList: false, // We configure OrderedList separately to support type attribute
+      }),
+      OrderedList.extend({
+        addAttributes() {
+          return {
+            ...this.parent?.(),
+            type: {
+              default: null,
+              parseHTML: (element) => element.getAttribute('type'),
+              renderHTML: (attributes) => {
+                if (!attributes.type) return {};
+                return { type: attributes.type, style: `list-style-type: ${attributes.type === 'I' ? 'upper-roman' : attributes.type === 'a' ? 'lower-alpha' : 'decimal'}` };
+              },
+            },
+          };
+        },
       }),
       Placeholder.configure({ placeholder: placeholder ?? t('placeholder') }),
       Link.configure({

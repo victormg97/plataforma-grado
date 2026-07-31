@@ -296,10 +296,23 @@ export function EditorToolbar({ editor, onOpenLinkModal }: EditorToolbarProps) {
       </ToolbarButton>
       <ToolbarButton
         onClick={() => editor.chain().focus().toggleOrderedList().run()}
-        active={editor.isActive('orderedList')}
+        active={editor.isActive('orderedList') && !editor.getAttributes('orderedList').type}
         title={t('lista_numerada')}
       >
         <ListOrdered className="size-4" />
+      </ToolbarButton>
+      <ToolbarButton
+        onClick={() => {
+          if (editor.isActive('orderedList') && editor.getAttributes('orderedList').type === 'I') {
+            editor.chain().focus().toggleOrderedList().run();
+          } else {
+            editor.chain().focus().toggleOrderedList().updateAttributes('orderedList', { type: 'I' }).run();
+          }
+        }}
+        active={editor.isActive('orderedList') && editor.getAttributes('orderedList').type === 'I'}
+        title={t('lista_romana')}
+      >
+        <span className="text-[11px] font-bold leading-none">I.</span>
       </ToolbarButton>
 
       <Divider />
