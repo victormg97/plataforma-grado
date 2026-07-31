@@ -68,7 +68,7 @@ export function RotatingStatCard({
   useEffect(() => {
     if (prevVisibleLengthRef.current !== visible.length) {
       prevVisibleLengthRef.current = visible.length;
-      setIndex(0);
+      setIndex(0); // eslint-disable-line react-hooks/set-state-in-effect -- reset index when data changes
     }
   }, [visible.length]);
 

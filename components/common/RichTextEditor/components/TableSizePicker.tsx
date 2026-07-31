@@ -132,7 +132,7 @@ export function TableSizePicker({ onInsert }: TableSizePickerProps) {
           onMouseDown={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            open ? setOpen(false) : openPicker();
+            if (open) { setOpen(false); } else { openPicker(); }
           }}
           className="flex items-center justify-center h-8 w-8 rounded-[var(--radius-sm)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
           aria-label={t('insertar_tabla')}

@@ -29,7 +29,7 @@ export function LinkPopover({ editor }: LinkPopoverProps) {
   // Keep ref in sync so event handlers see latest value
   editingRef.current = editing;
 
-  useEffect(() => { setMounted(true); }, []); // eslint-disable-line react-hooks/set-state-in-effect
+  useEffect(() => { setMounted(true); }, []);
 
   // Clamp the popover position so it stays within the viewport
   const clampPosition = useCallback((top: number, centerX: number) => {

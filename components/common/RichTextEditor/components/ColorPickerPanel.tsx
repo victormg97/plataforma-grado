@@ -79,7 +79,7 @@ export function ColorPickerPanel({ currentColor, onSelect, onClose, mode, trigge
   useEffect(() => {
     if (dragging.current) {
       const hex = hsvToHex(hue, sat, bright);
-      setCustomColor(hex);
+      setCustomColor(hex); // eslint-disable-line react-hooks/set-state-in-effect -- intentional: sync derived state while dragging
     }
   }, [hue, sat, bright]);
 

@@ -163,7 +163,7 @@ export default function AdminReferidosPage() {
   const pagedCodes = sortedCodes.slice(currentPage * pageSize, (currentPage + 1) * pageSize);
 
   // Reset page when sort changes or data updates
-  useEffect(() => { setCurrentPage(0); }, [sortState, codes.length]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { setCurrentPage(0); }, [sortState, codes.length]);
 
   const toggleSort = (key: SortKey) => {
     setSortState(

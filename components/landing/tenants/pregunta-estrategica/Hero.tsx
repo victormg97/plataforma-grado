@@ -7,18 +7,10 @@ import { AppLogo } from '@/components/common/AppLogo';
 
 const easeOut = [0.22, 1, 0.36, 1] as const;
 
-interface HeroProps {
-  /** Ruta pública de la imagen del hero, ya resuelta en el servidor. null = sin imagen */
-  imageSrc: string | null;
-}
+// ─── Sub-components extracted outside Hero to avoid "cannot create components during render" ───
 
-export function Hero({ imageSrc }: HeroProps) {
-  const t = useTranslations('landing-pregunta-estrategica.hero');
-  const hasImage = imageSrc !== null;
-
-  // Título reutilizado en ambos layouts. `onDark` ajusta los colores cuando
-  // el texto va sobre la imagen (móvil/tablet).
-  const Titulo = ({ onDark = false }: { onDark?: boolean }) => (
+function Titulo({ onDark = false, t }: { onDark?: boolean; t: ReturnType<typeof useTranslations> }) {
+  return (
     <h1
       className="font-bold leading-[0.95] tracking-tight break-words hyphens-auto"
       style={{ fontFamily: 'var(--font-display)' }}
@@ -46,14 +38,26 @@ export function Hero({ imageSrc }: HeroProps) {
       </span>
     </h1>
   );
+}
 
-  const LineaDecorativa = ({ onDark = false }: { onDark?: boolean }) => (
+function LineaDecorativa({ onDark = false }: { onDark?: boolean }) {
+  return (
     <div className="my-6 flex items-center gap-2" aria-hidden>
       <span className={`size-2.5 rounded-full ${onDark ? 'bg-white' : 'bg-[var(--color-text-primary)]'}`} />
       <span className={`h-0.5 flex-1 max-w-[180px] ${onDark ? 'bg-white' : 'bg-[var(--color-text-primary)]'}`} />
       <span className={`size-2.5 rounded-full ${onDark ? 'bg-white' : 'bg-[var(--color-text-primary)]'}`} />
     </div>
   );
+}
+
+interface HeroProps {
+  /** Ruta pública de la imagen del hero, ya resuelta en el servidor. null = sin imagen */
+  imageSrc: string | null;
+}
+
+export function Hero({ imageSrc }: HeroProps) {
+  const t = useTranslations('landing-pregunta-estrategica.hero');
+  const hasImage = imageSrc !== null;
 
   return (
     <section className="relative overflow-hidden bg-[var(--color-bg)]">
@@ -79,7 +83,7 @@ export function Hero({ imageSrc }: HeroProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: easeOut }}
         >
-          <Titulo onDark />
+          <Titulo onDark t={t} />
           <LineaDecorativa onDark />
           <p className="max-w-md text-[clamp(1rem,3.5vw,1.25rem)] leading-relaxed text-white/90">
             {t('subtitulo')}
@@ -100,7 +104,7 @@ export function Hero({ imageSrc }: HeroProps) {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.7, ease: easeOut }}
         >
-          <Titulo />
+          <Titulo t={t} />
           <LineaDecorativa />
           <p className="max-w-md text-[clamp(1rem,2.2vw,1.25rem)] leading-relaxed text-[var(--color-text-secondary)]">
             {t('subtitulo')}

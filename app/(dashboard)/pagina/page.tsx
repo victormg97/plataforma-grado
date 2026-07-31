@@ -4,9 +4,10 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useUserStore } from '@/stores/useUserStore';
-import { Loader2, Mail, Users, Globe, ChevronRight, Palette, Tag, Camera, Gift } from 'lucide-react';
+import { Loader2, Mail, Users, Globe, ChevronRight, Palette, Tag, Camera, Gift, HelpCircle } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { useQuery } from '@tanstack/react-query';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -88,6 +89,18 @@ export default function ConfiguracionPaginaPage() {
   const tqs = useTranslations('quienesSomos');
   const tpl = useTranslations('planesConfig');
   const tsn = useTranslations('sobreNosotrasConfig');
+  const tqb = useTranslations('bancoPreguntas');
+
+  // Check if question bank is enabled for this tenant
+  const { data: qbSettings } = useQuery({
+    queryKey: ['qb-settings'],
+    staleTime: 5 * 60_000,
+    queryFn: async () => {
+      const res = await fetch('/api/question-bank/settings');
+      if (!res.ok) return { question_bank_enabled: false };
+      return res.json();
+    },
+  });
 
   // Guard: solo admins
   useEffect(() => {
@@ -150,6 +163,14 @@ export default function ConfiguracionPaginaPage() {
       title: t('seccion_referidos'),
       description: t('seccion_referidos_desc'),
     },
+    ...(qbSettings?.question_bank_enabled ? [{
+      href: '/pagina/banco-preguntas',
+      icon: HelpCircle,
+      iconColor: 'text-[#ec4899]',
+      iconBg: 'bg-[color-mix(in_srgb,#ec4899_12%,transparent)]',
+      title: tqb('config_nav_label'),
+      description: tqb('config_nav_desc'),
+    }] : []),
   ];
 
   return (

@@ -152,7 +152,7 @@ export function PDFThumbnailCard({
 
     renderThumbnail();
     return () => { cancelled = true; };
-  }, [signedUrl, isVisible, cachedSrc, recurso.id]);
+  }, [signedUrl, isVisible, cachedSrc, recurso.id, hasServerThumbnail]);
 
   // Build actions for the ellipsis menu
   const actions: CardAction[] = [];

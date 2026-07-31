@@ -16,7 +16,7 @@ export function LogoCompleto({ className }: LogoCompletoProps) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    setMounted(true); // eslint-disable-line react-hooks/set-state-in-effect -- hydration guard
   }, []);
 
   const isDark = mounted && (resolvedTheme === 'dark' || resolvedTheme === 'graduado');

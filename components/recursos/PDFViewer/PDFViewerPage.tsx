@@ -445,7 +445,7 @@ function PDFViewerContent({ url, titulo, canDownload, onDownload, onBack, t }: P
       {showSearch && (
         <div className="flex items-center gap-2 border-b border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-1.5">
           <Search className="size-3.5 shrink-0 text-[var(--color-text-muted)]" />
-          <input ref={searchInputRef} type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.shiftKey ? handleSearchPrev() : (searchQuery ? handleSearchNext() : handleSearch()); } }} placeholder={t('pdf_buscar_placeholder')} className="flex-1 bg-transparent text-sm text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)]" />
+          <input ref={searchInputRef} type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { if (e.shiftKey) { handleSearchPrev(); } else if (searchQuery) { handleSearchNext(); } else { handleSearch(); } } }} placeholder={t('pdf_buscar_placeholder')} className="flex-1 bg-transparent text-sm text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)]" />
           <div className="flex items-center gap-0.5">
             <Tooltip content={t('pdf_buscar_anterior')} position="bottom">
               <button onClick={handleSearchPrev} disabled={!searchQuery} className="flex size-6 items-center justify-center rounded text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] disabled:opacity-30">

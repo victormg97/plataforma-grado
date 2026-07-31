@@ -1827,6 +1827,230 @@ export type Database = {
           },
         ]
       }
+      // ─── Question Bank tables ──────────────────────────────────────────
+      question_bank_settings: {
+        Row: {
+          id: string
+          tenant: string
+          question_bank_enabled: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          tenant: string
+          question_bank_enabled?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          tenant?: string
+          question_bank_enabled?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      qb_categories: {
+        Row: {
+          id: string
+          tenant: string
+          name: string
+          keywords: string[]
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          tenant: string
+          name: string
+          keywords?: string[]
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          tenant?: string
+          name?: string
+          keywords?: string[]
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      qb_tags: {
+        Row: {
+          id: string
+          tenant: string
+          name: string
+          keywords: string[]
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          tenant: string
+          name: string
+          keywords?: string[]
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          tenant?: string
+          name?: string
+          keywords?: string[]
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      qb_questions: {
+        Row: {
+          id: string
+          tenant: string
+          type: string
+          content: string
+          options: import('./types').Json
+          explanation: string | null
+          category_id: string | null
+          difficulty: string
+          status: string
+          import_batch_id: string | null
+          created_by: string
+          updated_by: string | null
+          created_at: string
+          updated_at: string
+          search_vector: unknown
+        }
+        Insert: {
+          id?: string
+          tenant: string
+          type: string
+          content: string
+          options?: import('./types').Json
+          explanation?: string | null
+          category_id?: string | null
+          difficulty?: string
+          status?: string
+          import_batch_id?: string | null
+          created_by: string
+          updated_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          tenant?: string
+          type?: string
+          content?: string
+          options?: import('./types').Json
+          explanation?: string | null
+          category_id?: string | null
+          difficulty?: string
+          status?: string
+          import_batch_id?: string | null
+          created_by?: string
+          updated_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qb_questions_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "qb_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qb_questions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qb_questions_import_batch_fkey"
+            columns: ["import_batch_id"]
+            isOneToOne: false
+            referencedRelation: "qb_import_batches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      qb_question_tags: {
+        Row: {
+          question_id: string
+          tag_id: string
+        }
+        Insert: {
+          question_id: string
+          tag_id: string
+        }
+        Update: {
+          question_id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qb_question_tags_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "qb_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qb_question_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "qb_tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      qb_import_batches: {
+        Row: {
+          id: string
+          tenant: string
+          imported_by: string
+          file_name: string
+          total_rows: number
+          success_count: number
+          error_count: number
+          imported_at: string
+        }
+        Insert: {
+          id?: string
+          tenant: string
+          imported_by: string
+          file_name: string
+          total_rows?: number
+          success_count?: number
+          error_count?: number
+          imported_at?: string
+        }
+        Update: {
+          id?: string
+          tenant?: string
+          imported_by?: string
+          file_name?: string
+          total_rows?: number
+          success_count?: number
+          error_count?: number
+          imported_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qb_import_batches_imported_by_fkey"
+            columns: ["imported_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
 
     Views: {
@@ -1983,6 +2207,22 @@ export type Database = {
       is_own_recurso: { Args: { p_recurso_id: string }; Returns: boolean }
       set_ui_preference: {
         Args: { p_key: string; p_value: Json }
+        Returns: Json
+      }
+      get_qb_questions: {
+        Args: {
+          p_tenant: string
+          p_search?: string | null
+          p_category_id?: string | null
+          p_tag_ids?: string[] | null
+          p_type?: string | null
+          p_difficulty?: string | null
+          p_status?: string | null
+          p_date_from?: string | null
+          p_date_to?: string | null
+          p_page?: number
+          p_page_size?: number
+        }
         Returns: Json
       }
     }
@@ -2249,3 +2489,87 @@ export type ReferralSettingsRow = Tables<'referral_settings'>;
 export type ReferralRewardRuleRow = Tables<'referral_reward_rules'>;
 export type DiscountCodeRow = Tables<'discount_codes'>;
 export type ReferralUsageRow = Tables<'referral_usages'>;
+
+// ─── Question Bank type aliases ──────────────────────────────────────────────
+
+export type QbQuestionType = 'single_choice' | 'multiple_choice' | 'true_false' | 'open_ended' | 'fill_blank';
+export type QbDifficulty = 'easy' | 'medium' | 'hard';
+export type QbStatus = 'draft' | 'active';
+
+export type QbQuestionBankSettings = {
+  id: string;
+  tenant: string;
+  question_bank_enabled: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type QbCategory = {
+  id: string;
+  tenant: string;
+  name: string;
+  keywords: string[];
+  created_at: string;
+  updated_at: string;
+};
+
+export type QbTag = {
+  id: string;
+  tenant: string;
+  name: string;
+  keywords: string[];
+  created_at: string;
+  updated_at: string;
+};
+
+export type QbQuestionOption = {
+  text: string;
+  is_correct: boolean;
+};
+
+export type QbTrueFalseOptions = {
+  correct_answer: boolean;
+};
+
+export type QbOpenEndedOptions = {
+  model_answer?: string;
+};
+
+export type QbFillBlankOptions = {
+  blanks: Array<{ position: number; accepted_answers: string[] }>;
+};
+
+export type QbQuestion = {
+  id: string;
+  tenant: string;
+  type: QbQuestionType;
+  content: string;
+  options: QbQuestionOption[] | QbTrueFalseOptions | QbOpenEndedOptions | QbFillBlankOptions;
+  explanation: string | null;
+  category_id: string | null;
+  difficulty: QbDifficulty;
+  status: QbStatus;
+  import_batch_id: string | null;
+  created_by: string;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type QbQuestionWithRelations = QbQuestion & {
+  category_name: string | null;
+  created_by_nombre: string | null;
+  created_by_apellido: string | null;
+  tags: Array<{ id: string; name: string }> | null;
+};
+
+export type QbImportBatch = {
+  id: string;
+  tenant: string;
+  imported_by: string;
+  file_name: string;
+  total_rows: number;
+  success_count: number;
+  error_count: number;
+  imported_at: string;
+};

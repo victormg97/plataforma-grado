@@ -27,7 +27,7 @@ export function HeadingSelect({ value, onChange, options }: HeadingSelectProps) 
   const triggerRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { setMounted(true); }, []); // eslint-disable-line react-hooks/set-state-in-effect
+  useEffect(() => { setMounted(true); }, []); // eslint-disable-line react-hooks/set-state-in-effect -- hydration guard
 
   const selected = options.find((o) => o.value === value);
 
@@ -79,7 +79,6 @@ export function HeadingSelect({ value, onChange, options }: HeadingSelectProps) 
       window.removeEventListener('scroll', reposition, true);
       window.removeEventListener('resize', reposition);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   const dropdown = open && mounted && typeof document !== 'undefined'
@@ -128,7 +127,7 @@ export function HeadingSelect({ value, onChange, options }: HeadingSelectProps) 
         onMouseDown={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          open ? setOpen(false) : openDropdown();
+          if (open) { setOpen(false); } else { openDropdown(); }
         }}
         className={`flex items-center justify-between gap-1 h-8 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-bg-primary)] pl-2 pr-1.5 text-xs text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] transition-colors min-w-[100px] ${
           open ? 'border-[var(--color-brand-gold)] ring-1 ring-[var(--color-brand-gold)]/30' : ''

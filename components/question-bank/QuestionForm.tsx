@@ -1,0 +1,612 @@
+'use client';
+
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { Plus, X, Check, Lightbulb, ChevronDown, ChevronUp } from 'lucide-react';
+import { Card } from '@/components/common/Card';
+import { Button } from '@/components/common/Button';
+import { AppSelect } from '@/components/common/AppSelect';
+import { RichTextEditor } from '@/components/common/RichTextEditor';
+import { suggestTagsForText, type SuggestionSource } from '@/lib/question-bank/suggestions';
+import type { QbCategory, QbTag, QbQuestionType, QbDifficulty, QbStatus } from '@/lib/supabase/types';
+import { questionTypes, difficulties, statuses } from '@/lib/validations/question-bank.schema';
+
+interface QuestionFormProps {
+  categories: QbCategory[];
+  tags: QbTag[];
+  editId: string | null;
+  onSaved: () => void;
+}
+
+interface ChoiceOption {
+  text: string;
+  is_correct: boolean;
+}
+
+export function QuestionForm({ categories, tags, editId, onSaved }: QuestionFormProps) {
+  const t = useTranslations('bancoPreguntas');
+  const queryClient = useQueryClient();
+
+  // Form state
+  const [type, setType] = useState<QbQuestionType>('single_choice');
+  const [content, setContent] = useState('');
+  const [options, setOptions] = useState<ChoiceOption[]>([
+    { text: '', is_correct: false },
+    { text: '', is_correct: false },
+  ]);
+  const [trueFalseAnswer, setTrueFalseAnswer] = useState<boolean>(true);
+  const [modelAnswer, setModelAnswer] = useState('');
+  const [fillBlankAnswers, setFillBlankAnswers] = useState<string[]>(['']);
+  const [explanation, setExplanation] = useState('');
+  const [showExplanation, setShowExplanation] = useState(false);
+  const [categoryId, setCategoryId] = useState<string | null>(null);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+  const [difficulty, setDifficulty] = useState<QbDifficulty>('medium');
+  const [status, setStatus] = useState<QbStatus>('draft');
+  const [tagSearch, setTagSearch] = useState('');
+  const [categorySearch, setCategorySearch] = useState('');
+
+  // Load question data for editing
+  const { data: editData } = useQuery({
+    queryKey: ['qb-question', editId],
+    enabled: !!editId,
+    queryFn: async () => {
+      const res = await fetch(`/api/question-bank/questions/${editId}`);
+      if (!res.ok) throw new Error();
+      return res.json();
+    },
+  });
+
+  // Populate form when editing
+  /* eslint-disable react-hooks/set-state-in-effect -- populating form from fetched data */
+  useEffect(() => {
+    if (editData) {
+      setType(editData.type);
+      setContent(editData.content || '');
+      setExplanation(editData.explanation || '');
+      setShowExplanation(!!editData.explanation);
+      setCategoryId(editData.category_id);
+      setDifficulty(editData.difficulty);
+      setStatus(editData.status);
+      setSelectedTagIds(editData.tags?.map((t: { id: string }) => t.id) || []);
+
+      // Set type-specific options
+      if (editData.type === 'single_choice' || editData.type === 'multiple_choice') {
+        setOptions(Array.isArray(editData.options) ? editData.options : []);
+      } else if (editData.type === 'true_false') {
+        setTrueFalseAnswer(editData.options?.correct_answer ?? true);
+      } else if (editData.type === 'open_ended') {
+        setModelAnswer(editData.options?.model_answer || '');
+      } else if (editData.type === 'fill_blank') {
+        setFillBlankAnswers(editData.options?.blanks?.[0]?.accepted_answers || ['']);
+      }
+    }
+  }, [editData]);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
+  // Auto-suggestions
+  const categorySources: SuggestionSource[] = useMemo(() => {
+    return categories.map(c => ({ id: c.id, name: c.name, keywords: c.keywords || [] }));
+  }, [categories]);
+
+  const tagSources: SuggestionSource[] = useMemo(() => {
+    return tags.map(t => ({ id: t.id, name: t.name, keywords: t.keywords || [] }));
+  }, [tags]);
+
+  const categorySuggestions = useMemo(() => {
+    if (!content.trim()) return [];
+    return suggestTagsForText(content, categorySources, 3);
+  }, [content, categorySources]);
+
+  const tagSuggestions = useMemo(() => {
+    if (!content.trim()) return [];
+    return suggestTagsForText(content, tagSources, 5)
+      .filter(s => !selectedTagIds.includes(s.id));
+  }, [content, tagSources, selectedTagIds]);
+
+  // Build options payload based on type
+  const buildOptionsPayload = useCallback(() => {
+    switch (type) {
+      case 'single_choice':
+      case 'multiple_choice':
+        return options;
+      case 'true_false':
+        return { correct_answer: trueFalseAnswer };
+      case 'open_ended':
+        return { model_answer: modelAnswer || undefined };
+      case 'fill_blank':
+        return { blanks: [{ position: 0, accepted_answers: fillBlankAnswers.filter(Boolean) }] };
+    }
+  }, [type, options, trueFalseAnswer, modelAnswer, fillBlankAnswers]);
+
+  // Save mutation
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const payload = {
+        type,
+        content,
+        options: buildOptionsPayload(),
+        explanation: showExplanation ? explanation : null,
+        category_id: categoryId,
+        tag_ids: selectedTagIds,
+        difficulty,
+        status,
+      };
+
+      const url = editId
+        ? `/api/question-bank/questions/${editId}`
+        : '/api/question-bank/questions';
+      const method = editId ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.message || body.error || 'Error');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success(t('guardada_ok'));
+      queryClient.invalidateQueries({ queryKey: ['qb-questions'] });
+      if (!editId) resetForm();
+      onSaved();
+    },
+    onError: (err: Error) => {
+      toast.error(err.message || t('error_guardar'));
+    },
+  });
+
+  // Create category inline
+  const createCategory = useMutation({
+    mutationFn: async (name: string) => {
+      const res = await fetch('/api/question-bank/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      });
+      if (!res.ok) throw new Error();
+      return res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['qb-categories'] });
+      setCategoryId(data.id);
+      setCategorySearch('');
+    },
+  });
+
+  // Create tag inline
+  const createTag = useMutation({
+    mutationFn: async (name: string) => {
+      const res = await fetch('/api/question-bank/tags', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      });
+      if (!res.ok) throw new Error();
+      return res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['qb-tags'] });
+      setSelectedTagIds(prev => [...prev, data.id]);
+      setTagSearch('');
+    },
+  });
+
+  const resetForm = () => {
+    setType('single_choice');
+    setContent('');
+    setOptions([{ text: '', is_correct: false }, { text: '', is_correct: false }]);
+    setTrueFalseAnswer(true);
+    setModelAnswer('');
+    setFillBlankAnswers(['']);
+    setExplanation('');
+    setShowExplanation(false);
+    setCategoryId(null);
+    setSelectedTagIds([]);
+    setDifficulty('medium');
+    setStatus('draft');
+  };
+
+  // Filter tags for autocomplete dropdown
+  const filteredTags = tagSearch.trim()
+    ? tags.filter(tag =>
+        tag.name.toLowerCase().includes(tagSearch.toLowerCase()) &&
+        !selectedTagIds.includes(tag.id)
+      )
+    : [];
+
+  const filteredCategories = categorySearch.trim()
+    ? categories.filter(c => c.name.toLowerCase().includes(categorySearch.toLowerCase()))
+    : categories;
+
+  const showCreateCategory = categorySearch.trim() &&
+    !categories.some(c => c.name.toLowerCase() === categorySearch.trim().toLowerCase());
+
+  const showCreateTag = tagSearch.trim() &&
+    !tags.some(t => t.name.toLowerCase() === tagSearch.trim().toLowerCase());
+
+  return (
+    <div className="space-y-6">
+      {/* Type selector */}
+      <Card className="p-[var(--space-lg)]">
+        <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-3">
+          {t('tipo_pregunta')}
+        </label>
+        <div className="flex flex-wrap gap-2">
+          {questionTypes.map((qt) => (
+            <button
+              key={qt}
+              type="button"
+              onClick={() => setType(qt)}
+              className={`rounded-[var(--radius-md)] px-4 py-2 text-sm font-medium transition-all ${
+                type === qt
+                  ? 'bg-[var(--color-brand-gold)] text-white shadow-sm'
+                  : 'border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-brand-gold)] hover:text-[var(--color-brand-gold)]'
+              }`}
+            >
+              {t(`tipo_${qt}`)}
+            </button>
+          ))}
+        </div>
+      </Card>
+
+      {/* Question content */}
+      <Card className="p-[var(--space-lg)]">
+        <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-2">
+          {t('enunciado')}
+        </label>
+        <RichTextEditor
+          content={content}
+          placeholder={t('enunciado_placeholder')}
+          onChange={setContent}
+        />
+      </Card>
+
+      {/* Options section - depends on type */}
+      {(type === 'single_choice' || type === 'multiple_choice') && (
+        <Card className="p-[var(--space-lg)]">
+          <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-3">
+            {t('opciones')}
+          </label>
+          <div className="space-y-3">
+            {options.map((opt, idx) => (
+              <div key={idx} className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (type === 'single_choice') {
+                      setOptions(prev => prev.map((o, i) => ({ ...o, is_correct: i === idx })));
+                    } else {
+                      setOptions(prev => prev.map((o, i) => i === idx ? { ...o, is_correct: !o.is_correct } : o));
+                    }
+                  }}
+                  className={`flex size-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+                    opt.is_correct
+                      ? 'border-[var(--color-brand-gold)] bg-[var(--color-brand-gold)] text-white'
+                      : 'border-[var(--color-border)] hover:border-[var(--color-brand-gold)]'
+                  }`}
+                  title={t('marcar_correcta')}
+                >
+                  {opt.is_correct && <Check className="size-3.5" />}
+                </button>
+                <input
+                  type="text"
+                  value={opt.text}
+                  onChange={(e) => setOptions(prev => prev.map((o, i) => i === idx ? { ...o, text: e.target.value } : o))}
+                  placeholder={`${t('opcion_placeholder')} ${idx + 1}`}
+                  className="flex-1 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
+                />
+                {options.length > 2 && (
+                  <button
+                    type="button"
+                    onClick={() => setOptions(prev => prev.filter((_, i) => i !== idx))}
+                    className="text-[var(--color-text-muted)] hover:text-[var(--color-error)] transition-colors"
+                  >
+                    <X className="size-4" />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => setOptions(prev => [...prev, { text: '', is_correct: false }])}
+            className="mt-3 inline-flex items-center gap-1.5 text-sm text-[var(--color-brand-gold)] hover:underline"
+          >
+            <Plus className="size-3.5" />
+            {t('agregar_opcion')}
+          </button>
+        </Card>
+      )}
+
+      {type === 'true_false' && (
+        <Card className="p-[var(--space-lg)]">
+          <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-3">
+            {t('respuesta_correcta')}
+          </label>
+          <div className="flex gap-3">
+            {[true, false].map((val) => (
+              <button
+                key={String(val)}
+                type="button"
+                onClick={() => setTrueFalseAnswer(val)}
+                className={`rounded-[var(--radius-md)] px-6 py-2.5 text-sm font-medium transition-all ${
+                  trueFalseAnswer === val
+                    ? 'bg-[var(--color-brand-gold)] text-white shadow-sm'
+                    : 'border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-brand-gold)]'
+                }`}
+              >
+                {val ? t('verdadero') : t('falso')}
+              </button>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {type === 'open_ended' && (
+        <Card className="p-[var(--space-lg)]">
+          <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-2">
+            {t('respuesta_modelo')}
+          </label>
+          <RichTextEditor
+            content={modelAnswer}
+            placeholder={t('respuesta_modelo_placeholder')}
+            onChange={setModelAnswer}
+          />
+        </Card>
+      )}
+
+      {type === 'fill_blank' && (
+        <Card className="p-[var(--space-lg)]">
+          <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-3">
+            {t('espacios_blanco')}
+          </label>
+          <p className="text-xs text-[var(--color-text-muted)] mb-3">
+            Usa ___ en el enunciado para indicar el espacio en blanco
+          </p>
+          <div className="space-y-2">
+            {fillBlankAnswers.map((ans, idx) => (
+              <div key={idx} className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={ans}
+                  onChange={(e) => setFillBlankAnswers(prev => prev.map((a, i) => i === idx ? e.target.value : a))}
+                  placeholder={`Respuesta válida ${idx + 1}`}
+                  className="flex-1 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
+                />
+                {fillBlankAnswers.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setFillBlankAnswers(prev => prev.filter((_, i) => i !== idx))}
+                    className="text-[var(--color-text-muted)] hover:text-[var(--color-error)]"
+                  >
+                    <X className="size-4" />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => setFillBlankAnswers(prev => [...prev, ''])}
+            className="mt-3 inline-flex items-center gap-1.5 text-sm text-[var(--color-brand-gold)] hover:underline"
+          >
+            <Plus className="size-3.5" />
+            {t('agregar_respuesta')}
+          </button>
+        </Card>
+      )}
+
+      {/* Explanation (collapsible) */}
+      <Card className="p-[var(--space-lg)]">
+        <button
+          type="button"
+          onClick={() => setShowExplanation(!showExplanation)}
+          className="flex items-center gap-2 text-sm font-medium text-[var(--color-text-primary)] hover:text-[var(--color-brand-gold)] transition-colors"
+        >
+          {showExplanation ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+          {showExplanation ? t('ocultar_explicacion') : t('mostrar_explicacion')}
+        </button>
+        {showExplanation && (
+          <div className="mt-3">
+            <RichTextEditor
+              content={explanation}
+              placeholder={t('explicacion_placeholder')}
+              onChange={setExplanation}
+            />
+          </div>
+        )}
+      </Card>
+
+      {/* Metadata: category, tags, difficulty, status */}
+      <Card className="p-[var(--space-lg)] space-y-5">
+        {/* Category */}
+        <div>
+          <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5">
+            {t('categoria')}
+          </label>
+          <div className="relative">
+            <input
+              type="text"
+              value={categorySearch || categories.find(c => c.id === categoryId)?.name || ''}
+              onChange={(e) => {
+                setCategorySearch(e.target.value);
+                if (!e.target.value) setCategoryId(null);
+              }}
+              onFocus={() => setCategorySearch(categories.find(c => c.id === categoryId)?.name || '')}
+              placeholder={t('categoria_placeholder')}
+              className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
+            />
+            {(categorySearch || (!categoryId && filteredCategories.length > 0)) && (
+              <div className="absolute z-10 mt-1 w-full max-h-[200px] overflow-y-auto rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] shadow-[var(--shadow-lg)]">
+                {filteredCategories.map(c => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => { setCategoryId(c.id); setCategorySearch(''); }}
+                    className="w-full px-3 py-2 text-left text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] transition-colors"
+                  >
+                    {c.name}
+                  </button>
+                ))}
+                {showCreateCategory && (
+                  <button
+                    type="button"
+                    onClick={() => createCategory.mutate(categorySearch.trim())}
+                    className="w-full px-3 py-2 text-left text-sm text-[var(--color-brand-gold)] font-medium hover:bg-[var(--color-bg-secondary)] transition-colors"
+                  >
+                    <Plus className="inline size-3.5 mr-1" />
+                    {t('crear_categoria', { name: categorySearch.trim() })}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+          {/* Category suggestions */}
+          {categorySuggestions.length > 0 && !categoryId && (
+            <div className="mt-2 flex items-center gap-2 flex-wrap">
+              <Lightbulb className="size-3.5 text-[var(--color-brand-gold)]" />
+              <span className="text-xs text-[var(--color-text-muted)]">{t('sugerencia_categoria')}:</span>
+              {categorySuggestions.map(s => (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => { setCategoryId(s.id); setCategorySearch(''); }}
+                  className="rounded-full bg-[color-mix(in_srgb,var(--color-brand-gold)_12%,transparent)] px-2.5 py-0.5 text-xs font-medium text-[var(--color-brand-gold)] hover:bg-[color-mix(in_srgb,var(--color-brand-gold)_20%,transparent)] transition-colors"
+                >
+                  {s.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Tags */}
+        <div>
+          <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5">
+            {t('tags')}
+          </label>
+          {/* Selected tags */}
+          {selectedTagIds.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {selectedTagIds.map(tagId => {
+                const tag = tags.find(t => t.id === tagId);
+                if (!tag) return null;
+                return (
+                  <span
+                    key={tagId}
+                    className="inline-flex items-center gap-1 rounded-full bg-[color-mix(in_srgb,var(--color-brand-gold)_12%,transparent)] px-2.5 py-1 text-xs font-medium text-[var(--color-brand-gold)]"
+                  >
+                    {tag.name}
+                    <button
+                      type="button"
+                      onClick={() => setSelectedTagIds(prev => prev.filter(id => id !== tagId))}
+                      className="hover:text-[var(--color-error)] transition-colors"
+                    >
+                      <X className="size-3" />
+                    </button>
+                  </span>
+                );
+              })}
+            </div>
+          )}
+          {/* Tag input */}
+          <div className="relative">
+            <input
+              type="text"
+              value={tagSearch}
+              onChange={(e) => setTagSearch(e.target.value)}
+              placeholder={t('tags_placeholder')}
+              className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
+            />
+            {tagSearch && (
+              <div className="absolute z-10 mt-1 w-full max-h-[200px] overflow-y-auto rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] shadow-[var(--shadow-lg)]">
+                {filteredTags.map(tag => (
+                  <button
+                    key={tag.id}
+                    type="button"
+                    onClick={() => { setSelectedTagIds(prev => [...prev, tag.id]); setTagSearch(''); }}
+                    className="w-full px-3 py-2 text-left text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] transition-colors"
+                  >
+                    {tag.name}
+                  </button>
+                ))}
+                {showCreateTag && (
+                  <button
+                    type="button"
+                    onClick={() => createTag.mutate(tagSearch.trim())}
+                    className="w-full px-3 py-2 text-left text-sm text-[var(--color-brand-gold)] font-medium hover:bg-[var(--color-bg-secondary)] transition-colors"
+                  >
+                    <Plus className="inline size-3.5 mr-1" />
+                    {t('crear_tag', { name: tagSearch.trim() })}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+          {/* Tag suggestions */}
+          {tagSuggestions.length > 0 && (
+            <div className="mt-2 flex items-center gap-2 flex-wrap">
+              <Lightbulb className="size-3.5 text-[var(--color-brand-gold)]" />
+              <span className="text-xs text-[var(--color-text-muted)]">{t('sugerencia_tags')}:</span>
+              {tagSuggestions.map(s => (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => setSelectedTagIds(prev => [...prev, s.id])}
+                  className="rounded-full bg-[color-mix(in_srgb,var(--color-brand-gold)_12%,transparent)] px-2.5 py-0.5 text-xs font-medium text-[var(--color-brand-gold)] hover:bg-[color-mix(in_srgb,var(--color-brand-gold)_20%,transparent)] transition-colors"
+                >
+                  + {s.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Difficulty */}
+        <div>
+          <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5">
+            {t('dificultad')}
+          </label>
+          <AppSelect
+            value={difficulty}
+            onChange={(v) => setDifficulty(v as QbDifficulty)}
+            options={difficulties.map(d => ({ value: d, label: t(`dificultad_${d}`) }))}
+            className="w-full max-w-xs"
+          />
+        </div>
+
+        {/* Status */}
+        <div>
+          <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5">
+            {t('estado')}
+          </label>
+          <AppSelect
+            value={status}
+            onChange={(v) => setStatus(v as QbStatus)}
+            options={statuses.map(s => ({ value: s, label: t(`estado_${s}`) }))}
+            className="w-full max-w-xs"
+          />
+        </div>
+      </Card>
+
+      {/* Save button */}
+      <div className="flex justify-end">
+        <Button
+          onClick={() => saveMutation.mutate()}
+          loading={saveMutation.isPending}
+          disabled={!content.trim()}
+        >
+          {saveMutation.isPending ? t('guardando') : t('guardar')}
+        </Button>
+      </div>
+    </div>
+  );
+}
