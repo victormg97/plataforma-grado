@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
@@ -11,12 +12,17 @@ import { Card } from '@/components/common/Card';
 import { Collapsible } from '@/components/common/Collapsible';
 import { RotatingStatCard, type RotatingStatItem } from '@/components/common/RotatingStatCard';
 import { StatusBadge } from '@/components/common/StatusBadge';
-import { CalendarioAdmin } from '@/components/calendario/CalendarioAdmin';
 import { useUserStore } from '@/stores/useUserStore';
 import { useUIStore } from '@/stores/useUIStore';
 import { useUiPreference } from '@/lib/hooks/useUiPreference';
 import { buildClaseDetailHref } from '@/lib/utils/horarioNavigation';
 import { useTranslations, useLocale } from 'next-intl';
+
+// Lazy-load FullCalendar (heavy: ~200KB+ with plugins) — only loads when visible
+const CalendarioAdmin = dynamic(
+  () => import('@/components/calendario/CalendarioAdmin').then((m) => m.CalendarioAdmin),
+  { ssr: false, loading: () => <div className="h-[500px] animate-pulse rounded-[var(--radius-lg)] bg-[var(--color-bg-secondary)]" /> }
+);
 
 type Stats = {
   total_alumnos: number;

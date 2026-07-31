@@ -163,19 +163,9 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    // Check role permissions
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('rol')
-      .eq('id', user.id)
-      .single();
-
-    if (!profile) {
-      const url = request.nextUrl.clone();
-      url.pathname = '/login';
-      return NextResponse.redirect(url);
-    }
-
+    // Check role permissions only when the URL prefix doesn't match what we
+    // can infer from the pathname. This avoids a profiles query on every
+    // navigation for the common case where the user is on their own dashboard.
     const roleAccess: Record<string, string[]> = {
       '/admin': ['admin'],
       '/profesor': ['admin', 'profesor'],
@@ -187,17 +177,49 @@ export async function proxy(request: NextRequest) {
       pathname.startsWith(prefix)
     );
 
-    if (matchedPrefix && !roleAccess[matchedPrefix].includes(profile.rol)) {
-      // Redirect to their own dashboard
-      const redirectMap: Record<string, string> = {
-        admin: '/admin',
-        profesor: '/profesor',
-        alumno: '/alumno',
-        lector: '/lector',
-      };
-      const url = request.nextUrl.clone();
-      url.pathname = redirectMap[profile.rol] || '/login';
-      return NextResponse.redirect(url);
+    if (matchedPrefix) {
+      // Read role from a lightweight cookie set after login to skip DB query
+      const rolCookie = request.cookies.get('x-user-rol')?.value;
+
+      if (rolCookie && roleAccess[matchedPrefix].includes(rolCookie)) {
+        // Fast path: cookie matches, skip DB call
+        return supabaseResponse;
+      }
+
+      // Fallback: query DB for role verification
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('rol')
+        .eq('id', user.id)
+        .single();
+
+      if (!profile) {
+        const url = request.nextUrl.clone();
+        url.pathname = '/login';
+        return NextResponse.redirect(url);
+      }
+
+      // Set role cookie for future requests (lightweight, non-sensitive)
+      supabaseResponse.cookies.set('x-user-rol', profile.rol, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60, // 1 hour — re-validated on next session refresh
+        path: '/',
+      });
+
+      if (!roleAccess[matchedPrefix].includes(profile.rol)) {
+        // Redirect to their own dashboard
+        const redirectMap: Record<string, string> = {
+          admin: '/admin',
+          profesor: '/profesor',
+          alumno: '/alumno',
+          lector: '/lector',
+        };
+        const url = request.nextUrl.clone();
+        url.pathname = redirectMap[profile.rol] || '/login';
+        return NextResponse.redirect(url);
+      }
     }
   }
 

@@ -12,8 +12,17 @@ export async function prefetchDashboardData(userId: string, rol: UserRol) {
 
   if (rol === 'admin') {
     // ── Single RPC call: get_admin_prefetch returns everything in one round-trip ──
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: prefetch } = await supabase.rpc('get_admin_prefetch', { p_admin_id: userId }) as { data: any };
+    const [prefetchResult, sortPrefResult] = await Promise.all([
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      supabase.rpc('get_admin_prefetch', { p_admin_id: userId }) as unknown as Promise<{ data: any }>,
+      supabase
+        .from('user_recursos_preferences')
+        .select('sort_by')
+        .eq('user_id', userId)
+        .maybeSingle(),
+    ]);
+
+    const prefetch = prefetchResult.data;
 
     if (prefetch) {
       const now = new Date();
@@ -98,19 +107,23 @@ export async function prefetchDashboardData(userId: string, rol: UserRol) {
       });
 
       // Recursos sort preference — avoids flash of re-ordering on initial load
-      const { data: adminSortPref } = await supabase
-        .from('user_recursos_preferences')
-        .select('sort_by')
-        .eq('user_id', userId)
-        .maybeSingle();
-      queryClient.setQueryData(['recursos_sort_pref', userId], adminSortPref?.sort_by ?? 'created_at_desc');
+      queryClient.setQueryData(['recursos_sort_pref', userId], sortPrefResult.data?.sort_by ?? 'created_at_desc');
     }
   }
 
   if (rol === 'profesor') {
     // ── Single RPC call for profesor ─────────────────────────────────────────
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: prefetch } = await supabase.rpc('get_profesor_prefetch', { p_profesor_id: userId }) as { data: any };
+    const [prefetchResult, sortPrefResult] = await Promise.all([
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      supabase.rpc('get_profesor_prefetch', { p_profesor_id: userId }) as unknown as Promise<{ data: any }>,
+      supabase
+        .from('user_recursos_preferences')
+        .select('sort_by')
+        .eq('user_id', userId)
+        .maybeSingle(),
+    ]);
+
+    const prefetch = prefetchResult.data;
 
     if (prefetch) {
       // Horarios + stats + alumnos (same shape as get_profesor_dashboard)
@@ -158,19 +171,23 @@ export async function prefetchDashboardData(userId: string, rol: UserRol) {
       });
 
       // Recursos sort preference — avoids flash of re-ordering on initial load
-      const { data: profSortPref } = await supabase
-        .from('user_recursos_preferences')
-        .select('sort_by')
-        .eq('user_id', userId)
-        .maybeSingle();
-      queryClient.setQueryData(['recursos_sort_pref', userId], profSortPref?.sort_by ?? 'created_at_desc');
+      queryClient.setQueryData(['recursos_sort_pref', userId], sortPrefResult.data?.sort_by ?? 'created_at_desc');
     }
   }
 
   if (rol === 'alumno') {
     // ── Single RPC call for alumno ───────────────────────────────────────────
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: prefetch } = await supabase.rpc('get_alumno_prefetch', { p_alumno_id: userId }) as { data: any };
+    const [prefetchResult, sortPrefResult] = await Promise.all([
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      supabase.rpc('get_alumno_prefetch', { p_alumno_id: userId }) as unknown as Promise<{ data: any }>,
+      supabase
+        .from('user_recursos_preferences')
+        .select('sort_by')
+        .eq('user_id', userId)
+        .maybeSingle(),
+    ]);
+
+    const prefetch = prefetchResult.data;
 
     if (prefetch) {
       // Asistencia dashboard (clases, proxima_clase, stats)
@@ -206,19 +223,23 @@ export async function prefetchDashboardData(userId: string, rol: UserRol) {
       });
 
       // Recursos sort preference
-      const { data: alumnoSortPref } = await supabase
-        .from('user_recursos_preferences')
-        .select('sort_by')
-        .eq('user_id', userId)
-        .maybeSingle();
-      queryClient.setQueryData(['recursos_sort_pref', userId], alumnoSortPref?.sort_by ?? 'created_at_desc');
+      queryClient.setQueryData(['recursos_sort_pref', userId], sortPrefResult.data?.sort_by ?? 'created_at_desc');
     }
   }
 
   if (rol === 'lector') {
     // ── Single RPC call for lector ───────────────────────────────────────────
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: prefetch } = await supabase.rpc('get_lector_prefetch', { p_lector_id: userId }) as { data: any };
+    const [prefetchResult, sortPrefResult] = await Promise.all([
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      supabase.rpc('get_lector_prefetch', { p_lector_id: userId }) as unknown as Promise<{ data: any }>,
+      supabase
+        .from('user_recursos_preferences')
+        .select('sort_by')
+        .eq('user_id', userId)
+        .maybeSingle(),
+    ]);
+
+    const prefetch = prefetchResult.data;
 
     if (prefetch) {
       const recursos = prefetch.recursos ?? {};
@@ -228,12 +249,7 @@ export async function prefetchDashboardData(userId: string, rol: UserRol) {
       });
 
       // Recursos sort preference
-      const { data: lectorSortPref } = await supabase
-        .from('user_recursos_preferences')
-        .select('sort_by')
-        .eq('user_id', userId)
-        .maybeSingle();
-      queryClient.setQueryData(['recursos_sort_pref', userId], lectorSortPref?.sort_by ?? 'created_at_desc');
+      queryClient.setQueryData(['recursos_sort_pref', userId], sortPrefResult.data?.sort_by ?? 'created_at_desc');
     }
   }
 

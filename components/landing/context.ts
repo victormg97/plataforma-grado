@@ -15,18 +15,18 @@ export async function getLandingContext(): Promise<LandingProps> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  let dashboardPath: string | null = null;
-  if (user) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('rol')
-      .eq('id', user.id)
-      .single();
-
-    if (profile) {
-      dashboardPath = getRolRedirectPath(profile.rol);
-    }
+  // Fast path: most landing visitors are anonymous — skip profile lookup
+  if (!user) {
+    return { locale, ctaHref: '/login', isLoggedIn: false };
   }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('rol')
+    .eq('id', user.id)
+    .single();
+
+  const dashboardPath = profile ? getRolRedirectPath(profile.rol) : null;
 
   return {
     locale,

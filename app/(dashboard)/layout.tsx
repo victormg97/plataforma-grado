@@ -16,27 +16,28 @@ export default async function DashboardLayout({
 
   if (!user) redirect('/login');
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single();
+  // Parallelize profile fetch + graduation check to reduce TTFB
+  const [profileResult, extraResult] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single(),
+    supabase
+      .from('alumnos_extra')
+      .select('paso_prueba')
+      .eq('alumno_id', user.id)
+      .single(),
+  ]);
 
+  const profile = profileResult.data;
   if (!profile) redirect('/login');
 
   // Block access if account is inactive
   if (!profile.activo) redirect('/login?blocked=1');
 
   // For alumnos, check graduation status (used for easter-egg theme)
-  let esGraduado = false;
-  if (profile.rol === 'alumno') {
-    const { data: extra } = await supabase
-      .from('alumnos_extra')
-      .select('paso_prueba')
-      .eq('alumno_id', user.id)
-      .single();
-    esGraduado = extra?.paso_prueba === true;
-  }
+  const esGraduado = profile.rol === 'alumno' && extraResult.data?.paso_prueba === true;
 
   // Prefetch role-specific data server-side so the first page renders
   // with data already in the React Query cache (zero loading spinners).

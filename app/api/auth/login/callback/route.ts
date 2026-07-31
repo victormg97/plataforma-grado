@@ -66,5 +66,17 @@ export async function GET(request: NextRequest) {
     profesor: '/profesor',
     alumno: '/alumno',
   };
-  return NextResponse.redirect(`${origin}${redirectMap[profile.rol] ?? '/login'}`);
+  const redirectUrl = `${origin}${redirectMap[profile.rol] ?? '/login'}`;
+  const response = NextResponse.redirect(redirectUrl);
+
+  // Cache role in cookie for fast proxy authorization
+  response.cookies.set('x-user-rol', profile.rol, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 60 * 60,
+    path: '/',
+  });
+
+  return response;
 }

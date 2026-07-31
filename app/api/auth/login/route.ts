@@ -101,9 +101,20 @@ export async function POST(request: NextRequest) {
     .eq('used', false);
 
   // ── 6. Return redirect path and preferences ────────────────────────────────
-  return NextResponse.json({
+  const response = NextResponse.json({
     redirectPath: getRolRedirectPath(profile.rol),
     tema: profile.tema ?? null,
     idioma: profile.idioma ?? null,
   });
+
+  // Cache role in a cookie for fast proxy authorization (avoids DB query per navigation)
+  response.cookies.set('x-user-rol', profile.rol, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 60 * 60, // 1 hour
+    path: '/',
+  });
+
+  return response;
 }
