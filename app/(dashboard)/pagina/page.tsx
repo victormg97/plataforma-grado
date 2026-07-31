@@ -156,7 +156,7 @@ export default function ConfiguracionPaginaPage() {
       description: tp('subtitulo'),
     },
     {
-      href: '/admin/referidos/configuracion',
+      href: '/admin/referidos/configuracion?from=/pagina',
       icon: Gift,
       iconColor: 'text-[#f59e0b]',
       iconBg: 'bg-[color-mix(in_srgb,#f59e0b_12%,transparent)]',

@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft } from 'lucide-react';
@@ -17,11 +17,12 @@ type Tab = 'agregar' | 'guardadas';
 export default function BancoPreguntasPage() {
   const t = useTranslations('bancoPreguntas');
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { user } = useUser();
 
-  const tab = (searchParams.get('tab') as Tab) ?? 'agregar';
-  const editId = searchParams.get('editId') ?? null;
+  // Use local state for tabs instead of URL params to avoid
+  // Next.js router transitions blocking when heavy components re-render.
+  const [tab, setTab] = useState<Tab>('agregar');
+  const [editId, setEditId] = useState<string | null>(null);
 
   // Guard: only admin
   useEffect(() => {
@@ -65,16 +66,15 @@ export default function BancoPreguntasPage() {
     enabled: !!user && user.rol === 'admin',
   });
 
-  // Prefetch first page of questions so it's instant when switching to "Guardadas" tab
+  // Prefetch first page of questions so it loads instantly on tab switch
   const queryClient = useQueryClient();
   useEffect(() => {
     if (user?.rol === 'admin') {
       const params = new URLSearchParams();
       params.set('page', '1');
       params.set('pageSize', '20');
-      const key = ['qb-questions', params.toString()];
       queryClient.prefetchQuery({
-        queryKey: key,
+        queryKey: ['qb-questions', params.toString()],
         staleTime: 30_000,
         queryFn: async () => {
           const res = await fetch(`/api/question-bank/questions?${params.toString()}`);
@@ -84,13 +84,6 @@ export default function BancoPreguntasPage() {
       });
     }
   }, [user, queryClient]);
-
-  const setTab = (newTab: Tab) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set('tab', newTab);
-    params.delete('editId');
-    router.replace(`?${params.toString()}`);
-  };
 
   // Redirect if feature disabled
   useEffect(() => {
@@ -137,7 +130,7 @@ export default function BancoPreguntasPage() {
         {tabs.map((t2) => (
           <button
             key={t2.key}
-            onClick={() => setTab(t2.key)}
+            onClick={() => { setTab(t2.key); setEditId(null); }}
             className={`min-h-[44px] px-4 pb-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
               (t2.key === 'agregar' && showForm) || (t2.key === 'guardadas' && !showForm)
                 ? 'border-[var(--color-brand-gold)] text-[var(--color-brand-gold)]'
@@ -155,18 +148,13 @@ export default function BancoPreguntasPage() {
             categories={categories}
             tags={tags}
             editId={editId}
-            onSaved={() => setTab('guardadas')}
+            onSaved={() => { setTab('guardadas'); setEditId(null); }}
           />
         ) : (
           <QuestionList
             categories={categories}
             tags={tags}
-            onEdit={(id) => {
-              const params = new URLSearchParams(searchParams.toString());
-              params.set('editId', id);
-              params.set('tab', 'agregar');
-              router.replace(`?${params.toString()}`);
-            }}
+            onEdit={(id) => { setEditId(id); setTab('agregar'); }}
           />
         )}
       </div>

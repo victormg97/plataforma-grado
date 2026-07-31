@@ -1,16 +1,16 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Plus, X, Check, Lightbulb, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, X, Check, Lightbulb, ChevronDown, ChevronUp, Eraser } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { RichTextEditor } from '@/components/common/RichTextEditor';
 import { suggestTagsForText, type SuggestionSource } from '@/lib/question-bank/suggestions';
-import type { QbCategory, QbTag, QbQuestionType, QbDifficulty, QbStatus } from '@/lib/supabase/types';
-import { questionTypes, difficulties, statuses } from '@/lib/validations/question-bank.schema';
+import type { QbCategory, QbTag, QbQuestionType, QbDifficulty } from '@/lib/supabase/types';
+import { questionTypes, difficulties } from '@/lib/validations/question-bank.schema';
 
 interface QuestionFormProps {
   categories: QbCategory[];
@@ -24,30 +24,98 @@ interface ChoiceOption {
   is_correct: boolean;
 }
 
+const STORAGE_KEY = 'qb-form-draft';
+
+interface FormState {
+  type: QbQuestionType;
+  content: string;
+  options: ChoiceOption[];
+  trueFalseAnswer: boolean;
+  modelAnswer: string;
+  fillBlankAnswers: string[];
+  explanation: string;
+  showExplanation: boolean;
+  categoryId: string | null;
+  selectedTagIds: string[];
+  difficulty: QbDifficulty;
+}
+
+const DEFAULT_STATE: FormState = {
+  type: 'single_choice',
+  content: '',
+  options: [{ text: '', is_correct: false }, { text: '', is_correct: false }],
+  trueFalseAnswer: true,
+  modelAnswer: '',
+  fillBlankAnswers: [''],
+  explanation: '',
+  showExplanation: false,
+  categoryId: null,
+  selectedTagIds: [],
+  difficulty: 'medium',
+};
+
+function loadDraft(): FormState | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as FormState;
+  } catch {
+    return null;
+  }
+}
+
+function saveDraft(state: FormState) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch { /* quota exceeded, ignore */ }
+}
+
+function clearDraft() {
+  try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
+}
+
 export function QuestionForm({ categories, tags, editId, onSaved }: QuestionFormProps) {
   const t = useTranslations('bancoPreguntas');
   const queryClient = useQueryClient();
 
+  // Load initial state from localStorage (only when creating, not editing)
+  const initialState = useMemo(() => {
+    if (editId) return DEFAULT_STATE;
+    return loadDraft() || DEFAULT_STATE;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Form state
-  const [type, setType] = useState<QbQuestionType>('single_choice');
-  const [content, setContent] = useState('');
-  const [options, setOptions] = useState<ChoiceOption[]>([
-    { text: '', is_correct: false },
-    { text: '', is_correct: false },
-  ]);
-  const [trueFalseAnswer, setTrueFalseAnswer] = useState<boolean>(true);
-  const [modelAnswer, setModelAnswer] = useState('');
-  const [fillBlankAnswers, setFillBlankAnswers] = useState<string[]>(['']);
-  const [explanation, setExplanation] = useState('');
-  const [showExplanation, setShowExplanation] = useState(false);
-  const [categoryId, setCategoryId] = useState<string | null>(null);
-  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
-  const [difficulty, setDifficulty] = useState<QbDifficulty>('medium');
-  const [status, setStatus] = useState<QbStatus>('draft');
+  const [type, setType] = useState<QbQuestionType>(initialState.type);
+  const [content, setContent] = useState(initialState.content);
+  const [options, setOptions] = useState<ChoiceOption[]>(initialState.options);
+  const [trueFalseAnswer, setTrueFalseAnswer] = useState<boolean>(initialState.trueFalseAnswer);
+  const [modelAnswer, setModelAnswer] = useState(initialState.modelAnswer);
+  const [fillBlankAnswers, setFillBlankAnswers] = useState<string[]>(initialState.fillBlankAnswers);
+  const [explanation, setExplanation] = useState(initialState.explanation);
+  const [showExplanation, setShowExplanation] = useState(initialState.showExplanation);
+  const [categoryId, setCategoryId] = useState<string | null>(initialState.categoryId);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>(initialState.selectedTagIds);
+  const [difficulty, setDifficulty] = useState<QbDifficulty>(initialState.difficulty);
   const [tagSearch, setTagSearch] = useState('');
   const [categorySearch, setCategorySearch] = useState('');
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
   const [tagDropdownOpen, setTagDropdownOpen] = useState(false);
+
+  // Auto-save to localStorage on every state change (debounced)
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (editId) return; // Don't save drafts when editing existing questions
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(() => {
+      saveDraft({
+        type, content, options, trueFalseAnswer, modelAnswer,
+        fillBlankAnswers, explanation, showExplanation,
+        categoryId, selectedTagIds, difficulty,
+      });
+    }, 500);
+    return () => { if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current); };
+  }, [type, content, options, trueFalseAnswer, modelAnswer, fillBlankAnswers, explanation, showExplanation, categoryId, selectedTagIds, difficulty, editId]);
   // Load question data for editing
   const { data: editData } = useQuery({
     queryKey: ['qb-question', editId],
@@ -69,7 +137,6 @@ export function QuestionForm({ categories, tags, editId, onSaved }: QuestionForm
       setShowExplanation(!!editData.explanation);
       setCategoryId(editData.category_id);
       setDifficulty(editData.difficulty);
-      setStatus(editData.status);
       setSelectedTagIds(editData.tags?.map((t: { id: string }) => t.id) || []);
 
       // Set type-specific options
@@ -86,6 +153,28 @@ export function QuestionForm({ categories, tags, editId, onSaved }: QuestionForm
   }, [editData]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
+  // Stable callbacks for RichTextEditor to prevent re-render cascades.
+  // We store whatever TipTap produces (including '<p></p>' for empty) to avoid
+  // the sync effect loop where '' !== '<p></p>' causes infinite setContent calls.
+  const handleContentChange = useCallback((html: string) => {
+    setContent(html);
+  }, []);
+
+  const handleModelAnswerChange = useCallback((html: string) => {
+    setModelAnswer(html);
+  }, []);
+
+  const handleExplanationChange = useCallback((html: string) => {
+    setExplanation(html);
+  }, []);
+
+  // Helper: check if rich text content is effectively empty
+  const isContentEmpty = (html: string) => {
+    if (!html) return true;
+    const stripped = html.replace(/<[^>]*>/g, '').trim();
+    return stripped.length === 0;
+  };
+
   // Auto-suggestions
   const categorySources: SuggestionSource[] = useMemo(() => {
     return categories.map(c => ({ id: c.id, name: c.name, keywords: c.keywords || [] }));
@@ -96,12 +185,12 @@ export function QuestionForm({ categories, tags, editId, onSaved }: QuestionForm
   }, [tags]);
 
   const categorySuggestions = useMemo(() => {
-    if (!content.trim()) return [];
+    if (isContentEmpty(content)) return [];
     return suggestTagsForText(content, categorySources, 3);
   }, [content, categorySources]);
 
   const tagSuggestions = useMemo(() => {
-    if (!content.trim()) return [];
+    if (isContentEmpty(content)) return [];
     return suggestTagsForText(content, tagSources, 5)
       .filter(s => !selectedTagIds.includes(s.id));
   }, [content, tagSources, selectedTagIds]);
@@ -121,7 +210,7 @@ export function QuestionForm({ categories, tags, editId, onSaved }: QuestionForm
     }
   }, [type, options, trueFalseAnswer, modelAnswer, fillBlankAnswers]);
 
-  // Save mutation
+  // Save mutation — always saves as 'active'
   const saveMutation = useMutation({
     mutationFn: async () => {
       const payload = {
@@ -132,7 +221,7 @@ export function QuestionForm({ categories, tags, editId, onSaved }: QuestionForm
         category_id: categoryId,
         tag_ids: selectedTagIds,
         difficulty,
-        status,
+        status: 'active',
       };
 
       const url = editId
@@ -155,7 +244,10 @@ export function QuestionForm({ categories, tags, editId, onSaved }: QuestionForm
     onSuccess: () => {
       toast.success(t('guardada_ok'));
       queryClient.invalidateQueries({ queryKey: ['qb-questions'] });
-      if (!editId) resetForm();
+      if (!editId) {
+        applyState(DEFAULT_STATE);
+        clearDraft();
+      }
       onSaved();
     },
     onError: (err: Error) => {
@@ -199,20 +291,45 @@ export function QuestionForm({ categories, tags, editId, onSaved }: QuestionForm
     },
   });
 
-  const resetForm = () => {
-    setType('single_choice');
-    setContent('');
-    setOptions([{ text: '', is_correct: false }, { text: '', is_correct: false }]);
-    setTrueFalseAnswer(true);
-    setModelAnswer('');
-    setFillBlankAnswers(['']);
-    setExplanation('');
-    setShowExplanation(false);
-    setCategoryId(null);
-    setSelectedTagIds([]);
-    setDifficulty('medium');
-    setStatus('draft');
-  };
+  // Apply a full form state (used for undo and reset)
+  const applyState = useCallback((s: FormState) => {
+    setType(s.type);
+    setContent(s.content);
+    setOptions(s.options);
+    setTrueFalseAnswer(s.trueFalseAnswer);
+    setModelAnswer(s.modelAnswer);
+    setFillBlankAnswers(s.fillBlankAnswers);
+    setExplanation(s.explanation);
+    setShowExplanation(s.showExplanation);
+    setCategoryId(s.categoryId);
+    setSelectedTagIds(s.selectedTagIds);
+    setDifficulty(s.difficulty);
+  }, []);
+
+  // Get current state as a snapshot (for undo)
+  const getSnapshot = useCallback((): FormState => ({
+    type, content, options, trueFalseAnswer, modelAnswer,
+    fillBlankAnswers, explanation, showExplanation,
+    categoryId, selectedTagIds, difficulty,
+  }), [type, content, options, trueFalseAnswer, modelAnswer, fillBlankAnswers, explanation, showExplanation, categoryId, selectedTagIds, difficulty]);
+
+  // Clear form with undo toast
+  const handleClear = useCallback(() => {
+    const snapshot = getSnapshot();
+    applyState(DEFAULT_STATE);
+    clearDraft();
+
+    toast(t('formulario_limpiado'), {
+      action: {
+        label: t('deshacer'),
+        onClick: () => {
+          applyState(snapshot);
+          saveDraft(snapshot);
+        },
+      },
+      duration: 5000,
+    });
+  }, [getSnapshot, applyState, t]);
 
   // Filter tags for autocomplete dropdown
   const filteredTags = tagSearch.trim()
@@ -266,7 +383,7 @@ export function QuestionForm({ categories, tags, editId, onSaved }: QuestionForm
           key="question-content"
           content={content}
           placeholder={t('enunciado_placeholder')}
-          onChange={setContent}
+          onChange={handleContentChange}
         />
       </Card>
 
@@ -360,7 +477,7 @@ export function QuestionForm({ categories, tags, editId, onSaved }: QuestionForm
             key="model-answer"
             content={modelAnswer}
             placeholder={t('respuesta_modelo_placeholder')}
-            onChange={setModelAnswer}
+            onChange={handleModelAnswerChange}
           />
         </Card>
       )}
@@ -422,7 +539,7 @@ export function QuestionForm({ categories, tags, editId, onSaved }: QuestionForm
               key="explanation"
               content={explanation}
               placeholder={t('explicacion_placeholder')}
-              onChange={setExplanation}
+              onChange={handleExplanationChange}
             />
           </div>
         )}
@@ -613,39 +730,22 @@ export function QuestionForm({ categories, tags, editId, onSaved }: QuestionForm
             ))}
           </div>
         </div>
-
-        {/* Status */}
-        <div>
-          <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-2">
-            {t('estado')}
-          </label>
-          <div className="flex gap-2">
-            {statuses.map((s) => (
-              <button
-                key={s}
-                type="button"
-                onClick={() => setStatus(s)}
-                className={`rounded-[var(--radius-md)] px-4 py-2 text-sm font-medium transition-all ${
-                  status === s
-                    ? s === 'active'
-                      ? 'bg-green-600 text-white shadow-sm'
-                      : 'bg-[var(--color-text-muted)] text-white shadow-sm'
-                    : 'border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-brand-gold)] hover:text-[var(--color-brand-gold)]'
-                }`}
-              >
-                {t(`estado_${s}`)}
-              </button>
-            ))}
-          </div>
-        </div>
       </Card>
 
-      {/* Save button */}
-      <div className="flex justify-end">
+      {/* Action buttons */}
+      <div className="flex justify-between">
+        <Button
+          variant="ghost"
+          onClick={handleClear}
+          disabled={saveMutation.isPending}
+        >
+          <Eraser className="size-4 mr-1.5" />
+          {t('limpiar')}
+        </Button>
         <Button
           onClick={() => saveMutation.mutate()}
           loading={saveMutation.isPending}
-          disabled={!content.trim()}
+          disabled={isContentEmpty(content)}
         >
           {saveMutation.isPending ? t('guardando') : t('guardar')}
         </Button>

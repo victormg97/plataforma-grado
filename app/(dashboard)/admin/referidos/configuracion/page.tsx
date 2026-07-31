@@ -120,7 +120,11 @@ export default function ConfiguracionReferidosPage() {
   return (
     <div>
       <button
-        onClick={() => router.push('/admin/referidos')}
+        onClick={() => {
+          const fromParam = searchParams.get('from');
+          if (fromParam) router.push(fromParam);
+          else router.back();
+        }}
         className="mb-3 inline-flex items-center gap-1.5 text-sm text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text-primary)]"
       >
         <ArrowLeft className="size-4" />
