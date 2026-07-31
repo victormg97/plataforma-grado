@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Plus, X, Check, Lightbulb, ChevronDown, Eraser } from 'lucide-react';
+import { Plus, X, Check, Lightbulb, ChevronDown, Eraser, Edit } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
@@ -23,6 +23,7 @@ interface QuestionFormProps {
   tags: QbTag[];
   editId: string | null;
   onSaved: () => void;
+  onCancelEdit: () => void;
 }
 
 interface ChoiceOption {
@@ -78,7 +79,7 @@ function clearDraft() {
   try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
 }
 
-export function QuestionForm({ categories, tags, editId, onSaved }: QuestionFormProps) {
+export function QuestionForm({ categories, tags, editId, onSaved, onCancelEdit }: QuestionFormProps) {
   const t = useTranslations('bancoPreguntas');
   const queryClient = useQueryClient();
 
@@ -369,8 +370,52 @@ export function QuestionForm({ categories, tags, editId, onSaved }: QuestionForm
   const showCreateTag = tagSearch.trim() &&
     !tags.some(t => t.name.toLowerCase() === tagSearch.trim().toLowerCase());
 
+  // Action bar component (reused top and bottom)
+  const ActionBar = () => (
+    <div className="flex items-center justify-between">
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={editId ? onCancelEdit : handleClear}
+        disabled={saveMutation.isPending}
+      >
+        <Eraser className="size-4 mr-1.5" />
+        {editId ? t('cancelar_edicion') : t('limpiar')}
+      </Button>
+      <Button
+        size="sm"
+        onClick={() => saveMutation.mutate()}
+        loading={saveMutation.isPending}
+        disabled={isContentEmpty(content)}
+      >
+        {saveMutation.isPending ? t('guardando') : editId ? t('guardar_cambios') : t('guardar')}
+      </Button>
+    </div>
+  );
+
   return (
     <div className="space-y-6">
+      {/* Edit mode banner */}
+      {editId && (
+        <div className="flex items-center justify-between rounded-[var(--radius-md)] border border-[var(--color-brand-gold)]/30 bg-[color-mix(in_srgb,var(--color-brand-gold)_8%,transparent)] px-4 py-3">
+          <div className="flex items-center gap-2">
+            <Edit className="size-4 text-[var(--color-brand-gold)]" />
+            <span className="text-sm font-medium text-[var(--color-text-primary)]">
+              {t('editando_pregunta')}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={onCancelEdit}
+            className="text-sm text-[var(--color-brand-gold)] hover:underline font-medium"
+          >
+            {t('crear_nueva')}
+          </button>
+        </div>
+      )}
+
+      {/* Top action bar */}
+      <ActionBar />
       {/* Type selector */}
       <Card className="p-[var(--space-lg)]">
         <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-3">
@@ -798,24 +843,8 @@ export function QuestionForm({ categories, tags, editId, onSaved }: QuestionForm
         </div>
       </Card>
 
-      {/* Action buttons */}
-      <div className="flex justify-between">
-        <Button
-          variant="ghost"
-          onClick={handleClear}
-          disabled={saveMutation.isPending}
-        >
-          <Eraser className="size-4 mr-1.5" />
-          {t('limpiar')}
-        </Button>
-        <Button
-          onClick={() => saveMutation.mutate()}
-          loading={saveMutation.isPending}
-          disabled={isContentEmpty(content)}
-        >
-          {saveMutation.isPending ? t('guardando') : t('guardar')}
-        </Button>
-      </div>
+      {/* Bottom action bar */}
+      <ActionBar />
     </div>
   );
 }

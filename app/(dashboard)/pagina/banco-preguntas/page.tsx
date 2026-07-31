@@ -149,6 +149,7 @@ export default function BancoPreguntasPage() {
             tags={tags}
             editId={editId}
             onSaved={() => { setTab('guardadas'); setEditId(null); }}
+            onCancelEdit={() => setEditId(null)}
           />
         ) : (
           <QuestionList

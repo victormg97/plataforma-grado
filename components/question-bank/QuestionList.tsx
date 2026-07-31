@@ -42,6 +42,8 @@ export function QuestionList({ categories, tags: _tags, onEdit }: QuestionListPr
   const [showImport, setShowImport] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
   // Debounce search
   const handleSearchChange = useCallback((value: string) => {
@@ -63,6 +65,8 @@ export function QuestionList({ categories, tags: _tags, onEdit }: QuestionListPr
   if (difficultyFilter) queryParams.set('difficulty', difficultyFilter);
   if (statusFilter) queryParams.set('status', statusFilter);
   if (tagFilter.length > 0) queryParams.set('tagIds', tagFilter.join(','));
+  if (dateFrom) queryParams.set('dateFrom', new Date(dateFrom).toISOString());
+  if (dateTo) queryParams.set('dateTo', new Date(dateTo + 'T23:59:59').toISOString());
 
   const { data, isLoading } = useQuery({
     queryKey: ['qb-questions', queryParams.toString()],
@@ -118,7 +122,7 @@ export function QuestionList({ categories, tags: _tags, onEdit }: QuestionListPr
 
   const stripHtml = (html: string) => html.replace(/<[^>]*>/g, '').trim();
 
-  const hasActiveFilters = categoryFilter || typeFilter || difficultyFilter || statusFilter || tagFilter.length > 0;
+  const hasActiveFilters = categoryFilter || typeFilter || difficultyFilter || statusFilter || tagFilter.length > 0 || dateFrom || dateTo;
 
   const clearFilters = () => {
     setCategoryFilter('');
@@ -126,6 +130,8 @@ export function QuestionList({ categories, tags: _tags, onEdit }: QuestionListPr
     setDifficultyFilter('');
     setStatusFilter('');
     setTagFilter([]);
+    setDateFrom('');
+    setDateTo('');
     setPage(1);
   };
 
@@ -176,7 +182,7 @@ export function QuestionList({ categories, tags: _tags, onEdit }: QuestionListPr
       {/* Filters panel */}
       {showFilters && (
         <Card className="p-[var(--space-md)]">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
               <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">
                 {t('filtro_categoria')}
@@ -228,6 +234,28 @@ export function QuestionList({ categories, tags: _tags, onEdit }: QuestionListPr
                   { value: '', label: t('todos_estados') },
                   ...statuses.map(s => ({ value: s, label: t(`estado_${s}`) })),
                 ]}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">
+                {t('filtro_fecha_desde')}
+              </label>
+              <input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => { setDateFrom(e.target.value); setPage(1); }}
+                className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">
+                {t('filtro_fecha_hasta')}
+              </label>
+              <input
+                type="date"
+                value={dateTo}
+                onChange={(e) => { setDateTo(e.target.value); setPage(1); }}
+                className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
               />
             </div>
           </div>
