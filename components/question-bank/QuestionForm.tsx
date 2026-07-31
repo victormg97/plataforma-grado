@@ -7,7 +7,6 @@ import { toast } from 'sonner';
 import { Plus, X, Check, Lightbulb, ChevronDown, ChevronUp } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
-import { AppSelect } from '@/components/common/AppSelect';
 import { RichTextEditor } from '@/components/common/RichTextEditor';
 import { suggestTagsForText, type SuggestionSource } from '@/lib/question-bank/suggestions';
 import type { QbCategory, QbTag, QbQuestionType, QbDifficulty, QbStatus } from '@/lib/supabase/types';
@@ -47,7 +46,8 @@ export function QuestionForm({ categories, tags, editId, onSaved }: QuestionForm
   const [status, setStatus] = useState<QbStatus>('draft');
   const [tagSearch, setTagSearch] = useState('');
   const [categorySearch, setCategorySearch] = useState('');
-
+  const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
+  const [tagDropdownOpen, setTagDropdownOpen] = useState(false);
   // Load question data for editing
   const { data: editData } = useQuery({
     queryKey: ['qb-question', editId],
@@ -263,6 +263,7 @@ export function QuestionForm({ categories, tags, editId, onSaved }: QuestionForm
           {t('enunciado')}
         </label>
         <RichTextEditor
+          key="question-content"
           content={content}
           placeholder={t('enunciado_placeholder')}
           onChange={setContent}
@@ -356,6 +357,7 @@ export function QuestionForm({ categories, tags, editId, onSaved }: QuestionForm
             {t('respuesta_modelo')}
           </label>
           <RichTextEditor
+            key="model-answer"
             content={modelAnswer}
             placeholder={t('respuesta_modelo_placeholder')}
             onChange={setModelAnswer}
@@ -417,6 +419,7 @@ export function QuestionForm({ categories, tags, editId, onSaved }: QuestionForm
         {showExplanation && (
           <div className="mt-3">
             <RichTextEditor
+              key="explanation"
               content={explanation}
               placeholder={t('explicacion_placeholder')}
               onChange={setExplanation}
@@ -438,19 +441,28 @@ export function QuestionForm({ categories, tags, editId, onSaved }: QuestionForm
               value={categorySearch || categories.find(c => c.id === categoryId)?.name || ''}
               onChange={(e) => {
                 setCategorySearch(e.target.value);
+                setCategoryDropdownOpen(true);
                 if (!e.target.value) setCategoryId(null);
               }}
-              onFocus={() => setCategorySearch(categories.find(c => c.id === categoryId)?.name || '')}
+              onFocus={() => {
+                setCategorySearch(categories.find(c => c.id === categoryId)?.name || '');
+                setCategoryDropdownOpen(true);
+              }}
+              onBlur={() => {
+                // Delay to allow click on dropdown items
+                setTimeout(() => setCategoryDropdownOpen(false), 200);
+              }}
               placeholder={t('categoria_placeholder')}
               className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
             />
-            {(categorySearch || (!categoryId && filteredCategories.length > 0)) && (
+            {categoryDropdownOpen && (filteredCategories.length > 0 || showCreateCategory) && (
               <div className="absolute z-10 mt-1 w-full max-h-[200px] overflow-y-auto rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] shadow-[var(--shadow-lg)]">
                 {filteredCategories.map(c => (
                   <button
                     key={c.id}
                     type="button"
-                    onClick={() => { setCategoryId(c.id); setCategorySearch(''); }}
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => { setCategoryId(c.id); setCategorySearch(''); setCategoryDropdownOpen(false); }}
                     className="w-full px-3 py-2 text-left text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] transition-colors"
                   >
                     {c.name}
@@ -459,7 +471,8 @@ export function QuestionForm({ categories, tags, editId, onSaved }: QuestionForm
                 {showCreateCategory && (
                   <button
                     type="button"
-                    onClick={() => createCategory.mutate(categorySearch.trim())}
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => { createCategory.mutate(categorySearch.trim()); setCategoryDropdownOpen(false); }}
                     className="w-full px-3 py-2 text-left text-sm text-[var(--color-brand-gold)] font-medium hover:bg-[var(--color-bg-secondary)] transition-colors"
                   >
                     <Plus className="inline size-3.5 mr-1" />
@@ -522,17 +535,20 @@ export function QuestionForm({ categories, tags, editId, onSaved }: QuestionForm
             <input
               type="text"
               value={tagSearch}
-              onChange={(e) => setTagSearch(e.target.value)}
+              onChange={(e) => { setTagSearch(e.target.value); setTagDropdownOpen(true); }}
+              onFocus={() => setTagDropdownOpen(true)}
+              onBlur={() => setTimeout(() => setTagDropdownOpen(false), 200)}
               placeholder={t('tags_placeholder')}
               className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
             />
-            {tagSearch && (
+            {tagDropdownOpen && tagSearch && (filteredTags.length > 0 || showCreateTag) && (
               <div className="absolute z-10 mt-1 w-full max-h-[200px] overflow-y-auto rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] shadow-[var(--shadow-lg)]">
                 {filteredTags.map(tag => (
                   <button
                     key={tag.id}
                     type="button"
-                    onClick={() => { setSelectedTagIds(prev => [...prev, tag.id]); setTagSearch(''); }}
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => { setSelectedTagIds(prev => [...prev, tag.id]); setTagSearch(''); setTagDropdownOpen(false); }}
                     className="w-full px-3 py-2 text-left text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] transition-colors"
                   >
                     {tag.name}
@@ -541,7 +557,8 @@ export function QuestionForm({ categories, tags, editId, onSaved }: QuestionForm
                 {showCreateTag && (
                   <button
                     type="button"
-                    onClick={() => createTag.mutate(tagSearch.trim())}
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => { createTag.mutate(tagSearch.trim()); setTagDropdownOpen(false); }}
                     className="w-full px-3 py-2 text-left text-sm text-[var(--color-brand-gold)] font-medium hover:bg-[var(--color-bg-secondary)] transition-colors"
                   >
                     <Plus className="inline size-3.5 mr-1" />
@@ -572,28 +589,54 @@ export function QuestionForm({ categories, tags, editId, onSaved }: QuestionForm
 
         {/* Difficulty */}
         <div>
-          <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5">
+          <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-2">
             {t('dificultad')}
           </label>
-          <AppSelect
-            value={difficulty}
-            onChange={(v) => setDifficulty(v as QbDifficulty)}
-            options={difficulties.map(d => ({ value: d, label: t(`dificultad_${d}`) }))}
-            className="w-full max-w-xs"
-          />
+          <div className="flex gap-2">
+            {difficulties.map((d) => (
+              <button
+                key={d}
+                type="button"
+                onClick={() => setDifficulty(d)}
+                className={`rounded-[var(--radius-md)] px-4 py-2 text-sm font-medium transition-all ${
+                  difficulty === d
+                    ? d === 'easy'
+                      ? 'bg-green-600 text-white shadow-sm'
+                      : d === 'medium'
+                      ? 'bg-yellow-500 text-white shadow-sm'
+                      : 'bg-red-600 text-white shadow-sm'
+                    : 'border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-brand-gold)] hover:text-[var(--color-brand-gold)]'
+                }`}
+              >
+                {t(`dificultad_${d}`)}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Status */}
         <div>
-          <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-1.5">
+          <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-2">
             {t('estado')}
           </label>
-          <AppSelect
-            value={status}
-            onChange={(v) => setStatus(v as QbStatus)}
-            options={statuses.map(s => ({ value: s, label: t(`estado_${s}`) }))}
-            className="w-full max-w-xs"
-          />
+          <div className="flex gap-2">
+            {statuses.map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setStatus(s)}
+                className={`rounded-[var(--radius-md)] px-4 py-2 text-sm font-medium transition-all ${
+                  status === s
+                    ? s === 'active'
+                      ? 'bg-green-600 text-white shadow-sm'
+                      : 'bg-[var(--color-text-muted)] text-white shadow-sm'
+                    : 'border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-brand-gold)] hover:text-[var(--color-brand-gold)]'
+                }`}
+              >
+                {t(`estado_${s}`)}
+              </button>
+            ))}
+          </div>
         </div>
       </Card>
 

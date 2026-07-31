@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft } from 'lucide-react';
 import { PageHeader } from '@/components/common/PageHeader';
 import { useUser } from '@/lib/hooks/useUser';
@@ -65,6 +65,26 @@ export default function BancoPreguntasPage() {
     enabled: !!user && user.rol === 'admin',
   });
 
+  // Prefetch first page of questions so it's instant when switching to "Guardadas" tab
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    if (user?.rol === 'admin') {
+      const params = new URLSearchParams();
+      params.set('page', '1');
+      params.set('pageSize', '20');
+      const key = ['qb-questions', params.toString()];
+      queryClient.prefetchQuery({
+        queryKey: key,
+        staleTime: 30_000,
+        queryFn: async () => {
+          const res = await fetch(`/api/question-bank/questions?${params.toString()}`);
+          if (!res.ok) throw new Error();
+          return res.json();
+        },
+      });
+    }
+  }, [user, queryClient]);
+
   const setTab = (newTab: Tab) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set('tab', newTab);
@@ -93,8 +113,8 @@ export default function BancoPreguntasPage() {
   const showForm = tab === 'agregar' || !!editId;
 
   const tabs: { key: Tab; label: string }[] = [
-    { key: 'guardadas', label: t('tab_guardadas') },
     { key: 'agregar', label: t('tab_agregar') },
+    { key: 'guardadas', label: t('tab_guardadas') },
   ];
 
   return (
