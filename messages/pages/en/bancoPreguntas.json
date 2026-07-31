@@ -15,6 +15,7 @@
   "opcion_placeholder": "Option text",
   "agregar_opcion": "Add option",
   "marcar_correcta": "Mark as correct",
+  "desmarcar_correcta": "Unmark as correct",
   "verdadero": "True",
   "falso": "False",
   "respuesta_correcta": "Correct answer",

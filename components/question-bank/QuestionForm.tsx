@@ -200,18 +200,27 @@ export function QuestionForm({ categories, tags, editId, onSaved }: QuestionForm
       .filter(s => !selectedTagIds.includes(s.id));
   }, [content, tagSources, selectedTagIds]);
 
-  // Build options payload based on type
+  // Build options payload based on type (filters out empty options)
   const buildOptionsPayload = useCallback(() => {
     switch (type) {
       case 'single_choice':
       case 'multiple_choice':
-        return options;
+        // Only include options with actual text
+        return options.filter(o => o.text.trim());
       case 'true_false':
         return { correct_answer: trueFalseAnswer };
       case 'open_ended':
         return { model_answer: modelAnswer || undefined };
-      case 'fill_blank':
-        return { blanks: [{ position: 0, accepted_answers: fillBlankAnswers.filter(Boolean) }] };
+      case 'fill_blank': {
+        // Each answer field can contain multiple answers separated by ;
+        const blanks = fillBlankAnswers
+          .map((ans, idx) => ({
+            position: idx,
+            accepted_answers: ans.split(';').map(a => a.trim()).filter(Boolean),
+          }))
+          .filter(b => b.accepted_answers.length > 0);
+        return { blanks: blanks.length > 0 ? blanks : [{ position: 0, accepted_answers: [] }] };
+      }
     }
   }, [type, options, trueFalseAnswer, modelAnswer, fillBlankAnswers]);
 
@@ -407,7 +416,7 @@ export function QuestionForm({ categories, tags, editId, onSaved }: QuestionForm
           <div className="space-y-3">
             {options.map((opt, idx) => (
               <div key={idx} className="flex items-center gap-3">
-                <Tooltip content={t('marcar_correcta')}>
+                <Tooltip content={opt.is_correct ? t('desmarcar_correcta') : t('marcar_correcta')}>
                   <button
                     type="button"
                     onClick={() => {
@@ -429,14 +438,34 @@ export function QuestionForm({ categories, tags, editId, onSaved }: QuestionForm
                 <input
                   type="text"
                   value={opt.text}
-                  onChange={(e) => setOptions(prev => prev.map((o, i) => i === idx ? { ...o, text: e.target.value } : o))}
+                  onChange={(e) => {
+                    const newVal = e.target.value;
+                    setOptions(prev => {
+                      const updated = prev.map((o, i) => i === idx ? { ...o, text: newVal } : o);
+                      // Auto-expand: if typing in the last option, add a new empty one
+                      if (idx === prev.length - 1 && newVal.trim()) {
+                        updated.push({ text: '', is_correct: false });
+                      }
+                      return updated;
+                    });
+                  }}
                   placeholder={`${t('opcion_placeholder')} ${idx + 1}`}
                   className="flex-1 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
                 />
-                {options.length > 2 && (
+                {/* X clears the field; if it's in the middle, options reorder on save */}
+                {options.length > 2 && idx < options.length - 1 && (
                   <button
                     type="button"
-                    onClick={() => setOptions(prev => prev.filter((_, i) => i !== idx))}
+                    onClick={() => {
+                      setOptions(prev => {
+                        const filtered = prev.filter((_, i) => i !== idx);
+                        // Ensure there's always at least one empty slot at the end
+                        if (filtered.length < 2 || filtered[filtered.length - 1].text.trim()) {
+                          filtered.push({ text: '', is_correct: false });
+                        }
+                        return filtered;
+                      });
+                    }}
                     className="text-[var(--color-text-muted)] hover:text-[var(--color-error)] transition-colors"
                   >
                     <X className="size-4" />
@@ -445,14 +474,6 @@ export function QuestionForm({ categories, tags, editId, onSaved }: QuestionForm
               </div>
             ))}
           </div>
-          <button
-            type="button"
-            onClick={() => setOptions(prev => [...prev, { text: '', is_correct: false }])}
-            className="mt-3 inline-flex items-center gap-1.5 text-sm text-[var(--color-brand-gold)] hover:underline"
-          >
-            <Plus className="size-3.5" />
-            {t('agregar_opcion')}
-          </button>
         </Card>
       )}
 
@@ -500,38 +521,44 @@ export function QuestionForm({ categories, tags, editId, onSaved }: QuestionForm
             {t('espacios_blanco')}
           </label>
           <p className="text-xs text-[var(--color-text-muted)] mb-3">
-            Usa ___ en el enunciado para indicar el espacio en blanco
+            Usa ___ en el enunciado para indicar espacios en blanco (se detectan automáticamente)
           </p>
-          <div className="space-y-2">
-            {fillBlankAnswers.map((ans, idx) => (
-              <div key={idx} className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={ans}
-                  onChange={(e) => setFillBlankAnswers(prev => prev.map((a, i) => i === idx ? e.target.value : a))}
-                  placeholder={`Respuesta válida ${idx + 1}`}
-                  className="flex-1 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
-                />
-                {fillBlankAnswers.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => setFillBlankAnswers(prev => prev.filter((_, i) => i !== idx))}
-                    className="text-[var(--color-text-muted)] hover:text-[var(--color-error)]"
-                  >
-                    <X className="size-4" />
-                  </button>
-                )}
+          {(() => {
+            // Auto-detect blanks from content
+            const plainContent = content.replace(/<[^>]*>/g, '');
+            const blankCount = (plainContent.match(/_{3,}/g) || []).length;
+            const displayCount = Math.max(blankCount, 1);
+            // Ensure fillBlankAnswers has enough slots
+            while (fillBlankAnswers.length < displayCount) {
+              fillBlankAnswers.push('');
+            }
+            return (
+              <div className="space-y-3">
+                {Array.from({ length: displayCount }).map((_, idx) => (
+                  <div key={idx} className="space-y-1.5">
+                    {displayCount > 1 && (
+                      <p className="text-xs font-medium text-[var(--color-text-muted)]">
+                        Espacio {idx + 1}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={fillBlankAnswers[idx] || ''}
+                        onChange={(e) => setFillBlankAnswers(prev => {
+                          const updated = [...prev];
+                          updated[idx] = e.target.value;
+                          return updated;
+                        })}
+                        placeholder={`Respuesta(s) válida(s) separadas por ;`}
+                        className="flex-1 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
+                      />
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-          <button
-            type="button"
-            onClick={() => setFillBlankAnswers(prev => [...prev, ''])}
-            className="mt-3 inline-flex items-center gap-1.5 text-sm text-[var(--color-brand-gold)] hover:underline"
-          >
-            <Plus className="size-3.5" />
-            {t('agregar_respuesta')}
-          </button>
+            );
+          })()}
         </Card>
       )}
 
