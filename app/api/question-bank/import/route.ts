@@ -107,9 +107,10 @@ export async function POST(req: NextRequest) {
       }
 
       // Parse difficulty
-      const difficulty: QbDifficulty = VALID_DIFFICULTIES.includes(row.difficulty?.trim().toLowerCase() as QbDifficulty)
-        ? (row.difficulty!.trim().toLowerCase() as QbDifficulty)
-        : 'medium';
+      const diffRaw = row.difficulty?.trim().toLowerCase();
+      const difficulty: string | null = VALID_DIFFICULTIES.includes(diffRaw as QbDifficulty)
+        ? diffRaw as QbDifficulty
+        : null;
 
       // Resolve category (create if needed)
       let categoryId: string | null = null;

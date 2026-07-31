@@ -33,6 +33,7 @@
   "tags_placeholder": "Search or create tags...",
   "crear_tag": "Create tag: \"{name}\"",
   "dificultad": "Difficulty",
+  "dificultad_sin": "Unrated",
   "dificultad_easy": "Easy",
   "dificultad_medium": "Medium",
   "dificultad_hard": "Hard",

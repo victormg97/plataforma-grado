@@ -1915,7 +1915,7 @@ export type Database = {
           options: import('./types').Json
           explanation: string | null
           category_id: string | null
-          difficulty: string
+          difficulty: string | null
           status: string
           import_batch_id: string | null
           created_by: string
@@ -1932,7 +1932,7 @@ export type Database = {
           options?: import('./types').Json
           explanation?: string | null
           category_id?: string | null
-          difficulty?: string
+          difficulty?: string | null
           status?: string
           import_batch_id?: string | null
           created_by: string
@@ -1948,7 +1948,7 @@ export type Database = {
           options?: import('./types').Json
           explanation?: string | null
           category_id?: string | null
-          difficulty?: string
+          difficulty?: string | null
           status?: string
           import_batch_id?: string | null
           created_by?: string
@@ -2547,7 +2547,7 @@ export type QbQuestion = {
   options: QbQuestionOption[] | QbTrueFalseOptions | QbOpenEndedOptions | QbFillBlankOptions;
   explanation: string | null;
   category_id: string | null;
-  difficulty: QbDifficulty;
+  difficulty: QbDifficulty | null;
   status: QbStatus;
   import_batch_id: string | null;
   created_by: string;

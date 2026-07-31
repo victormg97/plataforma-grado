@@ -203,6 +203,7 @@ export function QuestionList({ categories, tags: _tags, onEdit }: QuestionListPr
                 onChange={(v) => { setDifficultyFilter(v); setPage(1); }}
                 options={[
                   { value: '', label: t('todas_dificultades') },
+                  { value: 'unrated', label: t('dificultad_sin') },
                   ...difficulties.map(d => ({ value: d, label: t(`dificultad_${d}`) })),
                 ]}
               />
@@ -270,9 +271,10 @@ export function QuestionList({ categories, tags: _tags, onEdit }: QuestionListPr
                     <span className={`rounded-full px-2 py-0.5 font-medium ${
                       q.difficulty === 'easy' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
                       q.difficulty === 'hard' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
-                      'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                      q.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' :
+                      'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
                     }`}>
-                      {t(`dificultad_${q.difficulty}`)}
+                      {q.difficulty ? t(`dificultad_${q.difficulty}`) : t('dificultad_sin')}
                     </span>
                     <span className={`rounded-full px-2 py-0.5 font-medium ${
                       q.status === 'active'

@@ -37,7 +37,7 @@ export const questionSchema = z.object({
   explanation: z.string().nullable().optional(),
   category_id: z.string().uuid().nullable().optional(),
   tag_ids: z.array(z.string().uuid()).optional().default([]),
-  difficulty: z.enum(difficulties).default('medium'),
+  difficulty: z.enum(difficulties).nullable().optional().default(null),
   status: z.enum(statuses).default('draft'),
 }).superRefine((data, ctx) => {
   // Validate options based on question type

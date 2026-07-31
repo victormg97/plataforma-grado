@@ -4,13 +4,18 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Plus, X, Check, Lightbulb, ChevronDown, ChevronUp, Eraser } from 'lucide-react';
+import { Plus, X, Check, Lightbulb, ChevronDown, Eraser } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { RichTextEditor } from '@/components/common/RichTextEditor';
 import { suggestTagsForText, type SuggestionSource } from '@/lib/question-bank/suggestions';
+import { useUiPreference } from '@/lib/hooks/useUiPreference';
 import type { QbCategory, QbTag, QbQuestionType, QbDifficulty } from '@/lib/supabase/types';
 import { questionTypes, difficulties } from '@/lib/validations/question-bank.schema';
+
+// Difficulty options including null (unrated)
+type DifficultyOption = QbDifficulty | null;
 
 interface QuestionFormProps {
   categories: QbCategory[];
@@ -34,10 +39,9 @@ interface FormState {
   modelAnswer: string;
   fillBlankAnswers: string[];
   explanation: string;
-  showExplanation: boolean;
   categoryId: string | null;
   selectedTagIds: string[];
-  difficulty: QbDifficulty;
+  difficulty: DifficultyOption;
 }
 
 const DEFAULT_STATE: FormState = {
@@ -48,10 +52,9 @@ const DEFAULT_STATE: FormState = {
   modelAnswer: '',
   fillBlankAnswers: [''],
   explanation: '',
-  showExplanation: false,
   categoryId: null,
   selectedTagIds: [],
-  difficulty: 'medium',
+  difficulty: null,
 };
 
 function loadDraft(): FormState | null {
@@ -93,10 +96,11 @@ export function QuestionForm({ categories, tags, editId, onSaved }: QuestionForm
   const [modelAnswer, setModelAnswer] = useState(initialState.modelAnswer);
   const [fillBlankAnswers, setFillBlankAnswers] = useState<string[]>(initialState.fillBlankAnswers);
   const [explanation, setExplanation] = useState(initialState.explanation);
-  const [showExplanation, setShowExplanation] = useState(initialState.showExplanation);
+  // Explanation open/close state persisted per-user in DB
+  const [explanationOpen, setExplanationOpen] = useUiPreference<boolean>('qb_explanation_open', false);
   const [categoryId, setCategoryId] = useState<string | null>(initialState.categoryId);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>(initialState.selectedTagIds);
-  const [difficulty, setDifficulty] = useState<QbDifficulty>(initialState.difficulty);
+  const [difficulty, setDifficulty] = useState<DifficultyOption>(initialState.difficulty);
   const [tagSearch, setTagSearch] = useState('');
   const [categorySearch, setCategorySearch] = useState('');
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
@@ -110,12 +114,12 @@ export function QuestionForm({ categories, tags, editId, onSaved }: QuestionForm
     saveTimeoutRef.current = setTimeout(() => {
       saveDraft({
         type, content, options, trueFalseAnswer, modelAnswer,
-        fillBlankAnswers, explanation, showExplanation,
+        fillBlankAnswers, explanation,
         categoryId, selectedTagIds, difficulty,
       });
     }, 500);
     return () => { if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current); };
-  }, [type, content, options, trueFalseAnswer, modelAnswer, fillBlankAnswers, explanation, showExplanation, categoryId, selectedTagIds, difficulty, editId]);
+  }, [type, content, options, trueFalseAnswer, modelAnswer, fillBlankAnswers, explanation, categoryId, selectedTagIds, difficulty, editId]);
   // Load question data for editing
   const { data: editData } = useQuery({
     queryKey: ['qb-question', editId],
@@ -134,7 +138,7 @@ export function QuestionForm({ categories, tags, editId, onSaved }: QuestionForm
       setType(editData.type);
       setContent(editData.content || '');
       setExplanation(editData.explanation || '');
-      setShowExplanation(!!editData.explanation);
+      if (editData.explanation) setExplanationOpen(true);
       setCategoryId(editData.category_id);
       setDifficulty(editData.difficulty);
       setSelectedTagIds(editData.tags?.map((t: { id: string }) => t.id) || []);
@@ -217,10 +221,10 @@ export function QuestionForm({ categories, tags, editId, onSaved }: QuestionForm
         type,
         content,
         options: buildOptionsPayload(),
-        explanation: showExplanation ? explanation : null,
+        explanation: explanationOpen ? explanation : null,
         category_id: categoryId,
         tag_ids: selectedTagIds,
-        difficulty,
+        difficulty: difficulty,
         status: 'active',
       };
 
@@ -300,7 +304,6 @@ export function QuestionForm({ categories, tags, editId, onSaved }: QuestionForm
     setModelAnswer(s.modelAnswer);
     setFillBlankAnswers(s.fillBlankAnswers);
     setExplanation(s.explanation);
-    setShowExplanation(s.showExplanation);
     setCategoryId(s.categoryId);
     setSelectedTagIds(s.selectedTagIds);
     setDifficulty(s.difficulty);
@@ -309,9 +312,9 @@ export function QuestionForm({ categories, tags, editId, onSaved }: QuestionForm
   // Get current state as a snapshot (for undo)
   const getSnapshot = useCallback((): FormState => ({
     type, content, options, trueFalseAnswer, modelAnswer,
-    fillBlankAnswers, explanation, showExplanation,
+    fillBlankAnswers, explanation,
     categoryId, selectedTagIds, difficulty,
-  }), [type, content, options, trueFalseAnswer, modelAnswer, fillBlankAnswers, explanation, showExplanation, categoryId, selectedTagIds, difficulty]);
+  }), [type, content, options, trueFalseAnswer, modelAnswer, fillBlankAnswers, explanation, categoryId, selectedTagIds, difficulty]);
 
   // Clear form with undo toast
   const handleClear = useCallback(() => {
@@ -523,26 +526,42 @@ export function QuestionForm({ categories, tags, editId, onSaved }: QuestionForm
         </Card>
       )}
 
-      {/* Explanation (collapsible) */}
+      {/* Explanation (collapsible with animation) */}
       <Card className="p-[var(--space-lg)]">
         <button
           type="button"
-          onClick={() => setShowExplanation(!showExplanation)}
+          onClick={() => setExplanationOpen(!explanationOpen)}
           className="flex items-center gap-2 text-sm font-medium text-[var(--color-text-primary)] hover:text-[var(--color-brand-gold)] transition-colors"
         >
-          {showExplanation ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
-          {showExplanation ? t('ocultar_explicacion') : t('mostrar_explicacion')}
+          <motion.span
+            animate={{ rotate: explanationOpen ? 180 : 0 }}
+            transition={{ duration: 0.2 }}
+            className="inline-flex"
+          >
+            <ChevronDown className="size-4" />
+          </motion.span>
+          {explanationOpen ? t('ocultar_explicacion') : t('mostrar_explicacion')}
         </button>
-        {showExplanation && (
-          <div className="mt-3">
-            <RichTextEditor
-              key="explanation"
-              content={explanation}
-              placeholder={t('explicacion_placeholder')}
-              onChange={handleExplanationChange}
-            />
-          </div>
-        )}
+        <AnimatePresence initial={false}>
+          {explanationOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.25, ease: 'easeInOut' }}
+              className="overflow-hidden"
+            >
+              <div className="mt-3">
+                <RichTextEditor
+                  key="explanation"
+                  content={explanation}
+                  placeholder={t('explicacion_placeholder')}
+                  onChange={handleExplanationChange}
+                />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </Card>
 
       {/* Metadata: category, tags, difficulty, status */}
@@ -709,7 +728,18 @@ export function QuestionForm({ categories, tags, editId, onSaved }: QuestionForm
           <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-2">
             {t('dificultad')}
           </label>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setDifficulty(null)}
+              className={`rounded-[var(--radius-md)] px-4 py-2 text-sm font-medium transition-all ${
+                difficulty === null
+                  ? 'bg-[var(--color-text-muted)] text-white shadow-sm'
+                  : 'border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-brand-gold)] hover:text-[var(--color-brand-gold)]'
+              }`}
+            >
+              {t('dificultad_sin')}
+            </button>
             {difficulties.map((d) => (
               <button
                 key={d}
