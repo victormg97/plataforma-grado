@@ -5,13 +5,14 @@ import { useTranslations } from 'next-intl';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
-  Search, Filter, ChevronLeft, ChevronRight, Edit, Trash2, Copy, Upload
+  Search, Filter, ChevronLeft, ChevronRight, Upload
 } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { AppSelect } from '@/components/common/AppSelect';
 import { ConfirmDeleteModal } from '@/components/common/ConfirmDeleteModal';
 import { ImportModal } from '@/components/question-bank/ImportModal';
+import { QuestionDetailModal } from '@/components/question-bank/QuestionDetailModal';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import type { QbCategory, QbTag, QbQuestionWithRelations } from '@/lib/supabase/types';
@@ -39,6 +40,7 @@ export function QuestionList({ categories, tags: _tags, onEdit }: QuestionListPr
   const [showFilters, setShowFilters] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
 
   // Debounce search
   const handleSearchChange = useCallback((value: string) => {
@@ -94,6 +96,7 @@ export function QuestionList({ categories, tags: _tags, onEdit }: QuestionListPr
       toast.success(t('eliminada_ok'));
       queryClient.invalidateQueries({ queryKey: ['qb-questions'] });
       setDeletingId(null);
+      setSelectedIdx(null);
     },
     onError: () => {
       toast.error(t('error_eliminar'));
@@ -112,9 +115,7 @@ export function QuestionList({ categories, tags: _tags, onEdit }: QuestionListPr
     },
   });
 
-  const stripHtml = (html: string) => {
-    return html.replace(/<[^>]*>/g, '').trim();
-  };
+  const stripHtml = (html: string) => html.replace(/<[^>]*>/g, '').trim();
 
   const hasActiveFilters = categoryFilter || typeFilter || difficultyFilter || statusFilter || tagFilter.length > 0;
 
@@ -129,6 +130,11 @@ export function QuestionList({ categories, tags: _tags, onEdit }: QuestionListPr
 
   const from = (page - 1) * 20 + 1;
   const to = Math.min(page * 20, total);
+
+  // Modal navigation
+  const selectedQuestion = selectedIdx !== null ? questions[selectedIdx] : null;
+  const handlePrev = selectedIdx !== null && selectedIdx > 0 ? () => setSelectedIdx(selectedIdx - 1) : null;
+  const handleNext = selectedIdx !== null && selectedIdx < questions.length - 1 ? () => setSelectedIdx(selectedIdx + 1) : null;
 
   return (
     <div className="space-y-4">
@@ -236,7 +242,7 @@ export function QuestionList({ categories, tags: _tags, onEdit }: QuestionListPr
         </Card>
       )}
 
-      {/* Questions list */}
+      {/* Questions grid */}
       {isLoading && !data ? (
         <div className="flex justify-center py-12">
           <div className="size-7 animate-spin rounded-full border-4 border-[var(--color-brand-gold)] border-t-transparent" />
@@ -251,79 +257,42 @@ export function QuestionList({ categories, tags: _tags, onEdit }: QuestionListPr
           </p>
         </Card>
       ) : (
-        <div className="space-y-2">
-          {questions.map((q) => (
-            <Card key={q.id} padding="none" className="overflow-hidden">
-              <div className="flex items-start gap-4 p-4">
-                <div className="min-w-0 flex-1">
-                  {/* Content preview */}
-                  <p className="text-sm font-medium text-[var(--color-text-primary)] line-clamp-2">
-                    {stripHtml(q.content)}
-                  </p>
-                  {/* Metadata row */}
-                  <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-[var(--color-text-muted)]">
-                    <span className="rounded-full bg-[var(--color-bg-secondary)] px-2 py-0.5 font-medium">
-                      {t(`tipo_${q.type}`)}
-                    </span>
-                    {q.category_name && (
-                      <span className="rounded-full bg-[color-mix(in_srgb,var(--color-brand-gold)_10%,transparent)] px-2 py-0.5 text-[var(--color-brand-gold)] font-medium">
-                        {q.category_name}
-                      </span>
-                    )}
-                    <span className={`rounded-full px-2 py-0.5 font-medium ${
-                      q.difficulty === 'easy' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
-                      q.difficulty === 'hard' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
-                      q.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' :
-                      'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
-                    }`}>
-                      {q.difficulty ? t(`dificultad_${q.difficulty}`) : t('dificultad_sin')}
-                    </span>
-                    <span className={`rounded-full px-2 py-0.5 font-medium ${
-                      q.status === 'active'
-                        ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                        : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
-                    }`}>
-                      {t(`estado_${q.status}`)}
-                    </span>
-                    {q.tags && q.tags.length > 0 && q.tags.map(tag => (
-                      <span key={tag.id} className="rounded-full bg-[var(--color-bg-secondary)] px-2 py-0.5">
-                        {tag.name}
-                      </span>
-                    ))}
-                    <span className="ml-auto">
-                      {format(new Date(q.created_at), 'dd MMM yyyy', { locale: es })}
-                    </span>
-                  </div>
-                </div>
-                {/* Actions */}
-                <div className="flex shrink-0 gap-1">
-                  <button
-                    type="button"
-                    onClick={() => onEdit(q.id)}
-                    className="rounded-[var(--radius-sm)] p-2 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-brand-gold)] transition-colors"
-                    title={t('editar')}
-                  >
-                    <Edit className="size-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => duplicateMutation.mutate(q.id)}
-                    className="rounded-[var(--radius-sm)] p-2 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-brand-gold)] transition-colors"
-                    title={t('duplicar')}
-                  >
-                    <Copy className="size-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDeletingId(q.id)}
-                    className="rounded-[var(--radius-sm)] p-2 text-[var(--color-text-muted)] hover:bg-[var(--color-error)]/10 hover:text-[var(--color-error)] transition-colors"
-                    title={t('eliminar')}
-                  >
-                    <Trash2 className="size-4" />
-                  </button>
-                </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {questions.map((q, idx) => (
+            <button
+              key={q.id}
+              type="button"
+              onClick={() => setSelectedIdx(idx)}
+              className="text-left rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-card,var(--color-bg))] p-3.5 shadow-[var(--shadow-sm)] transition-all hover:border-[var(--color-brand-gold)] hover:shadow-[var(--shadow-md)] focus-visible:ring-2 focus-visible:ring-[var(--color-brand-gold)] outline-none"
+            >
+              {/* Content preview */}
+              <p className="text-sm font-medium text-[var(--color-text-primary)] line-clamp-2 leading-snug">
+                {stripHtml(q.content)}
+              </p>
+              {/* Metadata */}
+              <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+                <span className="rounded-full bg-[var(--color-bg-secondary)] px-2 py-0.5 text-[10px] font-medium text-[var(--color-text-muted)]">
+                  {t(`tipo_${q.type}`)}
+                </span>
+                <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                  q.difficulty === 'easy' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                  q.difficulty === 'hard' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                  q.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' :
+                  'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
+                }`}>
+                  {q.difficulty ? t(`dificultad_${q.difficulty}`) : t('dificultad_sin')}
+                </span>
+                {q.category_name && (
+                  <span className="rounded-full bg-[color-mix(in_srgb,var(--color-brand-gold)_10%,transparent)] px-2 py-0.5 text-[10px] font-medium text-[var(--color-brand-gold)]">
+                    {q.category_name}
+                  </span>
+                )}
               </div>
-            </Card>
+              {/* Date */}
+              <p className="mt-2 text-[10px] text-[var(--color-text-muted)]">
+                {format(new Date(q.created_at), 'dd MMM yyyy', { locale: es })}
+              </p>
+            </button>
           ))}
         </div>
       )}
@@ -356,6 +325,19 @@ export function QuestionList({ categories, tags: _tags, onEdit }: QuestionListPr
             </button>
           </div>
         </div>
+      )}
+
+      {/* Detail modal */}
+      {selectedQuestion && (
+        <QuestionDetailModal
+          question={selectedQuestion}
+          onClose={() => setSelectedIdx(null)}
+          onPrev={handlePrev}
+          onNext={handleNext}
+          onEdit={() => { setSelectedIdx(null); onEdit(selectedQuestion.id); }}
+          onDuplicate={() => { duplicateMutation.mutate(selectedQuestion.id); }}
+          onDelete={() => { setSelectedIdx(null); setDeletingId(selectedQuestion.id); }}
+        />
       )}
 
       {/* Delete confirmation */}

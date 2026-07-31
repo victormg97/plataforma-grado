@@ -113,8 +113,8 @@ export function ImportModal({ onClose, onImported }: ImportModalProps) {
       ['single_choice', '¿Cuál es el plazo para contestar una demanda civil?', 'Opción A;Opción B;Opción C;Opción D', '2', 'El plazo es de 15 días hábiles según el Art. 258 CPC', 'Derecho Procesal', 'plazos,demanda', 'medium'],
       ['true_false', '¿El recurso de apelación siempre se concede en ambos efectos?', '', 'falso', 'Depende del tipo de resolución', 'Derecho Procesal', 'recursos', 'hard'],
       ['multiple_choice', '¿Cuáles son elementos del contrato?', 'Consentimiento;Objeto;Causa;Color', '1,2,3', '', 'Derecho Civil', 'contratos,obligaciones', 'easy'],
-      ['open_ended', 'Explique la diferencia entre nulidad absoluta y relativa', 'La nulidad absoluta...', '', '', 'Derecho Civil', 'nulidad', 'hard'],
-      ['fill_blank', 'El plazo para interponer recurso de protección es de ___ días corridos', 'treinta;30', '', '', 'Derecho Constitucional', 'recurso de protección,plazos', 'medium'],
+      ['open_ended', 'Explique la diferencia entre nulidad absoluta y relativa', 'La nulidad absoluta...', '', '', 'Derecho Civil', 'nulidad', ''],
+      ['fill_blank', 'El plazo para interponer recurso de protección es de ___ días corridos', 'treinta;30', '', '', 'Derecho Constitucional', 'recurso de protección,plazos', ''],
     ];
 
     const ws = XLSX.utils.aoa_to_sheet([headers, ...exampleRows]);

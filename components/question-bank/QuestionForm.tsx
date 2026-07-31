@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { RichTextEditor } from '@/components/common/RichTextEditor';
+import { Tooltip } from '@/components/common/Tooltip';
 import { suggestTagsForText, type SuggestionSource } from '@/lib/question-bank/suggestions';
 import { useUiPreference } from '@/lib/hooks/useUiPreference';
 import type { QbCategory, QbTag, QbQuestionType, QbDifficulty } from '@/lib/supabase/types';
@@ -406,24 +407,25 @@ export function QuestionForm({ categories, tags, editId, onSaved }: QuestionForm
           <div className="space-y-3">
             {options.map((opt, idx) => (
               <div key={idx} className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (type === 'single_choice') {
-                      setOptions(prev => prev.map((o, i) => ({ ...o, is_correct: i === idx })));
-                    } else {
-                      setOptions(prev => prev.map((o, i) => i === idx ? { ...o, is_correct: !o.is_correct } : o));
-                    }
-                  }}
-                  className={`flex size-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
-                    opt.is_correct
-                      ? 'border-[var(--color-brand-gold)] bg-[var(--color-brand-gold)] text-white'
-                      : 'border-[var(--color-border)] hover:border-[var(--color-brand-gold)]'
-                  }`}
-                  title={t('marcar_correcta')}
-                >
-                  {opt.is_correct && <Check className="size-3.5" />}
-                </button>
+                <Tooltip content={t('marcar_correcta')}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (type === 'single_choice') {
+                        setOptions(prev => prev.map((o, i) => ({ ...o, is_correct: i === idx })));
+                      } else {
+                        setOptions(prev => prev.map((o, i) => i === idx ? { ...o, is_correct: !o.is_correct } : o));
+                      }
+                    }}
+                    className={`flex size-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+                      opt.is_correct
+                        ? 'border-[var(--color-brand-gold)] bg-[var(--color-brand-gold)] text-white'
+                        : 'border-[var(--color-border)] hover:border-[var(--color-brand-gold)]'
+                    }`}
+                  >
+                    {opt.is_correct && <Check className="size-3.5" />}
+                  </button>
+                </Tooltip>
                 <input
                   type="text"
                   value={opt.text}
