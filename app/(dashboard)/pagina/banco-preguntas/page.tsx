@@ -20,7 +20,7 @@ export default function BancoPreguntasPage() {
   const searchParams = useSearchParams();
   const { user } = useUser();
 
-  const tab = (searchParams.get('tab') as Tab) ?? 'guardadas';
+  const tab = (searchParams.get('tab') as Tab) ?? 'agregar';
   const editId = searchParams.get('editId') ?? null;
 
   // Guard: only admin
