@@ -77,20 +77,18 @@ export default function BancoPreguntasPage() {
     enabled: !!user && user.rol === 'admin',
   });
 
-  // Prefetch first page of questions so it loads instantly on tab switch
+  // Prefetch all questions so list loads instantly on tab switch
   const queryClient = useQueryClient();
   useEffect(() => {
     if (user?.rol === 'admin') {
-      const params = new URLSearchParams();
-      params.set('page', '1');
-      params.set('pageSize', '20');
       queryClient.prefetchQuery({
-        queryKey: ['qb-questions', params.toString()],
-        staleTime: 30_000,
+        queryKey: ['qb-questions-all'],
+        staleTime: 60_000,
         queryFn: async () => {
-          const res = await fetch(`/api/question-bank/questions?${params.toString()}`);
+          const res = await fetch('/api/question-bank/questions?page=1&pageSize=9999');
           if (!res.ok) throw new Error();
-          return res.json();
+          const json = await res.json();
+          return json.data || [];
         },
       });
     }

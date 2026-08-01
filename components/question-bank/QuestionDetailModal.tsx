@@ -113,6 +113,30 @@ export function QuestionDetailModal({
       );
     }
 
+    if (q.type === 'matching') {
+      const opts = q.options as { pairs: Array<{ left: string; right: string }> };
+      if (!opts.pairs?.length) return null;
+      return (
+        <div className="space-y-2">
+          <p className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wide">
+            {t('matching_par')}es
+          </p>
+          <div className="space-y-2">
+            {opts.pairs.map((pair, i) => (
+              <div key={i} className="grid grid-cols-2 gap-3">
+                <div className="rounded-[var(--radius-md)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-[var(--color-text-primary)] font-medium">
+                  {pair.left}
+                </div>
+                <div className="rounded-[var(--radius-md)] bg-green-50 border border-green-200 px-3 py-2 text-sm text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-300">
+                  {pair.right}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
     return null;
   };
 

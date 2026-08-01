@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
   Search, Filter, ChevronLeft, ChevronRight, Upload, Edit, Copy, Trash2
@@ -31,7 +31,6 @@ export function QuestionList({ categories, tags: _tags, onEdit }: QuestionListPr
 
   // Filters
   const [search, setSearch] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('');
   const [typeFilter, setTypeFilter] = useState<string>('');
   const [difficultyFilter, setDifficultyFilter] = useState<string>('');
@@ -45,51 +44,89 @@ export function QuestionList({ categories, tags: _tags, onEdit }: QuestionListPr
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
 
-  // Debounce search
-  const handleSearchChange = useCallback((value: string) => {
+  // Search handler (instant, no debounce needed for client-side)
+  const handleSearchChange = (value: string) => {
     setSearch(value);
-    const timeout = setTimeout(() => {
-      setDebouncedSearch(value);
-      setPage(1);
-    }, 400);
-    return () => clearTimeout(timeout);
-  }, []);
+    setPage(1);
+  };
 
-  // Build query params
-  const queryParams = new URLSearchParams();
-  queryParams.set('page', String(page));
-  queryParams.set('pageSize', '20');
-  if (debouncedSearch) queryParams.set('search', debouncedSearch);
-  if (categoryFilter) queryParams.set('categoryId', categoryFilter);
-  if (typeFilter) queryParams.set('type', typeFilter);
-  if (difficultyFilter) queryParams.set('difficulty', difficultyFilter);
-  if (statusFilter) queryParams.set('status', statusFilter);
-  if (tagFilter.length > 0) queryParams.set('tagIds', tagFilter.join(','));
-  if (dateFrom) queryParams.set('dateFrom', new Date(dateFrom).toISOString());
-  if (dateTo) queryParams.set('dateTo', new Date(dateTo + 'T23:59:59').toISOString());
-
-  const { data, isLoading } = useQuery({
-    queryKey: ['qb-questions', queryParams.toString()],
+  // Load ALL questions once, filter client-side
+  const { data: allQuestions = [], isLoading } = useQuery<QbQuestionWithRelations[]>({
+    queryKey: ['qb-questions-all'],
     staleTime: 60_000,
-    gcTime: 5 * 60_000,
+    gcTime: 10 * 60_000,
     refetchOnWindowFocus: false,
-    placeholderData: keepPreviousData,
     queryFn: async () => {
-      const res = await fetch(`/api/question-bank/questions?${queryParams.toString()}`);
+      // Fetch all questions in one call (page_size=9999)
+      const res = await fetch('/api/question-bank/questions?page=1&pageSize=9999');
       if (!res.ok) throw new Error();
-      return res.json() as Promise<{
-        data: QbQuestionWithRelations[];
-        total: number;
-        page: number;
-        page_size: number;
-        total_pages: number;
-      }>;
+      const json = await res.json();
+      return json.data || [];
     },
   });
 
-  const questions = data?.data || [];
-  const total = data?.total || 0;
-  const totalPages = data?.total_pages || 0;
+  // Client-side filtering
+  const filteredQuestions = useMemo(() => {
+    let result = allQuestions;
+
+    // Text search (strip HTML and search in plain text)
+    if (search.trim()) {
+      const term = search.trim().toLowerCase();
+      result = result.filter(q => {
+        const plain = q.content.replace(/<[^>]*>/g, '').toLowerCase();
+        return plain.includes(term);
+      });
+    }
+
+    // Category filter
+    if (categoryFilter) {
+      result = result.filter(q => q.category_id === categoryFilter);
+    }
+
+    // Type filter
+    if (typeFilter) {
+      result = result.filter(q => q.type === typeFilter);
+    }
+
+    // Difficulty filter
+    if (difficultyFilter) {
+      if (difficultyFilter === 'unrated') {
+        result = result.filter(q => !q.difficulty);
+      } else {
+        result = result.filter(q => q.difficulty === difficultyFilter);
+      }
+    }
+
+    // Status filter
+    if (statusFilter) {
+      result = result.filter(q => q.status === statusFilter);
+    }
+
+    // Tag filter
+    if (tagFilter.length > 0) {
+      result = result.filter(q =>
+        q.tags && tagFilter.some(tf => q.tags!.some(qt => qt.id === tf))
+      );
+    }
+
+    // Date filters
+    if (dateFrom) {
+      const fromDate = new Date(dateFrom).getTime();
+      result = result.filter(q => new Date(q.created_at).getTime() >= fromDate);
+    }
+    if (dateTo) {
+      const toDate = new Date(dateTo + 'T23:59:59').getTime();
+      result = result.filter(q => new Date(q.created_at).getTime() <= toDate);
+    }
+
+    return result;
+  }, [allQuestions, search, categoryFilter, typeFilter, difficultyFilter, statusFilter, tagFilter, dateFrom, dateTo]);
+
+  // Client-side pagination
+  const PAGE_SIZE = 21; // 3 columns × 7 rows
+  const total = filteredQuestions.length;
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+  const questions = filteredQuestions.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   // Delete mutation
   const deleteMutation = useMutation({
@@ -99,7 +136,7 @@ export function QuestionList({ categories, tags: _tags, onEdit }: QuestionListPr
     },
     onSuccess: () => {
       toast.success(t('eliminada_ok'));
-      queryClient.invalidateQueries({ queryKey: ['qb-questions'] });
+      queryClient.invalidateQueries({ queryKey: ['qb-questions-all'] });
       setDeletingId(null);
       setSelectedIdx(null);
     },
@@ -116,7 +153,7 @@ export function QuestionList({ categories, tags: _tags, onEdit }: QuestionListPr
     },
     onSuccess: () => {
       toast.success(t('duplicada_ok'));
-      queryClient.invalidateQueries({ queryKey: ['qb-questions'] });
+      queryClient.invalidateQueries({ queryKey: ['qb-questions-all'] });
     },
   });
 
@@ -272,17 +309,17 @@ export function QuestionList({ categories, tags: _tags, onEdit }: QuestionListPr
       )}
 
       {/* Questions grid */}
-      {isLoading && !data ? (
+      {isLoading ? (
         <div className="flex justify-center py-12">
           <div className="size-7 animate-spin rounded-full border-4 border-[var(--color-brand-gold)] border-t-transparent" />
         </div>
       ) : questions.length === 0 ? (
         <Card className="py-12 text-center">
           <p className="text-sm font-medium text-[var(--color-text-primary)]">
-            {debouncedSearch || hasActiveFilters ? t('sin_resultados') : t('sin_preguntas')}
+            {search || hasActiveFilters ? t('sin_resultados') : t('sin_preguntas')}
           </p>
           <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-            {debouncedSearch || hasActiveFilters ? t('sin_resultados_desc') : t('sin_preguntas_desc')}
+            {search || hasActiveFilters ? t('sin_resultados_desc') : t('sin_preguntas_desc')}
           </p>
         </Card>
       ) : (
@@ -305,6 +342,12 @@ export function QuestionList({ categories, tags: _tags, onEdit }: QuestionListPr
             } else if (q.type === 'fill_blank') {
               const opts = q.options as { blanks: Array<{ accepted_answers: string[] }> };
               if (opts.blanks?.[0]) answerPreview = opts.blanks[0].accepted_answers.join(', ');
+            } else if (q.type === 'matching') {
+              const opts = q.options as { pairs: Array<{ left: string; right: string }> };
+              if (opts.pairs?.length) {
+                answerPreview = opts.pairs.slice(0, 2).map(p => `${p.left} → ${p.right}`).join(' · ');
+                if (opts.pairs.length > 2) answerPreview += ' …';
+              }
             }
 
             return (
@@ -454,7 +497,7 @@ export function QuestionList({ categories, tags: _tags, onEdit }: QuestionListPr
           onClose={() => setShowImport(false)}
           onImported={() => {
             setShowImport(false);
-            queryClient.invalidateQueries({ queryKey: ['qb-questions'] });
+            queryClient.invalidateQueries({ queryKey: ['qb-questions-all'] });
             queryClient.invalidateQueries({ queryKey: ['qb-categories'] });
             queryClient.invalidateQueries({ queryKey: ['qb-tags'] });
           }}

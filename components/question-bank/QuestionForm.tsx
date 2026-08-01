@@ -318,7 +318,7 @@ export function QuestionForm({ categories, tags, subjects, editId, onSaved, onCa
           onClick: () => onSaved(),
         },
       });
-      queryClient.invalidateQueries({ queryKey: ['qb-questions'] });
+      queryClient.invalidateQueries({ queryKey: ['qb-questions-all'] });
       if (!editId) {
         applyState(DEFAULT_STATE);
         clearDraft();
