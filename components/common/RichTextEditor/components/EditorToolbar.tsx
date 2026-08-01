@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useRef } from 'react';
+import { useMemo, useState, useRef, useEffect } from 'react';
 import type { Editor } from '@tiptap/react';
 import {
   Bold, Italic, Strikethrough, List, ListOrdered,
@@ -31,6 +31,15 @@ export function EditorToolbar({ editor, onOpenLinkModal }: EditorToolbarProps) {
   const [showHighlight, setShowHighlight] = useState(false);
   const textColorBtnRef = useRef<HTMLDivElement>(null);
   const highlightBtnRef = useRef<HTMLDivElement>(null);
+
+  // Force local re-render on editor transactions so active states update.
+  // This is scoped to the toolbar only — doesn't block page navigation.
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const handler = () => setTick(t => t + 1);
+    editor.on('transaction', handler);
+    return () => { editor.off('transaction', handler); };
+  }, [editor]);
 
   const currentTextColor = editor.getAttributes('textStyle').color ?? '';
   const currentBgColor = editor.getAttributes('textStyle').backgroundColor ?? '';

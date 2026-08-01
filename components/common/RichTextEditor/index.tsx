@@ -96,7 +96,6 @@ export interface RichTextEditorProps {
 
 export function RichTextEditor({ content, placeholder, onChange, readOnly = false }: RichTextEditorProps) {
   const t = useTranslations('notas');
-  const [, setTick] = useState(0);
   const [linkModalOpen, setLinkModalOpen] = useState(false);
   const [linkModalInitial, setLinkModalInitial] = useState({ url: '', text: '' });
 
@@ -144,11 +143,7 @@ export function RichTextEditor({ content, placeholder, onChange, readOnly = fals
     immediatelyRender: false,
     editable: !readOnly,
     onUpdate: ({ editor }) => {
-      setTick((t) => t + 1);
       onChange?.(editor.getHTML());
-    },
-    onTransaction: () => {
-      setTick((t) => t + 1);
     },
     editorProps: {
       attributes: {
