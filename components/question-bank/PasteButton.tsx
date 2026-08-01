@@ -107,7 +107,7 @@ export function PasteButton({ type, onPasteChoices, onPasteMatching, onUndo }: P
 
       {/* Preview popup on hover */}
       {showPreview && preview && (
-        <div className="absolute left-0 top-full mt-2 z-20 w-72 max-h-[200px] overflow-y-auto rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] shadow-[var(--shadow-lg)] p-3 animate-in fade-in-0 zoom-in-95 duration-150">
+        <div className="absolute right-0 top-full mt-2 z-20 w-72 max-h-[200px] overflow-y-auto rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] shadow-[var(--shadow-lg)] p-3 animate-in fade-in-0 zoom-in-95 duration-150">
           <p className="text-[10px] font-medium uppercase tracking-wide text-[var(--color-text-muted)] mb-2">
             {t('vista_previa_pegado')}
           </p>
