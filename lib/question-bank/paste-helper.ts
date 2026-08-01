@@ -126,7 +126,7 @@ function detectHighlightedOptions(html: string, options: ParsedChoiceOption[]): 
 
 /**
  * Parse clipboard content for matching/pairing questions.
- * Detects two-column format (tab-separated or even line count split).
+ * Detects two-column format (tab-separated or alternating lines).
  */
 export function parseMatchingFromClipboard(plainText: string): ParsedMatchingPair[] {
   const lines = plainText
@@ -136,7 +136,7 @@ export function parseMatchingFromClipboard(plainText: string): ParsedMatchingPai
 
   if (lines.length < 2) return [];
 
-  // Strategy 1: Tab-separated (from table copy)
+  // Strategy 1: Tab-separated (from table copy in some apps)
   const tabSeparated = lines.filter(l => l.includes('\t'));
   if (tabSeparated.length >= 2) {
     return tabSeparated.map(l => {
@@ -145,35 +145,23 @@ export function parseMatchingFromClipboard(plainText: string): ParsedMatchingPai
     }).filter(p => p.left && p.right);
   }
 
-  // Strategy 2: Even number of lines — first half is left, second half is right
-  // (common when copying a two-column table as plain text)
-  if (lines.length >= 4 && lines.length % 2 === 0) {
-    const half = lines.length / 2;
-    // Heuristic: check if left column items are shorter (concept names)
-    // and right column items are longer (definitions)
-    const leftAvg = lines.slice(0, half).reduce((sum, l) => sum + l.length, 0) / half;
-    const rightAvg = lines.slice(half).reduce((sum, l) => sum + l.length, 0) / half;
-
-    // If there's a reasonable difference or even length, assume it's pairs
-    if (leftAvg > 0 && rightAvg > 0) {
-      const pairs: ParsedMatchingPair[] = [];
-      for (let i = 0; i < half; i++) {
-        pairs.push({ left: lines[i], right: lines[half + i] });
-      }
-      return pairs;
-    }
-  }
-
-  // Strategy 3: Alternating lines (concept, definition, concept, definition...)
+  // Strategy 2: Alternating lines (concept, definition, concept, definition...)
+  // This is how Word tables copy as plain text (column by column, row by row)
   if (lines.length >= 4 && lines.length % 2 === 0) {
     const pairs: ParsedMatchingPair[] = [];
     for (let i = 0; i < lines.length; i += 2) {
       pairs.push({ left: lines[i], right: lines[i + 1] });
     }
-    // Heuristic check: left items should be shorter on average (concepts)
-    const leftAvg = pairs.reduce((s, p) => s + p.left.length, 0) / pairs.length;
-    const rightAvg = pairs.reduce((s, p) => s + p.right.length, 0) / pairs.length;
-    if (rightAvg >= leftAvg * 0.5) return pairs; // reasonable ratio
+    return pairs;
+  }
+
+  // Strategy 3: Odd number of lines — try alternating anyway with last line as orphan
+  if (lines.length >= 3) {
+    const pairs: ParsedMatchingPair[] = [];
+    for (let i = 0; i + 1 < lines.length; i += 2) {
+      pairs.push({ left: lines[i], right: lines[i + 1] });
+    }
+    if (pairs.length >= 2) return pairs;
   }
 
   return [];
