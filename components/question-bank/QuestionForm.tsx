@@ -13,6 +13,7 @@ import { Tooltip } from '@/components/common/Tooltip';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
 import { suggestTagsForText, type SuggestionSource } from '@/lib/question-bank/suggestions';
 import { useUiPreference } from '@/lib/hooks/useUiPreference';
+import { PasteButton } from '@/components/question-bank/PasteButton';
 import type { QbCategory, QbTag, QbSubject, QbQuestionType, QbDifficulty } from '@/lib/supabase/types';
 import { questionTypes, difficulties } from '@/lib/validations/question-bank.schema';
 
@@ -124,6 +125,10 @@ export function QuestionForm({ categories, tags, subjects, editId, onSaved, onCa
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
   const [subjectDropdownOpen, setSubjectDropdownOpen] = useState(false);
   const [tagDropdownOpen, setTagDropdownOpen] = useState(false);
+
+  // Undo snapshots for paste actions
+  const [optionsSnapshot, setOptionsSnapshot] = useState<ChoiceOption[] | null>(null);
+  const [matchingSnapshot, setMatchingSnapshot] = useState<MatchingPair[] | null>(null);
 
   // Auto-save to localStorage on every state change (debounced)
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -320,8 +325,21 @@ export function QuestionForm({ categories, tags, subjects, editId, onSaved, onCa
       });
       queryClient.invalidateQueries({ queryKey: ['qb-questions-all'] });
       if (!editId) {
-        applyState(DEFAULT_STATE);
-        clearDraft();
+        // Only clear content-specific fields, keep type/materia/category/tags/difficulty
+        setContent('');
+        setOptions([{ text: '', is_correct: false }, { text: '', is_correct: false }]);
+        setTrueFalseAnswer(true);
+        setModelAnswer('');
+        setFillBlankAnswers(['']);
+        setMatchingPairs([{ left: '', right: '' }, { left: '', right: '' }]);
+        setExplanation('');
+        // Save draft with persisted metadata
+        saveDraft({
+          type, content: '', options: [{ text: '', is_correct: false }, { text: '', is_correct: false }],
+          trueFalseAnswer: true, modelAnswer: '', fillBlankAnswers: [''],
+          matchingPairs: [{ left: '', right: '' }, { left: '', right: '' }],
+          explanation: '', subjectId, categoryId, selectedTagIds, difficulty,
+        });
       } else {
         // When editing, go back to list after save
         onSaved();
@@ -618,9 +636,21 @@ export function QuestionForm({ categories, tags, subjects, editId, onSaved, onCa
       {/* Options section - depends on type */}
       {(type === 'single_choice' || type === 'multiple_choice') && (
         <Card className="p-[var(--space-lg)]">
-          <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-3">
-            {t('opciones')}
-          </label>
+          <div className="flex items-center justify-between mb-3">
+            <label className="text-sm font-medium text-[var(--color-text-primary)]">
+              {t('opciones')}
+            </label>
+            <PasteButton
+              type="choices"
+              onPasteChoices={(parsed) => {
+                setOptionsSnapshot(options);
+                // Add empty slot at end for auto-expand
+                setOptions([...parsed, { text: '', is_correct: false }]);
+              }}
+              onPasteMatching={() => {}}
+              onUndo={() => { if (optionsSnapshot) setOptions(optionsSnapshot); }}
+            />
+          </div>
           <div className="space-y-3">
             {options.map((opt, idx) => (
               <div key={idx} className="flex items-center gap-3">
@@ -773,9 +803,20 @@ export function QuestionForm({ categories, tags, subjects, editId, onSaved, onCa
       {/* Matching pairs (two-column, auto-expanding) */}
       {type === 'matching' && (
         <Card className="p-[var(--space-lg)]">
-          <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-3">
-            {t('matching_par')}es
-          </label>
+          <div className="flex items-center justify-between mb-3">
+            <label className="text-sm font-medium text-[var(--color-text-primary)]">
+              {t('matching_par')}es
+            </label>
+            <PasteButton
+              type="matching"
+              onPasteChoices={() => {}}
+              onPasteMatching={(parsed) => {
+                setMatchingSnapshot(matchingPairs);
+                setMatchingPairs([...parsed, { left: '', right: '' }]);
+              }}
+              onUndo={() => { if (matchingSnapshot) setMatchingPairs(matchingSnapshot); }}
+            />
+          </div>
           <div className="space-y-3">
             {matchingPairs.map((pair, idx) => (
               <div key={idx} className="grid grid-cols-2 gap-3 items-center">
