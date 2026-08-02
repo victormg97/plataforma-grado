@@ -98,7 +98,7 @@ export function PasteButton({ type, onPasteChoices, onPasteMatching, onUndo }: P
           onClick={handlePaste}
           onMouseEnter={handleHover}
           onMouseLeave={() => setShowPreview(false)}
-          className="inline-flex items-center gap-1.5 rounded-[var(--radius-md)] border border-dashed border-[var(--color-border)] px-3 py-1.5 text-xs font-medium text-[var(--color-text-muted)] transition-all hover:border-[var(--color-brand-gold)] hover:text-[var(--color-brand-gold)] hover:bg-[color-mix(in_srgb,var(--color-brand-gold)_5%,transparent)]"
+          className="inline-flex items-center gap-1.5 rounded-[var(--radius-md)] border border-dashed border-[var(--color-brand-gold)]/50 px-3 py-1.5 text-xs font-medium text-[var(--color-brand-gold)] transition-all hover:border-[var(--color-brand-gold)] hover:bg-[color-mix(in_srgb,var(--color-brand-gold)_8%,transparent)] hover:shadow-sm"
         >
           <ClipboardPaste className="size-3.5" />
           {t('pegar')}
