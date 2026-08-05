@@ -165,6 +165,7 @@ export default function BancoPreguntasPage() {
           <QuestionList
             categories={categories}
             tags={tags}
+            subjects={subjects}
             onEdit={(id) => { setEditId(id); setTab('agregar'); }}
           />
         )}

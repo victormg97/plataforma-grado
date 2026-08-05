@@ -2611,6 +2611,7 @@ export type QbQuestionWithRelations = QbQuestion & {
   category_name: string | null;
   created_by_nombre: string | null;
   created_by_apellido: string | null;
+  created_by_apellido_materno: string | null;
   tags: Array<{ id: string; name: string }> | null;
 };
 

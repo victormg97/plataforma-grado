@@ -9,12 +9,13 @@ interface ImportRow {
   options: string; // JSON string or semicolon-separated
   correct: string; // indices or true/false
   explanation?: string;
+  subject?: string;
   category?: string;
   tags?: string;
   difficulty?: string;
 }
 
-const VALID_TYPES: QbQuestionType[] = ['single_choice', 'multiple_choice', 'true_false', 'open_ended', 'fill_blank'];
+const VALID_TYPES: QbQuestionType[] = ['single_choice', 'multiple_choice', 'true_false', 'open_ended', 'fill_blank', 'matching'];
 const VALID_DIFFICULTIES: QbDifficulty[] = ['easy', 'medium', 'hard'];
 
 export async function POST(req: NextRequest) {
@@ -62,7 +63,7 @@ export async function POST(req: NextRequest) {
   let errorCount = 0;
   const errors: Array<{ row: number; message: string }> = [];
 
-  // Get existing categories & tags for matching
+  // Get existing categories, subjects & tags for matching
   const { data: existingCategories } = await supabase
     .from('qb_categories')
     .select('id, name')
@@ -73,8 +74,14 @@ export async function POST(req: NextRequest) {
     .select('id, name')
     .eq('tenant', tenantConfig.id);
 
+  const { data: existingSubjects } = await supabase
+    .from('qb_subjects')
+    .select('id, name')
+    .eq('tenant', tenantConfig.id);
+
   const categoryMap = new Map((existingCategories || []).map(c => [c.name.toLowerCase(), c.id]));
   const tagMap = new Map((existingTags || []).map(t => [t.name.toLowerCase(), t.id]));
+  const subjectMap = new Map((existingSubjects || []).map(s => [s.name.toLowerCase(), s.id]));
 
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
@@ -132,6 +139,26 @@ export async function POST(req: NextRequest) {
         }
       }
 
+      // Resolve subject (create if needed)
+      let subjectId: string | null = null;
+      if (row.subject?.trim()) {
+        const subName = row.subject.trim();
+        const existing = subjectMap.get(subName.toLowerCase());
+        if (existing) {
+          subjectId = existing;
+        } else {
+          const { data: newSub } = await supabase
+            .from('qb_subjects')
+            .insert({ name: subName, tenant: tenantConfig.id })
+            .select('id')
+            .single();
+          if (newSub) {
+            subjectId = newSub.id;
+            subjectMap.set(subName.toLowerCase(), newSub.id);
+          }
+        }
+      }
+
       // Insert question
       const { data: question, error: qError } = await supabase
         .from('qb_questions')
@@ -142,6 +169,7 @@ export async function POST(req: NextRequest) {
           options: options as import('@/lib/supabase/types').Json,
           explanation: row.explanation?.trim() || null,
           category_id: categoryId,
+          subject_id: subjectId,
           difficulty,
           status: 'active' as const,
           import_batch_id: batch.id,
@@ -242,6 +270,18 @@ function parseOptions(type: QbQuestionType, optionsRaw: string, correctRaw: stri
       return {
         blanks: [{ position: 0, accepted_answers: answers }],
       };
+    }
+    case 'matching': {
+      // Options come as alternating "concept1;definition1;concept2;definition2..."
+      const parts = optionsRaw?.split(';').map(p => p.trim()).filter(Boolean);
+      if (!parts || parts.length < 4 || parts.length % 2 !== 0) {
+        throw new Error('Para emparejamiento se necesitan pares: concepto1;definición1;concepto2;definición2...');
+      }
+      const pairs = [];
+      for (let i = 0; i < parts.length; i += 2) {
+        pairs.push({ left: parts[i], right: parts[i + 1] });
+      }
+      return { pairs };
     }
     default:
       throw new Error(`Tipo no soportado: ${type}`);

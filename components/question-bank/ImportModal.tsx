@@ -19,6 +19,7 @@ interface ParsedRow {
   options: string;
   correct: string;
   explanation: string;
+  subject: string;
   category: string;
   tags: string;
   difficulty: string;
@@ -65,6 +66,7 @@ export function ImportModal({ onClose, onImported }: ImportModalProps) {
         options: (row['opciones'] || row['options'] || '').trim(),
         correct: (row['correcta'] || row['correct'] || '').trim(),
         explanation: (row['explicacion'] || row['explanation'] || '').trim(),
+        subject: (row['materia'] || row['subject'] || '').trim(),
         category: (row['categoria'] || row['category'] || '').trim(),
         tags: (row['tags'] || row['etiquetas'] || '').trim(),
         difficulty: (row['dificultad'] || row['difficulty'] || '').trim(),
@@ -108,18 +110,60 @@ export function ImportModal({ onClose, onImported }: ImportModalProps) {
   });
 
   const downloadTemplate = () => {
-    const headers = ['tipo', 'pregunta', 'opciones', 'correcta', 'explicacion', 'categoria', 'tags', 'dificultad'];
+    const headers = ['tipo', 'pregunta', 'opciones', 'correcta', 'explicacion', 'materia', 'categoria', 'tags', 'dificultad'];
     const exampleRows = [
-      ['single_choice', '¿Cuál es el plazo para contestar una demanda civil?', 'Opción A;Opción B;Opción C;Opción D', '2', 'El plazo es de 15 días hábiles según el Art. 258 CPC', 'Derecho Procesal', 'plazos,demanda', 'medium'],
-      ['true_false', '¿El recurso de apelación siempre se concede en ambos efectos?', '', 'falso', 'Depende del tipo de resolución', 'Derecho Procesal', 'recursos', 'hard'],
-      ['multiple_choice', '¿Cuáles son elementos del contrato?', 'Consentimiento;Objeto;Causa;Color', '1,2,3', '', 'Derecho Civil', 'contratos,obligaciones', 'easy'],
-      ['open_ended', 'Explique la diferencia entre nulidad absoluta y relativa', 'La nulidad absoluta...', '', '', 'Derecho Civil', 'nulidad', ''],
-      ['fill_blank', 'El plazo para interponer recurso de protección es de ___ días corridos', 'treinta;30', '', '', 'Derecho Constitucional', 'recurso de protección,plazos', ''],
+      ['single_choice', '¿Cuál es el plazo para contestar una demanda civil?', 'Opción A;Opción B;Opción C;Opción D', '2', 'El plazo es de 15 días hábiles según el Art. 258 CPC', 'Derecho Civil', 'Derecho Procesal', 'plazos,demanda', 'medium'],
+      ['true_false', '¿El recurso de apelación siempre se concede en ambos efectos?', '', 'falso', 'Depende del tipo de resolución', 'Derecho Procesal', 'Recursos procesales', 'recursos', 'hard'],
+      ['multiple_choice', '¿Cuáles son elementos del contrato?', 'Consentimiento;Objeto;Causa;Color', '1,2,3', '', 'Derecho Civil', 'Contratos', 'contratos,obligaciones', 'easy'],
+      ['open_ended', 'Explique la diferencia entre nulidad absoluta y relativa', 'La nulidad absoluta...', '', '', 'Derecho Civil', 'Acto jurídico', 'nulidad', ''],
+      ['fill_blank', 'El plazo para interponer recurso de protección es de ___ días corridos', 'treinta;30', '', '', 'Derecho Constitucional', 'Acciones constitucionales', 'recurso de protección,plazos', ''],
+      ['matching', 'Empareja los tipos de contratos con sus características', 'Concepto 1;Definición 1;Concepto 2;Definición 2', '', '', 'Derecho Civil', 'Contratos', 'clasificación', ''],
+    ];
+
+    // Prompt sheet for AI assistance
+    const promptText = [
+      ['INSTRUCCIONES PARA IA — Conversión de preguntas a formato de importación'],
+      [''],
+      ['Eres un asistente que transforma preguntas de derecho a formato CSV/Excel para importar a un banco de preguntas.'],
+      [''],
+      ['FORMATO REQUERIDO (columnas separadas por tabulación):'],
+      ['tipo | pregunta | opciones | correcta | explicacion | materia | categoria | tags | dificultad'],
+      [''],
+      ['TIPOS VÁLIDOS:'],
+      ['- single_choice: Selección única. Opciones separadas por ";". Correcta = número de la opción (1,2,3...)'],
+      ['- multiple_choice: Selección múltiple. Opciones separadas por ";". Correcta = números separados por "," (ej: 1,3)'],
+      ['- true_false: Verdadero/Falso. Opciones vacío. Correcta = "verdadero" o "falso"'],
+      ['- open_ended: Desarrollo. Opciones = respuesta modelo (opcional). Correcta vacío.'],
+      ['- fill_blank: Completar espacio. La pregunta usa ___ para el espacio. Opciones = respuestas válidas separadas por ";"'],
+      ['- matching: Emparejamiento. Opciones = pares alternados "concepto1;definición1;concepto2;definición2". Correcta vacío.'],
+      [''],
+      ['REGLAS:'],
+      ['- Materia: clasificación general (ej: Derecho Civil, Derecho Penal). Puede quedar vacío.'],
+      ['- Categoría: subcategoría dentro de la materia (ej: Contratos, Obligaciones). Puede quedar vacío.'],
+      ['- Tags: palabras clave separadas por coma. Puede quedar vacío.'],
+      ['- Dificultad: "easy", "medium", "hard", o vacío si no se sabe.'],
+      ['- Si la respuesta correcta está resaltada/subrayada/en negrita en el texto original, identifícala.'],
+      ['- Explicación: breve justificación de la respuesta correcta. Puede quedar vacío.'],
+      [''],
+      ['EJEMPLO DE ENTRADA:'],
+      ['2. ¿Qué establece el artículo 2465 del Código Civil?'],
+      ['a) El deudor responde solo con su persona.'],
+      ['b) El acreedor puede perseguir solo los bienes raíces.'],
+      ['c) El deudor solo responde con los bienes donados.'],
+      ['d) El acreedor puede perseguir la ejecución sobre todos los bienes del deudor, excepto los no embargables. [CORRECTA]'],
+      [''],
+      ['EJEMPLO DE SALIDA:'],
+      ['single_choice\t¿Qué establece el artículo 2465 del Código Civil?\tEl deudor responde solo con su persona;El acreedor puede perseguir solo los bienes raíces;El deudor solo responde con los bienes donados;El acreedor puede perseguir la ejecución sobre todos los bienes del deudor, excepto los no embargables\t4\t\tDerecho Civil\tDerecho de prenda general\tart. 2465,prenda general\t'],
+      [''],
+      ['Ahora convierte las siguientes preguntas al formato descrito. Responde SOLO con las filas de datos (sin encabezados), una pregunta por línea, separadas por tabulación:'],
     ];
 
     const ws = XLSX.utils.aoa_to_sheet([headers, ...exampleRows]);
+    const wsPrompt = XLSX.utils.aoa_to_sheet(promptText);
+
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Preguntas');
+    XLSX.utils.book_append_sheet(wb, wsPrompt, 'Prompt para IA');
     XLSX.writeFile(wb, 'plantilla_banco_preguntas.xlsx');
   };
 

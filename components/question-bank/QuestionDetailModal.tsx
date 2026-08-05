@@ -189,6 +189,11 @@ export function QuestionDetailModal({
                 {q.category_name}
               </span>
             )}
+            {q.subject_name && (
+              <span className="rounded-full bg-[var(--color-bg-secondary)] px-2.5 py-0.5 text-xs font-medium text-[var(--color-text-secondary)]">
+                {q.subject_name}
+              </span>
+            )}
           </div>
           <button
             onClick={onClose}
@@ -235,7 +240,7 @@ export function QuestionDetailModal({
         <div className="mt-5 flex items-center justify-between border-t border-[var(--color-border)] pt-4">
           <div className="text-xs text-[var(--color-text-muted)]">
             {q.created_by_nombre && (
-              <span>{q.created_by_nombre} {q.created_by_apellido} · </span>
+              <span>{[q.created_by_nombre, q.created_by_apellido, q.created_by_apellido_materno].filter(Boolean).join(' ')} · </span>
             )}
             {format(new Date(q.created_at), "dd MMM yyyy, HH:mm", { locale: es })}
           </div>

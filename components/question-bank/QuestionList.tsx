@@ -16,25 +16,28 @@ import { ImportModal } from '@/components/question-bank/ImportModal';
 import { QuestionDetailModal } from '@/components/question-bank/QuestionDetailModal';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import type { QbCategory, QbTag, QbQuestionWithRelations } from '@/lib/supabase/types';
+import type { QbCategory, QbTag, QbSubject, QbQuestionWithRelations } from '@/lib/supabase/types';
 import { questionTypes, difficulties, statuses } from '@/lib/validations/question-bank.schema';
 
 interface QuestionListProps {
   categories: QbCategory[];
   tags: QbTag[];
+  subjects: QbSubject[];
   onEdit: (id: string) => void;
 }
 
-export function QuestionList({ categories, tags: _tags, onEdit }: QuestionListProps) {
+export function QuestionList({ categories, tags: _tags, subjects, onEdit }: QuestionListProps) {
   const t = useTranslations('bancoPreguntas');
   const queryClient = useQueryClient();
 
   // Filters
   const [search, setSearch] = useState('');
+  const [subjectFilter, setSubjectFilter] = useState<string>('');
   const [categoryFilter, setCategoryFilter] = useState<string>('');
   const [typeFilter, setTypeFilter] = useState<string>('');
   const [difficultyFilter, setDifficultyFilter] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('');
+  const [authorFilter, setAuthorFilter] = useState<string>('');
   const [tagFilter, setTagFilter] = useState<string[]>([]);
   const [page, setPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
@@ -78,6 +81,11 @@ export function QuestionList({ categories, tags: _tags, onEdit }: QuestionListPr
       });
     }
 
+    // Subject filter
+    if (subjectFilter) {
+      result = result.filter(q => q.subject_id === subjectFilter);
+    }
+
     // Category filter
     if (categoryFilter) {
       result = result.filter(q => q.category_id === categoryFilter);
@@ -102,6 +110,11 @@ export function QuestionList({ categories, tags: _tags, onEdit }: QuestionListPr
       result = result.filter(q => q.status === statusFilter);
     }
 
+    // Author filter
+    if (authorFilter) {
+      result = result.filter(q => q.created_by === authorFilter);
+    }
+
     // Tag filter
     if (tagFilter.length > 0) {
       result = result.filter(q =>
@@ -120,7 +133,20 @@ export function QuestionList({ categories, tags: _tags, onEdit }: QuestionListPr
     }
 
     return result;
-  }, [allQuestions, search, categoryFilter, typeFilter, difficultyFilter, statusFilter, tagFilter, dateFrom, dateTo]);
+  }, [allQuestions, search, subjectFilter, categoryFilter, typeFilter, difficultyFilter, statusFilter, authorFilter, tagFilter, dateFrom, dateTo]);
+
+  // Extract unique authors from questions for the author filter
+  const authorOptions = useMemo(() => {
+    const authorMap = new Map<string, string>();
+    allQuestions.forEach(q => {
+      if (q.created_by && q.created_by_nombre) {
+        const fullName = [q.created_by_nombre, q.created_by_apellido, q.created_by_apellido_materno]
+          .filter(Boolean).join(' ');
+        authorMap.set(q.created_by, fullName);
+      }
+    });
+    return Array.from(authorMap.entries()).map(([id, name]) => ({ value: id, label: name }));
+  }, [allQuestions]);
 
   // Client-side pagination
   const PAGE_SIZE = 21; // 3 columns × 7 rows
@@ -159,13 +185,15 @@ export function QuestionList({ categories, tags: _tags, onEdit }: QuestionListPr
 
   const stripHtml = (html: string) => html.replace(/<[^>]*>/g, '').trim();
 
-  const hasActiveFilters = categoryFilter || typeFilter || difficultyFilter || statusFilter || tagFilter.length > 0 || dateFrom || dateTo;
+  const hasActiveFilters = subjectFilter || categoryFilter || typeFilter || difficultyFilter || statusFilter || authorFilter || tagFilter.length > 0 || dateFrom || dateTo;
 
   const clearFilters = () => {
+    setSubjectFilter('');
     setCategoryFilter('');
     setTypeFilter('');
     setDifficultyFilter('');
     setStatusFilter('');
+    setAuthorFilter('');
     setTagFilter([]);
     setDateFrom('');
     setDateTo('');
@@ -218,94 +246,132 @@ export function QuestionList({ categories, tags: _tags, onEdit }: QuestionListPr
 
       {/* Filters panel */}
       {showFilters && (
-        <Card className="p-[var(--space-md)]">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">
-                {t('filtro_categoria')}
-              </label>
-              <AppSelect
-                value={categoryFilter}
-                onChange={(v) => { setCategoryFilter(v); setPage(1); }}
-                options={[
-                  { value: '', label: t('todas_categorias') },
-                  ...categories.map(c => ({ value: c.id, label: c.name })),
-                ]}
-              />
+        <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card,var(--color-bg))] shadow-[var(--shadow-sm)] overflow-hidden">
+          {/* Active filters summary + clear */}
+          {hasActiveFilters && (
+            <div className="flex items-center justify-between px-4 py-2 bg-[color-mix(in_srgb,var(--color-brand-gold)_6%,transparent)] border-b border-[var(--color-border)]">
+              <span className="text-xs text-[var(--color-text-muted)]">
+                {filteredQuestions.length} de {allQuestions.length} preguntas
+              </span>
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="text-xs font-medium text-[var(--color-brand-gold)] hover:underline"
+              >
+                {t('limpiar_filtros')}
+              </button>
             </div>
-            <div>
-              <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">
-                {t('filtro_tipo')}
-              </label>
-              <AppSelect
-                value={typeFilter}
-                onChange={(v) => { setTypeFilter(v); setPage(1); }}
-                options={[
-                  { value: '', label: t('todos_tipos') },
-                  ...questionTypes.map(qt => ({ value: qt, label: t(`tipo_${qt}`) })),
-                ]}
-              />
+          )}
+          <div className="p-4">
+            {/* Row 1: Main filters */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              <div>
+                <label className="block text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-1">
+                  {t('materia')}
+                </label>
+                <AppSelect
+                  value={subjectFilter}
+                  onChange={(v) => { setSubjectFilter(v); setPage(1); }}
+                  options={[
+                    { value: '', label: t('todas_materias') },
+                    ...subjects.map(s => ({ value: s.id, label: s.name })),
+                  ]}
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-1">
+                  {t('filtro_categoria')}
+                </label>
+                <AppSelect
+                  value={categoryFilter}
+                  onChange={(v) => { setCategoryFilter(v); setPage(1); }}
+                  options={[
+                    { value: '', label: t('todas_categorias') },
+                    ...categories.map(c => ({ value: c.id, label: c.name })),
+                  ]}
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-1">
+                  {t('filtro_tipo')}
+                </label>
+                <AppSelect
+                  value={typeFilter}
+                  onChange={(v) => { setTypeFilter(v); setPage(1); }}
+                  options={[
+                    { value: '', label: t('todos_tipos') },
+                    ...questionTypes.map(qt => ({ value: qt, label: t(`tipo_${qt}`) })),
+                  ]}
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-1">
+                  {t('filtro_dificultad')}
+                </label>
+                <AppSelect
+                  value={difficultyFilter}
+                  onChange={(v) => { setDifficultyFilter(v); setPage(1); }}
+                  options={[
+                    { value: '', label: t('todas_dificultades') },
+                    { value: 'unrated', label: t('dificultad_sin') },
+                    ...difficulties.map(d => ({ value: d, label: t(`dificultad_${d}`) })),
+                  ]}
+                />
+              </div>
             </div>
-            <div>
-              <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">
-                {t('filtro_dificultad')}
-              </label>
-              <AppSelect
-                value={difficultyFilter}
-                onChange={(v) => { setDifficultyFilter(v); setPage(1); }}
-                options={[
-                  { value: '', label: t('todas_dificultades') },
-                  { value: 'unrated', label: t('dificultad_sin') },
-                  ...difficulties.map(d => ({ value: d, label: t(`dificultad_${d}`) })),
-                ]}
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">
-                {t('filtro_estado')}
-              </label>
-              <AppSelect
-                value={statusFilter}
-                onChange={(v) => { setStatusFilter(v); setPage(1); }}
-                options={[
-                  { value: '', label: t('todos_estados') },
-                  ...statuses.map(s => ({ value: s, label: t(`estado_${s}`) })),
-                ]}
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">
-                {t('filtro_fecha_desde')}
-              </label>
-              <input
-                type="date"
-                value={dateFrom}
-                onChange={(e) => { setDateFrom(e.target.value); setPage(1); }}
-                className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">
-                {t('filtro_fecha_hasta')}
-              </label>
-              <input
-                type="date"
-                value={dateTo}
-                onChange={(e) => { setDateTo(e.target.value); setPage(1); }}
-                className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
-              />
+            {/* Row 2: Secondary filters */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mt-3">
+              <div>
+                <label className="block text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-1">
+                  {t('filtro_estado')}
+                </label>
+                <AppSelect
+                  value={statusFilter}
+                  onChange={(v) => { setStatusFilter(v); setPage(1); }}
+                  options={[
+                    { value: '', label: t('todos_estados') },
+                    ...statuses.map(s => ({ value: s, label: t(`estado_${s}`) })),
+                  ]}
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-1">
+                  {t('filtro_autor')}
+                </label>
+                <AppSelect
+                  value={authorFilter}
+                  onChange={(v) => { setAuthorFilter(v); setPage(1); }}
+                  options={[
+                    { value: '', label: t('todos_autores') },
+                    ...authorOptions,
+                  ]}
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-1">
+                  {t('filtro_fecha_desde')}
+                </label>
+                <input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => { setDateFrom(e.target.value); setPage(1); }}
+                  className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-1">
+                  {t('filtro_fecha_hasta')}
+                </label>
+                <input
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => { setDateTo(e.target.value); setPage(1); }}
+                  className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
+                />
+              </div>
             </div>
           </div>
-          {hasActiveFilters && (
-            <button
-              type="button"
-              onClick={clearFilters}
-              className="mt-3 text-xs text-[var(--color-brand-gold)] hover:underline"
-            >
-              {t('limpiar_filtros')}
-            </button>
-          )}
-        </Card>
+        </div>
       )}
 
       {/* Questions grid */}
@@ -387,6 +453,11 @@ export function QuestionList({ categories, tags: _tags, onEdit }: QuestionListPr
                     {q.category_name && (
                       <span className="rounded-full bg-[color-mix(in_srgb,var(--color-brand-gold)_10%,transparent)] px-2 py-0.5 text-[10px] font-medium text-[var(--color-brand-gold)]">
                         {q.category_name}
+                      </span>
+                    )}
+                    {q.subject_name && (
+                      <span className="rounded-full bg-[var(--color-bg-secondary)] px-2 py-0.5 text-[10px] font-medium text-[var(--color-text-secondary)]">
+                        {q.subject_name}
                       </span>
                     )}
                     {q.status === 'draft' && (
