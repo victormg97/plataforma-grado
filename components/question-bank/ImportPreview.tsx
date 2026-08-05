@@ -98,7 +98,9 @@ export function ImportPreview({ rows, onChange, onConfirm, onCancel, loading }: 
       }
       return pairs.join('\n');
     }
-    return row.options.split(';').map((o, i) => `${String.fromCharCode(65 + i)}) ${o}`).join('\n');
+    const opts = row.options.split(';').filter(Boolean);
+    const correctIndices = row.correct ? row.correct.split(',').map(c => parseInt(c.trim()) - 1) : [];
+    return opts.map((o, i) => `${correctIndices.includes(i) ? '✓' : '  '} ${String.fromCharCode(65 + i)}) ${o}`).join('\n');
   };
 
   const handleConfirm = () => {
@@ -219,20 +221,17 @@ export function ImportPreview({ rows, onChange, onConfirm, onCancel, loading }: 
                     {row.options && (
                       <div className="mb-2 text-xs text-[var(--color-text-secondary)] space-y-0.5">
                         {formatOptions(row).split('\n').map((line, i) => (
-                          <p key={i}>{line}</p>
-                        ))}
-                        {row.correct && row.type !== 'true_false' && (
-                          <p className="text-green-600 font-medium mt-1">
-                            ✓ {t('respuesta_correcta')}: {row.correct}
+                          <p key={i} className={line.startsWith('✓') ? 'text-green-600 font-medium' : ''}>
+                            {line}
                           </p>
-                        )}
+                        ))}
                       </div>
                     )}
 
                     {/* Explanation */}
                     {row.explanation && (
                       <p className="text-xs text-[var(--color-text-muted)] italic mb-2">
-                        💡 {row.explanation.length > 120 ? row.explanation.slice(0, 120) + '...' : row.explanation}
+                        💡 {row.explanation}
                       </p>
                     )}
 
