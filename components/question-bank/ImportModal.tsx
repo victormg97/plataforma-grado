@@ -6,6 +6,7 @@ import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { X, Upload, Download, AlertCircle, CheckCircle, ClipboardCopy } from 'lucide-react';
 import { Button } from '@/components/common/Button';
+import { ImportPreview } from '@/components/question-bank/ImportPreview';
 import * as XLSX from 'xlsx';
 
 interface ImportModalProps {
@@ -192,9 +193,9 @@ export function ImportModal({ onClose, onImported }: ImportModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50" onClick={onClose}>
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
       <div
-        className="relative mx-4 w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg)] p-6 shadow-2xl"
+        className="relative mx-4 w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg)] p-6 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -346,49 +347,15 @@ A continuación las preguntas a convertir:
           </div>
         )}
 
-        {/* Preview */}
+        {/* Preview with full editing */}
         {parsedRows.length > 0 && !importResult && (
-          <div className="mt-4">
-            <h3 className="text-sm font-medium text-[var(--color-text-primary)] mb-2">
-              {t('vista_previa')} ({parsedRows.length} {parsedRows.length === 1 ? 'fila' : 'filas'})
-            </h3>
-            <div className="max-h-[300px] overflow-y-auto rounded-[var(--radius-md)] border border-[var(--color-border)]">
-              <table className="w-full text-xs">
-                <thead className="sticky top-0 bg-[var(--color-bg-secondary)]">
-                  <tr>
-                    <th className="px-2 py-1.5 text-left font-medium text-[var(--color-text-muted)]">#</th>
-                    <th className="px-2 py-1.5 text-left font-medium text-[var(--color-text-muted)]">Tipo</th>
-                    <th className="px-2 py-1.5 text-left font-medium text-[var(--color-text-muted)]">Pregunta</th>
-                    <th className="px-2 py-1.5 text-left font-medium text-[var(--color-text-muted)]">Categoría</th>
-                    <th className="px-2 py-1.5 text-left font-medium text-[var(--color-text-muted)]">Dificultad</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[var(--color-border)]">
-                  {parsedRows.slice(0, 50).map((row, i) => (
-                    <tr key={i} className="hover:bg-[var(--color-bg-secondary)]">
-                      <td className="px-2 py-1.5 text-[var(--color-text-muted)]">{i + 1}</td>
-                      <td className="px-2 py-1.5">{row.type}</td>
-                      <td className="px-2 py-1.5 max-w-[200px] truncate">{row.content}</td>
-                      <td className="px-2 py-1.5">{row.category}</td>
-                      <td className="px-2 py-1.5">{row.difficulty}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="mt-4 flex gap-3 justify-end">
-              <Button variant="ghost" onClick={() => { setParsedRows([]); setFileName(''); }}>
-                Cancelar
-              </Button>
-              <Button
-                onClick={() => importMutation.mutate()}
-                loading={importMutation.isPending}
-              >
-                {importMutation.isPending ? t('importando') : t('importar_confirmar')}
-              </Button>
-            </div>
-          </div>
+          <ImportPreview
+            rows={parsedRows}
+            onChange={setParsedRows}
+            onConfirm={() => importMutation.mutate()}
+            onCancel={() => { setParsedRows([]); setFileName(''); }}
+            loading={importMutation.isPending}
+          />
         )}
 
         {/* Import result */}
