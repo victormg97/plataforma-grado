@@ -105,6 +105,8 @@
   "importar_titulo": "Importación masiva",
   "importar_desc": "Sube un archivo Excel o CSV con las preguntas",
   "descargar_plantilla": "Descargar plantilla",
+  "copiar_prompt": "Copiar prompt para IA",
+  "prompt_copiado": "Prompt copiado al portapapeles",
   "subir_archivo": "Subir archivo",
   "arrastra_archivo": "Arrastra un archivo aquí o haz clic para seleccionar",
   "formatos_aceptados": "Formatos: .xlsx, .csv",

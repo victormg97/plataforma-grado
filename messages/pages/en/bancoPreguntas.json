@@ -105,6 +105,8 @@
   "importar_titulo": "Bulk import",
   "importar_desc": "Upload an Excel or CSV file with questions",
   "descargar_plantilla": "Download template",
+  "copiar_prompt": "Copy prompt for AI",
+  "prompt_copiado": "Prompt copied to clipboard",
   "subir_archivo": "Upload file",
   "arrastra_archivo": "Drag a file here or click to select",
   "formatos_aceptados": "Formats: .xlsx, .csv",

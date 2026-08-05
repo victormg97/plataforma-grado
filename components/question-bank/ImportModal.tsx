@@ -4,7 +4,7 @@ import { useState, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { X, Upload, Download, AlertCircle, CheckCircle } from 'lucide-react';
+import { X, Upload, Download, AlertCircle, CheckCircle, ClipboardCopy } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import * as XLSX from 'xlsx';
 
@@ -188,15 +188,61 @@ export function ImportModal({ onClose, onImported }: ImportModalProps) {
 
         <p className="text-sm text-[var(--color-text-muted)] mb-4">{t('importar_desc')}</p>
 
-        {/* Download template */}
-        <button
-          type="button"
-          onClick={downloadTemplate}
-          className="mb-4 inline-flex items-center gap-1.5 text-sm text-[var(--color-brand-gold)] hover:underline"
-        >
-          <Download className="size-4" />
-          {t('descargar_plantilla')}
-        </button>
+        {/* Actions: download template + copy prompt */}
+        <div className="flex flex-wrap gap-3 mb-4">
+          <button
+            type="button"
+            onClick={downloadTemplate}
+            className="inline-flex items-center gap-1.5 text-sm text-[var(--color-brand-gold)] hover:underline"
+          >
+            <Download className="size-4" />
+            {t('descargar_plantilla')}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              const prompt = `Eres un asistente que transforma preguntas de derecho a formato CSV/Excel para importar a un banco de preguntas.
+
+FORMATO REQUERIDO (columnas separadas por tabulación):
+tipo\tpregunta\topciones\tcorrecta\texplicacion\tmateria\tcategoria\ttags\tdificultad
+
+TIPOS VÁLIDOS:
+- single_choice: Selección única. Opciones separadas por ";". Correcta = número de la opción (1,2,3...)
+- multiple_choice: Selección múltiple. Opciones separadas por ";". Correcta = números separados por "," (ej: 1,3)
+- true_false: Verdadero/Falso. Opciones vacío. Correcta = "verdadero" o "falso"
+- open_ended: Desarrollo. Opciones = respuesta modelo (opcional). Correcta vacío.
+- fill_blank: Completar espacio. La pregunta usa ___ para el espacio. Opciones = respuestas válidas separadas por ";"
+- matching: Emparejamiento. Opciones = pares alternados "concepto1;definición1;concepto2;definición2". Correcta vacío.
+
+REGLAS:
+- Materia: clasificación general (ej: Derecho Civil, Derecho Penal). Puede quedar vacío.
+- Categoría: subcategoría dentro de la materia (ej: Contratos, Obligaciones). Puede quedar vacío.
+- Tags: palabras clave separadas por coma. Puede quedar vacío.
+- Dificultad: "easy", "medium", "hard", o vacío si no se sabe.
+- Si la respuesta correcta está resaltada/subrayada/en negrita en el texto original, identifícala.
+- Explicación: breve justificación de la respuesta correcta. Puede quedar vacío.
+
+EJEMPLO DE ENTRADA:
+2. ¿Qué establece el artículo 2465 del Código Civil?
+a) El deudor responde solo con su persona.
+b) El acreedor puede perseguir solo los bienes raíces.
+c) El deudor solo responde con los bienes donados.
+d) El acreedor puede perseguir la ejecución sobre todos los bienes del deudor, excepto los no embargables. [CORRECTA]
+
+EJEMPLO DE SALIDA:
+single_choice\t¿Qué establece el artículo 2465 del Código Civil?\tEl deudor responde solo con su persona;El acreedor puede perseguir solo los bienes raíces;El deudor solo responde con los bienes donados;El acreedor puede perseguir la ejecución sobre todos los bienes del deudor, excepto los no embargables\t4\t\tDerecho Civil\tDerecho de prenda general\tart. 2465,prenda general\t
+
+Ahora convierte las siguientes preguntas al formato descrito. Responde SOLO con las filas de datos (sin encabezados), una pregunta por línea, separadas por tabulación:`;
+              navigator.clipboard.writeText(prompt).then(() => {
+                toast.success(t('prompt_copiado'));
+              });
+            }}
+            className="inline-flex items-center gap-1.5 text-sm text-[var(--color-brand-gold)] hover:underline"
+          >
+            <ClipboardCopy className="size-4" />
+            {t('copiar_prompt')}
+          </button>
+        </div>
 
         {/* File upload area */}
         {!parsedRows.length && !importResult && (
