@@ -36,6 +36,8 @@ export function ImportModal({ onClose, onImported }: ImportModalProps) {
   const [parsedRows, setParsedRows] = useState<ParsedRow[]>([]);
   const [fileName, setFileName] = useState('');
   const [parseErrors, setParseErrors] = useState<string[]>([]);
+  const [showPasteArea, setShowPasteArea] = useState(false);
+  const [pasteText, setPasteText] = useState('');
   const [importResult, setImportResult] = useState<{
     success_count: number;
     error_count: number;
@@ -76,6 +78,56 @@ export function ImportModal({ onClose, onImported }: ImportModalProps) {
     } catch (e) {
       setParseErrors([(e as Error).message || 'Error al leer el archivo']);
     }
+  };
+
+  const handlePasteFromAI = (text: string) => {
+    setParseErrors([]);
+    const lines = text.trim().split('\n').filter(l => l.trim());
+    if (lines.length === 0) {
+      setParseErrors(['El texto está vacío']);
+      return;
+    }
+
+    // Detect separator: semicolon CSV or tab-separated
+    const firstLine = lines[0];
+    const isSemicolon = firstLine.includes(';');
+    const isTab = firstLine.includes('\t');
+    const separator = isTab ? '\t' : ';';
+
+    // Check if first line is headers (skip it)
+    const headerKeywords = ['tipo', 'pregunta', 'type', 'question'];
+    const startIdx = headerKeywords.some(k => firstLine.toLowerCase().includes(k)) ? 1 : 0;
+
+    const rows: ParsedRow[] = [];
+    for (let i = startIdx; i < lines.length; i++) {
+      const parts = lines[i].split(separator).map(p => p.trim());
+      if (parts.length < 2) continue; // skip malformed lines
+
+      // Options use | as internal separator in the prompt, convert to ; for our backend
+      const optionsRaw = (parts[2] || '').replace(/\|/g, ';');
+
+      rows.push({
+        type: parts[0] || '',
+        content: parts[1] || '',
+        options: optionsRaw,
+        correct: parts[3] || '',
+        explanation: parts[4] || '',
+        subject: parts[5] || '',
+        category: parts[6] || '',
+        tags: parts[7] || '',
+        difficulty: parts[8] || '',
+      });
+    }
+
+    if (rows.length === 0) {
+      setParseErrors(['No se pudieron detectar preguntas en el texto']);
+      return;
+    }
+
+    setFileName('pegar-desde-ia.csv');
+    setParsedRows(rows);
+    setShowPasteArea(false);
+    setPasteText('');
   };
 
   const importMutation = useMutation({
@@ -122,40 +174,12 @@ export function ImportModal({ onClose, onImported }: ImportModalProps) {
 
     // Prompt sheet for AI assistance
     const promptText = [
-      ['INSTRUCCIONES PARA IA — Conversión de preguntas a formato de importación'],
+      ['INSTRUCCIONES PARA IA — Conversión de preguntas a formato CSV'],
       [''],
-      ['Eres un asistente que transforma preguntas de derecho a formato CSV/Excel para importar a un banco de preguntas.'],
+      ['Copia este prompt, pégalo en ChatGPT/Claude/Gemini, y a continuación pega tus preguntas.'],
+      ['La IA te devolverá un CSV listo para copiar, pegar en "Pegar desde IA" en la app, y confirmar la importación.'],
       [''],
-      ['FORMATO REQUERIDO (columnas separadas por tabulación):'],
-      ['tipo | pregunta | opciones | correcta | explicacion | materia | categoria | tags | dificultad'],
-      [''],
-      ['TIPOS VÁLIDOS:'],
-      ['- single_choice: Selección única. Opciones separadas por ";". Correcta = número de la opción (1,2,3...)'],
-      ['- multiple_choice: Selección múltiple. Opciones separadas por ";". Correcta = números separados por "," (ej: 1,3)'],
-      ['- true_false: Verdadero/Falso. Opciones vacío. Correcta = "verdadero" o "falso"'],
-      ['- open_ended: Desarrollo. Opciones = respuesta modelo (opcional). Correcta vacío.'],
-      ['- fill_blank: Completar espacio. La pregunta usa ___ para el espacio. Opciones = respuestas válidas separadas por ";"'],
-      ['- matching: Emparejamiento. Opciones = pares alternados "concepto1;definición1;concepto2;definición2". Correcta vacío.'],
-      [''],
-      ['REGLAS:'],
-      ['- Materia: clasificación general (ej: Derecho Civil, Derecho Penal). Puede quedar vacío.'],
-      ['- Categoría: subcategoría dentro de la materia (ej: Contratos, Obligaciones). Puede quedar vacío.'],
-      ['- Tags: palabras clave separadas por coma. Puede quedar vacío.'],
-      ['- Dificultad: "easy", "medium", "hard", o vacío si no se sabe.'],
-      ['- Si la respuesta correcta está resaltada/subrayada/en negrita en el texto original, identifícala.'],
-      ['- Explicación: breve justificación de la respuesta correcta. Puede quedar vacío.'],
-      [''],
-      ['EJEMPLO DE ENTRADA:'],
-      ['2. ¿Qué establece el artículo 2465 del Código Civil?'],
-      ['a) El deudor responde solo con su persona.'],
-      ['b) El acreedor puede perseguir solo los bienes raíces.'],
-      ['c) El deudor solo responde con los bienes donados.'],
-      ['d) El acreedor puede perseguir la ejecución sobre todos los bienes del deudor, excepto los no embargables. [CORRECTA]'],
-      [''],
-      ['EJEMPLO DE SALIDA:'],
-      ['single_choice\t¿Qué establece el artículo 2465 del Código Civil?\tEl deudor responde solo con su persona;El acreedor puede perseguir solo los bienes raíces;El deudor solo responde con los bienes donados;El acreedor puede perseguir la ejecución sobre todos los bienes del deudor, excepto los no embargables\t4\t\tDerecho Civil\tDerecho de prenda general\tart. 2465,prenda general\t'],
-      [''],
-      ['Ahora convierte las siguientes preguntas al formato descrito. Responde SOLO con las filas de datos (sin encabezados), una pregunta por línea, separadas por tabulación:'],
+      ['El prompt está disponible con el botón "Copiar prompt para IA" en el modal de importación.'],
     ];
 
     const ws = XLSX.utils.aoa_to_sheet([headers, ...exampleRows]);
@@ -188,7 +212,7 @@ export function ImportModal({ onClose, onImported }: ImportModalProps) {
 
         <p className="text-sm text-[var(--color-text-muted)] mb-4">{t('importar_desc')}</p>
 
-        {/* Actions: download template + copy prompt */}
+        {/* Actions: download template + copy prompt + paste from AI */}
         <div className="flex flex-wrap gap-3 mb-4">
           <button
             type="button"
@@ -201,38 +225,52 @@ export function ImportModal({ onClose, onImported }: ImportModalProps) {
           <button
             type="button"
             onClick={() => {
-              const prompt = `Eres un asistente que transforma preguntas de derecho a formato CSV/Excel para importar a un banco de preguntas.
+              const prompt = `Eres un asistente que convierte preguntas de derecho al formato CSV que necesito para importarlas a mi plataforma.
 
-FORMATO REQUERIDO (columnas separadas por tabulación):
-tipo\tpregunta\topciones\tcorrecta\texplicacion\tmateria\tcategoria\ttags\tdificultad
+INSTRUCCIONES:
+1. Lee las preguntas que te paso a continuación
+2. Conviértelas al formato CSV que describo abajo
+3. Tu respuesta debe ser ÚNICAMENTE el CSV completo, empezando por la fila de encabezados
+4. Usa punto y coma (;) como separador de columnas del CSV
+5. Las opciones de respuesta se separan con el carácter | (pipe)
+6. NO uses comillas alrededor de los campos a menos que el texto contenga un ;
 
-TIPOS VÁLIDOS:
-- single_choice: Selección única. Opciones separadas por ";". Correcta = número de la opción (1,2,3...)
-- multiple_choice: Selección múltiple. Opciones separadas por ";". Correcta = números separados por "," (ej: 1,3)
-- true_false: Verdadero/Falso. Opciones vacío. Correcta = "verdadero" o "falso"
-- open_ended: Desarrollo. Opciones = respuesta modelo (opcional). Correcta vacío.
-- fill_blank: Completar espacio. La pregunta usa ___ para el espacio. Opciones = respuestas válidas separadas por ";"
-- matching: Emparejamiento. Opciones = pares alternados "concepto1;definición1;concepto2;definición2". Correcta vacío.
+ENCABEZADOS DEL CSV:
+tipo;pregunta;opciones;correcta;explicacion;materia;categoria;tags;dificultad
 
-REGLAS:
-- Materia: clasificación general (ej: Derecho Civil, Derecho Penal). Puede quedar vacío.
-- Categoría: subcategoría dentro de la materia (ej: Contratos, Obligaciones). Puede quedar vacío.
-- Tags: palabras clave separadas por coma. Puede quedar vacío.
-- Dificultad: "easy", "medium", "hard", o vacío si no se sabe.
-- Si la respuesta correcta está resaltada/subrayada/en negrita en el texto original, identifícala.
-- Explicación: breve justificación de la respuesta correcta. Puede quedar vacío.
+VALORES PARA LA COLUMNA "tipo":
+- single_choice → Selección única (una sola respuesta correcta)
+- multiple_choice → Varias respuestas correctas
+- true_false → Verdadero o Falso
+- open_ended → Pregunta de desarrollo
+- fill_blank → Completar espacio en blanco
+- matching → Emparejamiento de conceptos
 
-EJEMPLO DE ENTRADA:
-2. ¿Qué establece el artículo 2465 del Código Civil?
-a) El deudor responde solo con su persona.
-b) El acreedor puede perseguir solo los bienes raíces.
-c) El deudor solo responde con los bienes donados.
-d) El acreedor puede perseguir la ejecución sobre todos los bienes del deudor, excepto los no embargables. [CORRECTA]
+COLUMNA "opciones":
+- Para single_choice y multiple_choice: las opciones separadas por | (pipe). Ejemplo: Opción A|Opción B|Opción C|Opción D
+- Para true_false: dejar vacío
+- Para open_ended: respuesta modelo (opcional)
+- Para fill_blank: respuestas válidas separadas por |
+- Para matching: pares alternados concepto|definición|concepto|definición
 
-EJEMPLO DE SALIDA:
-single_choice\t¿Qué establece el artículo 2465 del Código Civil?\tEl deudor responde solo con su persona;El acreedor puede perseguir solo los bienes raíces;El deudor solo responde con los bienes donados;El acreedor puede perseguir la ejecución sobre todos los bienes del deudor, excepto los no embargables\t4\t\tDerecho Civil\tDerecho de prenda general\tart. 2465,prenda general\t
+COLUMNA "correcta":
+- Para single_choice: número de la opción correcta (1, 2, 3...)
+- Para multiple_choice: números separados por coma (1,3,4)
+- Para true_false: "verdadero" o "falso"
+- Para open_ended y matching: dejar vacío
 
-Ahora convierte las siguientes preguntas al formato descrito. Responde SOLO con las filas de datos (sin encabezados), una pregunta por línea, separadas por tabulación:`;
+COLUMNA "dificultad": easy, medium, hard (o vacío si no estás seguro)
+
+EJEMPLO COMPLETO:
+tipo;pregunta;opciones;correcta;explicacion;materia;categoria;tags;dificultad
+single_choice;¿Qué establece el artículo 2465 del CC?;El deudor responde solo con su persona|El acreedor persigue solo bienes raíces|El deudor responde con bienes donados|El acreedor persigue todos los bienes excepto no embargables;4;El art. 2465 establece el derecho de prenda general;Derecho Civil;Obligaciones;art. 2465,prenda general;medium
+true_false;¿La compraventa es un contrato bilateral?;;verdadero;Genera obligaciones recíprocas;Derecho Civil;Contratos;compraventa,bilateral;easy
+matching;Empareja tipos de plazos con sus características;Plazo determinado|Conocido y específico en tiempo|Plazo fatal|Se extingue irrevocablemente el derecho;;Ambos son clasificaciones doctrinarias del plazo;Derecho Civil;Obligaciones;plazos,clasificación;medium
+
+IMPORTANTE: Responde SOLO con el CSV (encabezados + datos). Sin explicaciones, sin texto adicional, sin bloques de código. Solo el CSV puro.
+
+A continuación las preguntas a convertir:
+`;
               navigator.clipboard.writeText(prompt).then(() => {
                 toast.success(t('prompt_copiado'));
               });
@@ -243,6 +281,38 @@ Ahora convierte las siguientes preguntas al formato descrito. Responde SOLO con 
             {t('copiar_prompt')}
           </button>
         </div>
+
+        {/* Paste from AI option */}
+        {!parsedRows.length && !importResult && (
+          <div className="mb-4">
+            <button
+              type="button"
+              onClick={() => setShowPasteArea(!showPasteArea)}
+              className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-brand-gold)] transition-colors"
+            >
+              {showPasteArea ? '▾' : '▸'} {t('pegar_desde_ia')}
+            </button>
+            {showPasteArea && (
+              <div className="mt-2">
+                <textarea
+                  value={pasteText}
+                  onChange={(e) => setPasteText(e.target.value)}
+                  placeholder={t('pegar_desde_ia_placeholder')}
+                  rows={6}
+                  className="w-full resize-y rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2.5 text-xs font-mono outline-none transition-colors focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
+                />
+                <button
+                  type="button"
+                  disabled={!pasteText.trim()}
+                  onClick={() => handlePasteFromAI(pasteText)}
+                  className="mt-2 inline-flex items-center gap-1.5 rounded-[var(--radius-md)] bg-[var(--color-brand-gold)] px-3 py-1.5 text-xs font-medium text-white transition-colors hover:opacity-90 disabled:opacity-40"
+                >
+                  {t('procesar_texto')}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* File upload area */}
         {!parsedRows.length && !importResult && (
