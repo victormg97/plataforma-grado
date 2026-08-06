@@ -29,35 +29,141 @@ interface ImportRow {
 }
 
 /**
- * Convert HTML to plain text preserving line breaks from block-level elements.
- * More reliable than innerText for Word paste which can merge lines.
+ * Convert HTML to plain text preserving line breaks and list structure.
+ * Uses recursive tree walk to properly handle nested lists from Google Docs/Word.
+ * Adds letter prefixes (a. b. c.) for lower-alpha lists and
+ * roman prefixes (I. II.) for upper-roman lists.
  */
 function htmlToPlainText(html: string): string {
   const div = document.createElement('div');
   div.innerHTML = html;
+  const result: string[] = [];
   
-  // Replace block elements with newlines
-  const blockTags = ['p', 'div', 'li', 'tr', 'br', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'];
-  blockTags.forEach(tag => {
-    const elements = div.getElementsByTagName(tag);
-    for (let i = elements.length - 1; i >= 0; i--) {
-      const el = elements[i];
-      if (tag === 'br') {
-        el.replaceWith('\n');
-      } else if (tag === 'tr') {
-        // Table rows: join cells with tab
-        const cells = el.querySelectorAll('td, th');
-        const cellTexts = Array.from(cells).map(c => (c.textContent || '').trim());
-        const textNode = document.createTextNode(cellTexts.join('\t') + '\n');
-        el.replaceWith(textNode);
-      } else {
-        // Add newline after block element content
-        el.insertAdjacentText('afterend', '\n');
+  function walk(node: Node, listCounter?: { type: string; count: number }) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const text = node.textContent || '';
+      if (text.trim()) result.push(text);
+      return;
+    }
+    
+    if (node.nodeType !== Node.ELEMENT_NODE) return;
+    const el = node as HTMLElement;
+    const tag = el.tagName.toLowerCase();
+    
+    // Table row: join cells with tab
+    if (tag === 'tr') {
+      const cells = el.querySelectorAll('td, th');
+      const cellTexts = Array.from(cells).map(c => (c.textContent || '').trim());
+      result.push(cellTexts.join('\t'));
+      return;
+    }
+    
+    // List items: determine prefix based on parent list style
+    if (tag === 'li') {
+      const style = el.getAttribute('style') || '';
+      const parentStyle = el.parentElement?.getAttribute('style') || '';
+      const listType = extractListType(style) || extractListType(parentStyle);
+      
+      let prefix = '';
+      if (listCounter) {
+        listCounter.count++;
+        if (listCounter.type === 'lower-alpha' || listType === 'lower-alpha') {
+          prefix = String.fromCharCode(96 + listCounter.count) + '. ';
+        } else if (listCounter.type === 'upper-roman' || listType === 'upper-roman') {
+          prefix = toRoman(listCounter.count) + '. ';
+        } else if (listCounter.type === 'decimal' || listType === 'decimal') {
+          prefix = listCounter.count + '. ';
+        }
+      }
+      
+      // Check for nested lists inside this li
+      const nestedOl = el.querySelector(':scope > ol, :scope > ul');
+      const directText = getDirectText(el);
+      
+      if (directText.trim()) {
+        result.push(prefix + directText.trim());
+      }
+      
+      // Process nested lists with their own counter
+      if (nestedOl) {
+        const nestedType = extractListType((nestedOl as HTMLElement).getAttribute('style') || '') ||
+          extractListType(nestedOl.querySelector('li')?.getAttribute('style') || '');
+        const nestedCounter = { type: nestedType || 'decimal', count: 0 };
+        for (const child of Array.from(nestedOl.children)) {
+          walk(child, nestedCounter);
+        }
+      }
+      return;
+    }
+    
+    // Ordered/unordered list: walk children with counter
+    if (tag === 'ol' || tag === 'ul') {
+      const listType = extractListType(el.getAttribute('style') || '') ||
+        extractListType(el.querySelector('li')?.getAttribute('style') || '');
+      const counter = { type: listType || 'decimal', count: 0 };
+      for (const child of Array.from(el.children)) {
+        walk(child, counter);
+      }
+      return;
+    }
+    
+    // Block elements: add newline after
+    const isBlock = ['p', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote'].includes(tag);
+    if (tag === 'br') { result.push(''); return; }
+    
+    for (const child of Array.from(el.childNodes)) {
+      walk(child, listCounter);
+    }
+    
+    if (isBlock && result.length > 0) {
+      // Ensure a line break after block elements
+      const last = result[result.length - 1];
+      if (last !== '') result.push('');
+    }
+  }
+  
+  walk(div);
+  
+  // Join and clean up multiple empty lines
+  return result
+    .map(l => l.trim())
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n');
+}
+
+function extractListType(style: string): string {
+  const match = style.match(/list-style-type:\s*([^;]+)/i);
+  if (!match) return '';
+  const type = match[1].trim().toLowerCase();
+  if (type === 'upper-roman') return 'upper-roman';
+  if (type === 'lower-alpha' || type === 'lower-latin') return 'lower-alpha';
+  if (type === 'decimal') return 'decimal';
+  return type;
+}
+
+function getDirectText(el: HTMLElement): string {
+  let text = '';
+  for (const child of Array.from(el.childNodes)) {
+    if (child.nodeType === Node.TEXT_NODE) {
+      text += child.textContent || '';
+    } else if (child.nodeType === Node.ELEMENT_NODE) {
+      const tag = (child as HTMLElement).tagName.toLowerCase();
+      if (tag !== 'ol' && tag !== 'ul') {
+        text += (child as HTMLElement).textContent || '';
       }
     }
-  });
-  
-  return div.textContent || '';
+  }
+  return text;
+}
+
+function toRoman(num: number): string {
+  const vals = [10, 9, 5, 4, 1];
+  const syms = ['X', 'IX', 'V', 'IV', 'I'];
+  let result = '';
+  for (let i = 0; i < vals.length; i++) {
+    while (num >= vals[i]) { result += syms[i]; num -= vals[i]; }
+  }
+  return result;
 }
 
 export function ImportView({ categories, tags, subjects }: ImportViewProps) {
