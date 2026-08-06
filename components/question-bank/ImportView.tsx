@@ -28,6 +28,38 @@ interface ImportRow {
   difficulty: string;
 }
 
+/**
+ * Convert HTML to plain text preserving line breaks from block-level elements.
+ * More reliable than innerText for Word paste which can merge lines.
+ */
+function htmlToPlainText(html: string): string {
+  const div = document.createElement('div');
+  div.innerHTML = html;
+  
+  // Replace block elements with newlines
+  const blockTags = ['p', 'div', 'li', 'tr', 'br', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'];
+  blockTags.forEach(tag => {
+    const elements = div.getElementsByTagName(tag);
+    for (let i = elements.length - 1; i >= 0; i--) {
+      const el = elements[i];
+      if (tag === 'br') {
+        el.replaceWith('\n');
+      } else if (tag === 'tr') {
+        // Table rows: join cells with tab
+        const cells = el.querySelectorAll('td, th');
+        const cellTexts = Array.from(cells).map(c => (c.textContent || '').trim());
+        const textNode = document.createTextNode(cellTexts.join('\t') + '\n');
+        el.replaceWith(textNode);
+      } else {
+        // Add newline after block element content
+        el.insertAdjacentText('afterend', '\n');
+      }
+    }
+  });
+  
+  return div.textContent || '';
+}
+
 export function ImportView({ categories, tags, subjects }: ImportViewProps) {
   const t = useTranslations('bancoPreguntas');
   const queryClient = useQueryClient();
@@ -78,7 +110,10 @@ export function ImportView({ categories, tags, subjects }: ImportViewProps) {
         // Get both plain text and HTML from the contentEditable div
         const editorEl = document.getElementById('import-paste-editor');
         const htmlContent = editorEl?.innerHTML || '';
-        const plainText = editorEl?.innerText || pasteContent;
+        
+        // Extract plain text from HTML preserving line breaks from block elements
+        // This is more reliable than innerText for Word paste which may merge lines
+        const plainText = htmlToPlainText(htmlContent) || editorEl?.innerText || pasteContent;
 
         const questions = parseQuestionsFromText(plainText, htmlContent);
 

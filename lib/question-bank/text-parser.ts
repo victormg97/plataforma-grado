@@ -65,7 +65,9 @@ const EXPLANATION_MIN_LENGTH = 70;
 // ─── Main entry point ────────────────────────────────────────────────────────
 
 export function parseQuestionsFromText(plainText: string, htmlText?: string): ParsedQuestion[] {
-  const lines = plainText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  // Preprocess: insert line breaks before patterns that should be on their own line
+  const normalized = preprocessText(plainText);
+  const lines = normalized.split('\n').map(l => l.trim()).filter(l => l.length > 0);
   const questions: ParsedQuestion[] = [];
   const highlightedTexts = htmlText ? extractHighlightedTexts(htmlText) : [];
 
@@ -381,6 +383,43 @@ function looksLikeExplanation(line: string): boolean {
   return false;
 }
 
+// ─── Preprocessing ───────────────────────────────────────────────────────────
+
+/**
+ * Preprocess pasted text to ensure proper line breaks.
+ * Word paste sometimes merges lines that should be separate.
+ * We insert \n before patterns like:
+ * - Numbered questions: "1." "2." etc. when preceded by text
+ * - Roman numerals: "I." "II." "III." "IV." etc.
+ * - Letter options: "a." "b." "c." etc.
+ * - Bullets: "•" 
+ * - "¿" (question start)
+ * - "Verdadero" / "Falso" as standalone answers
+ */
+function preprocessText(text: string): string {
+  let result = text;
+  
+  // Insert newline before numbered questions (e.g., "...text1. ¿Pregunta" → "...text\n1. ¿Pregunta")
+  result = result.replace(/(?<=\S)\s+(\d+[\.\)]\s*[¿A-Z])/g, '\n$1');
+  
+  // Insert newline before roman numerals (I. II. III. IV. V. VI. VII. VIII. IX. X.)
+  result = result.replace(/(?<=\S)\s+((?:I{1,3}|IV|VI{0,3}|IX|X{1,3})[\.\)]\s)/gi, '\n$1');
+  
+  // Insert newline before letter options (a. b. c. d. etc.)
+  result = result.replace(/(?<=\S)\s+([a-h][\.\)]\s)/gi, '\n$1');
+  
+  // Insert newline before bullets
+  result = result.replace(/(?<=\S)\s*([•●])\s/g, '\n$1 ');
+  
+  // Insert newline before ¿ (question start) when preceded by text
+  result = result.replace(/(?<=\S)\s+(¿)/g, '\n$1');
+  
+  // Insert newline before standalone "Verdadero" or "Falso"
+  result = result.replace(/(?<=\S)\s+(Verdadero|Falso)(?=\s|$)/gi, '\n$1');
+  
+  return result;
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 /**
@@ -417,9 +456,22 @@ function isNextQuestionStart(line: string): boolean {
 function isHighlighted(optionText: string, highlightedTexts: string[]): boolean {
   if (highlightedTexts.length === 0) return false;
   const optClean = optionText.toLowerCase().trim();
+  if (optClean.length < 3) return false;
+  
   return highlightedTexts.some(ht => {
     const htClean = ht.toLowerCase().trim();
-    return optClean.includes(htClean) || htClean.includes(optClean);
+    if (htClean.length < 3) return false;
+    
+    // Exact match
+    if (optClean === htClean) return true;
+    
+    // Near-exact: one starts/ends with the other AND similar length
+    // This prevents "Solo I y III" from matching "Solo I" or vice versa broadly
+    const lenRatio = Math.min(optClean.length, htClean.length) / Math.max(optClean.length, htClean.length);
+    if (lenRatio < 0.5) return false; // Too different in length, can't be the same option
+    
+    if (htClean.includes(optClean) || optClean.includes(htClean)) return true;
+    return false;
   });
 }
 
@@ -429,18 +481,26 @@ function extractHighlightedTexts(html: string): string[] {
   div.innerHTML = html;
 
   const highlighted: string[] = [];
+
+  // Only look for elements with explicit highlight colors (yellow, lime, etc.)
+  // Avoid matching generic background colors from Word's page/cell formatting
+  const HIGHLIGHT_COLORS_RE = /background(?:-color)?:\s*(?:yellow|#ffff00|#ff0|rgb\(\s*255,\s*255,\s*0\s*\)|#ffff[0-9a-f]{2}|lime|#00ff00)/i;
+  // Also match Word's highlight markup which uses specific named colors
+  const WORD_HIGHLIGHT_RE = /mso-highlight:\s*\w+/i;
+
   const elements = div.querySelectorAll('*');
 
   elements.forEach(el => {
     const style = el.getAttribute('style') || '';
-    const hasHighlight =
-      /background-color:\s*(?:yellow|#ff(?:ff00|f[0-9a-f]{2})|rgb\(255,\s*255,\s*0\))/i.test(style) ||
-      /background(?:-color)?:\s*(?!transparent|white|#fff|inherit|initial|none)/i.test(style) ||
-      el.tagName === 'MARK';
+    const isHighlight = HIGHLIGHT_COLORS_RE.test(style) || WORD_HIGHLIGHT_RE.test(style) || el.tagName === 'MARK';
 
-    if (hasHighlight) {
+    if (isHighlight) {
+      // Only take direct text content (not nested children which might be broader)
       const text = (el.textContent || '').trim();
-      if (text && text.length > 2) highlighted.push(text);
+      // Filter out very short or very long texts (a highlighted option is typically 5-150 chars)
+      if (text.length >= 3 && text.length <= 200) {
+        highlighted.push(text);
+      }
     }
   });
 
