@@ -176,14 +176,14 @@ export function ImportPreviewView({
       return t('respuesta_correcta_vf', { answer: label });
     }
     if (row.type === 'matching') {
-      const parts = row.options.split(';').filter(Boolean);
+      const parts = row.options.split('|||').filter(Boolean);
       const pairs: string[] = [];
       for (let i = 0; i + 1 < parts.length; i += 2) {
         pairs.push(`${parts[i]} → ${parts[i + 1]}`);
       }
       return pairs.join('\n');
     }
-    const opts = row.options.split(';').filter(Boolean);
+    const opts = row.options.split('|||').filter(Boolean);
     const correctIndices = row.correct ? row.correct.split(',').map(c => parseInt(c.trim()) - 1) : [];
     return opts.map((o, i) => `${correctIndices.includes(i) ? '✓' : '  '} ${String.fromCharCode(65 + i)}) ${o}`).join('\n');
   };
@@ -496,7 +496,7 @@ export function ImportPreviewView({
                         ) : row.type === 'matching' ? (
                           <table className="w-full border-collapse text-xs">
                             <tbody>
-                              {row.options.split(';').filter(Boolean).reduce<Array<{ left: string; right: string }>>((acc, part, idx, arr) => {
+                              {row.options.split('|||').filter(Boolean).reduce<Array<{ left: string; right: string }>>((acc, part, idx, arr) => {
                                 if (idx % 2 === 0 && idx + 1 < arr.length) {
                                   acc.push({ left: part, right: arr[idx + 1] });
                                 }
@@ -511,7 +511,7 @@ export function ImportPreviewView({
                           </table>
                         ) : (
                           <div className="space-y-0.5">
-                            {row.options.split(';').filter(Boolean).map((opt, oi) => {
+                            {row.options.split('|||').filter(Boolean).map((opt, oi) => {
                               const correctIndices = row.correct ? row.correct.split(',').map(c => parseInt(c.trim()) - 1) : [];
                               const isCorrect = correctIndices.includes(oi);
                               return (
@@ -666,7 +666,7 @@ export function ImportPreviewView({
               {currentRow.type !== 'true_false' && (
                 <div>
                   <label className="block text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-1">
-                    {t('opciones')} (separadas por ;)
+                    {t('opciones')} (separadas por |||)
                   </label>
                   <textarea
                     value={currentRow.options}

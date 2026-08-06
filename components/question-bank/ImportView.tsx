@@ -178,18 +178,19 @@ export function ImportView({ categories, tags, subjects }: ImportViewProps) {
   const [aiPasteText, setAiPasteText] = useState('');
 
   // Convert ParsedQuestion[] to ImportRow[] for the API
+  // Uses ||| as internal separator to avoid conflicts with semicolons in option text
   const convertToRows = useCallback((questions: ParsedQuestion[]): ImportRow[] => {
     return questions.map((q) => {
       let options = '';
       let correct = '';
 
       if (q.type === 'single_choice' || q.type === 'multiple_choice') {
-        options = q.options.join(';');
+        options = q.options.join('|||');
         correct = q.correctIndices.map(i => i + 1).join(',');
       } else if (q.type === 'true_false') {
         correct = q.trueFalseAnswer === true ? 'verdadero' : q.trueFalseAnswer === false ? 'falso' : '';
       } else if (q.type === 'matching') {
-        options = q.matchingPairs.map(p => `${p.left};${p.right}`).join(';');
+        options = q.matchingPairs.map(p => `${p.left}|||${p.right}`).join('|||');
       }
 
       return {
@@ -265,7 +266,7 @@ export function ImportView({ categories, tags, subjects }: ImportViewProps) {
     for (let i = startIdx; i < lines.length; i++) {
       const parts = lines[i].split(separator).map(p => p.trim());
       if (parts.length < 2) continue;
-      const optionsRaw = (parts[2] || '').replace(/\|/g, ';');
+      const optionsRaw = (parts[2] || '').replace(/\|/g, '|||');
       rows.push({
         type: parts[0] || '',
         content: parts[1] || '',

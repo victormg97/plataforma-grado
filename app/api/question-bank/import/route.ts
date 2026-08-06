@@ -6,7 +6,7 @@ import type { QbQuestionType, QbDifficulty } from '@/lib/supabase/types';
 interface ImportRow {
   type: string;
   content: string;
-  options: string; // JSON string or semicolon-separated
+  options: string; // JSON string or ||| separated (text parser) or semicolon-separated (AI CSV)
   correct: string; // indices or true/false
   explanation?: string;
   subject?: string;
@@ -239,8 +239,10 @@ function parseOptions(type: QbQuestionType, optionsRaw: string, correctRaw: stri
   switch (type) {
     case 'single_choice':
     case 'multiple_choice': {
-      const opts = optionsRaw?.split(';').map(o => o.trim()).filter(Boolean);
-      if (!opts || opts.length < 2) throw new Error('Mínimo 2 opciones separadas por ";"');
+      // Support both ||| (from text parser) and ; (from AI CSV paste) as separators
+      const separator = optionsRaw?.includes('|||') ? '|||' : ';';
+      const opts = optionsRaw?.split(separator).map(o => o.trim()).filter(Boolean);
+      if (!opts || opts.length < 2) throw new Error('Mínimo 2 opciones');
 
       const correctIndices = correctRaw?.split(',').map(c => parseInt(c.trim()) - 1) || [];
       if (correctIndices.length === 0) throw new Error('Debes indicar al menos una opción correcta');
@@ -265,15 +267,17 @@ function parseOptions(type: QbQuestionType, optionsRaw: string, correctRaw: stri
       return { model_answer: optionsRaw?.trim() || undefined };
     }
     case 'fill_blank': {
-      const answers = optionsRaw?.split(';').map(a => a.trim()).filter(Boolean);
+      const separator = optionsRaw?.includes('|||') ? '|||' : ';';
+      const answers = optionsRaw?.split(separator).map(a => a.trim()).filter(Boolean);
       if (!answers || answers.length === 0) throw new Error('Debe haber al menos una respuesta válida');
       return {
         blanks: [{ position: 0, accepted_answers: answers }],
       };
     }
     case 'matching': {
-      // Options come as alternating "concept1;definition1;concept2;definition2..."
-      const parts = optionsRaw?.split(';').map(p => p.trim()).filter(Boolean);
+      // Options come as alternating "concept1|||definition1|||concept2|||definition2..."
+      const separator = optionsRaw?.includes('|||') ? '|||' : ';';
+      const parts = optionsRaw?.split(separator).map(p => p.trim()).filter(Boolean);
       if (!parts || parts.length < 4 || parts.length % 2 !== 0) {
         throw new Error('Para emparejamiento se necesitan pares: concepto1;definición1;concepto2;definición2...');
       }
