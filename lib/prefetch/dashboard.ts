@@ -1,5 +1,6 @@
 import { QueryClient, dehydrate } from '@tanstack/react-query';
 import { createClient } from '@/lib/supabase/server';
+import { tenantConfig } from '@/config';
 import type { UserRol } from '@/lib/supabase/types';
 
 /**
@@ -109,6 +110,15 @@ export async function prefetchDashboardData(userId: string, rol: UserRol) {
       // Recursos sort preference — avoids flash of re-ordering on initial load
       queryClient.setQueryData(['recursos_sort_pref', userId], sortPrefResult.data?.sort_by ?? 'created_at_desc');
     }
+
+    // Question Bank settings — prefetch so /pagina shows the button instantly
+    const { data: qbSettings } = await supabase
+      .from('question_bank_settings')
+      .select('*')
+      .eq('tenant', tenantConfig.id)
+      .maybeSingle();
+
+    queryClient.setQueryData(['qb-settings'], qbSettings ?? { question_bank_enabled: false, tenant: tenantConfig.id });
   }
 
   if (rol === 'profesor') {

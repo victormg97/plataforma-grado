@@ -137,6 +137,7 @@
   "confirmar_reemplazo": "Algunas preguntas ya tienen valores distintos",
   "confirmar_reemplazo_desc": "Se reemplazarán los valores existentes de {field} en {count} preguntas. ¿Continuar?",
   "respuesta_correcta_vf": "Respuesta: {answer}",
+  "tooltip_volver_importar": "Volver a pegar texto (se perderán las preguntas procesadas)",
   "paginacion_mostrando": "Mostrando {from}-{to} de {total}",
   "paginacion_anterior": "Anterior",
   "paginacion_siguiente": "Siguiente",

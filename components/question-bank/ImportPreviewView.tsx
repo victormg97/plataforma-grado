@@ -10,6 +10,7 @@ import {
 import { Button } from '@/components/common/Button';
 import { AppSelect } from '@/components/common/AppSelect';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
+import { Tooltip } from '@/components/common/Tooltip';
 import { questionTypes, difficulties } from '@/lib/validations/question-bank.schema';
 import type { QbCategory, QbTag, QbSubject } from '@/lib/supabase/types';
 
@@ -226,13 +227,15 @@ export function ImportPreviewView({
       {/* Header with back + mode toggle */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={onBack}
-            className="rounded-[var(--radius-sm)] p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] transition-colors"
-          >
-            <ArrowLeft className="size-5" />
-          </button>
+          <Tooltip content={t('tooltip_volver_importar')}>
+            <button
+              type="button"
+              onClick={onBack}
+              className="rounded-[var(--radius-sm)] p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] transition-colors"
+            >
+              <ArrowLeft className="size-5" />
+            </button>
+          </Tooltip>
           <div>
             <h3 className="text-base font-semibold text-[var(--color-text-primary)]">
               {t('vista_previa')} — {selectedCount} de {totalCount} {t('preguntas_seleccionadas')}
@@ -468,23 +471,31 @@ export function ImportPreviewView({
                       </p>
                     )}
 
-                    {/* Metadata badges */}
-                    <div className="flex flex-wrap gap-1.5">
-                      {row.subject && (
-                        <span className="rounded-full bg-[var(--color-bg-secondary)] px-2 py-0.5 text-[10px] text-[var(--color-text-muted)]">
-                          {row.subject}
-                        </span>
-                      )}
-                      {row.category && (
-                        <span className="rounded-full bg-[color-mix(in_srgb,var(--color-brand-gold)_10%,transparent)] px-2 py-0.5 text-[10px] text-[var(--color-brand-gold)]">
-                          {row.category}
-                        </span>
-                      )}
-                      {row.tags && row.tags.split(',').map((tag, i) => (
-                        <span key={i} className="rounded-full bg-[var(--color-bg-secondary)] px-2 py-0.5 text-[10px] text-[var(--color-text-muted)]">
-                          {tag.trim()}
-                        </span>
-                      ))}
+                    {/* Inline metadata editing */}
+                    <div className="grid grid-cols-3 gap-2 mt-2">
+                      <AppSelect
+                        value={row.subject}
+                        onChange={(v) => updateRow(globalIdx, 'subject', v)}
+                        options={[
+                          { value: '', label: `— ${t('materia')} —` },
+                          ...subjects.map(s => ({ value: s.name, label: s.name })),
+                        ]}
+                      />
+                      <AppSelect
+                        value={row.category}
+                        onChange={(v) => updateRow(globalIdx, 'category', v)}
+                        options={[
+                          { value: '', label: `— ${t('categoria')} —` },
+                          ...categories.map(c => ({ value: c.name, label: c.name })),
+                        ]}
+                      />
+                      <input
+                        type="text"
+                        value={row.tags}
+                        onChange={(e) => updateRow(globalIdx, 'tags', e.target.value)}
+                        placeholder={t('tags')}
+                        className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-2 py-1 text-[11px] outline-none focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
+                      />
                     </div>
                   </div>
 
