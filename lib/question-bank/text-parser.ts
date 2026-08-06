@@ -142,45 +142,66 @@ function extractHighlightsOrdered(html: string): string[] {
 /**
  * Assign highlights to question options AFTER parsing structure.
  * 
- * Strategy: For each highlight (in order), find the FIRST question whose
- * options contain that highlighted text and hasn't already consumed that highlight.
- * This ensures each highlight is used exactly once and in document order.
+ * Strategy: For each highlight (in order), find the FIRST question (searching
+ * forward) whose options contain that highlighted text.
+ * 
+ * Key rules:
+ * - Each highlight is consumed exactly once.
+ * - questionSearchStart only moves forward, preventing cross-question matches.
+ * - Matching requires substantial overlap (not just substring of 3 chars).
+ * - Each option can only be marked correct once.
  */
 function assignHighlightsToQuestions(questions: ParsedQuestion[], highlights: string[]): void {
   if (highlights.length === 0) return;
 
-  // For each highlight, find its matching question+option
-  let questionSearchStart = 0; // Only search forward
+  let questionSearchStart = 0;
 
   for (const highlight of highlights) {
-    const hlLower = highlight.toLowerCase().replace(/\s+/g, ' ').trim();
+    const hlNorm = normalizeForMatch(highlight);
+    if (hlNorm.length < 3) continue;
+
     let matched = false;
 
     // Search from questionSearchStart forward
     for (let qi = questionSearchStart; qi < questions.length; qi++) {
       const q = questions[qi];
-      if (q.type !== 'single_choice' && q.type !== 'multiple_choice' && q.type !== 'open_ended') continue;
+      if (q.options.length === 0) continue;
+
+      let bestOptionIdx = -1;
+      let bestScore = 0;
 
       for (let oi = 0; oi < q.options.length; oi++) {
-        const optLower = q.options[oi].toLowerCase().replace(/\s+/g, ' ').trim();
+        // Skip already-marked options
+        if (q.correctIndices.includes(oi)) continue;
 
-        // Check if this option matches the highlight
-        if (textsMatch(optLower, hlLower)) {
-          // Mark as correct (if not already)
-          if (!q.correctIndices.includes(oi)) {
-            q.correctIndices.push(oi);
-          }
-          // Move search start to this question (highlights come in order)
-          questionSearchStart = qi;
-          matched = true;
-          break;
+        const optNorm = normalizeForMatch(q.options[oi]);
+        const score = matchScore(optNorm, hlNorm);
+
+        if (score > bestScore) {
+          bestScore = score;
+          bestOptionIdx = oi;
         }
       }
-      if (matched) break;
+
+      // Require a high confidence match (score >= 0.8)
+      if (bestOptionIdx >= 0 && bestScore >= 0.8) {
+        q.correctIndices.push(bestOptionIdx);
+        // Advance search start to this question
+        // (next highlight must be in this question or later)
+        questionSearchStart = qi;
+        matched = true;
+        break;
+      }
+    }
+
+    // If no match found, the highlight might be from a non-option element
+    // (e.g., highlighted question text, or highlighted explanation). Skip it.
+    if (!matched) {
+      // Don't advance questionSearchStart — this highlight was irrelevant
     }
   }
 
-  // After assignment, fix types: if a question has multiple correct, it's multiple_choice
+  // After assignment, fix types
   for (const q of questions) {
     if (q.options.length > 0) {
       q.type = q.correctIndices.length > 1 ? 'multiple_choice' : 'single_choice';
@@ -189,18 +210,58 @@ function assignHighlightsToQuestions(questions: ParsedQuestion[], highlights: st
 }
 
 /**
- * Check if two texts match (one contains the other, with tolerance for
- * minor differences from Word formatting).
+ * Normalize text for matching: lowercase, collapse whitespace, strip punctuation edges.
  */
-function textsMatch(a: string, b: string): boolean {
-  if (a === b) return true;
-  if (a.includes(b) || b.includes(a)) return true;
-  // Try without trailing period (Word sometimes adds/removes it)
-  const aTrim = a.replace(/\.$/, '').trim();
-  const bTrim = b.replace(/\.$/, '').trim();
-  if (aTrim === bTrim) return true;
-  if (aTrim.includes(bTrim) || bTrim.includes(aTrim)) return true;
-  return false;
+function normalizeForMatch(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .replace(/^[a-h][\.\)\-]\s*/i, '') // strip option letter prefix if present
+    .replace(/^\d+[\.\)\-]\s*/, '')    // strip number prefix if present
+    .replace(/\.$/, '')                 // strip trailing period
+    .trim();
+}
+
+/**
+ * Calculate match score between an option and a highlight.
+ * Returns a value between 0 and 1 indicating how well they match.
+ * 
+ * - Exact match = 1.0
+ * - One contains the other substantially = 0.8-0.99
+ * - Partial overlap = lower
+ */
+function matchScore(optNorm: string, hlNorm: string): number {
+  if (optNorm === hlNorm) return 1.0;
+
+  // One contains the other
+  if (optNorm.includes(hlNorm)) {
+    // The highlight is a substring of the option
+    // Score based on how much of the option the highlight covers
+    return hlNorm.length / optNorm.length;
+  }
+  if (hlNorm.includes(optNorm)) {
+    // The option is a substring of the highlight
+    // Score based on how much of the highlight the option covers
+    return optNorm.length / hlNorm.length;
+  }
+
+  // No containment — check if they share a long common prefix/suffix
+  // (handles minor differences at the edges)
+  const shorter = optNorm.length <= hlNorm.length ? optNorm : hlNorm;
+  const longer = optNorm.length > hlNorm.length ? optNorm : hlNorm;
+
+  // Check prefix match
+  let prefixLen = 0;
+  for (let i = 0; i < shorter.length && i < longer.length; i++) {
+    if (shorter[i] === longer[i]) prefixLen++;
+    else break;
+  }
+
+  if (prefixLen >= shorter.length * 0.85) {
+    return prefixLen / longer.length;
+  }
+
+  return 0;
 }
 
 // ─── Preprocessing ───────────────────────────────────────────────────────────
