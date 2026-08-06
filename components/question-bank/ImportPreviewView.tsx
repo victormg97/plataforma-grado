@@ -5,13 +5,14 @@ import { useTranslations } from 'next-intl';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
-  ChevronLeft, ChevronRight, Check, Eye, Edit, Trash2, ArrowLeft, AlertCircle, CheckCircle
+  ChevronLeft, ChevronRight, Check, Eye, Edit, Trash2, ArrowLeft, AlertCircle, CheckCircle, AlertTriangle
 } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import { AppSelect } from '@/components/common/AppSelect';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
 import { Tooltip } from '@/components/common/Tooltip';
 import { questionTypes, difficulties } from '@/lib/validations/question-bank.schema';
+import { validateImportRows } from '@/lib/question-bank/import-validation';
 import type { QbCategory, QbTag, QbSubject } from '@/lib/supabase/types';
 
 interface ImportRow {
@@ -802,17 +803,67 @@ export function ImportPreviewView({
       )}
 
       {/* Footer */}
-      <div className="flex items-center justify-between pt-4 border-t border-[var(--color-border)]">
-        <Button variant="ghost" onClick={onBack} disabled={importMutation.isPending}>
-          {t('volver_a_pegar')}
-        </Button>
-        <Button
-          onClick={() => importMutation.mutate()}
-          loading={importMutation.isPending}
-          disabled={selectedCount === 0}
-        >
-          {t('importar_confirmar')} ({selectedCount})
-        </Button>
+      <div className="space-y-3 pt-4 border-t border-[var(--color-border)]">
+        {/* Validation warnings */}
+        {(() => {
+          const validation = validateImportRows(rows, selected);
+          if (!validation.valid) {
+            return (
+              <div className="rounded-[var(--radius-md)] border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 p-3">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="size-4 mt-0.5 shrink-0 text-amber-600 dark:text-amber-400" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+                      {validation.issueCount} {validation.issueCount === 1 ? 'pregunta requiere corrección' : 'preguntas requieren corrección'}
+                    </p>
+                    <div className="mt-1.5 max-h-[120px] overflow-y-auto space-y-0.5">
+                      {validation.issues.map((issue, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => {
+                            const targetPage = Math.ceil(issue.questionNumber / PAGE_SIZE);
+                            setPage(targetPage);
+                            setEditIdx(issue.questionNumber - 1);
+                            setMode('edit');
+                          }}
+                          className="block w-full text-left text-xs text-amber-700 dark:text-amber-400 hover:underline"
+                        >
+                          → #{issue.questionNumber}: {issue.issueType === 'no_correct_answer'
+                            ? 'sin respuesta correcta'
+                            : issue.issueType === 'no_true_false_answer'
+                            ? 'sin respuesta V/F'
+                            : 'sin opciones'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+          return null;
+        })()}
+
+        <div className="flex items-center justify-between">
+          <Button variant="ghost" onClick={onBack} disabled={importMutation.isPending}>
+            {t('volver_a_pegar')}
+          </Button>
+          <Button
+            onClick={() => {
+              const validation = validateImportRows(rows, selected);
+              if (!validation.valid) {
+                toast.error(`${validation.issueCount} pregunta(s) sin respuesta. Corrígelas antes de importar.`);
+                return;
+              }
+              importMutation.mutate();
+            }}
+            loading={importMutation.isPending}
+            disabled={selectedCount === 0}
+          >
+            {t('importar_confirmar')} ({selectedCount})
+          </Button>
+        </div>
       </div>
 
       {/* Confirm replace modal */}

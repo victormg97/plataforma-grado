@@ -142,13 +142,13 @@ function extractHighlightsOrdered(html: string): string[] {
 /**
  * Assign highlights to question options AFTER parsing structure.
  * 
- * Strategy: For each highlight (in order), find the FIRST question (searching
- * forward) whose options contain that highlighted text.
+ * Strategy: For each highlight (in order), find the best matching question+option.
  * 
  * Key rules:
  * - Each highlight is consumed exactly once.
- * - questionSearchStart only moves forward, preventing cross-question matches.
- * - Matching requires substantial overlap (not just substring of 3 chars).
+ * - questionSearchStart only moves forward, preventing backward cross-question matches.
+ * - When a highlight could match the current question (which already has a correct answer)
+ *   OR the next question, prefer the next question (prevents false multiple-choice).
  * - Each option can only be marked correct once.
  */
 function assignHighlightsToQuestions(questions: ParsedQuestion[], highlights: string[]): void {
@@ -160,44 +160,15 @@ function assignHighlightsToQuestions(questions: ParsedQuestion[], highlights: st
     const hlNorm = normalizeForMatch(highlight);
     if (hlNorm.length < 3) continue;
 
-    let matched = false;
+    // Find the best match starting from questionSearchStart
+    const match = findBestMatch(questions, questionSearchStart, hlNorm);
 
-    // Search from questionSearchStart forward
-    for (let qi = questionSearchStart; qi < questions.length; qi++) {
-      const q = questions[qi];
-      if (q.options.length === 0) continue;
-
-      let bestOptionIdx = -1;
-      let bestScore = 0;
-
-      for (let oi = 0; oi < q.options.length; oi++) {
-        // Skip already-marked options
-        if (q.correctIndices.includes(oi)) continue;
-
-        const optNorm = normalizeForMatch(q.options[oi]);
-        const score = matchScore(optNorm, hlNorm);
-
-        if (score > bestScore) {
-          bestScore = score;
-          bestOptionIdx = oi;
-        }
+    if (match) {
+      const q = questions[match.qi];
+      if (!q.correctIndices.includes(match.oi)) {
+        q.correctIndices.push(match.oi);
       }
-
-      // Require a high confidence match (score >= 0.8)
-      if (bestOptionIdx >= 0 && bestScore >= 0.8) {
-        q.correctIndices.push(bestOptionIdx);
-        // Advance search start to this question
-        // (next highlight must be in this question or later)
-        questionSearchStart = qi;
-        matched = true;
-        break;
-      }
-    }
-
-    // If no match found, the highlight might be from a non-option element
-    // (e.g., highlighted question text, or highlighted explanation). Skip it.
-    if (!matched) {
-      // Don't advance questionSearchStart — this highlight was irrelevant
+      questionSearchStart = match.qi;
     }
   }
 
@@ -207,6 +178,66 @@ function assignHighlightsToQuestions(questions: ParsedQuestion[], highlights: st
       q.type = q.correctIndices.length > 1 ? 'multiple_choice' : 'single_choice';
     }
   }
+}
+
+/**
+ * Find the best question+option match for a highlight.
+ * 
+ * Priority:
+ * 1. First question (from searchStart) that has NO correct answer yet and has a match (score >= 0.8)
+ * 2. If the only match is a question that already has a correct answer, only accept
+ *    if NO subsequent question without a correct answer has a match.
+ */
+function findBestMatch(
+  questions: ParsedQuestion[],
+  searchStart: number,
+  hlNorm: string
+): { qi: number; oi: number } | null {
+  let firstMatchWithAnswer: { qi: number; oi: number; score: number } | null = null;
+  let firstMatchWithoutAnswer: { qi: number; oi: number; score: number } | null = null;
+
+  for (let qi = searchStart; qi < questions.length; qi++) {
+    const q = questions[qi];
+    if (q.options.length === 0) continue;
+
+    let bestOi = -1;
+    let bestScore = 0;
+
+    for (let oi = 0; oi < q.options.length; oi++) {
+      if (q.correctIndices.includes(oi)) continue;
+      const optNorm = normalizeForMatch(q.options[oi]);
+      const score = matchScore(optNorm, hlNorm);
+      if (score > bestScore) {
+        bestScore = score;
+        bestOi = oi;
+      }
+    }
+
+    if (bestOi >= 0 && bestScore >= 0.8) {
+      const hasCorrectAlready = q.correctIndices.length > 0;
+
+      if (!hasCorrectAlready && !firstMatchWithoutAnswer) {
+        firstMatchWithoutAnswer = { qi, oi: bestOi, score: bestScore };
+        // Found a clean match — use it immediately
+        break;
+      } else if (hasCorrectAlready && !firstMatchWithAnswer) {
+        firstMatchWithAnswer = { qi, oi: bestOi, score: bestScore };
+        // Don't break — keep looking for a question without an answer
+      }
+    }
+  }
+
+  // Prefer question without a correct answer (prevents false multiple_choice)
+  if (firstMatchWithoutAnswer) {
+    return { qi: firstMatchWithoutAnswer.qi, oi: firstMatchWithoutAnswer.oi };
+  }
+
+  // Fall back to question that already has an answer (genuine multiple_choice)
+  if (firstMatchWithAnswer) {
+    return { qi: firstMatchWithAnswer.qi, oi: firstMatchWithAnswer.oi };
+  }
+
+  return null;
 }
 
 /**
