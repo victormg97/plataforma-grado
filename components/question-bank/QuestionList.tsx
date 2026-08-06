@@ -5,14 +5,13 @@ import { useTranslations } from 'next-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
-  Search, Filter, ChevronLeft, ChevronRight, Upload, Edit, Copy, Trash2
+  Search, Filter, ChevronLeft, ChevronRight, Edit, Copy, Trash2
 } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { AppSelect } from '@/components/common/AppSelect';
 import { Tooltip } from '@/components/common/Tooltip';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
-import { ImportModal } from '@/components/question-bank/ImportModal';
 import { QuestionDetailModal } from '@/components/question-bank/QuestionDetailModal';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -41,7 +40,6 @@ export function QuestionList({ categories, tags: _tags, subjects, onEdit }: Ques
   const [tagFilter, setTagFilter] = useState<string[]>([]);
   const [page, setPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
-  const [showImport, setShowImport] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
   const [dateFrom, setDateFrom] = useState('');
@@ -236,10 +234,6 @@ export function QuestionList({ categories, tags: _tags, subjects, onEdit }: Ques
                 !
               </span>
             )}
-          </Button>
-          <Button variant="secondary" size="sm" onClick={() => setShowImport(true)}>
-            <Upload className="size-4 mr-1.5" />
-            {t('importar')}
           </Button>
         </div>
       </div>
@@ -561,19 +555,6 @@ export function QuestionList({ categories, tags: _tags, subjects, onEdit }: Ques
         confirmText={t('eliminar')}
         loading={deleteMutation.isPending}
       />
-
-      {/* Import modal */}
-      {showImport && (
-        <ImportModal
-          onClose={() => setShowImport(false)}
-          onImported={() => {
-            setShowImport(false);
-            queryClient.invalidateQueries({ queryKey: ['qb-questions-all'] });
-            queryClient.invalidateQueries({ queryKey: ['qb-categories'] });
-            queryClient.invalidateQueries({ queryKey: ['qb-tags'] });
-          }}
-        />
-      )}
     </div>
   );
 }

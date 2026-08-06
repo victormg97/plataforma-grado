@@ -505,3 +505,11 @@ div[style*="position: fixed"] > [role="toolbar"] {
   left: auto !important;
   top: auto !important;
 }
+
+/* ContentEditable placeholder for import paste area */
+[data-placeholder]:empty::before {
+  content: attr(data-placeholder);
+  color: var(--color-text-muted);
+  pointer-events: none;
+  opacity: 0.6;
+}

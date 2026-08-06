@@ -10,9 +10,10 @@ import { useUser } from '@/lib/hooks/useUser';
 import { getRolRedirectPath } from '@/lib/auth/helpers';
 import { QuestionForm } from '@/components/question-bank/QuestionForm';
 import { QuestionList } from '@/components/question-bank/QuestionList';
+import { ImportView } from '@/components/question-bank/ImportView';
 import type { QbCategory, QbTag, QbSubject } from '@/lib/supabase/types';
 
-type Tab = 'agregar' | 'guardadas';
+type Tab = 'agregar' | 'guardadas' | 'importar';
 
 export default function BancoPreguntasPage() {
   const t = useTranslations('bancoPreguntas');
@@ -117,6 +118,7 @@ export default function BancoPreguntasPage() {
   const tabs: { key: Tab; label: string }[] = [
     { key: 'agregar', label: t('tab_agregar') },
     { key: 'guardadas', label: t('tab_guardadas') },
+    { key: 'importar', label: t('tab_importar') },
   ];
 
   return (
@@ -141,7 +143,7 @@ export default function BancoPreguntasPage() {
             key={t2.key}
             onClick={() => { setTab(t2.key); setEditId(null); }}
             className={`min-h-[44px] px-4 pb-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
-              (t2.key === 'agregar' && showForm) || (t2.key === 'guardadas' && !showForm)
+              tab === t2.key || (t2.key === 'agregar' && showForm && tab === 'agregar')
                 ? 'border-[var(--color-brand-gold)] text-[var(--color-brand-gold)]'
                 : 'border-transparent text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
             }`}
@@ -152,7 +154,7 @@ export default function BancoPreguntasPage() {
       </div>
 
       <div className="mt-[var(--space-lg)]">
-        {showForm ? (
+        {showForm && tab !== 'importar' ? (
           <QuestionForm
             categories={categories}
             tags={tags}
@@ -160,6 +162,12 @@ export default function BancoPreguntasPage() {
             editId={editId}
             onSaved={() => { setTab('guardadas'); setEditId(null); }}
             onCancelEdit={() => setEditId(null)}
+          />
+        ) : tab === 'importar' ? (
+          <ImportView
+            categories={categories}
+            tags={tags}
+            subjects={subjects}
           />
         ) : (
           <QuestionList
