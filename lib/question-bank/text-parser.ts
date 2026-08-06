@@ -43,7 +43,7 @@ export interface ParsedQuestion {
 const QUESTION_NUMBER_RE = /^\d+[\.\)\-]\s*/;
 const OPTION_LETTER_RE = /^[a-h][\.\)\-]\s*/i;
 const ROMAN_RE = /^(?:I{1,3}|IV|VI{0,3}|IX|X{1,3})[\.\)\-]\s+/;
-const BULLET_RE = /^[•●]\s*/;
+const BULLET_RE = /^[•●·\-]\s*/;
 const TRUE_FALSE_RE = /verdadero\s*o\s*falso/i;
 const MATCHING_RE = /emparej/i;
 const QUESTION_START_RE = /^¿/;
@@ -55,15 +55,21 @@ const EXPLANATION_MIN_LEN = 70;
 interface LineInfo {
   text: string;
   highlighted: boolean;
-  /** Position index from the HTML (for scoped highlight matching) */
-  htmlPosition: number;
 }
 
 // ─── Main ────────────────────────────────────────────────────────────────────
 
 export function parseQuestionsFromText(plainText: string, htmlText?: string): ParsedQuestion[] {
-  // Build lines with per-line highlight info (positional, not global)
-  const lines = buildLines(plainText, htmlText);
+  // Build highlight lookup from HTML (order-based matching)
+  const highlightedTexts = htmlText ? extractHighlightsOrdered(htmlText) : [];
+
+  // Normalize text
+  const normalized = preprocessText(plainText);
+  const rawLines = normalized.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+
+  // Build lines with per-line highlight using ordered consumption
+  const lines = matchHighlightsToLines(rawLines, highlightedTexts);
+
   const questions: ParsedQuestion[] = [];
 
   let i = 0;
@@ -89,87 +95,36 @@ export function parseQuestionsFromText(plainText: string, htmlText?: string): Pa
   return questions;
 }
 
-// ─── Build lines with highlight info ─────────────────────────────────────────
+// ─── Highlight extraction ────────────────────────────────────────────────────
 
 /**
- * Build an array of {text, highlighted, htmlPosition} per line.
- * We parse the HTML to determine which lines contain highlighted spans.
- * 
- * IMPORTANT: Highlights are matched POSITIONALLY, not just by text content.
- * This prevents the bug where identical option text in different questions
- * gets incorrectly marked as correct.
+ * Extract highlighted text snippets from HTML in DOM order.
+ * Returns them in sequence so we can consume them one-by-one
+ * matching from top to bottom (prevents cross-question matches).
  */
-function buildLines(plainText: string, htmlText?: string): LineInfo[] {
-  // Normalize text: ensure line breaks before key patterns
-  const normalized = preprocessText(plainText);
-  const rawLines = normalized.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+function extractHighlightsOrdered(html: string): string[] {
+  if (typeof document === 'undefined') return [];
 
-  if (!htmlText || typeof document === 'undefined') {
-    return rawLines.map((text, idx) => ({ text, highlighted: false, htmlPosition: idx }));
-  }
-
-  // Extract highlighted segments with their position in the document
-  const highlightedSegments = extractHighlightedSegmentsPositional(htmlText);
-
-  return rawLines.map((text, idx) => {
-    // Strip any prefix (number, roman, letter) for matching against highlighted set
-    const stripped = text
-      .replace(QUESTION_NUMBER_RE, '')
-      .replace(OPTION_LETTER_RE, '')
-      .replace(ROMAN_RE, '')
-      .replace(BULLET_RE, '')
-      .trim();
-
-    // Check if THIS specific line is highlighted using positional matching
-    const highlighted = isLineHighlightedPositional(stripped, idx, highlightedSegments, rawLines);
-
-    return { text, highlighted, htmlPosition: idx };
-  });
-}
-
-/**
- * A highlighted segment with its approximate position in the document.
- */
-interface HighlightedSegment {
-  text: string;        // Lowercased text
-  charOffset: number;  // Approximate character offset in the full text
-}
-
-/**
- * Extract highlighted text segments from HTML along with their approximate
- * character position. This allows us to match highlights to the correct
- * question even when identical text appears in multiple questions.
- */
-function extractHighlightedSegmentsPositional(html: string): HighlightedSegment[] {
   const div = document.createElement('div');
   div.innerHTML = html;
-  const segments: HighlightedSegment[] = [];
+  const texts: string[] = [];
 
   const HIGHLIGHT_RE = /background(?:-color)?:\s*(?:yellow|#ffff00|#ff0|rgb\(\s*255,\s*255,\s*0\s*\))/i;
   const WORD_HIGHLIGHT_RE = /mso-highlight:\s*yellow/i;
 
-  // Walk the DOM in order, tracking character position
-  let charPos = 0;
-  
+  // Walk DOM in document order
   function walk(node: Node) {
-    if (node.nodeType === Node.TEXT_NODE) {
-      charPos += (node.textContent || '').length;
-      return;
-    }
     if (node.nodeType !== Node.ELEMENT_NODE) return;
-    
     const el = node as HTMLElement;
     const style = el.getAttribute('style') || '';
     const isHighlighted = HIGHLIGHT_RE.test(style) || WORD_HIGHLIGHT_RE.test(style) || el.tagName === 'MARK';
 
     if (isHighlighted) {
       const t = (el.textContent || '').trim();
-      if (t.length >= 3 && t.length <= 300) {
-        segments.push({ text: t.toLowerCase(), charOffset: charPos });
+      if (t.length >= 3) {
+        texts.push(t.toLowerCase());
       }
-      // Still count the characters
-      charPos += (el.textContent || '').length;
-      return; // Don't descend into highlighted children (already captured)
+      return; // Don't descend — already captured entire text
     }
 
     for (const child of Array.from(el.childNodes)) {
@@ -178,71 +133,84 @@ function extractHighlightedSegmentsPositional(html: string): HighlightedSegment[
   }
 
   walk(div);
-  return segments;
+  return texts;
 }
 
 /**
- * Determine if a specific line (by index) is highlighted.
- * Uses positional matching: finds the approximate character offset of the line
- * in the full text, then checks if a highlighted segment matches nearby.
+ * Match highlights to lines using ordered consumption with lookahead.
+ * We iterate lines top to bottom. For each line, we check if any of the
+ * next few unconsumed highlights match this line's text. We allow a small
+ * lookahead window to handle cases where a highlight doesn't match its
+ * immediately expected line (e.g., due to whitespace differences).
+ *
+ * The key constraint: highlights are consumed in order, preventing
+ * cross-question matching.
  */
-function isLineHighlightedPositional(
-  strippedText: string,
-  lineIdx: number,
-  segments: HighlightedSegment[],
-  allLines: string[]
-): boolean {
-  if (segments.length === 0) return false;
-  if (!strippedText || strippedText.length < 3) return false;
+function matchHighlightsToLines(rawLines: string[], highlights: string[]): LineInfo[] {
+  let highlightIdx = 0;
+  // Maximum highlights to look ahead when matching
+  const LOOKAHEAD = 3;
 
-  const lowerStripped = strippedText.toLowerCase();
-
-  // Calculate approximate character offset for this line
-  let charOffset = 0;
-  for (let i = 0; i < lineIdx; i++) {
-    charOffset += allLines[i].length + 1; // +1 for newline
-  }
-
-  // Find matching highlighted segments that are close to this position
-  // Allow some tolerance since HTML and plain text positions may differ
-  const tolerance = 500; // characters of tolerance
-  
-  for (const seg of segments) {
-    // Check if the highlighted text matches this line's text
-    const matches = lowerStripped.includes(seg.text) || seg.text.includes(lowerStripped);
-    if (!matches) continue;
-
-    // Check positional proximity
-    const distance = Math.abs(seg.charOffset - charOffset);
-    if (distance <= tolerance) {
-      // Mark this segment as consumed so it can't match another line
-      // (This prevents the cross-question highlight bug)
-      seg.charOffset = -99999; // "consumed"
-      return true;
+  return rawLines.map(text => {
+    if (highlightIdx >= highlights.length) {
+      return { text, highlighted: false };
     }
-  }
 
-  return false;
+    // Strip prefixes for matching
+    const stripped = text
+      .replace(QUESTION_NUMBER_RE, '')
+      .replace(OPTION_LETTER_RE, '')
+      .replace(ROMAN_RE, '')
+      .replace(BULLET_RE, '')
+      .trim()
+      .toLowerCase();
+
+    if (!stripped || stripped.length < 3) {
+      return { text, highlighted: false };
+    }
+
+    const normalizedStripped = stripped.replace(/\s+/g, ' ');
+
+    // Check current and next few highlights (lookahead)
+    for (let offset = 0; offset < LOOKAHEAD && (highlightIdx + offset) < highlights.length; offset++) {
+      const candidate = highlights[highlightIdx + offset];
+      const normalizedCandidate = candidate.replace(/\s+/g, ' ');
+
+      // Match if line contains the highlight or highlight contains the line
+      if (
+        normalizedStripped.includes(normalizedCandidate) ||
+        normalizedCandidate.includes(normalizedStripped)
+      ) {
+        // Consume ALL highlights up to and including this one
+        highlightIdx = highlightIdx + offset + 1;
+        return { text, highlighted: true };
+      }
+    }
+
+    return { text, highlighted: false };
+  });
 }
+
+// ─── Preprocessing ───────────────────────────────────────────────────────────
 
 function preprocessText(text: string): string {
   let r = text;
-  // Newline before numbered questions (e.g., "1. ¿" or "1. Los")
-  // But only when it looks like a NEW question number (preceded by non-newline content)
+  // Newline before numbered questions (e.g., "1. ¿" or "1. Los" or "1. Según")
+  // Only when preceded by non-newline content
   r = r.replace(/([^\n])\s+(\d+[\.\)]\s*(?:¿|[A-Z]))/g, '$1\n$2');
-  // Newline before roman numerals (I. II. III. IV.) only when clearly an assertion
-  // NOT when it's part of a sentence (e.g., "Solo I y II")
-  r = r.replace(/([^\n])\s+((?:I{1,3}|IV|VI{0,3}|IX|X{1,3})[\.\)]\s{2,})/g, '$1\n$2');
-  // Newline before letter options (a. b. c. etc.) — only with clear spacing
-  r = r.replace(/([^\n])\s+([a-h][\.\)]\s)/gi, '$1\n$2');
-  // Newline before bullets
-  r = r.replace(/([^\n])\s*([•●])\s/g, '$1\n$2 ');
-  // DO NOT add newline before ¿ in the middle of a sentence!
-  // Only add newline before ¿ if it starts a new numbered question OR is at
-  // the beginning after another complete sentence (ends with punctuation + space)
-  r = r.replace(/([.!?])\s+(¿)/g, '$1\n$2');
-  // Newline before Verdadero/Falso
-  r = r.replace(/([^\n])\s+(Verdadero|Falso)(\s|$)/gi, '$1\n$2$3');
+  // Newline before roman numerals ONLY when they appear with substantial spacing
+  // (distinguishes "I.  Afirmación" from "Solo I y II")
+  r = r.replace(/([^\n])\s{2,}((?:I{1,3}|IV|VI{0,3}|IX|X{1,3})[\.\)]\s{2,})/g, '$1\n$2');
+  // Newline before letter options (a. b. c. etc.) — even with minimal spacing
+  // This handles cases where text is "...text. b) Option" or "...text  b. Option"
+  r = r.replace(/([^\n])(\s+)([a-h][\.\)]\s)/gi, '$1\n$3');
+  // Also handle case where option letter comes after a period: "text.a) " or "text. a) "
+  r = r.replace(/([.?!])(\s*)([a-h][\.\)]\s)/gi, '$1\n$3');
+  // Newline before bullets (•, ●, ·, -)
+  r = r.replace(/([^\n])\s*([•●·])\s/g, '$1\n$2 ');
+  // DO NOT split before ¿ in the middle of a sentence.
+  // Newline before Verdadero/Falso standing alone
+  r = r.replace(/([^\n])\s+(Verdadero|Falso)\s*$/gim, '$1\n$2');
   return r;
 }
 
@@ -271,7 +239,12 @@ function parseChoice(
     const { text, highlighted } = line;
 
     if (doneOptions) {
-      explanationLines.push(BULLET_RE.test(text) ? text.replace(BULLET_RE, '').trim() : text);
+      // Preserve bullet formatting in explanations
+      if (BULLET_RE.test(text)) {
+        explanationLines.push('• ' + text.replace(BULLET_RE, '').trim());
+      } else {
+        explanationLines.push(text);
+      }
       continue;
     }
 
@@ -294,7 +267,7 @@ function parseChoice(
     // Bullet → explanation starts
     if (BULLET_RE.test(text)) {
       doneOptions = true;
-      explanationLines.push(text.replace(BULLET_RE, '').trim());
+      explanationLines.push('• ' + text.replace(BULLET_RE, '').trim());
       continue;
     }
 
@@ -306,7 +279,6 @@ function parseChoice(
     }
 
     // No options yet, no roman, no letter prefix → could be unprefixed option or assertion
-    // Use heuristic: if it's long, it's explanation; if short, it's an option
     if (text.length > EXPLANATION_MIN_LEN && looksLikeExplanation(text)) {
       doneOptions = true;
       explanationLines.push(text);
@@ -324,13 +296,31 @@ function parseChoice(
     content = content + '\n' + romanLines.join('\n');
   }
 
-  // If only 1 correct answer → single_choice; if multiple → multiple_choice
+  // Clean up explanation: remove trailing "N." that is actually the next question number
+  while (explanationLines.length > 0) {
+    const last = explanationLines[explanationLines.length - 1];
+    if (/^\d+\.\s*$/.test(last)) {
+      explanationLines.pop();
+    } else {
+      break;
+    }
+  }
+
+  // Determine type
   const type = options.length > 0
     ? (correctIndices.length > 1 ? 'multiple_choice' : 'single_choice')
     : 'open_ended';
 
   return {
-    question: { type, content, options, correctIndices, matchingPairs: [], trueFalseAnswer: null, explanation: explanationLines.join('\n') },
+    question: {
+      type,
+      content,
+      options,
+      correctIndices,
+      matchingPairs: [],
+      trueFalseAnswer: null,
+      explanation: explanationLines.join('\n'),
+    },
     nextIndex: i,
   };
 }
@@ -358,9 +348,14 @@ function parseTrueFalse(lines: LineInfo[], startIdx: number, content: string): {
     if (isQuestionStart(text)) break;
     if (/^verdadero$/i.test(text)) { answer = true; i++; continue; }
     if (/^falso$/i.test(text)) { answer = false; i++; continue; }
-    if (BULLET_RE.test(text)) { explanationLines.push(text.replace(BULLET_RE, '').trim()); i++; continue; }
+    if (BULLET_RE.test(text)) { explanationLines.push('• ' + text.replace(BULLET_RE, '').trim()); i++; continue; }
     if (answer !== null) { explanationLines.push(text); i++; continue; }
     i++;
+  }
+
+  // Clean trailing question numbers
+  while (explanationLines.length > 0 && /^\d+\.\s*$/.test(explanationLines[explanationLines.length - 1])) {
+    explanationLines.pop();
   }
 
   return {
@@ -385,7 +380,7 @@ function parseMatching(lines: LineInfo[], startIdx: number, content: string): { 
       const parts = text.split('\t').map(p => p.trim()).filter(Boolean);
       if (parts.length >= 2) { pairs.push({ left: parts[0], right: parts[1] }); i++; continue; }
     }
-    if (BULLET_RE.test(text)) { parsingExplanation = true; explanationLines.push(text.replace(BULLET_RE, '').trim()); i++; continue; }
+    if (BULLET_RE.test(text)) { parsingExplanation = true; explanationLines.push('• ' + text.replace(BULLET_RE, '').trim()); i++; continue; }
     if (parsingExplanation) { explanationLines.push(text); i++; continue; }
 
     if (i + 1 < lines.length) {
@@ -395,6 +390,11 @@ function parseMatching(lines: LineInfo[], startIdx: number, content: string): { 
       }
     }
     i++;
+  }
+
+  // Clean trailing question numbers
+  while (explanationLines.length > 0 && /^\d+\.\s*$/.test(explanationLines[explanationLines.length - 1])) {
+    explanationLines.pop();
   }
 
   return {
@@ -409,16 +409,15 @@ function extractQuestionText(line: string): string | null {
   const isNumbered = QUESTION_NUMBER_RE.test(line);
   const stripped = isNumbered ? line.replace(QUESTION_NUMBER_RE, '').trim() : line;
 
-  // A numbered line is a question if it contains "?" OR ends with ":" OR is long enough
-  // The ENTIRE stripped text (including text before "¿") is the question content.
+  // A numbered line is a question if it contains "?" OR ends with ":" OR is reasonably long
   if (isNumbered && (stripped.includes('?') || stripped.endsWith(':') || stripped.length > 20)) return stripped;
-  
+
   // A non-numbered line starting with ¿ and containing ? is a question
   if (QUESTION_START_RE.test(line) && line.includes('?')) return line;
-  
+
   // Matching keyword
   if (MATCHING_RE.test(line) && (line.includes('.') || line.includes('?'))) return line;
-  
+
   return null;
 }
 

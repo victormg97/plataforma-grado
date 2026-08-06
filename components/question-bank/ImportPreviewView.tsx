@@ -482,9 +482,9 @@ export function ImportPreviewView({
                       )}
                     </div>
 
-                    <p className="text-sm font-medium text-[var(--color-text-primary)] mb-2">
+                    <div className="text-sm font-medium text-[var(--color-text-primary)] mb-2 whitespace-pre-line">
                       {row.content}
-                    </p>
+                    </div>
 
                     {/* Options / answer preview */}
                     {(row.options || row.type === 'true_false') && (
@@ -527,9 +527,9 @@ export function ImportPreviewView({
 
                     {/* Explanation */}
                     {row.explanation && (
-                      <p className="text-xs text-[var(--color-text-muted)] italic mb-2 line-clamp-3">
+                      <div className="text-xs text-[var(--color-text-muted)] italic mb-2 whitespace-pre-line">
                         💡 {row.explanation}
-                      </p>
+                      </div>
                     )}
 
                     {/* Inline metadata editing */}
