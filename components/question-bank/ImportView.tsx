@@ -112,10 +112,15 @@ export function ImportView({ categories, tags, subjects }: ImportViewProps) {
         const htmlContent = editorEl?.innerHTML || '';
         
         // Extract plain text from HTML preserving line breaks from block elements
-        // This is more reliable than innerText for Word paste which may merge lines
         const plainText = htmlToPlainText(htmlContent) || editorEl?.innerText || pasteContent;
 
+        // DEBUG: log what the parser receives
+        console.log('[ImportView] plainText first 2000 chars:', plainText.slice(0, 2000));
+        console.log('[ImportView] htmlContent first 2000 chars:', htmlContent.slice(0, 2000));
+
         const questions = parseQuestionsFromText(plainText, htmlContent);
+
+        console.log('[ImportView] Parsed questions:', JSON.stringify(questions.slice(0, 3), null, 2));
 
         if (questions.length === 0) {
           toast.error(t('sin_preguntas_detectadas'));
