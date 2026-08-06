@@ -8,9 +8,9 @@ import {
   ChevronLeft, ChevronRight, Check, Eye, Edit, Trash2, ArrowLeft, AlertCircle, CheckCircle, AlertTriangle
 } from 'lucide-react';
 import { Button } from '@/components/common/Button';
-import { AppSelect } from '@/components/common/AppSelect';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
 import { Tooltip } from '@/components/common/Tooltip';
+import { ImportQuestionEditor } from '@/components/question-bank/ImportQuestionEditor';
 import { questionTypes, difficulties } from '@/lib/validations/question-bank.schema';
 import { validateImportRows } from '@/lib/question-bank/import-validation';
 import type { QbCategory, QbTag, QbSubject } from '@/lib/supabase/types';
@@ -614,157 +614,18 @@ export function ImportPreviewView({
           })}
         </div>
       ) : (
-        /* Edit mode: one question at a time */
+        /* Edit mode: one question at a time using ImportQuestionEditor */
         currentRow && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <button
-                type="button"
-                disabled={editIdx === 0}
-                onClick={() => setEditIdx(i => i - 1)}
-                className="rounded-[var(--radius-md)] p-2 text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] disabled:opacity-30 transition-colors"
-              >
-                <ChevronLeft className="size-5" />
-              </button>
-              <span className="text-sm font-medium text-[var(--color-text-primary)]">
-                {t('pregunta_n', { n: editIdx + 1, total: totalCount })}
-              </span>
-              <button
-                type="button"
-                disabled={editIdx === rows.length - 1}
-                onClick={() => setEditIdx(i => i + 1)}
-                className="rounded-[var(--radius-md)] p-2 text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] disabled:opacity-30 transition-colors"
-              >
-                <ChevronRight className="size-5" />
-              </button>
-            </div>
-
-            {/* Edit fields */}
-            <div className="space-y-3">
-              <div>
-                <label className="block text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-1">
-                  {t('tipo_pregunta')}
-                </label>
-                <AppSelect
-                  value={currentRow.type}
-                  onChange={(v) => updateRow(editIdx, 'type', v)}
-                  options={questionTypes.map(qt => ({ value: qt, label: t(`tipo_${qt}`) }))}
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-1">
-                  {t('enunciado')}
-                </label>
-                <textarea
-                  value={currentRow.content}
-                  onChange={(e) => updateRow(editIdx, 'content', e.target.value)}
-                  rows={3}
-                  className="w-full resize-y rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm outline-none focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
-                />
-              </div>
-
-              {currentRow.type !== 'true_false' && (
-                <div>
-                  <label className="block text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-1">
-                    {t('opciones')} (separadas por |||)
-                  </label>
-                  <textarea
-                    value={currentRow.options}
-                    onChange={(e) => updateRow(editIdx, 'options', e.target.value)}
-                    rows={3}
-                    className="w-full resize-y rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm font-mono outline-none focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
-                  />
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-1">
-                    {t('respuesta_correcta')}
-                  </label>
-                  <input
-                    type="text"
-                    value={currentRow.correct}
-                    onChange={(e) => updateRow(editIdx, 'correct', e.target.value)}
-                    className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm outline-none focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-1">
-                    {t('dificultad')}
-                  </label>
-                  <AppSelect
-                    value={currentRow.difficulty}
-                    onChange={(v) => updateRow(editIdx, 'difficulty', v)}
-                    options={[
-                      { value: '', label: t('dificultad_sin') },
-                      ...difficulties.map(d => ({ value: d, label: t(`dificultad_${d}`) })),
-                    ]}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-1">
-                  {t('explicacion')}
-                </label>
-                <textarea
-                  value={currentRow.explanation}
-                  onChange={(e) => updateRow(editIdx, 'explanation', e.target.value)}
-                  rows={3}
-                  className="w-full resize-y rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm outline-none focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
-                />
-              </div>
-
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-1">
-                    {t('materia')}
-                  </label>
-                  <input
-                    type="text"
-                    list="edit-subject-list"
-                    value={currentRow.subject}
-                    onChange={(e) => updateRow(editIdx, 'subject', e.target.value)}
-                    placeholder={t('materia_placeholder')}
-                    className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm outline-none focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
-                  />
-                  <datalist id="edit-subject-list">
-                    {subjects.map(s => <option key={s.id} value={s.name} />)}
-                  </datalist>
-                </div>
-                <div>
-                  <label className="block text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-1">
-                    {t('categoria')}
-                  </label>
-                  <input
-                    type="text"
-                    list="edit-category-list"
-                    value={currentRow.category}
-                    onChange={(e) => updateRow(editIdx, 'category', e.target.value)}
-                    placeholder={t('categoria_placeholder')}
-                    className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm outline-none focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
-                  />
-                  <datalist id="edit-category-list">
-                    {categories.map(c => <option key={c.id} value={c.name} />)}
-                  </datalist>
-                </div>
-                <div>
-                  <label className="block text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-1">
-                    {t('tags')}
-                  </label>
-                  <input
-                    type="text"
-                    value={currentRow.tags}
-                    onChange={(e) => updateRow(editIdx, 'tags', e.target.value)}
-                    placeholder={t('tags_placeholder')}
-                    className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm outline-none focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
+          <ImportQuestionEditor
+            row={currentRow}
+            index={editIdx}
+            total={totalCount}
+            onChange={(field, value) => updateRow(editIdx, field, value)}
+            onPrev={() => setEditIdx(i => i - 1)}
+            onNext={() => setEditIdx(i => i + 1)}
+            categories={categories}
+            subjects={subjects}
+          />
         )
       )}
 
