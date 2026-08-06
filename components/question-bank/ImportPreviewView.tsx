@@ -282,14 +282,19 @@ export function ImportPreviewView({
                 {t('materia')}
               </label>
               <div className="flex gap-1">
-                <AppSelect
-                  value={bulkSubject}
-                  onChange={setBulkSubject}
-                  options={[
-                    { value: '', label: '—' },
-                    ...subjects.map(s => ({ value: s.name, label: s.name })),
-                  ]}
-                />
+                <div className="flex-1 relative">
+                  <input
+                    type="text"
+                    list="bulk-subject-list"
+                    value={bulkSubject}
+                    onChange={(e) => setBulkSubject(e.target.value)}
+                    placeholder={t('materia_placeholder')}
+                    className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-2 py-1.5 text-xs outline-none focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
+                  />
+                  <datalist id="bulk-subject-list">
+                    {subjects.map(s => <option key={s.id} value={s.name} />)}
+                  </datalist>
+                </div>
                 {bulkSubject && (
                   <button
                     type="button"
@@ -306,14 +311,19 @@ export function ImportPreviewView({
                 {t('categoria')}
               </label>
               <div className="flex gap-1">
-                <AppSelect
-                  value={bulkCategory}
-                  onChange={setBulkCategory}
-                  options={[
-                    { value: '', label: '—' },
-                    ...categories.map(c => ({ value: c.name, label: c.name })),
-                  ]}
-                />
+                <div className="flex-1 relative">
+                  <input
+                    type="text"
+                    list="bulk-category-list"
+                    value={bulkCategory}
+                    onChange={(e) => setBulkCategory(e.target.value)}
+                    placeholder={t('categoria_placeholder')}
+                    className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-2 py-1.5 text-xs outline-none focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
+                  />
+                  <datalist id="bulk-category-list">
+                    {categories.map(c => <option key={c.id} value={c.name} />)}
+                  </datalist>
+                </div>
                 {bulkCategory && (
                   <button
                     type="button"
@@ -354,6 +364,17 @@ export function ImportPreviewView({
               </label>
               <div className="flex gap-1">
                 <div className="flex rounded-[var(--radius-md)] border border-[var(--color-border)] overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => setBulkDifficulty(prev => prev === 'none' ? '' : 'none')}
+                    className={`px-2.5 py-1.5 text-[10px] font-medium transition-colors ${
+                      bulkDifficulty === 'none'
+                        ? 'bg-[var(--color-brand-gold)] text-white'
+                        : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]'
+                    }`}
+                  >
+                    {t('dificultad_sin')}
+                  </button>
                   {difficulties.map(d => (
                     <button
                       key={d}
@@ -372,7 +393,19 @@ export function ImportPreviewView({
                 {bulkDifficulty && (
                   <button
                     type="button"
-                    onClick={() => applyBulkField('difficulty', bulkDifficulty)}
+                    onClick={() => {
+                      if (bulkDifficulty === 'none') {
+                        // Apply empty string = clear difficulty
+                        const selectedIndices = Array.from(selected);
+                        const newRows = [...rows];
+                        selectedIndices.forEach(idx => { newRows[idx] = { ...newRows[idx], difficulty: '' }; });
+                        onChange(newRows);
+                        toast.success(t('aplicar_a_seleccionadas'));
+                        setBulkDifficulty('');
+                      } else {
+                        applyBulkField('difficulty', bulkDifficulty);
+                      }
+                    }}
                     className="shrink-0 rounded-[var(--radius-sm)] bg-[var(--color-brand-gold)] p-1.5 text-white hover:opacity-90 transition-opacity"
                   >
                     <Check className="size-3.5" />
@@ -455,12 +488,40 @@ export function ImportPreviewView({
 
                     {/* Options / answer preview */}
                     {(row.options || row.type === 'true_false') && (
-                      <div className="mb-2 text-xs text-[var(--color-text-secondary)] space-y-0.5">
-                        {formatOptions(row).split('\n').map((line, i) => (
-                          <p key={i} className={line.startsWith('✓') ? 'text-green-600 dark:text-green-400 font-medium' : ''}>
-                            {line}
+                      <div className="mb-2 text-xs text-[var(--color-text-secondary)]">
+                        {row.type === 'true_false' ? (
+                          <p className="font-medium">
+                            {formatOptions(row)}
                           </p>
-                        ))}
+                        ) : row.type === 'matching' ? (
+                          <table className="w-full border-collapse text-xs">
+                            <tbody>
+                              {row.options.split(';').filter(Boolean).reduce<Array<{ left: string; right: string }>>((acc, part, idx, arr) => {
+                                if (idx % 2 === 0 && idx + 1 < arr.length) {
+                                  acc.push({ left: part, right: arr[idx + 1] });
+                                }
+                                return acc;
+                              }, []).map((pair, pi) => (
+                                <tr key={pi} className="border-b border-[var(--color-border)] last:border-b-0">
+                                  <td className="py-1 pr-3 font-medium text-[var(--color-text-primary)]">{pair.left}</td>
+                                  <td className="py-1 text-[var(--color-text-secondary)]">{pair.right}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        ) : (
+                          <div className="space-y-0.5">
+                            {row.options.split(';').filter(Boolean).map((opt, oi) => {
+                              const correctIndices = row.correct ? row.correct.split(',').map(c => parseInt(c.trim()) - 1) : [];
+                              const isCorrect = correctIndices.includes(oi);
+                              return (
+                                <p key={oi} className={isCorrect ? 'text-green-600 dark:text-green-400 font-medium' : ''}>
+                                  {isCorrect ? '✓ ' : '  '}{String.fromCharCode(65 + oi)}) {opt}
+                                </p>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -473,29 +534,59 @@ export function ImportPreviewView({
 
                     {/* Inline metadata editing */}
                     <div className="grid grid-cols-3 gap-2 mt-2">
-                      <AppSelect
-                        value={row.subject}
-                        onChange={(v) => updateRow(globalIdx, 'subject', v)}
-                        options={[
-                          { value: '', label: `— ${t('materia')} —` },
-                          ...subjects.map(s => ({ value: s.name, label: s.name })),
-                        ]}
-                      />
-                      <AppSelect
-                        value={row.category}
-                        onChange={(v) => updateRow(globalIdx, 'category', v)}
-                        options={[
-                          { value: '', label: `— ${t('categoria')} —` },
-                          ...categories.map(c => ({ value: c.name, label: c.name })),
-                        ]}
-                      />
+                      <div className="relative">
+                        <input
+                          type="text"
+                          list={`subject-list-${globalIdx}`}
+                          value={row.subject}
+                          onChange={(e) => updateRow(globalIdx, 'subject', e.target.value)}
+                          placeholder={t('materia_placeholder')}
+                          className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-2 py-1.5 text-[11px] outline-none focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
+                        />
+                        <datalist id={`subject-list-${globalIdx}`}>
+                          {subjects.map(s => <option key={s.id} value={s.name} />)}
+                        </datalist>
+                      </div>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          list={`category-list-${globalIdx}`}
+                          value={row.category}
+                          onChange={(e) => updateRow(globalIdx, 'category', e.target.value)}
+                          placeholder={t('categoria_placeholder')}
+                          className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-2 py-1.5 text-[11px] outline-none focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
+                        />
+                        <datalist id={`category-list-${globalIdx}`}>
+                          {categories.map(c => <option key={c.id} value={c.name} />)}
+                        </datalist>
+                      </div>
                       <input
                         type="text"
                         value={row.tags}
                         onChange={(e) => updateRow(globalIdx, 'tags', e.target.value)}
-                        placeholder={t('tags')}
-                        className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-2 py-1 text-[11px] outline-none focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
+                        placeholder={t('tags_placeholder')}
+                        className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-2 py-1.5 text-[11px] outline-none focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
                       />
+                    </div>
+                    {/* Difficulty toggle per question */}
+                    <div className="flex items-center gap-1 mt-2">
+                      <span className="text-[10px] text-[var(--color-text-muted)] mr-1">{t('dificultad')}:</span>
+                      <div className="flex rounded-[var(--radius-md)] border border-[var(--color-border)] overflow-hidden">
+                        {['', ...difficulties].map(d => (
+                          <button
+                            key={d}
+                            type="button"
+                            onClick={() => updateRow(globalIdx, 'difficulty', d)}
+                            className={`px-2 py-1 text-[10px] font-medium transition-colors ${
+                              row.difficulty === d
+                                ? 'bg-[var(--color-brand-gold)] text-white'
+                                : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]'
+                            }`}
+                          >
+                            {d ? t(`dificultad_${d}`) : t('dificultad_sin')}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
 
@@ -630,27 +721,33 @@ export function ImportPreviewView({
                   <label className="block text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-1">
                     {t('materia')}
                   </label>
-                  <AppSelect
+                  <input
+                    type="text"
+                    list="edit-subject-list"
                     value={currentRow.subject}
-                    onChange={(v) => updateRow(editIdx, 'subject', v)}
-                    options={[
-                      { value: '', label: '—' },
-                      ...subjects.map(s => ({ value: s.name, label: s.name })),
-                    ]}
+                    onChange={(e) => updateRow(editIdx, 'subject', e.target.value)}
+                    placeholder={t('materia_placeholder')}
+                    className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm outline-none focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
                   />
+                  <datalist id="edit-subject-list">
+                    {subjects.map(s => <option key={s.id} value={s.name} />)}
+                  </datalist>
                 </div>
                 <div>
                   <label className="block text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-1">
                     {t('categoria')}
                   </label>
-                  <AppSelect
+                  <input
+                    type="text"
+                    list="edit-category-list"
                     value={currentRow.category}
-                    onChange={(v) => updateRow(editIdx, 'category', v)}
-                    options={[
-                      { value: '', label: '—' },
-                      ...categories.map(c => ({ value: c.name, label: c.name })),
-                    ]}
+                    onChange={(e) => updateRow(editIdx, 'category', e.target.value)}
+                    placeholder={t('categoria_placeholder')}
+                    className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm outline-none focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
                   />
+                  <datalist id="edit-category-list">
+                    {categories.map(c => <option key={c.id} value={c.name} />)}
+                  </datalist>
                 </div>
                 <div>
                   <label className="block text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-1">
@@ -660,7 +757,7 @@ export function ImportPreviewView({
                     type="text"
                     value={currentRow.tags}
                     onChange={(e) => updateRow(editIdx, 'tags', e.target.value)}
-                    placeholder="tag1, tag2"
+                    placeholder={t('tags_placeholder')}
                     className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm outline-none focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
                   />
                 </div>

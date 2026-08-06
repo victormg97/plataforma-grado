@@ -7,6 +7,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft } from 'lucide-react';
 import { PageHeader } from '@/components/common/PageHeader';
 import { useUser } from '@/lib/hooks/useUser';
+import { useQueryParam } from '@/lib/hooks/useQueryParam';
 import { getRolRedirectPath } from '@/lib/auth/helpers';
 import { QuestionForm } from '@/components/question-bank/QuestionForm';
 import { QuestionList } from '@/components/question-bank/QuestionList';
@@ -15,14 +16,21 @@ import type { QbCategory, QbTag, QbSubject } from '@/lib/supabase/types';
 
 type Tab = 'agregar' | 'guardadas' | 'importar';
 
+const VALID_TABS: Tab[] = ['agregar', 'guardadas', 'importar'];
+
 export default function BancoPreguntasPage() {
   const t = useTranslations('bancoPreguntas');
   const router = useRouter();
   const { user } = useUser();
 
-  // Use local state for tabs instead of URL params to avoid
-  // Next.js router transitions blocking when heavy components re-render.
-  const [tab, setTab] = useState<Tab>('agregar');
+  // Tab state driven by URL query param: ?vista=agregar|guardadas|importar
+  const [vistaParam, setVistaParam] = useQueryParam('vista');
+  const tab: Tab = VALID_TABS.includes(vistaParam as Tab) ? (vistaParam as Tab) : 'agregar';
+  const setTab = (newTab: Tab) => {
+    setVistaParam(newTab === 'agregar' ? null : newTab);
+    setEditId(null);
+  };
+
   const [editId, setEditId] = useState<string | null>(null);
 
   // Guard: only admin
@@ -141,7 +149,7 @@ export default function BancoPreguntasPage() {
         {tabs.map((t2) => (
           <button
             key={t2.key}
-            onClick={() => { setTab(t2.key); setEditId(null); }}
+            onClick={() => setTab(t2.key)}
             className={`min-h-[44px] px-4 pb-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
               tab === t2.key || (t2.key === 'agregar' && showForm && tab === 'agregar')
                 ? 'border-[var(--color-brand-gold)] text-[var(--color-brand-gold)]'
@@ -160,7 +168,7 @@ export default function BancoPreguntasPage() {
             tags={tags}
             subjects={subjects}
             editId={editId}
-            onSaved={() => { setTab('guardadas'); setEditId(null); }}
+            onSaved={() => { setVistaParam('guardadas'); setEditId(null); }}
             onCancelEdit={() => setEditId(null)}
           />
         ) : tab === 'importar' ? (
@@ -174,7 +182,7 @@ export default function BancoPreguntasPage() {
             categories={categories}
             tags={tags}
             subjects={subjects}
-            onEdit={(id) => { setEditId(id); setTab('agregar'); }}
+            onEdit={(id) => { setEditId(id); setVistaParam(null); }}
           />
         )}
       </div>

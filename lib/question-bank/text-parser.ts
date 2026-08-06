@@ -52,7 +52,7 @@ export interface ParsedQuestion {
 
 const QUESTION_NUMBER_RE = /^\d+[\.\)\-]\s*/;
 const OPTION_PREFIX_RE = /^[a-hA-H][\.\)\-]\s*/;
-const ROMAN_PREFIX_RE = /^[IVXivx]+[\.\)\-]\s*/;
+const ROMAN_PREFIX_RE = /^(?:I{1,3}|IV|VI{0,3}|IX|X{0,3})[\.\)\-]\s*/i;
 const BULLET_RE = /^[•●]\s*/;
 const TRUE_FALSE_RE = /verdadero\s*o\s*falso|verdadero\s*\/\s*falso/i;
 const MATCHING_RE = /emparej/i;
@@ -232,8 +232,9 @@ function parseChoiceQuestion(
   }
 
   // Check what structure the body has
-  const hasLetterPrefixes = bodyLines.some(l => OPTION_PREFIX_RE.test(l));
   const hasRomanPrefixes = bodyLines.some(l => ROMAN_PREFIX_RE.test(l));
+  // Only consider letter prefixes on lines that are NOT roman numerals
+  const hasLetterPrefixes = bodyLines.some(l => OPTION_PREFIX_RE.test(l) && !ROMAN_PREFIX_RE.test(l));
 
   if (hasLetterPrefixes) {
     // Pattern: possibly roman numeral assertions + lettered options + explanation
@@ -254,7 +255,13 @@ function parseChoiceQuestion(
         continue;
       }
 
-      if (OPTION_PREFIX_RE.test(line)) {
+      // Check roman FIRST (I., II., III., IV.) — these are assertions, not options
+      if (ROMAN_PREFIX_RE.test(line) && !parsingOptions) {
+        romanLines.push(line);
+        continue;
+      }
+
+      if (OPTION_PREFIX_RE.test(line) && !ROMAN_PREFIX_RE.test(line)) {
         parsingOptions = true;
         const optText = line.replace(OPTION_PREFIX_RE, '').trim();
         options.push(optText);
@@ -269,14 +276,11 @@ function parseChoiceQuestion(
         } else {
           explanationLines.push(line);
         }
-      } else if (hasRomanPrefixes && ROMAN_PREFIX_RE.test(line)) {
-        // Roman numeral assertion — include in question content
-        romanLines.push(line);
       } else if (BULLET_RE.test(line)) {
         doneOptions = true;
         explanationLines.push(line.replace(BULLET_RE, '').trim());
       } else {
-        // Other line before options — could be assertion text
+        // Other line before options — could be assertion text without roman prefix
         romanLines.push(line);
       }
     }
