@@ -1,18 +1,22 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
-  ChevronLeft, ChevronRight, Check, Eye, Edit, Trash2, ArrowLeft, AlertCircle, CheckCircle, AlertTriangle
+  ChevronLeft, ChevronRight, Check, Eye, Edit, Trash2,
+  AlertCircle, CheckCircle, AlertTriangle, X
 } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
-import { Tooltip } from '@/components/common/Tooltip';
+import { SubjectSelector } from '@/components/question-bank/SubjectSelector';
+import { CategorySelector } from '@/components/question-bank/CategorySelector';
+import { TagSelector } from '@/components/question-bank/TagSelector';
 import { ImportQuestionEditor } from '@/components/question-bank/ImportQuestionEditor';
 import { questionTypes, difficulties } from '@/lib/validations/question-bank.schema';
 import { validateImportRows } from '@/lib/question-bank/import-validation';
+import { useUiPreference } from '@/lib/hooks/useUiPreference';
 import type { QbCategory, QbTag, QbSubject } from '@/lib/supabase/types';
 
 interface ImportRow {
@@ -39,10 +43,13 @@ interface ImportPreviewViewProps {
 
 type ViewMode = 'review' | 'edit';
 
-const PAGE_SIZE = 21;
+const PAGE_SIZE_OPTIONS = [10, 21, 50, 100, 200];
+const DEFAULT_PAGE_SIZE = 21;
+// Max items to render at once for performance (virtual loading threshold)
+const MAX_RENDER_BATCH = 100;
 
 export function ImportPreviewView({
-  rows, onChange, onBack, onImported, categories, tags: _tags, subjects,
+  rows, onChange, onBack, onImported, categories, tags, subjects,
 }: ImportPreviewViewProps) {
   const t = useTranslations('bancoPreguntas');
 
@@ -50,6 +57,28 @@ export function ImportPreviewView({
   const [editIdx, setEditIdx] = useState(0);
   const [selected, setSelected] = useState<Set<number>>(() => new Set(rows.map((_, i) => i)));
   const [page, setPage] = useState(1);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+
+  // Persisted page size preference
+  const [pageSize, setPageSize] = useUiPreference<number>('qb_import_page_size', DEFAULT_PAGE_SIZE);
+  const [pageSizeInput, setPageSizeInput] = useState(pageSize);
+  const pageSizeDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Sync local input with preference
+  useEffect(() => { setPageSizeInput(pageSize); }, [pageSize]);
+
+  // Page size change with debounce + optimistic update
+  const handlePageSizeChange = (value: number) => {
+    setPageSizeInput(value); // Optimistic UI update
+    setPage(1); // Reset to first page
+    if (pageSizeDebounceRef.current) clearTimeout(pageSizeDebounceRef.current);
+    pageSizeDebounceRef.current = setTimeout(() => {
+      setPageSize(value);
+    }, 300);
+  };
+
+  // Effective page size: clamp to total count for efficiency
+  const effectivePageSize = Math.min(pageSizeInput, Math.max(rows.length, DEFAULT_PAGE_SIZE));
 
   // Bulk metadata state
   const [bulkSubject, setBulkSubject] = useState('');
@@ -65,10 +94,39 @@ export function ImportPreviewView({
     success_count: number; error_count: number; errors: Array<{ row: number; message: string }>;
   } | null>(null);
 
+  // Virtual loading: how many items to render in the current page
+  const [renderedCount, setRenderedCount] = useState(MAX_RENDER_BATCH);
+  const scrollSentinelRef = useRef<HTMLDivElement>(null);
+
   const selectedCount = selected.size;
   const totalCount = rows.length;
-  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
-  const pageRows = rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalPages = Math.ceil(totalCount / effectivePageSize);
+  const pageRows = rows.slice((page - 1) * effectivePageSize, page * effectivePageSize);
+  // Only render up to renderedCount for performance
+  const visibleRows = pageRows.slice(0, renderedCount);
+
+  // Reset rendered count when page changes
+  useEffect(() => {
+    setRenderedCount(MAX_RENDER_BATCH);
+  }, [page]);
+
+  // IntersectionObserver for lazy loading more items
+  useEffect(() => {
+    if (pageRows.length <= renderedCount) return;
+    const sentinel = scrollSentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setRenderedCount(prev => Math.min(prev + MAX_RENDER_BATCH, pageRows.length));
+        }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [pageRows.length, renderedCount]);
 
   // Selection helpers
   const toggleSelect = (idx: number) => {
@@ -170,6 +228,16 @@ export function ImportPreviewView({
     return d;
   };
 
+  // Metadata helpers for review mode per-question selectors
+  const getSubjectId = (name: string) => subjects.find(s => s.name === name)?.id || null;
+  const getCategoryId = (name: string) => categories.find(c => c.name === name)?.id || null;
+  const getTagIds = (tagsStr: string) => {
+    if (!tagsStr) return [];
+    return tagsStr.split(',').map(t => t.trim())
+      .map(name => tags.find(tag => tag.name === name)?.id)
+      .filter(Boolean) as string[];
+  };
+
   const formatOptions = (row: ImportRow) => {
     if (row.type === 'true_false') {
       const answer = row.correct?.toLowerCase();
@@ -190,6 +258,16 @@ export function ImportPreviewView({
   };
 
   const currentRow = rows[editIdx];
+
+  // Page size options: include total count if it makes sense
+  const pageSizeOpts = useMemo(() => {
+    const opts = PAGE_SIZE_OPTIONS.filter(n => n <= rows.length || n === DEFAULT_PAGE_SIZE);
+    // Add the total if it's reasonable (≤500) and not already in the list
+    if (rows.length <= 500 && !opts.includes(rows.length) && rows.length > 0) {
+      opts.push(rows.length);
+    }
+    return [...new Set(opts)].sort((a, b) => a - b);
+  }, [rows.length]);
 
   // Import result view
   if (importResult) {
@@ -225,48 +303,43 @@ export function ImportPreviewView({
 
   return (
     <div className="space-y-4">
-      {/* Header with back + mode toggle */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Tooltip content={t('tooltip_volver_importar')}>
-            <button
-              type="button"
-              onClick={onBack}
-              className="rounded-[var(--radius-sm)] p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] transition-colors"
-            >
-              <ArrowLeft className="size-5" />
-            </button>
-          </Tooltip>
-          <div>
-            <h3 className="text-base font-semibold text-[var(--color-text-primary)]">
-              {t('vista_previa')} — {selectedCount} de {totalCount} {t('preguntas_seleccionadas')}
-            </h3>
-          </div>
-        </div>
+      {/* Header: 3 centered buttons + question count */}
+      <div className="flex flex-col items-center gap-3">
+        <h3 className="text-base font-semibold text-[var(--color-text-primary)]">
+          {t('vista_previa')} — {selectedCount} de {totalCount} {t('preguntas_seleccionadas')}
+        </h3>
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => setMode('review')}
-            className={`inline-flex items-center gap-1.5 rounded-[var(--radius-md)] px-3 py-1.5 text-xs font-medium transition-all ${
+            className={`inline-flex items-center gap-1.5 rounded-[var(--radius-md)] px-4 py-2 text-sm font-medium transition-all ${
               mode === 'review'
-                ? 'bg-[var(--color-brand-gold)] text-white'
-                : 'border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-brand-gold)]'
+                ? 'bg-[var(--color-brand-gold)] text-white shadow-sm'
+                : 'border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-brand-gold)] hover:text-[var(--color-brand-gold)]'
             }`}
           >
-            <Eye className="size-3.5" />
+            <Eye className="size-4" />
             {t('modo_revisar')}
           </button>
           <button
             type="button"
             onClick={() => setMode('edit')}
-            className={`inline-flex items-center gap-1.5 rounded-[var(--radius-md)] px-3 py-1.5 text-xs font-medium transition-all ${
+            className={`inline-flex items-center gap-1.5 rounded-[var(--radius-md)] px-4 py-2 text-sm font-medium transition-all ${
               mode === 'edit'
-                ? 'bg-[var(--color-brand-gold)] text-white'
-                : 'border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-brand-gold)]'
+                ? 'bg-[var(--color-brand-gold)] text-white shadow-sm'
+                : 'border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-brand-gold)] hover:text-[var(--color-brand-gold)]'
             }`}
           >
-            <Edit className="size-3.5" />
+            <Edit className="size-4" />
             {t('modo_editar')}
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowCancelConfirm(true)}
+            className="inline-flex items-center gap-1.5 rounded-[var(--radius-md)] px-4 py-2 text-sm font-medium border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-error)] hover:text-[var(--color-error)] transition-all"
+          >
+            <X className="size-4" />
+            {t('cancelar')}
           </button>
         </div>
       </div>
@@ -396,7 +469,6 @@ export function ImportPreviewView({
                     type="button"
                     onClick={() => {
                       if (bulkDifficulty === 'none') {
-                        // Apply empty string = clear difficulty
                         const selectedIndices = Array.from(selected);
                         const newRows = [...rows];
                         selectedIndices.forEach(idx => { newRows[idx] = { ...newRows[idx], difficulty: '' }; });
@@ -439,9 +511,9 @@ export function ImportPreviewView({
             </span>
           </div>
 
-          {/* Question cards (paginated) */}
-          {pageRows.map((row, pageIdx) => {
-            const globalIdx = (page - 1) * PAGE_SIZE + pageIdx;
+          {/* Question cards (paginated + virtual loaded) */}
+          {visibleRows.map((row, pageIdx) => {
+            const globalIdx = (page - 1) * effectivePageSize + pageIdx;
             return (
               <div
                 key={globalIdx}
@@ -491,9 +563,7 @@ export function ImportPreviewView({
                     {(row.options || row.type === 'true_false') && (
                       <div className="mb-2 text-xs text-[var(--color-text-secondary)]">
                         {row.type === 'true_false' ? (
-                          <p className="font-medium">
-                            {formatOptions(row)}
-                          </p>
+                          <p className="font-medium">{formatOptions(row)}</p>
                         ) : row.type === 'matching' ? (
                           <table className="w-full border-collapse text-xs">
                             <tbody>
@@ -533,40 +603,34 @@ export function ImportPreviewView({
                       </div>
                     )}
 
-                    {/* Inline metadata editing */}
+                    {/* Inline metadata using reusable selectors */}
                     <div className="grid grid-cols-3 gap-2 mt-2">
-                      <div className="relative">
-                        <input
-                          type="text"
-                          list={`subject-list-${globalIdx}`}
-                          value={row.subject}
-                          onChange={(e) => updateRow(globalIdx, 'subject', e.target.value)}
-                          placeholder={t('materia_placeholder')}
-                          className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-2 py-1.5 text-[11px] outline-none focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
-                        />
-                        <datalist id={`subject-list-${globalIdx}`}>
-                          {subjects.map(s => <option key={s.id} value={s.name} />)}
-                        </datalist>
-                      </div>
-                      <div className="relative">
-                        <input
-                          type="text"
-                          list={`category-list-${globalIdx}`}
-                          value={row.category}
-                          onChange={(e) => updateRow(globalIdx, 'category', e.target.value)}
-                          placeholder={t('categoria_placeholder')}
-                          className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-2 py-1.5 text-[11px] outline-none focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
-                        />
-                        <datalist id={`category-list-${globalIdx}`}>
-                          {categories.map(c => <option key={c.id} value={c.name} />)}
-                        </datalist>
-                      </div>
-                      <input
-                        type="text"
-                        value={row.tags}
-                        onChange={(e) => updateRow(globalIdx, 'tags', e.target.value)}
-                        placeholder={t('tags_placeholder')}
-                        className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-2 py-1.5 text-[11px] outline-none focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
+                      <SubjectSelector
+                        subjects={subjects}
+                        value={getSubjectId(row.subject)}
+                        onChange={(id) => {
+                          const name = id ? subjects.find(s => s.id === id)?.name || '' : '';
+                          updateRow(globalIdx, 'subject', name);
+                        }}
+                        compact
+                      />
+                      <CategorySelector
+                        categories={categories}
+                        value={getCategoryId(row.category)}
+                        onChange={(id) => {
+                          const name = id ? categories.find(c => c.id === id)?.name || '' : '';
+                          updateRow(globalIdx, 'category', name);
+                        }}
+                        compact
+                      />
+                      <TagSelector
+                        tags={tags}
+                        selectedIds={getTagIds(row.tags)}
+                        onChange={(ids) => {
+                          const names = ids.map(id => tags.find(t => t.id === id)?.name || '').filter(Boolean);
+                          updateRow(globalIdx, 'tags', names.join(', '));
+                        }}
+                        compact
                       />
                     </div>
                     {/* Difficulty toggle per question */}
@@ -612,6 +676,13 @@ export function ImportPreviewView({
               </div>
             );
           })}
+
+          {/* Scroll sentinel for virtual loading */}
+          {pageRows.length > renderedCount && (
+            <div ref={scrollSentinelRef} className="flex justify-center py-4">
+              <div className="size-5 animate-spin rounded-full border-2 border-[var(--color-brand-gold)] border-t-transparent" />
+            </div>
+          )}
         </div>
       ) : (
         /* Edit mode: one question at a time using ImportQuestionEditor */
@@ -625,6 +696,7 @@ export function ImportPreviewView({
             onNext={() => setEditIdx(i => i + 1)}
             categories={categories}
             subjects={subjects}
+            tags={tags}
           />
         )
       )}
@@ -632,13 +704,30 @@ export function ImportPreviewView({
       {/* Pagination */}
       {totalPages > 1 && mode === 'review' && (
         <div className="flex items-center justify-between pt-2">
-          <p className="text-xs text-[var(--color-text-muted)]">
-            {t('paginacion_mostrando', {
-              from: (page - 1) * PAGE_SIZE + 1,
-              to: Math.min(page * PAGE_SIZE, totalCount),
-              total: totalCount,
-            })}
-          </p>
+          <div className="flex items-center gap-3">
+            <p className="text-xs text-[var(--color-text-muted)]">
+              {t('paginacion_mostrando', {
+                from: (page - 1) * effectivePageSize + 1,
+                to: Math.min(page * effectivePageSize, totalCount),
+                total: totalCount,
+              })}
+            </p>
+            {/* Page size selector */}
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] text-[var(--color-text-muted)]">Ver:</span>
+              <select
+                value={pageSizeInput}
+                onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                className="rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-2 py-1 text-[11px] outline-none transition-colors focus:border-[var(--color-brand-gold)]"
+              >
+                {pageSizeOpts.map(n => (
+                  <option key={n} value={n}>
+                    {n === rows.length ? `${n} (todas)` : n}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
           <div className="flex gap-1">
             <button
               type="button"
@@ -662,6 +751,23 @@ export function ImportPreviewView({
           </div>
         </div>
       )}
+      {/* Show page size selector even if only 1 page */}
+      {totalPages <= 1 && mode === 'review' && rows.length > 10 && (
+        <div className="flex items-center gap-1.5 pt-2">
+          <span className="text-[10px] text-[var(--color-text-muted)]">Ver:</span>
+          <select
+            value={pageSizeInput}
+            onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+            className="rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-2 py-1 text-[11px] outline-none transition-colors focus:border-[var(--color-brand-gold)]"
+          >
+            {pageSizeOpts.map(n => (
+              <option key={n} value={n}>
+                {n === rows.length ? `${n} (todas)` : n}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* Footer */}
       <div className="space-y-3 pt-4 border-t border-[var(--color-border)]">
@@ -683,7 +789,7 @@ export function ImportPreviewView({
                           key={idx}
                           type="button"
                           onClick={() => {
-                            const targetPage = Math.ceil(issue.questionNumber / PAGE_SIZE);
+                            const targetPage = Math.ceil(issue.questionNumber / effectivePageSize);
                             setPage(targetPage);
                             setEditIdx(issue.questionNumber - 1);
                             setMode('edit');
@@ -706,10 +812,7 @@ export function ImportPreviewView({
           return null;
         })()}
 
-        <div className="flex items-center justify-between">
-          <Button variant="ghost" onClick={onBack} disabled={importMutation.isPending}>
-            {t('volver_a_pegar')}
-          </Button>
+        <div className="flex items-center justify-center">
           <Button
             onClick={() => {
               const validation = validateImportRows(rows, selected);
@@ -726,6 +829,17 @@ export function ImportPreviewView({
           </Button>
         </div>
       </div>
+
+      {/* Cancel confirmation modal */}
+      <ConfirmModal
+        open={showCancelConfirm}
+        onClose={() => setShowCancelConfirm(false)}
+        onConfirm={() => { setShowCancelConfirm(false); onBack(); }}
+        title={t('confirmar_cancelar_importacion')}
+        description={t('confirmar_cancelar_importacion_desc')}
+        confirmText={t('cancelar_importacion_confirmar')}
+        isDanger
+      />
 
       {/* Confirm replace modal */}
       <ConfirmModal

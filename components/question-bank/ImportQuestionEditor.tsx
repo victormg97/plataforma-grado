@@ -2,9 +2,12 @@
 
 import { useTranslations } from 'next-intl';
 import { Plus, X, Check, ChevronLeft, ChevronRight } from 'lucide-react';
+import { SubjectSelector } from '@/components/question-bank/SubjectSelector';
+import { CategorySelector } from '@/components/question-bank/CategorySelector';
+import { TagSelector } from '@/components/question-bank/TagSelector';
 import { AppSelect } from '@/components/common/AppSelect';
 import { questionTypes, difficulties } from '@/lib/validations/question-bank.schema';
-import type { QbCategory, QbSubject } from '@/lib/supabase/types';
+import type { QbCategory, QbSubject, QbTag } from '@/lib/supabase/types';
 
 interface ImportRow {
   type: string;
@@ -27,14 +30,16 @@ interface ImportQuestionEditorProps {
   onNext: () => void;
   categories: QbCategory[];
   subjects: QbSubject[];
+  tags: QbTag[];
 }
 
 /**
- * Lightweight inline editor for import preview.
- * Provides visual option management with click-to-mark-correct UX.
+ * Full-featured inline editor for import preview.
+ * Supports all question types: single_choice, multiple_choice, true_false,
+ * open_ended, fill_blank, and matching.
  */
 export function ImportQuestionEditor({
-  row, index, total, onChange, onPrev, onNext, categories, subjects,
+  row, index, total, onChange, onPrev, onNext, categories, subjects, tags,
 }: ImportQuestionEditorProps) {
   const t = useTranslations('bancoPreguntas');
 
@@ -46,8 +51,11 @@ export function ImportQuestionEditor({
 
   const isSingleOrMultiple = row.type === 'single_choice' || row.type === 'multiple_choice';
   const isTrueFalse = row.type === 'true_false';
+  const isMatching = row.type === 'matching';
+  const isFillBlank = row.type === 'fill_blank';
+  const isOpenEnded = row.type === 'open_ended';
 
-  // ─── Option helpers ──────────────────────────────────────────────────────
+  // ─── Option helpers (single/multiple choice) ─────────────────────────────
 
   const updateOptions = (newOpts: string[]) => {
     onChange('options', newOpts.join('|||'));
@@ -59,10 +67,8 @@ export function ImportQuestionEditor({
 
   const toggleCorrect = (idx: number) => {
     if (row.type === 'single_choice') {
-      // Exclusive: only one correct
       updateCorrect(correctIndices.includes(idx) ? [] : [idx]);
     } else {
-      // Toggle
       if (correctIndices.includes(idx)) {
         updateCorrect(correctIndices.filter(i => i !== idx));
       } else {
@@ -82,14 +88,111 @@ export function ImportQuestionEditor({
   };
 
   const removeOption = (idx: number) => {
-    if (options.length <= 2) return; // min 2 options
+    if (options.length <= 2) return;
     const newOpts = options.filter((_, i) => i !== idx);
-    // Adjust correct indices
     const newCorrect = correctIndices
       .filter(i => i !== idx)
       .map(i => (i > idx ? i - 1 : i));
     updateOptions(newOpts);
     updateCorrect(newCorrect);
+  };
+
+  // ─── Matching helpers ─────────────────────────────────────────────────────
+
+  const getMatchingPairs = (): Array<{ left: string; right: string }> => {
+    if (!row.options) return [{ left: '', right: '' }, { left: '', right: '' }];
+    const parts = row.options.split('|||').filter(Boolean);
+    const pairs: Array<{ left: string; right: string }> = [];
+    for (let i = 0; i + 1 < parts.length; i += 2) {
+      pairs.push({ left: parts[i], right: parts[i + 1] });
+    }
+    if (pairs.length < 2) {
+      while (pairs.length < 2) pairs.push({ left: '', right: '' });
+    }
+    return pairs;
+  };
+
+  const setMatchingPairs = (pairs: Array<{ left: string; right: string }>) => {
+    const serialized = pairs.map(p => `${p.left}|||${p.right}`).join('|||');
+    onChange('options', serialized);
+  };
+
+  const matchingPairs = getMatchingPairs();
+
+  const updatePairField = (idx: number, field: 'left' | 'right', value: string) => {
+    const newPairs = [...matchingPairs];
+    newPairs[idx] = { ...newPairs[idx], [field]: value };
+    // Auto-expand: add new empty pair if typing in the last one
+    if (idx === newPairs.length - 1 && value.trim()) {
+      newPairs.push({ left: '', right: '' });
+    }
+    setMatchingPairs(newPairs);
+  };
+
+  const removePair = (idx: number) => {
+    if (matchingPairs.length <= 2) return;
+    const newPairs = matchingPairs.filter((_, i) => i !== idx);
+    if (!newPairs[newPairs.length - 1]?.left && !newPairs[newPairs.length - 1]?.right) {
+      // Already has an empty slot at end
+    } else {
+      newPairs.push({ left: '', right: '' });
+    }
+    setMatchingPairs(newPairs);
+  };
+
+  const addPair = () => {
+    setMatchingPairs([...matchingPairs, { left: '', right: '' }]);
+  };
+
+  // ─── Fill blank helpers ───────────────────────────────────────────────────
+
+  const getFillBlankAnswers = (): string[] => {
+    // Fill blank answers are stored in `correct` field as semicolon-separated
+    if (!row.correct) return [''];
+    return row.correct.split(';').map(a => a.trim()).filter(Boolean).length > 0
+      ? row.correct.split(';').map(a => a.trim())
+      : [''];
+  };
+
+  const fillBlankAnswers = getFillBlankAnswers();
+
+  const updateFillBlankAnswer = (idx: number, value: string) => {
+    const newAnswers = [...fillBlankAnswers];
+    newAnswers[idx] = value;
+    onChange('correct', newAnswers.join(';'));
+  };
+
+  const addFillBlankAnswer = () => {
+    onChange('correct', [...fillBlankAnswers, ''].join(';'));
+  };
+
+  const removeFillBlankAnswer = (idx: number) => {
+    if (fillBlankAnswers.length <= 1) return;
+    const newAnswers = fillBlankAnswers.filter((_, i) => i !== idx);
+    onChange('correct', newAnswers.join(';'));
+  };
+
+  // ─── Metadata helpers (convert between name-based ImportRow and id-based) ──
+
+  const subjectId = subjects.find(s => s.name === row.subject)?.id || null;
+  const categoryId = categories.find(c => c.name === row.category)?.id || null;
+  const tagIds = row.tags
+    ? row.tags.split(',').map(t => t.trim()).map(name => tags.find(tag => tag.name === name)?.id).filter(Boolean) as string[]
+    : [];
+
+  const handleSubjectChange = (id: string | null) => {
+    const name = id ? subjects.find(s => s.id === id)?.name || '' : '';
+    onChange('subject', name);
+  };
+
+  const handleCategoryChange = (id: string | null) => {
+    const name = id ? categories.find(c => c.id === id)?.name || '' : '';
+    onChange('category', name);
+  };
+
+  const handleTagsChange = (ids: string[]) => {
+    const names = ids.map(id => tags.find(t => t.id === id)?.name || '').filter(Boolean);
+    onChange('tags', names.join(', '));
   };
 
   // ─── Render ──────────────────────────────────────────────────────────────
@@ -156,7 +259,6 @@ export function ImportQuestionEditor({
               const letter = String.fromCharCode(65 + idx);
               return (
                 <div key={idx} className="flex items-center gap-2">
-                  {/* Correct toggle */}
                   <button
                     type="button"
                     onClick={() => toggleCorrect(idx)}
@@ -169,8 +271,6 @@ export function ImportQuestionEditor({
                   >
                     {isCorrect ? <Check className="size-3.5" /> : <span className="text-xs font-medium">{letter}</span>}
                   </button>
-
-                  {/* Option text */}
                   <input
                     type="text"
                     value={opt}
@@ -182,8 +282,6 @@ export function ImportQuestionEditor({
                         : 'border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))]'
                     }`}
                   />
-
-                  {/* Remove button */}
                   {options.length > 2 && (
                     <button
                       type="button"
@@ -197,8 +295,6 @@ export function ImportQuestionEditor({
                 </div>
               );
             })}
-
-            {/* Add option button */}
             {options.length < 8 && (
               <button
                 type="button"
@@ -210,8 +306,6 @@ export function ImportQuestionEditor({
               </button>
             )}
           </div>
-
-          {/* No correct answer warning */}
           {correctIndices.length === 0 && (
             <p className="mt-2 text-xs text-amber-600 dark:text-amber-400">
               ⚠️ Sin respuesta correcta marcada
@@ -255,6 +349,123 @@ export function ImportQuestionEditor({
         </div>
       )}
 
+      {/* Matching pairs */}
+      {isMatching && (
+        <div>
+          <label className="block text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-2">
+            {t('matching_par')}es — Concepto → Definición
+          </label>
+          <div className="space-y-2">
+            {matchingPairs.map((pair, idx) => (
+              <div key={idx} className="grid grid-cols-[1fr_1fr_auto] gap-2 items-center">
+                <input
+                  type="text"
+                  value={pair.left}
+                  onChange={(e) => updatePairField(idx, 'left', e.target.value)}
+                  placeholder={`${t('matching_concepto')} ${idx + 1}`}
+                  className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
+                />
+                <input
+                  type="text"
+                  value={pair.right}
+                  onChange={(e) => updatePairField(idx, 'right', e.target.value)}
+                  placeholder={`${t('matching_definicion')} ${idx + 1}`}
+                  className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
+                />
+                {matchingPairs.length > 2 && idx < matchingPairs.length - 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removePair(idx)}
+                    className="shrink-0 rounded p-1 text-[var(--color-text-muted)] hover:text-[var(--color-error)] transition-colors"
+                  >
+                    <X className="size-4" />
+                  </button>
+                )}
+                {(matchingPairs.length <= 2 || idx >= matchingPairs.length - 1) && (
+                  <div className="w-6" /> // Spacer
+                )}
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={addPair}
+              className="flex items-center gap-1.5 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-brand-gold)] transition-colors mt-1"
+            >
+              <Plus className="size-3.5" />
+              Agregar par
+            </button>
+          </div>
+          {matchingPairs.filter(p => p.left.trim() && p.right.trim()).length < 2 && (
+            <p className="mt-2 text-xs text-amber-600 dark:text-amber-400">
+              ⚠️ Se necesitan al menos 2 pares completos
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Fill in the blank */}
+      {isFillBlank && (
+        <div>
+          <label className="block text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-2">
+            {t('espacios_blanco')}
+          </label>
+          <p className="text-xs text-[var(--color-text-muted)] mb-3">
+            Usa ___ en el enunciado para indicar espacios en blanco. Separa respuestas alternativas con ;
+          </p>
+          <div className="space-y-2">
+            {fillBlankAnswers.map((answer, idx) => (
+              <div key={idx} className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={answer}
+                  onChange={(e) => updateFillBlankAnswer(idx, e.target.value)}
+                  placeholder="Respuesta(s) válida(s) separadas por ;"
+                  className="flex-1 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
+                />
+                {fillBlankAnswers.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeFillBlankAnswer(idx)}
+                    className="shrink-0 rounded p-1 text-[var(--color-text-muted)] hover:text-[var(--color-error)] transition-colors"
+                  >
+                    <X className="size-4" />
+                  </button>
+                )}
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={addFillBlankAnswer}
+              className="flex items-center gap-1.5 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-brand-gold)] transition-colors mt-1"
+            >
+              <Plus className="size-3.5" />
+              {t('agregar_respuesta')}
+            </button>
+          </div>
+          {fillBlankAnswers.every(a => !a.trim()) && (
+            <p className="mt-2 text-xs text-amber-600 dark:text-amber-400">
+              ⚠️ Se necesita al menos una respuesta válida
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Open-ended: model answer */}
+      {isOpenEnded && (
+        <div>
+          <label className="block text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-1">
+            {t('respuesta_modelo')}
+          </label>
+          <textarea
+            value={row.correct || ''}
+            onChange={(e) => onChange('correct', e.target.value)}
+            rows={3}
+            placeholder={t('respuesta_modelo_placeholder')}
+            className="w-full resize-y rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm outline-none focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
+          />
+        </div>
+      )}
+
       {/* Explanation */}
       <div>
         <label className="block text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-1">
@@ -291,52 +502,26 @@ export function ImportQuestionEditor({
         </div>
       </div>
 
-      {/* Metadata */}
-      <div className="grid grid-cols-3 gap-3">
-        <div>
-          <label className="block text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-1">
-            {t('materia')}
-          </label>
-          <input
-            type="text"
-            list={`edit-subject-${index}`}
-            value={row.subject}
-            onChange={(e) => onChange('subject', e.target.value)}
-            placeholder={t('materia_placeholder')}
-            className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm outline-none focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
-          />
-          <datalist id={`edit-subject-${index}`}>
-            {subjects.map(s => <option key={s.id} value={s.name} />)}
-          </datalist>
-        </div>
-        <div>
-          <label className="block text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-1">
-            {t('categoria')}
-          </label>
-          <input
-            type="text"
-            list={`edit-category-${index}`}
-            value={row.category}
-            onChange={(e) => onChange('category', e.target.value)}
-            placeholder={t('categoria_placeholder')}
-            className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm outline-none focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
-          />
-          <datalist id={`edit-category-${index}`}>
-            {categories.map(c => <option key={c.id} value={c.name} />)}
-          </datalist>
-        </div>
-        <div>
-          <label className="block text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-1">
-            {t('tags')}
-          </label>
-          <input
-            type="text"
-            value={row.tags}
-            onChange={(e) => onChange('tags', e.target.value)}
-            placeholder={t('tags_placeholder')}
-            className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm outline-none focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
-          />
-        </div>
+      {/* Metadata — using reusable selectors */}
+      <div className="space-y-3">
+        <SubjectSelector
+          subjects={subjects}
+          value={subjectId}
+          onChange={handleSubjectChange}
+          compact
+        />
+        <CategorySelector
+          categories={categories}
+          value={categoryId}
+          onChange={handleCategoryChange}
+          compact
+        />
+        <TagSelector
+          tags={tags}
+          selectedIds={tagIds}
+          onChange={handleTagsChange}
+          compact
+        />
       </div>
     </div>
   );

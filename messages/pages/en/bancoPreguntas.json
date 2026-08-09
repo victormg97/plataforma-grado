@@ -104,8 +104,8 @@
   "importar": "Import questions",
   "tab_importar": "Import",
   "importar_titulo": "Import questions from text",
-  "importar_desc": "Paste Word document content with questions. The system will automatically detect question types, options, correct answers and explanations.",
-  "importar_pegar_placeholder": "Paste the Word document text with questions here...",
+  "importar_desc": "Paste Google Docs document content with questions. The system will automatically detect question types, options, correct answers and explanations.",
+  "importar_pegar_placeholder": "Paste the Google Docs document text with questions here...",
   "procesar_texto": "Process text",
   "procesando_texto": "Processing...",
   "preguntas_detectadas": "{count} questions detected",
@@ -148,5 +148,9 @@
   "config_nav_desc": "Manage questions for interactive games",
   "keywords_titulo": "Keywords",
   "keywords_desc": "Associated words for auto-suggestion",
-  "keywords_placeholder": "Add keyword and press Enter"
+  "keywords_placeholder": "Add keyword and press Enter",
+  "confirmar_cancelar_importacion": "Cancel import?",
+  "confirmar_cancelar_importacion_desc": "All processed questions and changes will be lost. This action cannot be undone.",
+  "cancelar_importacion_confirmar": "Yes, cancel import",
+  "opcional": "optional"
 }

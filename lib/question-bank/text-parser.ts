@@ -1,5 +1,5 @@
 /**
- * Smart text parser for question bank — Word document format.
+ * Smart text parser for question bank — Google Docs document format.
  *
  * Strategy:
  * 1. Extract ALL highlighted texts from HTML as an ordered list.
