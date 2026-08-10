@@ -100,7 +100,7 @@ export function SubjectSelector({ subjects, value, onChange, compact = false }: 
             setSearch(selectedName);
             setDropdownOpen(true);
           }}
-          onBlur={() => setTimeout(() => setDropdownOpen(false), 200)}
+          onBlur={() => setTimeout(() => setDropdownOpen(false), 150)}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && search.trim() && showCreate) {
               e.preventDefault();

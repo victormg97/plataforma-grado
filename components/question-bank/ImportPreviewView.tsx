@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import { useState, useCallback, useMemo, useRef, useEffect, memo } from 'react';
 import { useTranslations } from 'next-intl';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -74,7 +74,7 @@ function BulkDropdown({ value, onChange, options, placeholder, allowFreeText = f
         value={value}
         onChange={(e) => { onChange(e.target.value); setOpen(true); }}
         onFocus={() => setOpen(true)}
-        onBlur={() => setTimeout(() => setOpen(false), 200)}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
         placeholder={placeholder}
         className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-2 py-1.5 text-xs outline-none focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
       />
@@ -106,6 +106,215 @@ function BulkDropdown({ value, onChange, options, placeholder, allowFreeText = f
     </div>
   );
 }
+
+// ─── Memoized question card for review mode ─────────────────────────────────
+// Prevents re-rendering ALL cards when one question changes.
+interface ReviewCardProps {
+  row: ImportRow;
+  globalIdx: number;
+  isSelected: boolean;
+  subjects: QbSubject[];
+  categories: QbCategory[];
+  tags: QbTag[];
+  onToggleSelect: (idx: number) => void;
+  onUpdateRow: (idx: number, field: keyof ImportRow, value: string) => void;
+  onEditRow: (idx: number) => void;
+  onRemoveRow: (idx: number) => void;
+}
+
+const ReviewQuestionCard = memo(function ReviewQuestionCard({
+  row, globalIdx, isSelected, subjects, categories, tags,
+  onToggleSelect, onUpdateRow, onEditRow, onRemoveRow,
+}: ReviewCardProps) {
+  const t = useTranslations('bancoPreguntas');
+
+  const getTypeLabel = (type: string) => {
+    const valid = questionTypes as readonly string[];
+    if (valid.includes(type)) return t(`tipo_${type}`);
+    return type || '—';
+  };
+
+  const getDifficultyLabel = (d: string) => {
+    if (!d) return t('dificultad_sin');
+    if (d === 'easy' || d === 'medium' || d === 'hard') return t(`dificultad_${d}`);
+    return d;
+  };
+
+  const getSubjectId = (name: string) => subjects.find(s => s.name === name)?.id || null;
+  const getCategoryId = (name: string) => categories.find(c => c.name === name)?.id || null;
+  const getTagIds = (tagsStr: string) => {
+    if (!tagsStr) return [];
+    return tagsStr.split(',').map(t => t.trim())
+      .map(name => tags.find(tag => tag.name === name)?.id)
+      .filter(Boolean) as string[];
+  };
+
+  return (
+    <div
+      className={`rounded-[var(--radius-md)] border p-4 transition-all ${
+        isSelected
+          ? 'border-[var(--color-border)] bg-[var(--color-card,var(--color-bg))]'
+          : 'border-dashed border-[var(--color-border)] bg-[var(--color-bg-secondary)] opacity-60'
+      }`}
+    >
+      <div className="flex items-start gap-3">
+        {/* Checkbox */}
+        <button
+          type="button"
+          onClick={() => onToggleSelect(globalIdx)}
+          className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded border-2 transition-colors ${
+            isSelected
+              ? 'border-[var(--color-brand-gold)] bg-[var(--color-brand-gold)] text-white'
+              : 'border-[var(--color-border)] hover:border-[var(--color-brand-gold)]'
+          }`}
+        >
+          {isSelected && <Check className="size-3" />}
+        </button>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="text-[10px] font-bold text-[var(--color-text-muted)]">#{globalIdx + 1}</span>
+            <span className="rounded-full bg-[var(--color-bg-secondary)] px-2 py-0.5 text-[10px] font-medium text-[var(--color-text-muted)]">
+              {getTypeLabel(row.type)}
+            </span>
+            {row.difficulty && (
+              <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                row.difficulty === 'easy' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                row.difficulty === 'hard' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+              }`}>
+                {getDifficultyLabel(row.difficulty)}
+              </span>
+            )}
+          </div>
+
+          <div className="text-sm font-medium text-[var(--color-text-primary)] mb-2 whitespace-pre-line">
+            {row.content}
+          </div>
+
+          {/* Options / answer preview */}
+          {(row.options || row.type === 'true_false') && (
+            <div className="mb-2 text-xs text-[var(--color-text-secondary)]">
+              {row.type === 'true_false' ? (
+                <p className="font-medium">
+                  {t('respuesta_correcta_vf', {
+                    answer: (row.correct?.toLowerCase() === 'verdadero' || row.correct?.toLowerCase() === 'true')
+                      ? t('verdadero') : t('falso')
+                  })}
+                </p>
+              ) : row.type === 'matching' ? (
+                <table className="w-full border-collapse text-xs">
+                  <tbody>
+                    {row.options.split('|||').filter(Boolean).reduce<Array<{ left: string; right: string }>>((acc, part, idx, arr) => {
+                      if (idx % 2 === 0 && idx + 1 < arr.length) {
+                        acc.push({ left: part, right: arr[idx + 1] });
+                      }
+                      return acc;
+                    }, []).map((pair, pi) => (
+                      <tr key={pi} className="border-b border-[var(--color-border)] last:border-b-0">
+                        <td className="py-1 pr-3 font-medium text-[var(--color-text-primary)]">{pair.left}</td>
+                        <td className="py-1 text-[var(--color-text-secondary)]">{pair.right}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <div className="space-y-0.5">
+                  {row.options.split('|||').filter(Boolean).map((opt, oi) => {
+                    const correctIndices = row.correct ? row.correct.split(',').map(c => parseInt(c.trim()) - 1) : [];
+                    const isCorrect = correctIndices.includes(oi);
+                    return (
+                      <p key={oi} className={isCorrect ? 'text-green-600 dark:text-green-400 font-medium' : ''}>
+                        {isCorrect ? '✓ ' : '  '}{String.fromCharCode(65 + oi)}) {opt}
+                      </p>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Explanation */}
+          {row.explanation && (
+            <div className="text-xs text-[var(--color-text-muted)] italic mb-2 whitespace-pre-line">
+              💡 {row.explanation}
+            </div>
+          )}
+
+          {/* Inline metadata using reusable selectors */}
+          <div className="grid grid-cols-3 gap-2 mt-2">
+            <SubjectSelector
+              subjects={subjects}
+              value={getSubjectId(row.subject)}
+              onChange={(id) => {
+                const name = id ? subjects.find(s => s.id === id)?.name || '' : '';
+                onUpdateRow(globalIdx, 'subject', name);
+              }}
+              compact
+            />
+            <CategorySelector
+              categories={categories}
+              value={getCategoryId(row.category)}
+              onChange={(id) => {
+                const name = id ? categories.find(c => c.id === id)?.name || '' : '';
+                onUpdateRow(globalIdx, 'category', name);
+              }}
+              compact
+            />
+            <TagSelector
+              tags={tags}
+              selectedIds={getTagIds(row.tags)}
+              onChange={(ids) => {
+                const names = ids.map(id => tags.find(t => t.id === id)?.name || '').filter(Boolean);
+                onUpdateRow(globalIdx, 'tags', names.join(', '));
+              }}
+              compact
+            />
+          </div>
+          {/* Difficulty toggle per question */}
+          <div className="flex items-center gap-1 mt-2">
+            <span className="text-[10px] text-[var(--color-text-muted)] mr-1">{t('dificultad')}:</span>
+            <div className="flex rounded-[var(--radius-md)] border border-[var(--color-border)] overflow-hidden">
+              {['', ...difficulties].map(d => (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => onUpdateRow(globalIdx, 'difficulty', d)}
+                  className={`px-2 py-1 text-[10px] font-medium transition-colors ${
+                    row.difficulty === d
+                      ? 'bg-[var(--color-brand-gold)] text-white'
+                      : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]'
+                  }`}
+                >
+                  {d ? t(`dificultad_${d}`) : t('dificultad_sin')}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="flex shrink-0 gap-1">
+          <button
+            type="button"
+            onClick={() => onEditRow(globalIdx)}
+            className="rounded p-1 text-[var(--color-text-muted)] hover:text-[var(--color-brand-gold)] transition-colors"
+          >
+            <Edit className="size-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => onRemoveRow(globalIdx)}
+            className="rounded p-1 text-[var(--color-text-muted)] hover:text-[var(--color-error)] transition-colors"
+          >
+            <Trash2 className="size-3.5" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+});
 
 export function ImportPreviewView({
   rows, onChange, onBack, onImported, onSelectionChange, initialSelected, categories, tags, subjects,
@@ -215,20 +424,20 @@ export function ImportPreviewView({
   }, [pageRows.length, renderedCount]);
 
   // Selection helpers
-  const toggleSelect = (idx: number) => {
+  const toggleSelect = useCallback((idx: number) => {
     setSelected(prev => {
       const next = new Set(prev);
       if (next.has(idx)) next.delete(idx); else next.add(idx);
       return next;
     });
-  };
+  }, []);
 
   const toggleAll = () => {
     if (selected.size === rows.length) setSelected(new Set());
     else setSelected(new Set(rows.map((_, i) => i)));
   };
 
-  const removeRow = (idx: number) => {
+  const removeRow = useCallback((idx: number) => {
     const newRows = rows.filter((_, i) => i !== idx);
     onChange(newRows);
     setSelected(prev => {
@@ -240,13 +449,40 @@ export function ImportPreviewView({
       return next;
     });
     if (editIdx >= newRows.length) setEditIdx(Math.max(0, newRows.length - 1));
-  };
+  }, [rows, onChange, editIdx]);
 
-  const updateRow = (idx: number, field: keyof ImportRow, value: string) => {
+  const updateRow = useCallback((idx: number, field: keyof ImportRow, value: string) => {
     const newRows = [...rows];
     newRows[idx] = { ...newRows[idx], [field]: value };
     onChange(newRows);
-  };
+  }, [rows, onChange]);
+
+  // Stable callbacks for ReviewQuestionCard
+  const handleEditRow = useCallback((idx: number) => {
+    setEditIdx(idx);
+    setMode('edit');
+  }, []);
+
+  // Keyboard navigation: ArrowLeft/ArrowRight in edit mode (only when not in input/textarea)
+  useEffect(() => {
+    if (mode !== 'edit') return;
+    const handler = (e: KeyboardEvent) => {
+      // Skip if user is typing in an input, textarea, or contentEditable
+      const tag = (e.target as HTMLElement)?.tagName?.toLowerCase();
+      const isEditable = (e.target as HTMLElement)?.isContentEditable;
+      if (tag === 'input' || tag === 'textarea' || tag === 'select' || isEditable) return;
+
+      if (e.key === 'ArrowLeft' && editIdx > 0) {
+        e.preventDefault();
+        setEditIdx(i => i - 1);
+      } else if (e.key === 'ArrowRight' && editIdx < rows.length - 1) {
+        e.preventDefault();
+        setEditIdx(i => i + 1);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [mode, editIdx, rows.length]);
 
   // Bulk metadata apply with conflict detection
   const applyBulkField = useCallback((field: keyof ImportRow, value: string) => {
@@ -300,48 +536,6 @@ export function ImportPreviewView({
       toast.error(err.message || t('error_importar'));
     },
   });
-
-  // Formatting helpers
-  const getTypeLabel = (type: string) => {
-    const valid = questionTypes as readonly string[];
-    if (valid.includes(type)) return t(`tipo_${type}`);
-    return type || '—';
-  };
-
-  const getDifficultyLabel = (d: string) => {
-    if (!d) return t('dificultad_sin');
-    if (d === 'easy' || d === 'medium' || d === 'hard') return t(`dificultad_${d}`);
-    return d;
-  };
-
-  // Metadata helpers for review mode per-question selectors
-  const getSubjectId = (name: string) => subjects.find(s => s.name === name)?.id || null;
-  const getCategoryId = (name: string) => categories.find(c => c.name === name)?.id || null;
-  const getTagIds = (tagsStr: string) => {
-    if (!tagsStr) return [];
-    return tagsStr.split(',').map(t => t.trim())
-      .map(name => tags.find(tag => tag.name === name)?.id)
-      .filter(Boolean) as string[];
-  };
-
-  const formatOptions = (row: ImportRow) => {
-    if (row.type === 'true_false') {
-      const answer = row.correct?.toLowerCase();
-      const label = answer === 'verdadero' || answer === 'true' ? t('verdadero') : t('falso');
-      return t('respuesta_correcta_vf', { answer: label });
-    }
-    if (row.type === 'matching') {
-      const parts = row.options.split('|||').filter(Boolean);
-      const pairs: string[] = [];
-      for (let i = 0; i + 1 < parts.length; i += 2) {
-        pairs.push(`${parts[i]} → ${parts[i + 1]}`);
-      }
-      return pairs.join('\n');
-    }
-    const opts = row.options.split('|||').filter(Boolean);
-    const correctIndices = row.correct ? row.correct.split(',').map(c => parseInt(c.trim()) - 1) : [];
-    return opts.map((o, i) => `${correctIndices.includes(i) ? '✓' : '  '} ${String.fromCharCode(65 + i)}) ${o}`).join('\n');
-  };
 
   const currentRow = rows[editIdx];
 
@@ -594,165 +788,19 @@ export function ImportPreviewView({
           {visibleRows.map((row, pageIdx) => {
             const globalIdx = (page - 1) * effectivePageSize + pageIdx;
             return (
-              <div
+              <ReviewQuestionCard
                 key={globalIdx}
-                className={`rounded-[var(--radius-md)] border p-4 transition-all ${
-                  selected.has(globalIdx)
-                    ? 'border-[var(--color-border)] bg-[var(--color-card,var(--color-bg))]'
-                    : 'border-dashed border-[var(--color-border)] bg-[var(--color-bg-secondary)] opacity-60'
-                }`}
-              >
-                <div className="flex items-start gap-3">
-                  {/* Checkbox */}
-                  <button
-                    type="button"
-                    onClick={() => toggleSelect(globalIdx)}
-                    className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded border-2 transition-colors ${
-                      selected.has(globalIdx)
-                        ? 'border-[var(--color-brand-gold)] bg-[var(--color-brand-gold)] text-white'
-                        : 'border-[var(--color-border)] hover:border-[var(--color-brand-gold)]'
-                    }`}
-                  >
-                    {selected.has(globalIdx) && <Check className="size-3" />}
-                  </button>
-
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <span className="text-[10px] font-bold text-[var(--color-text-muted)]">#{globalIdx + 1}</span>
-                      <span className="rounded-full bg-[var(--color-bg-secondary)] px-2 py-0.5 text-[10px] font-medium text-[var(--color-text-muted)]">
-                        {getTypeLabel(row.type)}
-                      </span>
-                      {row.difficulty && (
-                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                          row.difficulty === 'easy' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
-                          row.difficulty === 'hard' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
-                          'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
-                        }`}>
-                          {getDifficultyLabel(row.difficulty)}
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="text-sm font-medium text-[var(--color-text-primary)] mb-2 whitespace-pre-line">
-                      {row.content}
-                    </div>
-
-                    {/* Options / answer preview */}
-                    {(row.options || row.type === 'true_false') && (
-                      <div className="mb-2 text-xs text-[var(--color-text-secondary)]">
-                        {row.type === 'true_false' ? (
-                          <p className="font-medium">{formatOptions(row)}</p>
-                        ) : row.type === 'matching' ? (
-                          <table className="w-full border-collapse text-xs">
-                            <tbody>
-                              {row.options.split('|||').filter(Boolean).reduce<Array<{ left: string; right: string }>>((acc, part, idx, arr) => {
-                                if (idx % 2 === 0 && idx + 1 < arr.length) {
-                                  acc.push({ left: part, right: arr[idx + 1] });
-                                }
-                                return acc;
-                              }, []).map((pair, pi) => (
-                                <tr key={pi} className="border-b border-[var(--color-border)] last:border-b-0">
-                                  <td className="py-1 pr-3 font-medium text-[var(--color-text-primary)]">{pair.left}</td>
-                                  <td className="py-1 text-[var(--color-text-secondary)]">{pair.right}</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        ) : (
-                          <div className="space-y-0.5">
-                            {row.options.split('|||').filter(Boolean).map((opt, oi) => {
-                              const correctIndices = row.correct ? row.correct.split(',').map(c => parseInt(c.trim()) - 1) : [];
-                              const isCorrect = correctIndices.includes(oi);
-                              return (
-                                <p key={oi} className={isCorrect ? 'text-green-600 dark:text-green-400 font-medium' : ''}>
-                                  {isCorrect ? '✓ ' : '  '}{String.fromCharCode(65 + oi)}) {opt}
-                                </p>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Explanation */}
-                    {row.explanation && (
-                      <div className="text-xs text-[var(--color-text-muted)] italic mb-2 whitespace-pre-line">
-                        💡 {row.explanation}
-                      </div>
-                    )}
-
-                    {/* Inline metadata using reusable selectors */}
-                    <div className="grid grid-cols-3 gap-2 mt-2">
-                      <SubjectSelector
-                        subjects={subjects}
-                        value={getSubjectId(row.subject)}
-                        onChange={(id) => {
-                          const name = id ? subjects.find(s => s.id === id)?.name || '' : '';
-                          updateRow(globalIdx, 'subject', name);
-                        }}
-                        compact
-                      />
-                      <CategorySelector
-                        categories={categories}
-                        value={getCategoryId(row.category)}
-                        onChange={(id) => {
-                          const name = id ? categories.find(c => c.id === id)?.name || '' : '';
-                          updateRow(globalIdx, 'category', name);
-                        }}
-                        compact
-                      />
-                      <TagSelector
-                        tags={tags}
-                        selectedIds={getTagIds(row.tags)}
-                        onChange={(ids) => {
-                          const names = ids.map(id => tags.find(t => t.id === id)?.name || '').filter(Boolean);
-                          updateRow(globalIdx, 'tags', names.join(', '));
-                        }}
-                        compact
-                      />
-                    </div>
-                    {/* Difficulty toggle per question */}
-                    <div className="flex items-center gap-1 mt-2">
-                      <span className="text-[10px] text-[var(--color-text-muted)] mr-1">{t('dificultad')}:</span>
-                      <div className="flex rounded-[var(--radius-md)] border border-[var(--color-border)] overflow-hidden">
-                        {['', ...difficulties].map(d => (
-                          <button
-                            key={d}
-                            type="button"
-                            onClick={() => updateRow(globalIdx, 'difficulty', d)}
-                            className={`px-2 py-1 text-[10px] font-medium transition-colors ${
-                              row.difficulty === d
-                                ? 'bg-[var(--color-brand-gold)] text-white'
-                                : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]'
-                            }`}
-                          >
-                            {d ? t(`dificultad_${d}`) : t('dificultad_sin')}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex shrink-0 gap-1">
-                    <button
-                      type="button"
-                      onClick={() => { setEditIdx(globalIdx); setMode('edit'); }}
-                      className="rounded p-1 text-[var(--color-text-muted)] hover:text-[var(--color-brand-gold)] transition-colors"
-                    >
-                      <Edit className="size-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => removeRow(globalIdx)}
-                      className="rounded p-1 text-[var(--color-text-muted)] hover:text-[var(--color-error)] transition-colors"
-                    >
-                      <Trash2 className="size-3.5" />
-                    </button>
-                  </div>
-                </div>
-              </div>
+                row={row}
+                globalIdx={globalIdx}
+                isSelected={selected.has(globalIdx)}
+                subjects={subjects}
+                categories={categories}
+                tags={tags}
+                onToggleSelect={toggleSelect}
+                onUpdateRow={updateRow}
+                onEditRow={handleEditRow}
+                onRemoveRow={removeRow}
+              />
             );
           })}
 
