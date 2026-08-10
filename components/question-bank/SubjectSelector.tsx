@@ -89,6 +89,7 @@ export function SubjectSelector({ subjects, value, onChange, compact = false }: 
       <div className="relative">
         <input
           type="text"
+          autoComplete="off"
           value={search || selectedName}
           onChange={(e) => {
             setSearch(e.target.value);
@@ -109,13 +110,13 @@ export function SubjectSelector({ subjects, value, onChange, compact = false }: 
           placeholder={t('materia_placeholder')}
           className={`w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] outline-none transition-colors focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)] ${
             compact ? 'px-2 py-1.5 text-[11px]' : 'px-3 py-2 text-sm'
-          }`}
+          } ${value ? (compact ? 'pr-6' : 'pr-7') : ''}`}
         />
-        {/* Clear button */}
-        {value && !dropdownOpen && (
+        {/* Clear button — always visible when value is set */}
+        {value && (
           <button
             type="button"
-            onClick={() => { onChange(null); setSearch(''); }}
+            onClick={() => { onChange(null); setSearch(''); setDropdownOpen(false); }}
             className="absolute right-2 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] hover:text-[var(--color-error)] transition-colors"
           >
             <X className={compact ? 'size-3' : 'size-3.5'} />

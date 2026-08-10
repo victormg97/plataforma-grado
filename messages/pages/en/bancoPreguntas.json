@@ -133,6 +133,8 @@
   "error_importar": "Error processing file",
   "metadata_masiva": "Bulk metadata",
   "metadata_masiva_desc": "Apply to all selected questions",
+  "metadata_masiva_titulo": "Apply to all selected",
+  "metadata_masiva_descripcion": "Choose a value and click ✓ to apply it to all checked questions at once.",
   "aplicar_a_seleccionadas": "Apply to selected",
   "confirmar_reemplazo": "Some questions already have different values",
   "confirmar_reemplazo_desc": "Existing {field} values in {count} questions will be replaced. Continue?",
@@ -152,5 +154,8 @@
   "confirmar_cancelar_importacion": "Cancel import?",
   "confirmar_cancelar_importacion_desc": "All processed questions and changes will be lost. This action cannot be undone.",
   "cancelar_importacion_confirmar": "Yes, cancel import",
-  "opcional": "optional"
+  "opcional": "optional",
+  "borrador_importacion_encontrado": "You have an import in progress with {count} questions",
+  "continuar_borrador": "Continue",
+  "descartar_borrador": "Discard"
 }

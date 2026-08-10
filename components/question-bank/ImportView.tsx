@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { FileText, ChevronDown, ChevronUp, ClipboardCopy } from 'lucide-react';
+import { FileText, ChevronDown, ChevronUp, ClipboardCopy, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import { ImportPreviewView } from '@/components/question-bank/ImportPreviewView';
 import { parseQuestionsFromText, type ParsedQuestion } from '@/lib/question-bank/text-parser';
@@ -26,6 +26,45 @@ interface ImportRow {
   category: string;
   tags: string;
   difficulty: string;
+}
+
+// ─── Draft persistence ──────────────────────────────────────────────────────
+const IMPORT_DRAFT_KEY = 'qb-import-draft';
+
+interface ImportDraft {
+  rows: ImportRow[];
+  selectedIndices: number[];
+  savedAt: number; // timestamp for staleness check
+}
+
+function loadImportDraft(): ImportDraft | null {
+  try {
+    const raw = localStorage.getItem(IMPORT_DRAFT_KEY);
+    if (!raw) return null;
+    const parsed: ImportDraft = JSON.parse(raw);
+    // Validate structure
+    if (!Array.isArray(parsed.rows) || parsed.rows.length === 0) return null;
+    if (!Array.isArray(parsed.selectedIndices)) return null;
+    // Discard drafts older than 7 days
+    if (Date.now() - parsed.savedAt > 7 * 24 * 60 * 60 * 1000) {
+      localStorage.removeItem(IMPORT_DRAFT_KEY);
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function saveImportDraft(rows: ImportRow[], selectedIndices: number[]) {
+  try {
+    const draft: ImportDraft = { rows, selectedIndices, savedAt: Date.now() };
+    localStorage.setItem(IMPORT_DRAFT_KEY, JSON.stringify(draft));
+  } catch { /* quota exceeded or private browsing, ignore */ }
+}
+
+function clearImportDraft() {
+  try { localStorage.removeItem(IMPORT_DRAFT_KEY); } catch { /* ignore */ }
 }
 
 /**
@@ -170,12 +209,33 @@ export function ImportView({ categories, tags, subjects }: ImportViewProps) {
   const t = useTranslations('bancoPreguntas');
   const queryClient = useQueryClient();
 
-  const [step, setStep] = useState<'paste' | 'preview'>('paste');
-  const [parsedRows, setParsedRows] = useState<ImportRow[]>([]);
+  // Load saved draft on mount
+  const savedDraft = useRef(loadImportDraft());
+
+  const [step, setStep] = useState<'paste' | 'preview'>(savedDraft.current ? 'preview' : 'paste');
+  const [parsedRows, setParsedRows] = useState<ImportRow[]>(savedDraft.current?.rows || []);
+  const [initialSelected] = useState<number[]>(savedDraft.current?.selectedIndices || []);
   const [pasteContent, setPasteContent] = useState('');
   const [processing, setProcessing] = useState(false);
   const [showAiSection, setShowAiSection] = useState(false);
   const [aiPasteText, setAiPasteText] = useState('');
+  const [showDraftBanner, setShowDraftBanner] = useState(!!savedDraft.current);
+
+  // Track selected indices from child for persistence
+  const selectedIndicesRef = useRef<number[]>(initialSelected);
+
+  // Save draft whenever rows change (from ImportPreviewView edits)
+  const handleRowsChange = useCallback((newRows: ImportRow[]) => {
+    setParsedRows(newRows);
+    saveImportDraft(newRows, selectedIndicesRef.current);
+  }, []);
+
+  // Callback for ImportPreviewView to report selection changes
+  const handleSelectionChange = useCallback((indices: number[]) => {
+    selectedIndicesRef.current = indices;
+    // Save with current rows
+    saveImportDraft(parsedRows, indices);
+  }, [parsedRows]);
 
   // Convert ParsedQuestion[] to ImportRow[] for the API
   // Uses ||| as internal separator to avoid conflicts with semicolons in option text
@@ -238,6 +298,11 @@ export function ImportView({ categories, tags, subjects }: ImportViewProps) {
         const rows = convertToRows(questions);
         setParsedRows(rows);
         setStep('preview');
+        setShowDraftBanner(false);
+        // Save initial draft with all selected
+        const allSelected = rows.map((_, i) => i);
+        selectedIndicesRef.current = allSelected;
+        saveImportDraft(rows, allSelected);
         toast.success(t('preguntas_detectadas', { count: questions.length }));
       } catch {
         toast.error(t('error_importar'));
@@ -287,6 +352,11 @@ export function ImportView({ categories, tags, subjects }: ImportViewProps) {
 
     setParsedRows(rows);
     setStep('preview');
+    setShowDraftBanner(false);
+    // Save initial draft with all selected
+    const allSelected = rows.map((_, i) => i);
+    selectedIndicesRef.current = allSelected;
+    saveImportDraft(rows, allSelected);
     toast.success(t('preguntas_detectadas', { count: rows.length }));
   }, [aiPasteText, t]);
 
@@ -295,14 +365,18 @@ export function ImportView({ categories, tags, subjects }: ImportViewProps) {
     queryClient.invalidateQueries({ queryKey: ['qb-categories'] });
     queryClient.invalidateQueries({ queryKey: ['qb-tags'] });
     queryClient.invalidateQueries({ queryKey: ['qb-subjects'] });
+    clearImportDraft();
     setParsedRows([]);
     setPasteContent('');
     setStep('paste');
+    setShowDraftBanner(false);
   }, [queryClient]);
 
   const handleBack = useCallback(() => {
+    clearImportDraft();
     setParsedRows([]);
     setStep('paste');
+    setShowDraftBanner(false);
   }, []);
 
   const copyAiPrompt = useCallback(() => {
@@ -349,6 +423,38 @@ A continuación las preguntas a convertir:
   if (step === 'paste') {
     return (
       <div className="space-y-6">
+        {/* Draft recovery banner */}
+        {showDraftBanner && savedDraft.current && (
+          <div className="flex items-center justify-between rounded-[var(--radius-md)] border border-[var(--color-brand-gold)]/30 bg-[color-mix(in_srgb,var(--color-brand-gold)_8%,transparent)] px-4 py-3">
+            <div className="flex items-center gap-2">
+              <RotateCcw className="size-4 text-[var(--color-brand-gold)]" />
+              <span className="text-sm text-[var(--color-text-primary)]">
+                {t('borrador_importacion_encontrado', { count: savedDraft.current.rows.length })}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => { clearImportDraft(); setShowDraftBanner(false); savedDraft.current = null; }}
+              >
+                {t('descartar_borrador')}
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => {
+                  setParsedRows(savedDraft.current!.rows);
+                  selectedIndicesRef.current = savedDraft.current!.selectedIndices;
+                  setStep('preview');
+                  setShowDraftBanner(false);
+                }}
+              >
+                {t('continuar_borrador')}
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div>
           <h2 className="text-lg font-bold text-[var(--color-text-primary)]" style={{ fontFamily: 'var(--font-display)' }}>
@@ -436,9 +542,11 @@ A continuación las preguntas a convertir:
   return (
     <ImportPreviewView
       rows={parsedRows}
-      onChange={setParsedRows}
+      onChange={handleRowsChange}
       onBack={handleBack}
       onImported={handleImported}
+      onSelectionChange={handleSelectionChange}
+      initialSelected={initialSelected}
       categories={categories}
       tags={tags}
       subjects={subjects}

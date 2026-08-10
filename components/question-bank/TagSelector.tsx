@@ -127,6 +127,7 @@ export function TagSelector({ tags, selectedIds, onChange, contentForSuggestions
       <div className="relative">
         <input
           type="text"
+          autoComplete="off"
           value={search}
           onChange={(e) => { setSearch(e.target.value); setDropdownOpen(true); }}
           onFocus={() => setDropdownOpen(true)}

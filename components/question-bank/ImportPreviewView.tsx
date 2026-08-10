@@ -36,6 +36,8 @@ interface ImportPreviewViewProps {
   onChange: (rows: ImportRow[]) => void;
   onBack: () => void;
   onImported: () => void;
+  onSelectionChange?: (indices: number[]) => void;
+  initialSelected?: number[];
   categories: QbCategory[];
   tags: QbTag[];
   subjects: QbSubject[];
@@ -48,16 +50,90 @@ const DEFAULT_PAGE_SIZE = 21;
 // Max items to render at once for performance (virtual loading threshold)
 const MAX_RENDER_BATCH = 100;
 
+/**
+ * Simple inline dropdown for bulk metadata fields.
+ * Replaces native <datalist> which triggers browser autocomplete history.
+ */
+function BulkDropdown({ value, onChange, options, placeholder, allowFreeText = false }: {
+  value: string;
+  onChange: (v: string) => void;
+  options: string[];
+  placeholder: string;
+  allowFreeText?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const filtered = value.trim()
+    ? options.filter(o => o.toLowerCase().includes(value.toLowerCase()))
+    : options;
+
+  return (
+    <div className="relative w-full">
+      <input
+        type="text"
+        autoComplete="off"
+        value={value}
+        onChange={(e) => { onChange(e.target.value); setOpen(true); }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setTimeout(() => setOpen(false), 200)}
+        placeholder={placeholder}
+        className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-2 py-1.5 text-xs outline-none focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
+      />
+      {open && filtered.length > 0 && (
+        <div className="absolute z-10 mt-1 w-full max-h-[160px] overflow-y-auto rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] shadow-[var(--shadow-lg)]">
+          {filtered.map((opt) => (
+            <button
+              key={opt}
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                if (allowFreeText && value.includes(',')) {
+                  // Append to existing comma-separated list
+                  const parts = value.split(',').map(p => p.trim()).filter(Boolean);
+                  if (!parts.includes(opt)) parts.push(opt);
+                  onChange(parts.join(', '));
+                } else {
+                  onChange(opt);
+                }
+                setOpen(false);
+              }}
+              className="w-full px-2.5 py-1.5 text-left text-xs text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] transition-colors"
+            >
+              {opt}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function ImportPreviewView({
-  rows, onChange, onBack, onImported, categories, tags, subjects,
+  rows, onChange, onBack, onImported, onSelectionChange, initialSelected, categories, tags, subjects,
 }: ImportPreviewViewProps) {
   const t = useTranslations('bancoPreguntas');
 
   const [mode, setMode] = useState<ViewMode>('review');
   const [editIdx, setEditIdx] = useState(0);
-  const [selected, setSelected] = useState<Set<number>>(() => new Set(rows.map((_, i) => i)));
+  const [selected, setSelected] = useState<Set<number>>(() => {
+    // Use initialSelected from parent (restored draft) or default to all
+    if (initialSelected && initialSelected.length > 0) {
+      return new Set(initialSelected);
+    }
+    return new Set(rows.map((_, i) => i));
+  });
   const [page, setPage] = useState(1);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+
+  // Warn before closing browser tab with unsaved import progress
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      // Modern browsers ignore custom messages, but this triggers the native dialog
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, []);
 
   // Persisted page size preference
   const [pageSize, setPageSize] = useUiPreference<number>('qb_import_page_size', DEFAULT_PAGE_SIZE);
@@ -66,6 +142,16 @@ export function ImportPreviewView({
 
   // Sync local input with preference
   useEffect(() => { setPageSizeInput(pageSize); }, [pageSize]);
+
+  // Report selection changes to parent for draft persistence
+  const prevSelectedRef = useRef<string>('');
+  useEffect(() => {
+    const key = Array.from(selected).sort().join(',');
+    if (key !== prevSelectedRef.current) {
+      prevSelectedRef.current = key;
+      onSelectionChange?.(Array.from(selected));
+    }
+  }, [selected, onSelectionChange]);
 
   // Page size change with debounce + optimistic update
   const handlePageSizeChange = (value: number) => {
@@ -344,12 +430,15 @@ export function ImportPreviewView({
         </div>
       </div>
 
-      {/* Bulk metadata section */}
+      {/* Bulk metadata section — apply to all selected questions */}
       {mode === 'review' && (
         <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-card,var(--color-bg))] p-4">
-          <h4 className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-3">
-            {t('metadata_masiva')}
+          <h4 className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-1">
+            {t('metadata_masiva_titulo')}
           </h4>
+          <p className="text-[10px] text-[var(--color-text-muted)] mb-3">
+            {t('metadata_masiva_descripcion')}
+          </p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div>
               <label className="block text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-1">
@@ -357,17 +446,12 @@ export function ImportPreviewView({
               </label>
               <div className="flex gap-1">
                 <div className="flex-1 relative">
-                  <input
-                    type="text"
-                    list="bulk-subject-list"
+                  <BulkDropdown
                     value={bulkSubject}
-                    onChange={(e) => setBulkSubject(e.target.value)}
+                    onChange={setBulkSubject}
+                    options={subjects.map(s => s.name)}
                     placeholder={t('materia_placeholder')}
-                    className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-2 py-1.5 text-xs outline-none focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
                   />
-                  <datalist id="bulk-subject-list">
-                    {subjects.map(s => <option key={s.id} value={s.name} />)}
-                  </datalist>
                 </div>
                 {bulkSubject && (
                   <button
@@ -386,17 +470,12 @@ export function ImportPreviewView({
               </label>
               <div className="flex gap-1">
                 <div className="flex-1 relative">
-                  <input
-                    type="text"
-                    list="bulk-category-list"
+                  <BulkDropdown
                     value={bulkCategory}
-                    onChange={(e) => setBulkCategory(e.target.value)}
+                    onChange={setBulkCategory}
+                    options={categories.map(c => c.name)}
                     placeholder={t('categoria_placeholder')}
-                    className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-2 py-1.5 text-xs outline-none focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
                   />
-                  <datalist id="bulk-category-list">
-                    {categories.map(c => <option key={c.id} value={c.name} />)}
-                  </datalist>
                 </div>
                 {bulkCategory && (
                   <button
@@ -414,12 +493,12 @@ export function ImportPreviewView({
                 {t('tags')}
               </label>
               <div className="flex gap-1">
-                <input
-                  type="text"
+                <BulkDropdown
                   value={bulkTags}
-                  onChange={(e) => setBulkTags(e.target.value)}
+                  onChange={setBulkTags}
+                  options={tags.map(t => t.name)}
                   placeholder="tag1, tag2"
-                  className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-2 py-1.5 text-xs outline-none focus:border-[var(--color-brand-gold)] focus:ring-1 focus:ring-[var(--color-brand-gold)]"
+                  allowFreeText
                 />
                 {bulkTags && (
                   <button

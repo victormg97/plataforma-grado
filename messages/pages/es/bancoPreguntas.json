@@ -131,8 +131,10 @@
   "importacion_ok": "Se importaron {count} preguntas correctamente",
   "importacion_parcial": "Se importaron {success} de {total} preguntas ({errors} con errores)",
   "error_importar": "Error al procesar el archivo",
-  "metadata_masiva": "Metadata para todas",
+  "metadata_masiva": "Clasificación en lote",
   "metadata_masiva_desc": "Aplica a todas las preguntas seleccionadas",
+  "metadata_masiva_titulo": "Aplicar a todas las seleccionadas",
+  "metadata_masiva_descripcion": "Elige un valor y haz clic en ✓ para aplicarlo a todas las preguntas marcadas de una vez.",
   "aplicar_a_seleccionadas": "Aplicar a seleccionadas",
   "confirmar_reemplazo": "Algunas preguntas ya tienen valores distintos",
   "confirmar_reemplazo_desc": "Se reemplazarán los valores existentes de {field} en {count} preguntas. ¿Continuar?",
@@ -152,5 +154,8 @@
   "confirmar_cancelar_importacion": "¿Cancelar importación?",
   "confirmar_cancelar_importacion_desc": "Se perderán todas las preguntas procesadas y los cambios realizados. Esta acción no se puede deshacer.",
   "cancelar_importacion_confirmar": "Sí, cancelar importación",
-  "opcional": "opcional"
+  "opcional": "opcional",
+  "borrador_importacion_encontrado": "Tienes una importación en progreso con {count} preguntas",
+  "continuar_borrador": "Continuar",
+  "descartar_borrador": "Descartar"
 }
