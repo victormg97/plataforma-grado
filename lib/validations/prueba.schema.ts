@@ -8,7 +8,7 @@ export const calificarPruebaSchema = z.object({
     .multipleOf(0.1)
     .optional()
     .nullable(),
-  observaciones: z.string().max(1000).optional().nullable(),
+  observaciones: z.string().optional().nullable(),
 });
 
 export type CalificarPruebaData = z.infer<typeof calificarPruebaSchema>;

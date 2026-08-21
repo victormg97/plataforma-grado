@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const programaSchema = z.object({
   nombre: z.string().min(1, 'El nombre es requerido').max(200),
-  descripcion: z.string().max(1000).optional().nullable(),
+  descripcion: z.string().optional().nullable(),
   profesor_id: z.string().uuid().optional().nullable(), // legacy / backward compat
   // Solo admin puede especificar visibilidad y profesor_ids
   visibilidad: z.enum(['todos', 'especifico']).optional(),
@@ -11,7 +11,7 @@ export const programaSchema = z.object({
 
 export const claseSchema = z.object({
   nombre: z.string().min(1, 'El nombre es requerido').max(200),
-  descripcion: z.string().max(1000).optional().nullable(),
+  descripcion: z.string().optional().nullable(),
   tipo: z.enum(['materia', 'prueba']),
   orden: z.number().int().min(1),
   duracion_min: z.number().int().min(15).max(480).optional().nullable(),
