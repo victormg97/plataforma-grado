@@ -179,13 +179,14 @@ export function TerminosReferidosButton({
         aria-label={t('terminos_boton')}
         title={t('terminos_boton')}
         className={[
-          'inline-flex size-7 shrink-0 items-center justify-center rounded-full text-[var(--color-brand-gold)] ring-1 ring-[var(--color-brand-gold)]/35 transition-colors',
-          'hover:bg-[var(--color-brand-gold-muted)] hover:ring-[var(--color-brand-gold)]',
+          // Sin borde propio: el icono de lucide ya dibuja su círculo.
+          'inline-flex size-7 shrink-0 items-center justify-center rounded-full text-[var(--color-brand-gold)] transition-colors',
+          'hover:bg-[var(--color-brand-gold-muted)]',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand-gold)]',
           className || '',
         ].join(' ')}
       >
-        <Info className="size-4" />
+        <Info className="size-[1.15rem]" />
       </button>
 
       <TerminosReferidosModal

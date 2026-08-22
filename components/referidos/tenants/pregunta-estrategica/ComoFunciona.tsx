@@ -82,7 +82,9 @@ function PasoConSeparador({
             className="flex size-12 items-center justify-center rounded-full bg-[var(--color-bg-secondary)] text-xl font-bold text-[var(--color-text-primary)] sm:size-14 sm:text-2xl"
             style={{ fontFamily: 'var(--font-display)' }}
           >
-            {numero}
+            {/* Igual que en la escala de acumulación: compensa el baseline de
+                Playfair para centrar ópticamente el número. */}
+            <span className="leading-none pb-[0.1em]">{numero}</span>
           </span>
           <span className="absolute -bottom-1 -right-1 flex size-6 items-center justify-center rounded-[var(--radius-sm)] bg-[var(--color-bg)] shadow-[var(--shadow-sm)] ring-1 ring-[var(--color-border)]">
             <Icon className="size-3.5 text-[var(--color-brand-gold)]" aria-hidden />

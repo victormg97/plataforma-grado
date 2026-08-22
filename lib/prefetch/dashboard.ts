@@ -11,6 +11,16 @@ export async function prefetchDashboardData(userId: string, rol: UserRol) {
   const queryClient = new QueryClient();
   const supabase = await createClient();
 
+  // Configuración del sistema de referidos — la consumen el sidebar (para
+  // mostrar el botón) y la página de referidos (para saber si el sistema está
+  // activo). Se dispara ya para que solape con el prefetch por rol de abajo y
+  // no sume latencia; se resuelve justo antes de dehidratar.
+  const referralSettingsPromise = supabase
+    .from('referral_settings')
+    .select('*')
+    .eq('tenant', tenantConfig.id)
+    .maybeSingle();
+
   if (rol === 'admin') {
     // ── Single RPC call: get_admin_prefetch returns everything in one round-trip ──
     const [prefetchResult, sortPrefResult] = await Promise.all([
@@ -262,6 +272,28 @@ export async function prefetchDashboardData(userId: string, rol: UserRol) {
       queryClient.setQueryData(['recursos_sort_pref', userId], sortPrefResult.data?.sort_by ?? 'created_at_desc');
     }
   }
+
+  // ── Referidos: settings en caché antes del primer render ──────────────────
+  // Evita el parpadeo del banner "sistema desactivado" y del botón del sidebar
+  // mientras se resolvía la consulta en el cliente. El fallback replica la
+  // respuesta de GET /api/referidos/settings cuando el tenant no tiene fila.
+  const { data: referralSettings } = await referralSettingsPromise;
+  queryClient.setQueryData(
+    ['referral-settings'],
+    referralSettings ?? {
+      tenant: tenantConfig.id,
+      platform_enabled: false,
+      tenant_enabled: false,
+      display_name: 'Sistema de Referidos',
+      icon: 'star',
+      reader_role_enabled: true,
+      discount_codes_module_enabled: false,
+      discount_codes_display_name: 'Código de Descuento',
+      show_rewards_to_user: true,
+      show_referral_count_to_user: true,
+      user_welcome_message: '',
+    }
+  );
 
   return dehydrate(queryClient);
 }

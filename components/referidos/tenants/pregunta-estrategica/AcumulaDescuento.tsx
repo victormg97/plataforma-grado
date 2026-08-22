@@ -75,7 +75,10 @@ export function AcumulaDescuento({
                 ].join(' ')}
                 style={{ fontFamily: 'var(--font-display)' }}
               >
-                {tier.referrals}
+                {/* El padding inferior compensa las métricas verticales de
+                    Playfair (el baseline deja los dígitos ópticamente bajos)
+                    para que el número quede centrado en el círculo. */}
+                <span className="leading-none pb-[0.1em]">{tier.referrals}</span>
                 {activo && (
                   <span className="absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-[var(--color-bg)] ring-1 ring-[var(--color-brand-gold)]">
                     <Check className="size-2.5 text-[var(--color-brand-gold)]" strokeWidth={3} />

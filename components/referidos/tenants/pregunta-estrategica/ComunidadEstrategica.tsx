@@ -52,7 +52,7 @@ export default function ComunidadEstrategica({
   const showCount = settings.show_referral_count_to_user;
 
   return (
-    <div className="mx-auto max-w-5xl space-y-[var(--space-xl)] pb-[var(--space-lg)]">
+    <div className="w-full space-y-[var(--space-xl)] pb-[var(--space-lg)]">
       {/* ── Encabezado ── */}
       <Reveal direction="none">
         <header className="text-center">

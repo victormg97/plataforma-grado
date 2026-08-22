@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
-import { ArrowLeft, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card } from '@/components/common/Card';
 import { MiCodigoCard } from '@/components/referidos/MiCodigoCard';
@@ -25,12 +25,8 @@ import type {
 
 export default function AlumnoReferidosPage() {
   const t = useTranslations('referidos');
-  const tc = useTranslations('common');
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { user } = useUser();
-
-  const from = searchParams.get('from');
 
   // Algunos tenants tienen una vista propia para su programa de referidos
   // (registro en components/referidos/variants.tsx).
@@ -92,26 +88,20 @@ export default function AlumnoReferidosPage() {
       (hasTenantView || !!settings?.show_rewards_to_user),
   });
 
-  const handleVolver = () => {
-    if (from) router.push(from);
-    else router.back();
-  };
-
   if (!user || user.rol !== 'alumno') return null;
 
-  const systemActive = settings?.platform_enabled && settings?.tenant_enabled;
+  // Los settings vienen precargados desde el servidor (prefetchDashboardData),
+  // así que normalmente ya están disponibles en el primer render. Mientras no
+  // se hayan resuelto no se renderiza nada: así se evita el parpadeo del banner
+  // "sistema desactivado" antes de saber si el sistema está activo.
+  const settingsResolved = settings !== undefined;
+  const systemActive = !!settings?.platform_enabled && !!settings?.tenant_enabled;
   const displayName = settings?.display_name || t('titulo');
+
+  if (!settingsResolved) return null;
 
   return (
     <div>
-      <button
-        onClick={handleVolver}
-        className="mb-3 inline-flex items-center gap-1.5 text-sm text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text-primary)]"
-      >
-        <ArrowLeft className="size-4" />
-        {tc('volver')}
-      </button>
-
       {/* La vista propia del tenant trae su propio encabezado. */}
       {!(systemActive && hasTenantView) && (
         <PageHeader title={displayName} subtitle={t('subtitulo_alumno')} />
