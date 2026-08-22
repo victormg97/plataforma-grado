@@ -12,6 +12,7 @@ import {
 import { format } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
 import { buildAlumnoHorarioDetailHref, buildClaseDetailHref } from '@/lib/utils/horarioNavigation';
+import { stripHtml } from '@/lib/utils';
 import { useUIStore } from '@/stores/useUIStore';
 import { useUserStore } from '@/stores/useUserStore';
 import { ModalRespuestaSolicitud } from '@/components/notificaciones/ModalRespuestaSolicitud';
@@ -270,7 +271,7 @@ export function NotificacionesPanel() {
       return n.mensaje || tn(`tipos.${n.tipo}`);
     }
 
-    const clase = n.horario?.titulo?.trim() || n.horario?.descripcion?.trim() || tn('mensajes.clase_generica');
+    const clase = n.horario?.titulo?.trim() || stripHtml(n.horario?.descripcion ?? '').trim() || tn('mensajes.clase_generica');
     const fecha = n.horario
       ? format(
           new Date(`${n.horario.fecha}T12:00:00`),

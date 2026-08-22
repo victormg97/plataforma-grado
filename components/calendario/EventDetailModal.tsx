@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { Clock, FileText, MessageSquare, GraduationCap } from 'lucide-react';
+import { RichDescription } from '@/components/common/RichDescription';
 import { Modal } from '@/components/common/Modal';
 import { Avatar } from '@/components/common/Avatar';
 import { StatusBadge } from '@/components/common/StatusBadge';
@@ -114,7 +115,7 @@ export function EventDetailModal({
           {horario.descripcion && (
             <div className="flex items-start gap-2 text-sm text-[var(--color-text-secondary)]">
               <FileText className="mt-0.5 size-4 shrink-0" />
-              <p>{horario.descripcion}</p>
+              <RichDescription html={horario.descripcion} />
             </div>
           )}
 

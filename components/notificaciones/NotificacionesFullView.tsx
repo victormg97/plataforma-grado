@@ -15,6 +15,7 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { Card } from '@/components/common/Card';
 import { AppSelect } from '@/components/common/AppSelect';
 import { buildAlumnoHorarioDetailHref, buildClaseDetailHref } from '@/lib/utils/horarioNavigation';
+import { stripHtml } from '@/lib/utils';
 import { useUIStore } from '@/stores/useUIStore';
 import { useUserStore } from '@/stores/useUserStore';
 import { ModalRespuestaSolicitud } from '@/components/notificaciones/ModalRespuestaSolicitud';
@@ -348,7 +349,7 @@ export function NotificacionesFullView({ role }: NotificacionesFullViewProps) {
       return n.mensaje || tn(`tipos.${n.tipo}`);
     }
 
-    const clase = n.horario?.titulo?.trim() || n.horario?.descripcion?.trim() || tn('mensajes.clase_generica');
+    const clase = n.horario?.titulo?.trim() || stripHtml(n.horario?.descripcion ?? '').trim() || tn('mensajes.clase_generica');
     const fecha = n.horario
       ? format(
           new Date(`${n.horario.fecha}T12:00:00`),

@@ -17,6 +17,7 @@ import type { Profile } from '@/lib/supabase/types';
 import type { HorarioConAsistencia } from '@/lib/hooks/useHorarios';
 import { AlumnoCombobox } from './components/AlumnoCombobox';
 import { ExamenToggle } from './components/ExamenToggle';
+import { SimpleRichEditor } from '@/components/common/SimpleRichEditor';
 import { usePruebaTerm } from '@/lib/hooks/usePruebaTerm';
 
 interface HorarioFormProps {
@@ -553,12 +554,10 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
             {/* Descripcion */}
             <div>
               <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">{t('descripcion')} <span className="text-[var(--color-text-muted)]">{t('opcional')}</span></label>
-              <textarea
-                value={watchedDescripcion}
-                onChange={(e) => setValue('descripcion', e.target.value)}
-                rows={3}
+              <SimpleRichEditor
+                content={watchedDescripcion}
+                onChange={(html) => setValue('descripcion', html)}
                 placeholder={t('descripcion_placeholder')}
-                className={inputClass}
               />
               {errors.descripcion && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.descripcion.message}</p>}
             </div>

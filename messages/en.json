@@ -1657,6 +1657,10 @@
     "columna_fecha_registro": "Registration date",
     "columna_recompensa": "Reward applied",
     "premio_por_referido": "Reward per successful referral",
-    "sin_recompensas_activas": "No active rewards configured yet"
+    "sin_recompensas_activas": "No active rewards configured yet",
+    "terminos_boton": "View terms and conditions",
+    "terminos_titulo": "Terms and Conditions",
+    "terminos_cargando": "Loading terms and conditions...",
+    "terminos_error": "We couldn't load the terms and conditions. Please try again later."
   }
 }

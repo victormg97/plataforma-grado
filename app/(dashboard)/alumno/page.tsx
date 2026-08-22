@@ -22,6 +22,7 @@ import { usePruebaTerm } from '@/lib/hooks/usePruebaTerm';
 import type { ClaseAlumno } from '@/lib/hooks/useAsistencia';
 import Link from 'next/link';
 import { useTranslations, useLocale } from 'next-intl';
+import { RichDescription } from '@/components/common/RichDescription';
 
 function AlumnoDashboardContent() {
   const { user } = useUserStore();
@@ -114,7 +115,7 @@ function AlumnoDashboardContent() {
                       )}
                     </div>
                     {proximaClase.horario.descripcion && (
-                      <p className="text-sm text-[var(--color-text-muted)] mt-0.5">{proximaClase.horario.descripcion}</p>
+                      <RichDescription html={proximaClase.horario.descripcion} className="mt-0.5" />
                     )}
                     {proximaClase.horario.profesor && (
                       <p className="text-sm text-[var(--color-text-muted)] mt-1">

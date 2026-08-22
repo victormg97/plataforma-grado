@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { format } from 'date-fns';
 import { es as esDateFns } from 'date-fns/locale';
 import { Calendar, Clock, FileText, MessageSquare, GraduationCap } from 'lucide-react';
+import { RichDescription } from '@/components/common/RichDescription';
 import { usePathname } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -162,7 +163,7 @@ export function HorarioDetailGlobal() {
           {horario.descripcion && (
             <div className="flex items-start gap-2 text-sm text-[var(--color-text-secondary)]">
               <FileText className="mt-0.5 size-4 shrink-0" />
-              <p>{horario.descripcion}</p>
+              <RichDescription html={horario.descripcion} />
             </div>
           )}
 

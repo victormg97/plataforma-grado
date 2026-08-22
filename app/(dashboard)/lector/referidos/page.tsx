@@ -10,10 +10,18 @@ import { MiCodigoCard } from '@/components/referidos/MiCodigoCard';
 import { ListaReferidos } from '@/components/referidos/ListaReferidos';
 import { RecompensasCard } from '@/components/referidos/RecompensasCard';
 import { SistemaDesactivadoBanner } from '@/components/referidos/SistemaDesactivadoBanner';
+import {
+  TenantReferidosView,
+  tenantHasReferidosVariant,
+} from '@/components/referidos/variants';
 import { Card } from '@/components/common/Card';
 import { useUser } from '@/lib/hooks/useUser';
 import { getRolRedirectPath } from '@/lib/auth/helpers';
-import type { ReferralSettings } from '@/lib/referidos/types';
+import type {
+  ReferralRewardRule,
+  ReferralSettings,
+  ReferralUsageEnriched,
+} from '@/lib/referidos/types';
 
 export default function LectorReferidosPage() {
   const t = useTranslations('referidos');
@@ -23,6 +31,10 @@ export default function LectorReferidosPage() {
   const { user } = useUser();
 
   const from = searchParams.get('from');
+
+  // Algunos tenants tienen una vista propia para su programa de referidos
+  // (registro en components/referidos/variants.tsx).
+  const hasTenantView = tenantHasReferidosVariant();
 
   const { data: settings, isLoading: settingsLoading } = useQuery<ReferralSettings>({
     queryKey: ['referral-settings'],
@@ -59,7 +71,7 @@ export default function LectorReferidosPage() {
     enabled: !!user && user.rol === 'lector' && !!settings?.reader_role_enabled,
   });
 
-  const { data: usages = [] } = useQuery({
+  const { data: usages = [] } = useQuery<ReferralUsageEnriched[]>({
     queryKey: ['my-referral-usages'],
     staleTime: 30_000,
     queryFn: async () => {
@@ -70,7 +82,7 @@ export default function LectorReferidosPage() {
     enabled: !!user && user.rol === 'lector' && !!settings?.reader_role_enabled,
   });
 
-  const { data: rules = [] } = useQuery({
+  const { data: rules = [] } = useQuery<ReferralRewardRule[]>({
     queryKey: ['referral-reward-rules'],
     staleTime: 5 * 60_000,
     queryFn: async () => {
@@ -78,7 +90,12 @@ export default function LectorReferidosPage() {
       if (!res.ok) throw new Error();
       return res.json();
     },
-    enabled: !!user && user.rol === 'lector' && !!settings?.show_rewards_to_user,
+    // La vista propia del tenant también usa las reglas para derivar los montos
+    // del programa, por eso no depende solo de show_rewards_to_user.
+    enabled:
+      !!user &&
+      user.rol === 'lector' &&
+      (hasTenantView || !!settings?.show_rewards_to_user),
   });
 
   const handleVolver = () => {
@@ -101,10 +118,13 @@ export default function LectorReferidosPage() {
         {tc('volver')}
       </button>
 
-      <PageHeader
-        title={settings?.display_name || t('titulo')}
-        subtitle={t('subtitulo')}
-      />
+      {/* La vista propia del tenant trae su propio encabezado. */}
+      {!(systemActive && hasTenantView) && (
+        <PageHeader
+          title={settings?.display_name || t('titulo')}
+          subtitle={t('subtitulo')}
+        />
+      )}
 
       {!systemActive && (
         <div className="mt-[var(--space-md)]">
@@ -115,7 +135,17 @@ export default function LectorReferidosPage() {
         </div>
       )}
 
-      {systemActive && (
+      {systemActive && settings && hasTenantView && (
+        <TenantReferidosView
+          settings={settings}
+          code={myCode?.code ?? null}
+          usages={usages}
+          rules={rules}
+          userId={user.id}
+        />
+      )}
+
+      {systemActive && !hasTenantView && (
         <div className="mt-[var(--space-lg)] space-y-[var(--space-lg)]">
           {/* ── Welcome context card ── */}
           {settings?.user_welcome_message && (

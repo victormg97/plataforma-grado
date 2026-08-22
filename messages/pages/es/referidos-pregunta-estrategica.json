@@ -1,0 +1,52 @@
+{
+  "eyebrow": "Programa de Referidos",
+  "titulo": "Comunidad Estratégica",
+  "lema": "Estudiar acompañado también tiene sus beneficios",
+  "descripcion": "Invita a otros estudiantes a prepararse con {app} y obtengan beneficios ambos.",
+  "beneficios": {
+    "tu": "Tú",
+    "referido": "Tu referido",
+    "descuento": "{monto} de descuento",
+    "tuDetalle": "Por cada persona que se registre con tu código durante {meses} meses.",
+    "tuAcumulable": "Acumulable hasta <b>{tope}</b>",
+    "referidoDetalle": "En su programa de {programa} durante {meses} meses."
+  },
+  "comoFunciona": {
+    "titulo": "¿Cómo funciona?",
+    "paso1Titulo": "Comparte tu código",
+    "paso1Desc": "Cada alumno tiene un código promocional personal.",
+    "paso2Titulo": "Invita a un amigo",
+    "paso2Desc": "Tu referido se registra utilizando tu código al contratar su programa de {programa}.",
+    "paso3Titulo": "Ambos reciben un beneficio",
+    "paso3Desc": "Tu amig@ obtiene {montoReferido} de descuento y tú {montoReferente} de descuento en tu próximo pack de {programa}."
+  },
+  "acumula": {
+    "titulo": "Acumula tu descuento",
+    "referidoSingular": "Referido",
+    "referidoPlural": "Referidos",
+    "nota": "Durante {meses} meses. La acumulación de los referidos es mensual.",
+    "progreso": "{cantidad, plural, =0 {Aún no tienes referidos este mes} one {# referido este mes} other {# referidos este mes}}",
+    "acumulado": "{monto} acumulados",
+    "bonusTitulo": "Al llegar a {cantidad} referidos en el mes",
+    "bonusAlcanzado": "¡Beneficio especial desbloqueado!",
+    "bonusDefault": "Beneficio especial"
+  },
+  "codigo": {
+    "titulo": "Tu código personal",
+    "subtitulo": "Compártelo y empieza a ganar beneficios.",
+    "copiar": "Copiar",
+    "copiado": "¡Copiado!",
+    "compartir": "Compartir mi código",
+    "compartirTexto": "Prepárate para tu examen de grado con {app}. Regístrate con mi código {codigo} y obtén {monto} de descuento.",
+    "sinCodigo": "Tu código personal se está generando. Vuelve a intentarlo en unos instantes."
+  },
+  "misReferidos": {
+    "titulo": "Mis referidos",
+    "vacioTitulo": "Aún no tienes referidos",
+    "vacioDesc": "Comparte tu código y las personas que se registren con él aparecerán aquí."
+  },
+  "terminos": {
+    "nota": "*Los beneficios están sujetos a los términos y condiciones del Programa {programa}.",
+    "titulo": "Términos y Condiciones · {programa}"
+  }
+}

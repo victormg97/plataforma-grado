@@ -19,6 +19,7 @@ import { Button } from '@/components/common/Button';
 import { HorarioForm } from '@/components/horarios/HorarioForm';
 import { useTranslations, useLocale } from 'next-intl';
 import { Calendar, Clock, FileText, Lock, MessageSquare, Pencil, UserX, GraduationCap } from 'lucide-react';
+import { RichDescription } from '@/components/common/RichDescription';
 import { usePruebaTerm } from '@/lib/hooks/usePruebaTerm';
 import { CalendarioDownloadButton, type CalendarioExportEvent } from '@/components/calendario/CalendarioDownloadButton';
 import { CalendarioStyles } from '@/components/calendario/CalendarioStyles';
@@ -481,7 +482,7 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
             {selectedHorario.descripcion && (
               <div className="flex items-start gap-2 text-sm text-[var(--color-text-secondary)]">
                 <FileText className="mt-0.5 size-4 shrink-0" />
-                <p>{selectedHorario.descripcion}</p>
+                <RichDescription html={selectedHorario.descripcion} />
               </div>
             )}
 

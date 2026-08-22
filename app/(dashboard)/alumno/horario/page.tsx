@@ -36,6 +36,8 @@ import type { ClaseAlumno } from '@/lib/hooks/useAsistencia';
 import type { EstadoAsistencia } from '@/lib/supabase/types';
 import { useTranslations, useLocale } from 'next-intl';
 import { FilterChip } from '@/components/horarios/HorariosProfesorView/FilterChip';
+import { RichDescription } from '@/components/common/RichDescription';
+import { stripHtml } from '@/lib/utils';
 
 /* ── Search input ── */
 function SearchInput({
@@ -147,7 +149,7 @@ function UpcomingClaseCard({ clase, locale, dateFnsLocale, t, isFirst, isExamen 
             )}
           </div>
           {clase.horario.descripcion && (
-            <p className="mt-2 text-xs text-[var(--color-text-muted)] line-clamp-1">{clase.horario.descripcion}</p>
+            <RichDescription html={clase.horario.descripcion} className="mt-2 text-xs line-clamp-1" />
           )}
         </div>
       </div>
@@ -316,7 +318,7 @@ function HorarioListView({ clases, loading }: { clases: ClaseAlumno[]; loading: 
     const q = debouncedProximas.toLowerCase();
     return upcoming.filter((c) =>
       c.horario.titulo.toLowerCase().includes(q) ||
-      c.horario.descripcion?.toLowerCase().includes(q) ||
+      stripHtml(c.horario.descripcion ?? '').toLowerCase().includes(q) ||
       (c.horario.profesor &&
         `${c.horario.profesor.nombre} ${c.horario.profesor.apellido}`.toLowerCase().includes(q))
     );
@@ -338,7 +340,7 @@ function HorarioListView({ clases, loading }: { clases: ClaseAlumno[]; loading: 
     const q = debouncedHistorial.toLowerCase();
     return base.filter((c) =>
       c.horario.titulo.toLowerCase().includes(q) ||
-      c.horario.descripcion?.toLowerCase().includes(q) ||
+      stripHtml(c.horario.descripcion ?? '').toLowerCase().includes(q) ||
       (c.horario.profesor &&
         `${c.horario.profesor.nombre} ${c.horario.profesor.apellido}`.toLowerCase().includes(q))
     );
@@ -618,7 +620,7 @@ function HorarioDetailView({ clase, user, confirmar, cancelar, pedirCambio: _ped
             </div>
 
             {clase.horario.descripcion && (
-              <p className="text-[var(--color-text-muted)]">{clase.horario.descripcion}</p>
+              <RichDescription html={clase.horario.descripcion} />
             )}
 
             <div className="flex flex-wrap items-center gap-2">

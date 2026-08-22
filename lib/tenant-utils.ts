@@ -33,7 +33,7 @@ export function formatOwnerEmails(propietarios: Owner[]): string {
 
 // ─── Carga de documentos legales con fallback por tenant ─────────────────────
 
-export type LegalDocType = 'privacidad' | 'terminos';
+export type LegalDocType = 'privacidad' | 'terminos' | 'referidos-terminos';
 
 /**
  * Carga un documento legal con lógica de fallback:
@@ -43,7 +43,9 @@ export type LegalDocType = 'privacidad' | 'terminos';
  *
  * La política de privacidad global representa la plataforma (desarrollador).
  * Los términos y condiciones globales son el fallback genérico para tenants
- * que aún no han subido los suyos.
+ * que aún no han subido los suyos. Lo mismo aplica a `referidos-terminos`
+ * (T&C del programa de referidos): el archivo global es una plantilla que el
+ * tenant sobrescribe dejando su propio documento en `content/tenants/...`.
  *
  * @returns { content: string; isCustom: boolean }
  *   - content: texto Markdown listo para reemplazar placeholders

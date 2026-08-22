@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { format } from 'date-fns';
 import { es as esDateFns, enUS } from 'date-fns/locale';
 import { Calendar, Clock, FileText, MessageSquare, ArrowLeft, GraduationCap } from 'lucide-react';
+import { RichDescription } from '@/components/common/RichDescription';
 import Link from 'next/link';
 import { useTranslations, useLocale } from 'next-intl';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -396,7 +397,7 @@ export function ClaseDetailView({ rol }: ClaseDetailViewProps) {
             {horario.descripcion && (
               <div className="flex items-start gap-2 text-sm text-[var(--color-text-secondary)]">
                 <FileText className="mt-0.5 h-4 w-4 shrink-0" />
-                <p>{horario.descripcion}</p>
+                <RichDescription html={horario.descripcion} />
               </div>
             )}
 

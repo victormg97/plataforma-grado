@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Clock, GraduationCap, Lock, User, FileText } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { cn } from '@/lib/utils';
+import { cn, stripHtml } from '@/lib/utils';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { usePruebaTerm } from '@/lib/hooks/usePruebaTerm';
 import type { EstadoAsistencia } from '@/lib/supabase/types';
@@ -186,7 +186,7 @@ export function CalendarEventPopover({ data, anchorEl, rol, onClose }: CalendarE
         data.descripcion ? (
           <div className="flex items-start gap-1.5 text-xs text-[var(--color-text-muted)]">
             <FileText className="size-3 shrink-0 mt-0.5" />
-            <span className="line-clamp-2">{data.descripcion}</span>
+            <span className="line-clamp-2">{stripHtml(data.descripcion)}</span>
           </div>
         ) : (
           <p className="text-xs text-[var(--color-text-muted)] italic">{t('bloqueo_sin_motivo')}</p>
@@ -213,7 +213,7 @@ export function CalendarEventPopover({ data, anchorEl, rol, onClose }: CalendarE
           {data.descripcion && (
             <div className="flex items-start gap-1.5 text-xs text-[var(--color-text-muted)] mb-1.5">
               <FileText className="size-3 shrink-0 mt-0.5" />
-              <span className="line-clamp-1">{data.descripcion}</span>
+              <span className="line-clamp-1">{stripHtml(data.descripcion)}</span>
             </div>
           )}
 

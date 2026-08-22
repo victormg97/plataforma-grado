@@ -1661,6 +1661,10 @@
     "columna_fecha_registro": "Fecha de registro",
     "columna_recompensa": "Recompensa aplicada",
     "premio_por_referido": "Premio por cada referido exitoso",
-    "sin_recompensas_activas": "No hay recompensas activas configuradas actualmente"
+    "sin_recompensas_activas": "No hay recompensas activas configuradas actualmente",
+    "terminos_boton": "Ver términos y condiciones",
+    "terminos_titulo": "Términos y Condiciones",
+    "terminos_cargando": "Cargando términos y condiciones...",
+    "terminos_error": "No pudimos cargar los términos y condiciones. Inténtalo de nuevo más tarde."
   }
 }

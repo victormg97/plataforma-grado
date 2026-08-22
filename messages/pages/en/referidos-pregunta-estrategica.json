@@ -1,0 +1,52 @@
+{
+  "eyebrow": "Referral Program",
+  "titulo": "Strategic Community",
+  "lema": "Studying together also has its perks",
+  "descripcion": "Invite other students to prepare with {app} and you both get benefits.",
+  "beneficios": {
+    "tu": "You",
+    "referido": "Your referral",
+    "descuento": "{monto} off",
+    "tuDetalle": "For every person who signs up with your code, for {meses} months.",
+    "tuAcumulable": "Stackable up to <b>{tope}</b>",
+    "referidoDetalle": "On their {programa} program for {meses} months."
+  },
+  "comoFunciona": {
+    "titulo": "How does it work?",
+    "paso1Titulo": "Share your code",
+    "paso1Desc": "Every student has a personal promo code.",
+    "paso2Titulo": "Invite a friend",
+    "paso2Desc": "Your referral signs up with your code when purchasing their {programa} program.",
+    "paso3Titulo": "You both get a benefit",
+    "paso3Desc": "Your friend gets {montoReferido} off and you get {montoReferente} off your next {programa} pack."
+  },
+  "acumula": {
+    "titulo": "Stack your discount",
+    "referidoSingular": "Referral",
+    "referidoPlural": "Referrals",
+    "nota": "For {meses} months. Referrals stack on a monthly basis.",
+    "progreso": "{cantidad, plural, =0 {No referrals yet this month} one {# referral this month} other {# referrals this month}}",
+    "acumulado": "{monto} stacked",
+    "bonusTitulo": "When you reach {cantidad} referrals in the month",
+    "bonusAlcanzado": "Special benefit unlocked!",
+    "bonusDefault": "Special benefit"
+  },
+  "codigo": {
+    "titulo": "Your personal code",
+    "subtitulo": "Share it and start earning benefits.",
+    "copiar": "Copy",
+    "copiado": "Copied!",
+    "compartir": "Share my code",
+    "compartirTexto": "Get ready for your bar exam with {app}. Sign up with my code {codigo} and get {monto} off.",
+    "sinCodigo": "Your personal code is being generated. Please try again in a moment."
+  },
+  "misReferidos": {
+    "titulo": "My referrals",
+    "vacioTitulo": "No referrals yet",
+    "vacioDesc": "Share your code and everyone who signs up with it will show up here."
+  },
+  "terminos": {
+    "nota": "*Benefits are subject to the terms and conditions of the {programa} Program.",
+    "titulo": "Terms and Conditions · {programa}"
+  }
+}
