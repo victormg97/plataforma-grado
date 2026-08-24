@@ -11,6 +11,13 @@ import {
 import { XIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 
+const SIZE_CLASSES = {
+  default: 'max-w-lg md:max-w-xl',
+  lg: 'max-w-xl md:max-w-2xl',
+  xl: 'max-w-2xl md:max-w-3xl',
+  full: 'w-full h-full sm:max-w-2xl sm:max-h-[90dvh]',
+} as const;
+
 interface ModalProps {
   open: boolean;
   onClose: () => void;
@@ -19,6 +26,7 @@ interface ModalProps {
   children: ReactNode;
   footer?: ReactNode;
   preventOutsideClose?: boolean;
+  size?: keyof typeof SIZE_CLASSES;
 }
 
 export function Modal({
@@ -29,6 +37,7 @@ export function Modal({
   children,
   footer,
   preventOutsideClose = false,
+  size = 'default',
 }: ModalProps) {
   return (
     <Dialog
@@ -38,7 +47,7 @@ export function Modal({
       }}
     >
       <DialogContent
-        className="max-w-lg md:max-w-xl flex flex-col max-h-[90dvh] overflow-hidden border-[var(--color-border)] bg-[var(--color-bg)]"
+        className={`${SIZE_CLASSES[size]} flex flex-col max-h-[90dvh] overflow-hidden border-[var(--color-border)] bg-[var(--color-bg)]`}
         showCloseButton={!preventOutsideClose}
       >
         {preventOutsideClose && (

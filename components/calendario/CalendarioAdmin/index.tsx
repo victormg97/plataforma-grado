@@ -487,11 +487,10 @@ export function CalendarioAdmin() {
               text: `+ ${t('nueva_clase')}`,
               click: () => {
                 setEditingHorario(null);
-                setDefaultDate(undefined);
-                setDefaultTime(undefined);
-                setDefaultEndTime(undefined);
-                setDefaultBloqueo(false);
-                setFormOpen(true);
+                setAgendaFormDate(undefined);
+                setAgendaFormTime(undefined);
+                setAgendaFormEndTime(undefined);
+                setAgendaFormOpen(true);
               },
             },
             descargar: {

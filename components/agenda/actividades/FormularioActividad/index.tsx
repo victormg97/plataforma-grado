@@ -72,11 +72,16 @@ export interface FormularioActividadProps {
   onSuccess: () => void;
   cachedAlumnos?: AlumnoOption[];
   adminProfesores?: { id: string; nombre: string; apellido: string }[];
+  /** When 'inline', renders form content without its own Modal wrapper. */
+  renderMode?: 'modal' | 'inline';
+  /** Callback to report dirty state to parent (used in inline mode). */
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
 export function FormularioActividad({
   open, onClose, defaultDate, defaultTime, defaultEndTime,
   actividadExistente, rol, profesorId, onSuccess, cachedAlumnos, adminProfesores,
+  renderMode = 'modal', onDirtyChange,
 }: FormularioActividadProps) {
   const t = useTranslations('agendaActividades');
   const tNucleo = useTranslations('agendaNucleo');
@@ -87,7 +92,7 @@ export function FormularioActividad({
 
   const {
     register, handleSubmit, reset, watch, control, setValue,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, isDirty },
   } = useForm<ActividadFormData>({
     resolver: zodResolver(crearActividadSchema) as never,
     defaultValues: {
@@ -103,6 +108,11 @@ export function FormularioActividad({
   const horaInicio = watch('hora_inicio');
   const horaFin = watch('hora_fin');
   const alcance = watch('alcance');
+
+  // Report dirty state to parent (inline mode)
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
 
   useEffect(() => {
     if (!open) return;
@@ -198,173 +208,189 @@ export function FormularioActividad({
   const inputClass =
     'w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-brand-gold)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-gold)]';
 
+  const footerContent = (
+    <div className="flex w-full items-center justify-end gap-3">
+      <Button variant="ghost" onClick={onClose}>{tc('cancelar')}</Button>
+      <Button onClick={handleSubmit(onSubmit)} loading={isSubmitting}>
+        {isEditing ? t('btn_guardar') : t('btn_crear')}
+      </Button>
+    </div>
+  );
+
+  const formContent = (
+    <form className="space-y-4">
+      {/* Título */}
+      <div>
+        <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">
+          {t('campo_titulo')}
+        </label>
+        <input type="text" {...register('titulo')} placeholder={t('campo_titulo_placeholder')} className={inputClass} />
+        {errors.titulo && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.titulo.message}</p>}
+      </div>
+
+      {/* Categoría */}
+      <div>
+        <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">
+          {t('campo_categoria')}
+        </label>
+        <Controller
+          control={control}
+          name="categoria"
+          render={({ field }) => (
+            <AppSelect value={field.value} onChange={field.onChange} options={categoriaOptions} className="w-full" />
+          )}
+        />
+      </div>
+
+      {/* Día completo */}
+      <div className="flex items-center gap-2">
+        <input
+          type="checkbox" id="actividad_dia_completo" {...register('dia_completo')}
+          className="size-4 rounded border-[var(--color-border)] text-[var(--color-brand-gold)] focus:ring-[var(--color-brand-gold)]"
+        />
+        <label htmlFor="actividad_dia_completo" className="text-sm text-[var(--color-text-primary)]">
+          {t('campo_dia_completo')}
+        </label>
+      </div>
+
+      {/* Fecha */}
+      <div>
+        <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">
+          {tNucleo('campo_fecha')}
+        </label>
+        <input type="date" {...register('fecha')} className={inputClass} />
+        {errors.fecha && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.fecha.message}</p>}
+      </div>
+
+      {/* Hora inicio / Hora fin */}
+      {!diaCompleto && (
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">
+              {tNucleo('campo_hora_inicio')}
+            </label>
+            <input type="time" {...register('hora_inicio')} className={inputClass} />
+            {errors.hora_inicio && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.hora_inicio.message}</p>}
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">
+              {tNucleo('campo_hora_fin')}
+            </label>
+            <input type="time" {...register('hora_fin')} className={inputClass} />
+            {errors.hora_fin && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.hora_fin.message}</p>}
+          </div>
+        </div>
+      )}
+
+      {/* Descripción */}
+      <div>
+        <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">
+          {t('campo_descripcion')}
+        </label>
+        <Controller
+          control={control}
+          name="descripcion"
+          render={({ field }) => (
+            <SimpleRichEditor content={field.value ?? ''} onChange={field.onChange} placeholder={t('campo_descripcion_placeholder')} />
+          )}
+        />
+      </div>
+
+      {/* Nota */}
+      <div>
+        <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">
+          {t('campo_nota')}
+        </label>
+        <Controller
+          control={control}
+          name="nota"
+          render={({ field }) => (
+            <SimpleRichEditor content={field.value ?? ''} onChange={field.onChange} placeholder={t('campo_nota_placeholder')} />
+          )}
+        />
+      </div>
+
+      {/* Lugar */}
+      <div>
+        <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">
+          {t('campo_lugar')}
+        </label>
+        <input type="text" {...register('lugar')} placeholder={t('campo_lugar_placeholder')} className={inputClass} />
+        {errors.lugar && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.lugar.message}</p>}
+      </div>
+
+      {/* Enlace de conexión */}
+      <div>
+        <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">
+          {tConexion('campo_label')}
+        </label>
+        <input type="url" {...register('enlace_conexion')} placeholder={tConexion('campo_placeholder')} className={inputClass} />
+        {errors.enlace_conexion && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.enlace_conexion.message}</p>}
+      </div>
+
+      {/* Alcance */}
+      <div>
+        <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">
+          {t('campo_alcance')}
+        </label>
+        <Controller
+          control={control}
+          name="alcance"
+          render={({ field }) => (
+            <SelectorAlcance
+              value={field.value}
+              onChange={(val) => {
+                field.onChange(val);
+                if (val === 'todos_alumnos') setValue('destinatarios', []);
+              }}
+            />
+          )}
+        />
+      </div>
+
+      {/* Destinatarios */}
+      {alcance === 'alumnos_seleccionados' && (
+        <Controller
+          control={control}
+          name="destinatarios"
+          render={({ field }) => (
+            <SelectorDestinatarios alumnos={alumnos} selectedIds={field.value} onChange={field.onChange} />
+          )}
+        />
+      )}
+
+      {/* Visibilidad */}
+      <div>
+        <Controller
+          control={control}
+          name="visibilidad"
+          render={({ field }) => <SelectorVisibilidad value={field.value} onChange={field.onChange} />}
+        />
+      </div>
+
+      {/* Aviso de solapamiento (modo advertencia siempre) */}
+      <AvisoSolapamiento conflictos={conflictos} modo="advertencia" />
+    </form>
+  );
+
+  // Inline mode: render form + footer without Modal wrapper
+  if (renderMode === 'inline') {
+    return (
+      <div className="flex flex-col">
+        <div className="flex-1">{formContent}</div>
+        <div className="mt-4 border-t border-[var(--color-border)] pt-4">{footerContent}</div>
+      </div>
+    );
+  }
+
   return (
     <Modal
       open={open}
       onClose={onClose}
       title={isEditing ? t('titulo_editar') : t('titulo_crear')}
-      footer={
-        <div className="flex w-full items-center justify-end gap-3">
-          <Button variant="ghost" onClick={onClose}>{tc('cancelar')}</Button>
-          <Button onClick={handleSubmit(onSubmit)} loading={isSubmitting}>
-            {isEditing ? t('btn_guardar') : t('btn_crear')}
-          </Button>
-        </div>
-      }
+      footer={footerContent}
     >
-      <form className="space-y-4">
-        {/* Título */}
-        <div>
-          <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">
-            {t('campo_titulo')}
-          </label>
-          <input type="text" {...register('titulo')} placeholder={t('campo_titulo_placeholder')} className={inputClass} />
-          {errors.titulo && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.titulo.message}</p>}
-        </div>
-
-        {/* Categoría */}
-        <div>
-          <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">
-            {t('campo_categoria')}
-          </label>
-          <Controller
-            control={control}
-            name="categoria"
-            render={({ field }) => (
-              <AppSelect value={field.value} onChange={field.onChange} options={categoriaOptions} className="w-full" />
-            )}
-          />
-        </div>
-
-        {/* Día completo */}
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox" id="actividad_dia_completo" {...register('dia_completo')}
-            className="size-4 rounded border-[var(--color-border)] text-[var(--color-brand-gold)] focus:ring-[var(--color-brand-gold)]"
-          />
-          <label htmlFor="actividad_dia_completo" className="text-sm text-[var(--color-text-primary)]">
-            {t('campo_dia_completo')}
-          </label>
-        </div>
-
-        {/* Fecha */}
-        <div>
-          <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">
-            {tNucleo('campo_fecha')}
-          </label>
-          <input type="date" {...register('fecha')} className={inputClass} />
-          {errors.fecha && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.fecha.message}</p>}
-        </div>
-
-        {/* Hora inicio / Hora fin */}
-        {!diaCompleto && (
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">
-                {tNucleo('campo_hora_inicio')}
-              </label>
-              <input type="time" {...register('hora_inicio')} className={inputClass} />
-              {errors.hora_inicio && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.hora_inicio.message}</p>}
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">
-                {tNucleo('campo_hora_fin')}
-              </label>
-              <input type="time" {...register('hora_fin')} className={inputClass} />
-              {errors.hora_fin && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.hora_fin.message}</p>}
-            </div>
-          </div>
-        )}
-
-        {/* Descripción */}
-        <div>
-          <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">
-            {t('campo_descripcion')}
-          </label>
-          <Controller
-            control={control}
-            name="descripcion"
-            render={({ field }) => (
-              <SimpleRichEditor content={field.value ?? ''} onChange={field.onChange} placeholder={t('campo_descripcion_placeholder')} />
-            )}
-          />
-        </div>
-
-        {/* Nota */}
-        <div>
-          <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">
-            {t('campo_nota')}
-          </label>
-          <Controller
-            control={control}
-            name="nota"
-            render={({ field }) => (
-              <SimpleRichEditor content={field.value ?? ''} onChange={field.onChange} placeholder={t('campo_nota_placeholder')} />
-            )}
-          />
-        </div>
-
-        {/* Lugar */}
-        <div>
-          <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">
-            {t('campo_lugar')}
-          </label>
-          <input type="text" {...register('lugar')} placeholder={t('campo_lugar_placeholder')} className={inputClass} />
-          {errors.lugar && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.lugar.message}</p>}
-        </div>
-
-        {/* Enlace de conexión */}
-        <div>
-          <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">
-            {tConexion('campo_label')}
-          </label>
-          <input type="url" {...register('enlace_conexion')} placeholder={tConexion('campo_placeholder')} className={inputClass} />
-          {errors.enlace_conexion && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.enlace_conexion.message}</p>}
-        </div>
-
-        {/* Alcance */}
-        <div>
-          <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">
-            {t('campo_alcance')}
-          </label>
-          <Controller
-            control={control}
-            name="alcance"
-            render={({ field }) => (
-              <SelectorAlcance
-                value={field.value}
-                onChange={(val) => {
-                  field.onChange(val);
-                  if (val === 'todos_alumnos') setValue('destinatarios', []);
-                }}
-              />
-            )}
-          />
-        </div>
-
-        {/* Destinatarios */}
-        {alcance === 'alumnos_seleccionados' && (
-          <Controller
-            control={control}
-            name="destinatarios"
-            render={({ field }) => (
-              <SelectorDestinatarios alumnos={alumnos} selectedIds={field.value} onChange={field.onChange} />
-            )}
-          />
-        )}
-
-        {/* Visibilidad */}
-        <div>
-          <Controller
-            control={control}
-            name="visibilidad"
-            render={({ field }) => <SelectorVisibilidad value={field.value} onChange={field.onChange} />}
-          />
-        </div>
-
-        {/* Aviso de solapamiento (modo advertencia siempre) */}
-        <AvisoSolapamiento conflictos={conflictos} modo="advertencia" />
-      </form>
+      {formContent}
     </Modal>
   );
 }

@@ -1747,6 +1747,8 @@
     "filtro_clases": "Clases",
     "filtro_entradas": "Entradas personales",
     "filtro_actividades": "Actividades",
+    "filtro_btn": "Filtrar",
+    "filtro_btn_aria": "Filtrar tipos de evento en el calendario",
     "tipo_entrada_personal": "Entrada personal",
     "tipo_actividad": "Actividad",
     "leyenda_titulo": "Leyenda",
@@ -1756,7 +1758,17 @@
   },
   "agendaFormulario": {
     "titulo_crear": "Nuevo evento",
-    "titulo_editar": "Editar evento"
+    "titulo_editar": "Editar evento",
+    "titulo_nueva_clase": "Nueva clase",
+    "titulo_editar_clase": "Editar clase",
+    "titulo_nueva_entrada": "Nueva entrada personal",
+    "titulo_editar_entrada": "Editar entrada personal",
+    "titulo_nueva_actividad": "Nueva actividad",
+    "titulo_editar_actividad": "Editar actividad",
+    "confirmar_cierre_titulo": "Cambios sin guardar",
+    "confirmar_cierre_mensaje": "Tienes cambios sin guardar. ¿Seguro que quieres cerrar?",
+    "confirmar_cierre_descartar": "Descartar cambios",
+    "confirmar_cierre_seguir": "Seguir editando"
   },
   "agendaActividades": {
     "titulo_crear": "Nueva actividad",

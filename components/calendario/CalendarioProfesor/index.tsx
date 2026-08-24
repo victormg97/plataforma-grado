@@ -282,11 +282,10 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
 
   function handleNewClass() {
     setEditingHorario(null);
-    setDefaultDate(undefined);
-    setDefaultTime(undefined);
-    setDefaultEndTime(undefined);
-    setDefaultBloqueo(false);
-    setFormOpen(true);
+    setAgendaFormDate(undefined);
+    setAgendaFormTime(undefined);
+    setAgendaFormEndTime(undefined);
+    setAgendaFormOpen(true);
   }
 
   function handleDateClick(info: DateClickArg) {

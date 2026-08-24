@@ -1743,6 +1743,8 @@
     "filtro_clases": "Classes",
     "filtro_entradas": "Personal entries",
     "filtro_actividades": "Activities",
+    "filtro_btn": "Filter",
+    "filtro_btn_aria": "Filter event types on the calendar",
     "tipo_entrada_personal": "Personal entry",
     "tipo_actividad": "Activity",
     "leyenda_titulo": "Legend",
@@ -1752,7 +1754,17 @@
   },
   "agendaFormulario": {
     "titulo_crear": "New event",
-    "titulo_editar": "Edit event"
+    "titulo_editar": "Edit event",
+    "titulo_nueva_clase": "New class",
+    "titulo_editar_clase": "Edit class",
+    "titulo_nueva_entrada": "New personal entry",
+    "titulo_editar_entrada": "Edit personal entry",
+    "titulo_nueva_actividad": "New activity",
+    "titulo_editar_actividad": "Edit activity",
+    "confirmar_cierre_titulo": "Unsaved changes",
+    "confirmar_cierre_mensaje": "You have unsaved changes. Are you sure you want to close?",
+    "confirmar_cierre_descartar": "Discard changes",
+    "confirmar_cierre_seguir": "Keep editing"
   },
   "agendaActividades": {
     "titulo_crear": "New activity",
