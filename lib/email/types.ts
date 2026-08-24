@@ -27,7 +27,7 @@ import type { TipoNotificacion } from '@/lib/supabase/types';
  */
 export type TipoCorreo = Extract<
   TipoNotificacion,
-  'confirmacion' | 'cancelacion' | 'solicitud_cambio_horario' | 'programa_asignado' | 'nueva_clase' | 'invitacion_acceso' | 'bienvenida_registro' | 'nueva_nota_clase' | 'recordatorio_clase'
+  'confirmacion' | 'cancelacion' | 'solicitud_cambio_horario' | 'programa_asignado' | 'nueva_clase' | 'invitacion_acceso' | 'bienvenida_registro' | 'nueva_nota_clase' | 'recordatorio_clase' | 'nueva_actividad'
 >;
 
 /**

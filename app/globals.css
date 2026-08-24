@@ -59,6 +59,18 @@
   --color-error: var(--color-error);
   --color-info: var(--color-info);
 
+  /* Agenda — categorías y tipos de evento */
+  --color-agenda-clase: var(--color-agenda-clase);
+  --color-agenda-reunion: var(--color-agenda-reunion);
+  --color-agenda-estudio: var(--color-agenda-estudio);
+  --color-agenda-personal: var(--color-agenda-personal);
+  --color-agenda-administrativo: var(--color-agenda-administrativo);
+  --color-agenda-evento-externo: var(--color-agenda-evento-externo);
+  --color-agenda-plazo: var(--color-agenda-plazo);
+  --color-agenda-otro: var(--color-agenda-otro);
+  --color-agenda-tipo-entrada: var(--color-agenda-tipo-entrada);
+  --color-agenda-tipo-actividad: var(--color-agenda-tipo-actividad);
+
   /* CTA Brand Fonts */
   --font-display: var(--font-display);
   --font-body: var(--font-body);
@@ -138,6 +150,29 @@
   --color-profe-6: #f97316;
   --color-profe-7: #06b6d4;
 
+  /* Categorías de agenda (Requisitos 10.1, 10.5, 15.6)
+     Único lugar del proyecto donde viven estos valores: los componentes de
+     agenda los consumen siempre como var(--color-agenda-*).
+     Los ocho son distintos entre sí y distintos de los cinco colores de
+     estado_asistencia (pendiente = --color-brand-gold, confirmado =
+     --color-success, cancelado = --color-error, cambiado = --color-info,
+     no_asistio = --color-text-muted) y del gris de los Bloqueos_Horario
+     (--color-bg-elevated), para que una Clase y un Evento_Agenda no se
+     confundan en el calendario.
+     Todos superan 4.5:1 de contraste con texto blanco en el tema claro. */
+  --color-agenda-clase: #3F3D9E;
+  --color-agenda-reunion: #7A4FA3;
+  --color-agenda-estudio: #46700D;
+  --color-agenda-personal: #0F6E85;
+  --color-agenda-administrativo: #5A6B7C;
+  --color-agenda-evento-externo: #A85A17;
+  --color-agenda-plazo: #9E1B54;
+  --color-agenda-otro: #57534E;
+
+  /* Tipos de evento de agenda, para la leyenda y el Filtro_Agenda */
+  --color-agenda-tipo-entrada: var(--color-agenda-personal);
+  --color-agenda-tipo-actividad: var(--color-agenda-evento-externo);
+
   /* Tipografía */
   --font-display: 'Playfair Display', Georgia, serif;
   --font-body: 'DM Sans', system-ui, sans-serif;
@@ -215,6 +250,18 @@
   --color-profe-5: #2dd4bf;
   --color-profe-6: #fb923c;
   --color-profe-7: #22d3ee;
+
+  /* Categorías de agenda — versiones aclaradas para fondos oscuros.
+     Mismo tono que en el tema claro, con más luminosidad para que el evento
+     se distinga del lienzo del calendario. */
+  --color-agenda-clase: #8A88E8;
+  --color-agenda-reunion: #B98FE0;
+  --color-agenda-estudio: #9FC24B;
+  --color-agenda-personal: #4FC3DC;
+  --color-agenda-administrativo: #A3B4C4;
+  --color-agenda-evento-externo: #E09A4F;
+  --color-agenda-plazo: #E56A9C;
+  --color-agenda-otro: #B0A99F;
 }
 
 .graduado {
@@ -272,6 +319,17 @@
   --color-profe-6: #fb923c;
   --color-profe-7: #22d3ee;
   --shadow-gold: 0 4px 20px rgba(201, 153, 63, 0.35);
+
+  /* Categorías de agenda — el tema graduado no se combina con .dark, así que
+     necesita sus propias versiones aclaradas sobre su fondo casi negro. */
+  --color-agenda-clase: #8A88E8;
+  --color-agenda-reunion: #B98FE0;
+  --color-agenda-estudio: #9FC24B;
+  --color-agenda-personal: #4FC3DC;
+  --color-agenda-administrativo: #A3B4C4;
+  --color-agenda-evento-externo: #E09A4F;
+  --color-agenda-plazo: #E56A9C;
+  --color-agenda-otro: #B0A99F;
 }
 
 /* Tiptap editor styles */

@@ -588,7 +588,8 @@
       "cambio_horario_aceptado": "Cambio de horario aceptado",
       "cambio_horario_rechazado": "Cambio de horario rechazado",
       "nueva_nota_clase": "dejó una nota en una clase",
-      "recordatorio_clase": "Recordatorio de clase"
+      "recordatorio_clase": "Recordatorio de clase",
+      "nueva_actividad": "Nueva actividad"
     },
     "mensajes": {
       "alumno_generico": "El alumno",
@@ -1666,5 +1667,129 @@
     "terminos_titulo": "Términos y Condiciones",
     "terminos_cargando": "Cargando términos y condiciones...",
     "terminos_error": "No pudimos cargar los términos y condiciones. Inténtalo de nuevo más tarde."
+  },
+  "agendaConexion": {
+    "abrir": "Unirse a la reunión",
+    "abrir_aria": "Abrir el enlace de conexión en una pestaña nueva",
+    "campo_label": "Enlace de conexión",
+    "campo_placeholder": "https://…",
+    "errores": {
+      "enlace_invalido": "El enlace de conexión debe ser una URL que empiece por http o https",
+      "enlace_excede": "El enlace de conexión no puede superar los 2.000 caracteres"
+    }
+  },
+  "agendaVisibilidad": {
+    "indicador_privada": "Entrada privada (solo visible para ti)",
+    "indicador_publica": "Entrada pública (visible para otros)",
+    "opcion_privada": "Privada",
+    "opcion_publica": "Pública",
+    "label": "Visibilidad"
+  },
+  "agendaSolapamiento": {
+    "bloqueante_titulo": "Este horario choca con un compromiso ya asignado",
+    "bloqueante_item": "{titulo} · {fecha} · {horaInicio} a {horaFin}",
+    "advertencia_titulo": "Este horario se cruza con {cantidad, plural, one {# evento} other {# eventos}} de tu agenda",
+    "advertencia_item": "{titulo} · {fecha} · {horaInicio} a {horaFin}"
+  },
+  "agendaEntradasPersonales": {
+    "titulo_crear": "Nueva entrada personal",
+    "titulo_editar": "Editar entrada personal",
+    "campo_titulo": "Título",
+    "campo_titulo_placeholder": "¿Qué tienes planeado?",
+    "campo_categoria": "Categoría",
+    "campo_dia_completo": "Día completo",
+    "campo_descripcion": "Descripción",
+    "campo_descripcion_placeholder": "Añade detalles...",
+    "campo_nota": "Nota",
+    "campo_nota_placeholder": "Notas personales...",
+    "campo_lugar": "Lugar",
+    "campo_lugar_placeholder": "Lugar (opcional)",
+    "btn_guardar": "Guardar",
+    "btn_crear": "Crear entrada",
+    "exito_creado": "Entrada personal creada",
+    "exito_editado": "Entrada personal actualizada",
+    "exito_eliminado": "Entrada personal eliminada",
+    "error_guardar": "Error al guardar la entrada"
+  },
+  "agendaNucleo": {
+    "campo_fecha": "Fecha",
+    "campo_hora_inicio": "Hora inicio",
+    "campo_hora_fin": "Hora fin",
+    "categorias": {
+      "clase": "Clase",
+      "reunion": "Reunión",
+      "estudio": "Estudio",
+      "personal": "Personal",
+      "administrativo": "Administrativo",
+      "evento_externo": "Evento externo",
+      "plazo": "Plazo",
+      "otro": "Otro"
+    },
+    "selector_tipo_clase": "Clase",
+    "selector_tipo_entrada_personal": "Entrada personal",
+    "selector_tipo_actividad": "Actividad",
+    "actividad_proximamente": "Próximamente",
+    "alcance": {
+      "alumnos_seleccionados": "Alumnos seleccionados",
+      "todos_alumnos": "Todos mis alumnos"
+    }
+  },
+  "agendaCalendario": {
+    "dia_completo": "Día completo",
+    "detalle_titulo": "Detalle del evento",
+    "detalle_autor": "Creado por",
+    "detalle_categoria": "Categoría",
+    "detalle_lugar": "Lugar",
+    "detalle_descripcion": "Descripción",
+    "detalle_nota": "Nota",
+    "btn_editar": "Editar",
+    "btn_eliminar": "Eliminar",
+    "filtro_clases": "Clases",
+    "filtro_entradas": "Entradas personales",
+    "filtro_actividades": "Actividades",
+    "tipo_entrada_personal": "Entrada personal",
+    "tipo_actividad": "Actividad",
+    "leyenda_titulo": "Leyenda",
+    "errores": {
+      "exportacion": "La exportación no se pudo completar. Los eventos siguen visibles en el calendario."
+    }
+  },
+  "agendaFormulario": {
+    "titulo_crear": "Nuevo evento",
+    "titulo_editar": "Editar evento"
+  },
+  "agendaActividades": {
+    "titulo_crear": "Nueva actividad",
+    "titulo_editar": "Editar actividad",
+    "campo_titulo": "Título",
+    "campo_titulo_placeholder": "Nombre de la actividad",
+    "campo_categoria": "Categoría",
+    "campo_dia_completo": "Día completo",
+    "campo_descripcion": "Descripción",
+    "campo_descripcion_placeholder": "Detalles de la actividad...",
+    "campo_nota": "Nota",
+    "campo_nota_placeholder": "Notas adicionales...",
+    "campo_lugar": "Lugar",
+    "campo_lugar_placeholder": "Lugar (opcional)",
+    "campo_destinatarios": "Destinatarios",
+    "campo_destinatarios_placeholder": "Seleccionar alumnos...",
+    "campo_alcance": "Dirigida a",
+    "todos_seleccionados": "{cantidad} alumnos seleccionados",
+    "btn_crear": "Crear actividad",
+    "btn_guardar": "Guardar",
+    "exito_creado": "Actividad creada",
+    "exito_editado": "Actividad actualizada",
+    "exito_eliminado": "Actividad eliminada",
+    "error_guardar": "Error al guardar la actividad"
+  },
+  "agendaNotificaciones": {
+    "etiqueta": "Nueva actividad"
+  },
+  "agendaOcultacion": {
+    "ocultar": "Ocultar de mi calendario",
+    "mostrar": "Mostrar en mi calendario",
+    "panel_titulo": "Actividades ocultas",
+    "panel_vacio": "No hay actividades ocultas en este periodo",
+    "btn_restaurar": "Mostrar"
   }
 }

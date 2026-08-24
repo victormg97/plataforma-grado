@@ -67,6 +67,9 @@ export async function PATCH(
   if (callerProfile?.rol === 'admin' && body.profesor_id) {
     updateData.profesor_id = body.profesor_id;
   }
+  if ('enlace_conexion' in body) {
+    updateData.enlace_conexion = body.enlace_conexion || null;
+  }
 
   const { data, error } = await supabase
     .from('horarios')

@@ -9,6 +9,7 @@ import { StatusBadge } from '@/components/common/StatusBadge';
 import type { EstadoAsistencia } from '@/lib/supabase/types';
 import type { ReactNode } from 'react';
 import { usePruebaTerm } from '@/lib/hooks/usePruebaTerm';
+import { BotonConexion } from '@/components/agenda/conexion/BotonConexion';
 
 interface EventDetailHorario {
   id: string;
@@ -17,6 +18,7 @@ interface EventDetailHorario {
   fecha: string;
   hora_inicio: string;
   hora_fin: string;
+  enlace_conexion?: string | null;
   alumno: { id: string; nombre: string; apellido: string; email: string; avatar_url: string | null } | null;
   asistencia: { id: string; estado: string; nota_alumno: string | null }[];
 }
@@ -110,6 +112,9 @@ export function EventDetailModal({
               <span>{horario.fecha} · {horario.hora_inicio.slice(0, 5)} - {horario.hora_fin.slice(0, 5)}</span>
             </div>
           )}
+
+          {/* Connection link (Zoom, Meet, etc.) */}
+          <BotonConexion enlace={horario.enlace_conexion ?? null} />
 
           {/* Descripcion */}
           {horario.descripcion && (

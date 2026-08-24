@@ -14,6 +14,147 @@ export type Database = {
   }
   public: {
     Tables: {
+      // ─── Agenda tables ─────────────────────────────────────────────────
+      agenda_eventos: {
+        Row: {
+          activo: boolean
+          alcance: Database["public"]["Enums"]["agenda_alcance"]
+          categoria: Database["public"]["Enums"]["agenda_categoria"]
+          creador_id: string
+          created_at: string
+          descripcion: string | null
+          dia_completo: boolean
+          enlace_conexion: string | null
+          fecha: string
+          hora_fin: string
+          hora_inicio: string
+          id: string
+          lugar: string | null
+          nota: string | null
+          titulo: string
+          updated_at: string
+          visibilidad: Database["public"]["Enums"]["agenda_visibilidad"]
+        }
+        Insert: {
+          activo?: boolean
+          alcance: Database["public"]["Enums"]["agenda_alcance"]
+          categoria?: Database["public"]["Enums"]["agenda_categoria"]
+          creador_id: string
+          created_at?: string
+          descripcion?: string | null
+          dia_completo?: boolean
+          enlace_conexion?: string | null
+          fecha: string
+          hora_fin: string
+          hora_inicio: string
+          id?: string
+          lugar?: string | null
+          nota?: string | null
+          titulo: string
+          updated_at?: string
+          visibilidad?: Database["public"]["Enums"]["agenda_visibilidad"]
+        }
+        Update: {
+          activo?: boolean
+          alcance?: Database["public"]["Enums"]["agenda_alcance"]
+          categoria?: Database["public"]["Enums"]["agenda_categoria"]
+          creador_id?: string
+          created_at?: string
+          descripcion?: string | null
+          dia_completo?: boolean
+          enlace_conexion?: string | null
+          fecha?: string
+          hora_fin?: string
+          hora_inicio?: string
+          id?: string
+          lugar?: string | null
+          nota?: string | null
+          titulo?: string
+          updated_at?: string
+          visibilidad?: Database["public"]["Enums"]["agenda_visibilidad"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agenda_eventos_creador_id_fkey"
+            columns: ["creador_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agenda_evento_destinatarios: {
+        Row: {
+          alumno_id: string
+          created_at: string
+          evento_id: string
+          id: string
+        }
+        Insert: {
+          alumno_id: string
+          created_at?: string
+          evento_id: string
+          id?: string
+        }
+        Update: {
+          alumno_id?: string
+          created_at?: string
+          evento_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agenda_evento_destinatarios_alumno_id_fkey"
+            columns: ["alumno_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agenda_evento_destinatarios_evento_id_fkey"
+            columns: ["evento_id"]
+            isOneToOne: false
+            referencedRelation: "agenda_eventos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agenda_evento_ocultaciones: {
+        Row: {
+          alumno_id: string
+          created_at: string
+          evento_id: string
+          id: string
+        }
+        Insert: {
+          alumno_id: string
+          created_at?: string
+          evento_id: string
+          id?: string
+        }
+        Update: {
+          alumno_id?: string
+          created_at?: string
+          evento_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agenda_evento_ocultaciones_alumno_id_fkey"
+            columns: ["alumno_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agenda_evento_ocultaciones_evento_id_fkey"
+            columns: ["evento_id"]
+            isOneToOne: false
+            referencedRelation: "agenda_eventos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       carpetas_recursos: {
         Row: {
           id: string
@@ -482,6 +623,7 @@ export type Database = {
           alumno_id: string
           created_at: string
           descripcion: string | null
+          enlace_conexion: string | null
           es_recurrente: boolean
           fecha: string
           from_programa: boolean | null
@@ -497,6 +639,7 @@ export type Database = {
           alumno_id: string
           created_at?: string
           descripcion?: string | null
+          enlace_conexion?: string | null
           es_recurrente?: boolean
           fecha: string
           from_programa?: boolean | null
@@ -512,6 +655,7 @@ export type Database = {
           alumno_id?: string
           created_at?: string
           descripcion?: string | null
+          enlace_conexion?: string | null
           es_recurrente?: boolean
           fecha?: string
           from_programa?: boolean | null
@@ -774,6 +918,7 @@ export type Database = {
       }
       notificaciones: {
         Row: {
+          agenda_evento_id: string | null
           alumno_id: string | null
           created_at: string
           destinatario_id: string
@@ -787,6 +932,7 @@ export type Database = {
           tipo: Database["public"]["Enums"]["tipo_notificacion"]
         }
         Insert: {
+          agenda_evento_id?: string | null
           alumno_id?: string | null
           created_at?: string
           destinatario_id: string
@@ -800,6 +946,7 @@ export type Database = {
           tipo: Database["public"]["Enums"]["tipo_notificacion"]
         }
         Update: {
+          agenda_evento_id?: string | null
           alumno_id?: string | null
           created_at?: string
           destinatario_id?: string
@@ -813,6 +960,13 @@ export type Database = {
           tipo?: Database["public"]["Enums"]["tipo_notificacion"]
         }
         Relationships: [
+          {
+            foreignKeyName: "notificaciones_agenda_evento_id_fkey"
+            columns: ["agenda_evento_id"]
+            isOneToOne: false
+            referencedRelation: "agenda_eventos"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "notificaciones_alumno_id_fkey"
             columns: ["alumno_id"]
@@ -2096,6 +2250,23 @@ export type Database = {
         }
         Returns: undefined
       }
+      agenda_guardar_entrada_personal_alumno: {
+        Args: {
+          p_evento_id: string | null
+          p_titulo: string
+          p_fecha: string
+          p_hora_inicio: string
+          p_hora_fin: string
+          p_categoria?: Database["public"]["Enums"]["agenda_categoria"]
+          p_visibilidad?: Database["public"]["Enums"]["agenda_visibilidad"]
+          p_dia_completo?: boolean
+          p_descripcion?: string | null
+          p_nota?: string | null
+          p_lugar?: string | null
+          p_enlace_conexion?: string | null
+        }
+        Returns: Json
+      }
       alumno_tiene_asignacion_activa: {
         Args: { p_programa_id: string }
         Returns: boolean
@@ -2258,6 +2429,17 @@ export type Database = {
       }
     }
     Enums: {
+      agenda_alcance: "personal" | "alumnos_seleccionados" | "todos_alumnos"
+      agenda_visibilidad: "privada" | "publica"
+      agenda_categoria:
+        | "clase"
+        | "reunion"
+        | "estudio"
+        | "personal"
+        | "administrativo"
+        | "evento_externo"
+        | "plazo"
+        | "otro"
       estado_asistencia:
         | "pendiente"
         | "confirmado"
@@ -2279,6 +2461,7 @@ export type Database = {
         | "bienvenida_registro"
         | "nueva_nota_clase"
         | "recordatorio_clase"
+        | "nueva_actividad"
       user_rol: "admin" | "profesor" | "alumno" | "lector"
     }
     CompositeTypes: {
@@ -2407,6 +2590,18 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      agenda_alcance: ["personal", "alumnos_seleccionados", "todos_alumnos"],
+      agenda_visibilidad: ["privada", "publica"],
+      agenda_categoria: [
+        "clase",
+        "reunion",
+        "estudio",
+        "personal",
+        "administrativo",
+        "evento_externo",
+        "plazo",
+        "otro",
+      ],
       estado_asistencia: [
         "pendiente",
         "confirmado",
@@ -2429,6 +2624,7 @@ export const Constants = {
         "bienvenida_registro",
         "nueva_nota_clase",
         "recordatorio_clase",
+        "nueva_actividad",
       ],
       user_rol: ["admin", "profesor", "alumno", "lector"],
     },
@@ -2451,6 +2647,16 @@ export type EnlaceInvitacion = Tables<'enlaces_invitacion'>;
 
 export type EmailPlantilla = Tables<'email_plantillas'>;
 export type EmailEnvio = Tables<'email_envios'>;
+
+// ─── Agenda type aliases ─────────────────────────────────────────────────────
+
+export type AgendaAlcance = Database['public']['Enums']['agenda_alcance'];
+export type AgendaVisibilidad = Database['public']['Enums']['agenda_visibilidad'];
+export type CategoriaAgenda = Database['public']['Enums']['agenda_categoria'];
+
+export type AgendaEvento = Tables<'agenda_eventos'>;
+export type AgendaEventoDestinatario = Tables<'agenda_evento_destinatarios'>;
+export type AgendaEventoOcultacion = Tables<'agenda_evento_ocultaciones'>;
 
 export type EstadoPrograma = 'activo' | 'eliminado';
 export type EstadoPrueba = 'pendiente' | 'calificada' | 'en_curso';

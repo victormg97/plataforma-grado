@@ -44,7 +44,7 @@ export async function PATCH(
     .from('solicitudes_cambio_horario')
     .select(`
       *,
-      horario_original:horarios!solicitudes_cambio_horario_horario_original_id_fkey(id, titulo, fecha, hora_inicio, hora_fin, alumno_id, profesor_id)
+      horario_original:horarios!solicitudes_cambio_horario_horario_original_id_fkey(id, titulo, fecha, hora_inicio, hora_fin, alumno_id, profesor_id, enlace_conexion)
     `)
     .eq('id', id)
     .single();
@@ -77,6 +77,7 @@ export async function PATCH(
     hora_fin: string;
     alumno_id: string;
     profesor_id: string;
+    enlace_conexion: string | null;
   };
 
   if (estado === 'aceptada') {
@@ -90,6 +91,7 @@ export async function PATCH(
         hora_fin: solicitud.hora_fin_propuesta,
         profesor_id: solicitud.profesor_id,
         alumno_id: solicitud.alumno_id,
+        enlace_conexion: horarioOriginal.enlace_conexion,
         activo: true,
         es_recurrente: false,
       })

@@ -588,7 +588,8 @@
       "cambio_horario_aceptado": "Schedule change accepted",
       "cambio_horario_rechazado": "Schedule change rejected",
       "nueva_nota_clase": "left a note on a class",
-      "recordatorio_clase": "Class reminder"
+      "recordatorio_clase": "Class reminder",
+      "nueva_actividad": "New activity"
     },
     "mensajes": {
       "alumno_generico": "The student",
@@ -1662,5 +1663,129 @@
     "terminos_titulo": "Terms and Conditions",
     "terminos_cargando": "Loading terms and conditions...",
     "terminos_error": "We couldn't load the terms and conditions. Please try again later."
+  },
+  "agendaConexion": {
+    "abrir": "Join the meeting",
+    "abrir_aria": "Open the connection link in a new tab",
+    "campo_label": "Connection link",
+    "campo_placeholder": "https://…",
+    "errores": {
+      "enlace_invalido": "The connection link must be a URL starting with http or https",
+      "enlace_excede": "The connection link cannot exceed 2,000 characters"
+    }
+  },
+  "agendaVisibilidad": {
+    "indicador_privada": "Private entry (only visible to you)",
+    "indicador_publica": "Public entry (visible to others)",
+    "opcion_privada": "Private",
+    "opcion_publica": "Public",
+    "label": "Visibility"
+  },
+  "agendaSolapamiento": {
+    "bloqueante_titulo": "This time slot conflicts with an assigned commitment",
+    "bloqueante_item": "{titulo} · {fecha} · {horaInicio} to {horaFin}",
+    "advertencia_titulo": "This time slot overlaps with {cantidad, plural, one {# event} other {# events}} in your schedule",
+    "advertencia_item": "{titulo} · {fecha} · {horaInicio} to {horaFin}"
+  },
+  "agendaEntradasPersonales": {
+    "titulo_crear": "New personal entry",
+    "titulo_editar": "Edit personal entry",
+    "campo_titulo": "Title",
+    "campo_titulo_placeholder": "What do you have planned?",
+    "campo_categoria": "Category",
+    "campo_dia_completo": "All day",
+    "campo_descripcion": "Description",
+    "campo_descripcion_placeholder": "Add details...",
+    "campo_nota": "Note",
+    "campo_nota_placeholder": "Personal notes...",
+    "campo_lugar": "Location",
+    "campo_lugar_placeholder": "Location (optional)",
+    "btn_guardar": "Save",
+    "btn_crear": "Create entry",
+    "exito_creado": "Personal entry created",
+    "exito_editado": "Personal entry updated",
+    "exito_eliminado": "Personal entry deleted",
+    "error_guardar": "Error saving the entry"
+  },
+  "agendaNucleo": {
+    "campo_fecha": "Date",
+    "campo_hora_inicio": "Start time",
+    "campo_hora_fin": "End time",
+    "categorias": {
+      "clase": "Class",
+      "reunion": "Meeting",
+      "estudio": "Study",
+      "personal": "Personal",
+      "administrativo": "Administrative",
+      "evento_externo": "External event",
+      "plazo": "Deadline",
+      "otro": "Other"
+    },
+    "selector_tipo_clase": "Class",
+    "selector_tipo_entrada_personal": "Personal entry",
+    "selector_tipo_actividad": "Activity",
+    "actividad_proximamente": "Coming soon",
+    "alcance": {
+      "alumnos_seleccionados": "Selected students",
+      "todos_alumnos": "All my students"
+    }
+  },
+  "agendaCalendario": {
+    "dia_completo": "All day",
+    "detalle_titulo": "Event detail",
+    "detalle_autor": "Created by",
+    "detalle_categoria": "Category",
+    "detalle_lugar": "Location",
+    "detalle_descripcion": "Description",
+    "detalle_nota": "Note",
+    "btn_editar": "Edit",
+    "btn_eliminar": "Delete",
+    "filtro_clases": "Classes",
+    "filtro_entradas": "Personal entries",
+    "filtro_actividades": "Activities",
+    "tipo_entrada_personal": "Personal entry",
+    "tipo_actividad": "Activity",
+    "leyenda_titulo": "Legend",
+    "errores": {
+      "exportacion": "The export could not be completed. Events remain visible in the calendar."
+    }
+  },
+  "agendaFormulario": {
+    "titulo_crear": "New event",
+    "titulo_editar": "Edit event"
+  },
+  "agendaActividades": {
+    "titulo_crear": "New activity",
+    "titulo_editar": "Edit activity",
+    "campo_titulo": "Title",
+    "campo_titulo_placeholder": "Activity name",
+    "campo_categoria": "Category",
+    "campo_dia_completo": "All day",
+    "campo_descripcion": "Description",
+    "campo_descripcion_placeholder": "Activity details...",
+    "campo_nota": "Note",
+    "campo_nota_placeholder": "Additional notes...",
+    "campo_lugar": "Location",
+    "campo_lugar_placeholder": "Location (optional)",
+    "campo_destinatarios": "Recipients",
+    "campo_destinatarios_placeholder": "Select students...",
+    "campo_alcance": "Directed to",
+    "todos_seleccionados": "{cantidad} students selected",
+    "btn_crear": "Create activity",
+    "btn_guardar": "Save",
+    "exito_creado": "Activity created",
+    "exito_editado": "Activity updated",
+    "exito_eliminado": "Activity deleted",
+    "error_guardar": "Error saving the activity"
+  },
+  "agendaNotificaciones": {
+    "etiqueta": "New activity"
+  },
+  "agendaOcultacion": {
+    "ocultar": "Hide from my calendar",
+    "mostrar": "Show in my calendar",
+    "panel_titulo": "Hidden activities",
+    "panel_vacio": "No hidden activities in this period",
+    "btn_restaurar": "Show"
   }
 }

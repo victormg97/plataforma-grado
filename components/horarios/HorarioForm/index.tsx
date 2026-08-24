@@ -69,6 +69,7 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
   const t = useTranslations('horarios');
   const tc = useTranslations('common');
   const ta = useTranslations('alumnos');
+  const tConexion = useTranslations('agendaConexion');
   const pruebaTerm = usePruebaTerm();
   const queryClient = useQueryClient();
   const [deleting, setDeleting] = useState(false);
@@ -95,6 +96,7 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
       fecha: '',
       hora_inicio: '',
       hora_fin: '',
+      enlace_conexion: '',
     },
   });
 
@@ -115,6 +117,7 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
   const watchedFecha = watch('fecha') ?? '';
   const watchedHoraInicio = watch('hora_inicio') ?? '';
   const watchedHoraFin = watch('hora_fin') ?? '';
+  const watchedEnlaceConexion = watch('enlace_conexion') ?? '';
 
   // Auto-fill hora_fin = hora_inicio + 1h (only when creating)
   useEffect(() => {
@@ -155,6 +158,7 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
         fecha: horario.fecha,
         hora_inicio: horario.hora_inicio.slice(0, 5),
         hora_fin: horario.hora_fin.slice(0, 5),
+        enlace_conexion: horario.enlace_conexion || '',
       });
       setAlumnoSearch(
         horario.alumno ? `${horario.alumno.nombre} ${horario.alumno.apellido}` : ''
@@ -180,6 +184,7 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
         fecha: defaultDate || '',
         hora_inicio: defaultTime || '',
         hora_fin: endTime,
+        enlace_conexion: '',
       });
       setAlumnoSearch('');
       setEsExamen(false);
@@ -560,6 +565,21 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
                 placeholder={t('descripcion_placeholder')}
               />
               {errors.descripcion && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.descripcion.message}</p>}
+            </div>
+
+            {/* Enlace de conexión (opcional) */}
+            <div>
+              <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">
+                {tConexion('campo_label')} <span className="text-[var(--color-text-muted)]">{t('opcional')}</span>
+              </label>
+              <input
+                type="url"
+                value={watchedEnlaceConexion}
+                onChange={(e) => setValue('enlace_conexion', e.target.value, { shouldValidate: !!errors.enlace_conexion })}
+                placeholder={tConexion('campo_placeholder')}
+                className={inputClass}
+              />
+              {errors.enlace_conexion && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.enlace_conexion.message}</p>}
             </div>
 
             {/* Fecha */}

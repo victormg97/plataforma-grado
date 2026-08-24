@@ -21,6 +21,8 @@ export type HorarioConAsistencia = {
   es_recurrente: boolean;
   from_programa: boolean | null;
   activo: boolean;
+  /** Absent in the professor dashboard RPC payload; present when selecting the row directly. */
+  enlace_conexion?: string | null;
   created_at: string;
   updated_at: string;
   asistencia: {
@@ -124,7 +126,9 @@ export function useHorarios(profesorId?: string) {
 
   // Keep Zustand store in sync (for any legacy consumers)
   useEffect(() => {
-    setHorarios(rawData);
+    setHorarios(
+      rawData.map((h) => ({ ...h, enlace_conexion: h.enlace_conexion ?? null })),
+    );
   }, [rawData, setHorarios]);
 
   // Realtime: invalidate React Query cache on changes

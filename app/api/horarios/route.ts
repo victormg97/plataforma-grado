@@ -79,6 +79,7 @@ export async function POST(request: NextRequest) {
       fecha: body.fecha,
       hora_inicio: body.hora_inicio,
       hora_fin: body.hora_fin,
+      enlace_conexion: body.enlace_conexion || null,
       es_recurrente: false,
       activo: true,
     })

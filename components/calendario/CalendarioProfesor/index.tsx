@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import type { CalendarEvent } from '@/lib/hooks/useHorarios';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
@@ -8,7 +8,7 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import listPlugin from '@fullcalendar/list';
 import interactionPlugin from '@fullcalendar/interaction';
 import esLocale from '@fullcalendar/core/locales/es';
-import type { EventClickArg } from '@fullcalendar/core';
+import type { EventClickArg, DatesSetArg, EventInput } from '@fullcalendar/core';
 import type { DateClickArg } from '@fullcalendar/interaction';
 import { useHorarios, type HorarioConAsistencia } from '@/lib/hooks/useHorarios';
 import { useBloqueos, type BloqueHorario } from '@/lib/hooks/useBloqueos';
@@ -36,6 +36,16 @@ import { usePruebas } from '@/lib/hooks/usePruebas';
 import { CalendarEventPopover, useCalendarPopover, type PopoverEventData } from '@/components/calendario/CalendarEventPopover';
 import { CalendarioToolbarTooltips } from '@/components/calendario/CalendarioToolbarTooltips';
 import type { EstadoAsistencia } from '@/lib/supabase/types';
+import { useQueryClient } from '@tanstack/react-query';
+
+// ─── Agenda imports ─────────────────────────────────────────────────────────
+import { useEventosAgenda } from '@/lib/agenda/nucleo';
+import type { RangoVisible, EventoAgendaProyectado } from '@/lib/agenda/nucleo';
+import { useFiltroAgenda, aEventoFullCalendar, aFilaExportacion } from '@/lib/agenda/calendario';
+import { FiltroAgenda } from '@/components/agenda/calendario/FiltroAgenda';
+import { LeyendaAgenda } from '@/components/agenda/calendario/LeyendaAgenda';
+import { DetalleEventoAgenda } from '@/components/agenda/calendario/DetalleEventoAgenda';
+import { FormularioAgenda } from '@/components/agenda/FormularioAgenda';
 
 // Prefix used to distinguish bloqueo events from horario events in FullCalendar
 const BLOQUEO_PREFIX = 'bloqueo::';
@@ -73,6 +83,33 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
   const { user } = useUserStore();
   const userRol: 'profesor' | 'admin' = user?.rol === 'admin' ? 'admin' : 'profesor';
   const notasCounts = useNotasCount(selectedHorario ? [selectedHorario.id] : []);
+  const queryClient = useQueryClient();
+
+  // ─── Agenda state ───────────────────────────────────────────────────────
+  const [selectedAgendaEvento, setSelectedAgendaEvento] = useState<EventoAgendaProyectado | null>(null);
+  const [agendaDetailOpen, setAgendaDetailOpen] = useState(false);
+  const [agendaFormOpen, setAgendaFormOpen] = useState(false);
+  const [agendaFormDate, setAgendaFormDate] = useState<string | undefined>(undefined);
+  const [agendaFormTime, setAgendaFormTime] = useState<string | undefined>(undefined);
+  const [agendaFormEndTime, setAgendaFormEndTime] = useState<string | undefined>(undefined);
+
+  // ─── Agenda: rango visible ──────────────────────────────────────────────
+  const [rangoVisible, setRangoVisible] = useState<RangoVisible>(() => {
+    const hoy = new Date();
+    const desde = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+    const hasta = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 6);
+    return {
+      desde: desde.toISOString().slice(0, 10),
+      hasta: hasta.toISOString().slice(0, 10),
+    };
+  });
+
+  // ─── Agenda: filtro y eventos ───────────────────────────────────────────
+  const [filtroAgenda] = useFiltroAgenda();
+  const { eventos: eventosAgenda } = useEventosAgenda({
+    usuarioId: user?.id,
+    rango: rangoVisible,
+  });
 
   // Build a Set of horario IDs that are exam classes
   const { data: pruebas = [] } = usePruebas();
@@ -84,30 +121,59 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
   // Popover on hover (desktop only)
   const { popoverData, popoverAnchor, handleMouseEnter, handleMouseLeave, closePopover } = useCalendarPopover();
 
-  // Estado colour map — resolved at render time from globals.css CSS vars
-  const estadoHex: Record<string, string> = {
-    pendiente:  resolveCssVar('--color-brand-gold',   '#C9993F'),
-    confirmado: resolveCssVar('--color-success',      '#2D6A4F'),
-    cancelado:  resolveCssVar('--color-error',        '#C0392B'),
-    cambiado:   resolveCssVar('--color-info',         '#2C5F8A'),
-    no_asistio: resolveCssVar('--color-text-muted',   '#888888'),
-  };
+  // ─── Agenda: eventos mapeados a FullCalendar ────────────────────────────
+  const agendaFcEvents = useMemo(
+    () => eventosAgenda.map(aEventoFullCalendar),
+    [eventosAgenda],
+  );
+
+  // ─── Eventos combinados con filtro aplicado ─────────────────────────────
+  const combinedEvents = useMemo(() => {
+    const result: EventInput[] = [];
+    if (filtroAgenda.clases) {
+      result.push(...(events as CalendarEvent[]));
+    }
+    for (const ev of agendaFcEvents) {
+      const tipo = ev.extendedProps.tipo;
+      if (tipo === 'entrada_personal' && !filtroAgenda.entradasPersonales) continue;
+      if (tipo === 'actividad' && !filtroAgenda.actividades) continue;
+      result.push(ev);
+    }
+    return result;
+  }, [events, agendaFcEvents, filtroAgenda]);
 
   // Normalised events for PDF export
-  const profesorExportEvents = useMemo<CalendarioExportEvent[]>(
-    () =>
-      rawData.map((h) => ({
-        id: h.id,
-        title: h.titulo,
-        start: new Date(`${h.fecha}T${h.hora_inicio}`),
-        end: new Date(`${h.fecha}T${h.hora_fin}`),
-        color: estadoHex[h.asistencia?.[0]?.estado ?? 'pendiente'] ?? estadoHex.pendiente,
-        subtitle: h.alumno ? `${h.alumno.nombre} ${h.alumno.apellido}` : undefined,
-        status: h.asistencia?.[0]?.estado,
-      })),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [rawData],
-  );
+  const profesorExportEvents = useMemo<CalendarioExportEvent[]>(() => {
+    const estadoColors: Record<string, string> = {
+      pendiente:  resolveCssVar('--color-brand-gold',   '#C9993F'),
+      confirmado: resolveCssVar('--color-success',      '#2D6A4F'),
+      cancelado:  resolveCssVar('--color-error',        '#C0392B'),
+      cambiado:   resolveCssVar('--color-info',         '#2C5F8A'),
+      no_asistio: resolveCssVar('--color-text-muted',   '#888888'),
+    };
+
+    const claseEvents: CalendarioExportEvent[] = filtroAgenda.clases
+      ? rawData.map((h) => ({
+          id: h.id,
+          title: h.titulo,
+          start: new Date(`${h.fecha}T${h.hora_inicio}`),
+          end: new Date(`${h.fecha}T${h.hora_fin}`),
+          color: estadoColors[h.asistencia?.[0]?.estado ?? 'pendiente'] ?? estadoColors.pendiente,
+          subtitle: h.alumno ? `${h.alumno.nombre} ${h.alumno.apellido}` : undefined,
+          status: h.asistencia?.[0]?.estado,
+        }))
+      : [];
+
+    const agendaExportados: CalendarioExportEvent[] = eventosAgenda
+      .filter((ev) => {
+        if (ev.tipo === 'entrada_personal' && !filtroAgenda.entradasPersonales) return false;
+        if (ev.tipo === 'actividad' && !filtroAgenda.actividades) return false;
+        return true;
+      })
+      .map((ev) => aFilaExportacion(ev, (v) => resolveCssVar(v, '#888888')));
+
+    return [...claseEvents, ...agendaExportados];
+  }, [rawData, eventosAgenda, filtroAgenda]);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -145,7 +211,7 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
     if (!api) return;
     queueMicrotask(() => {
       api.removeAllEvents();
-      (events as CalendarEvent[]).forEach((e) => api.addEvent(e));
+      (combinedEvents as CalendarEvent[]).forEach((e) => api.addEvent(e));
       // Add bloqueo events with a distinct style
       bloqueos.forEach((b) => {
         api.addEvent({
@@ -161,7 +227,7 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
         });
       });
     });
-  }, [events, bloqueos]);
+  }, [combinedEvents, bloqueos]);
 
   // External trigger: open detail modal for a specific horario (e.g. from a direct URL link).
   // onHorarioOpened clears the URL param immediately so the same link works a second time.
@@ -191,6 +257,16 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
       const bloqueo = info.event.extendedProps.bloqueo as BloqueHorario;
       setSelectedBloqueo(bloqueo);
       setBloqueoDetailOpen(true);
+      return;
+    }
+    // Agenda event
+    if (info.event.extendedProps.eventoAgendaId) {
+      const eventoId = info.event.extendedProps.eventoAgendaId as string;
+      const evento = eventosAgenda.find((e) => e.id === eventoId);
+      if (evento) {
+        setSelectedAgendaEvento(evento);
+        setAgendaDetailOpen(true);
+      }
       return;
     }
     const horario = info.event.extendedProps.horario as HorarioConAsistencia;
@@ -228,11 +304,20 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
     }
     // In week/time views, dateStr includes time (e.g. 2026-03-28T10:00:00)
     const timeMatch = info.dateStr.match(/T(\d{2}:\d{2})/);
-    setDefaultTime(timeMatch ? timeMatch[1] : undefined);
-    setDefaultEndTime(undefined);
-    setDefaultBloqueo(false);
-    setFormOpen(true);
+    // Open FormularioAgenda for empty range
+    setAgendaFormDate(info.dateStr.slice(0, 10));
+    setAgendaFormTime(timeMatch ? timeMatch[1] : undefined);
+    setAgendaFormEndTime(undefined);
+    setAgendaFormOpen(true);
   }
+
+  // ─── Agenda: handle datesSet to update rango ────────────────────────────
+  const handleDatesSet = useCallback((arg: DatesSetArg) => {
+    setCurrentView(arg.view.type);
+    const desde = arg.startStr.slice(0, 10);
+    const hasta = arg.endStr.slice(0, 10);
+    setRangoVisible({ desde, hasta });
+  }, []);
 
   async function handleNoAsistio() {
     const asistenciaId = selectedHorario?.asistencia?.[0]?.id;
@@ -282,6 +367,12 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
         containerClass=".calendario-profesor"
         exportEvents={profesorExportEvents}
       />
+
+      {/* Agenda filter + leyenda */}
+      <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <FiltroAgenda />
+        <LeyendaAgenda eventos={eventosAgenda} />
+      </div>
 
       <div className="calendario-profesor" style={{ overflow: 'hidden' }}>
         <CalendarioStyles containerClass=".calendario-profesor" />
@@ -350,7 +441,7 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
           }}
           eventMouseLeave={() => handleMouseLeave()}
           dateClick={handleDateClick}
-          datesSet={(arg) => setCurrentView(arg.view.type)}
+          datesSet={handleDatesSet}
           eventContent={(arg) => {
             const isExam = pruebaHorarioIds.has(arg.event.id);
             // In list view, render title inline (FC handles time + dot separately)
@@ -595,6 +686,30 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
           </div>
         )}
       </Modal>
+
+      {/* Agenda event detail */}
+      <DetalleEventoAgenda
+        evento={selectedAgendaEvento}
+        open={agendaDetailOpen}
+        onClose={() => setAgendaDetailOpen(false)}
+        usuarioId={user?.id ?? ''}
+      />
+
+      {/* Agenda form (empty range click) */}
+      <FormularioAgenda
+        open={agendaFormOpen}
+        onClose={() => setAgendaFormOpen(false)}
+        rol={userRol}
+        profesorId={profesorId}
+        defaultDate={agendaFormDate}
+        defaultTime={agendaFormTime}
+        defaultEndTime={agendaFormEndTime}
+        onSuccess={() => {
+          setAgendaFormOpen(false);
+          queryClient.invalidateQueries({ queryKey: ['agenda-eventos'] });
+        }}
+        cachedAlumnos={alumnos}
+      />
     </>
   );
 }

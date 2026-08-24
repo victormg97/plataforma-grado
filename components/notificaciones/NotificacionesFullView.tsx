@@ -85,6 +85,7 @@ const TIPO_ICON: Record<TipoNotificacion, { icon: React.ElementType; color: stri
   bienvenida_registro:      { icon: Mail,          color: 'var(--color-brand-gold)' },
   nueva_nota_clase:         { icon: StickyNote,    color: 'var(--color-brand-gold)' },
   recordatorio_clase:       { icon: Mail,          color: 'var(--color-brand-gold)' },
+  nueva_actividad:          { icon: CalendarPlus,  color: 'var(--color-brand-gold)' },
 };
 
 // (tipos are now fetched dynamically from the API)
