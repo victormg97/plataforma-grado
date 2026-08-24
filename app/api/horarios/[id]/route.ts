@@ -15,7 +15,7 @@ export async function GET(
 
   const { data, error } = await supabase
     .from('horarios')
-    .select('*, asistencia:asistencia!asistencia_horario_id_fkey(*), alumno:profiles!horarios_alumno_id_fkey(*), profesor:profiles!horarios_profesor_id_fkey(*), pruebas:pruebas!pruebas_horario_id_fkey(id, nombre, estado, nota, observaciones, clase_id, alumno_id)')
+    .select('*, asistencia:asistencia!asistencia_horario_id_fkey(*), alumno:profiles!horarios_alumno_id_fkey(*), profesor:profiles!horarios_profesor_id_fkey(*), pruebas:pruebas!pruebas_horario_id_fkey(id, nombre, estado, nota, observaciones, clase_id, alumno_id), simulacion_comision(id, profesor_id, profesor:profiles!simulacion_comision_profesor_id_fkey(id, nombre, apellido, avatar_url)), simulacion_evaluaciones(id, profesor_id, profesor:profiles!simulacion_evaluaciones_profesor_id_fkey(id, nombre, apellido), nota, feedback, estado)')
     .eq('id', id)
     .single();
 

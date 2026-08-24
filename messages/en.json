@@ -284,7 +284,21 @@
       "confirmar_desc": "A reminder email will be sent to the student with the details of this class.",
       "confirmar_desc_con_envios": "{count} email(s) have been sent about this class. Send another reminder?",
       "confirmar_enviar": "Send email"
-    }
+    },
+    "tipo_clase_normal": "Class",
+    "tipo_clase_interrogacion": "Oral exam",
+    "tipo_clase_simulacion": "Simulation",
+    "comision_label": "Evaluation committee",
+    "comision_incluido": "Included (responsible)",
+    "comision_placeholder": "Select professors...",
+    "simulacion_badge": "Simulation",
+    "evaluacion_pendiente": "Pending",
+    "evaluacion_calificada": "Graded",
+    "evaluacion_nota_label": "Grade (1-7)",
+    "evaluacion_feedback_label": "Feedback",
+    "evaluacion_btn_calificar": "Grade",
+    "evaluacion_btn_editar": "Edit grade",
+    "evaluacion_titulo": "Committee evaluations"
   },
   "asistencia": {
     "estados": {

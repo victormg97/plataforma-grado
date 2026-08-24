@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
 
   let query = supabase
     .from('horarios')
-    .select('*, asistencia:asistencia!asistencia_horario_id_fkey(*), alumno:profiles!horarios_alumno_id_fkey(*), profesor:profiles!horarios_profesor_id_fkey(*)')
+    .select('*, asistencia:asistencia!asistencia_horario_id_fkey(*), alumno:profiles!horarios_alumno_id_fkey(*), profesor:profiles!horarios_profesor_id_fkey(*), simulacion_comision(id, profesor_id, profesor:profiles!simulacion_comision_profesor_id_fkey(id, nombre, apellido, avatar_url)), simulacion_evaluaciones(id, profesor_id, profesor:profiles!simulacion_evaluaciones_profesor_id_fkey(id, nombre, apellido), nota, feedback, estado)')
     .eq('activo', true);
 
   if (fecha) {
@@ -69,6 +69,10 @@ export async function POST(request: NextRequest) {
 
   const profesorId = (profile?.rol === 'admin' && body.profesor_id) ? body.profesor_id : user.id;
 
+  // Determine tipo_clase: explicit field takes precedence, fallback to es_prueba for backward compat
+  const tipoClase: 'normal' | 'interrogacion' | 'simulacion' =
+    body.tipo_clase || (body.es_prueba === true ? 'interrogacion' : 'normal');
+
   const { data: horario, error: horarioError } = await supabase
     .from('horarios')
     .insert({
@@ -82,6 +86,7 @@ export async function POST(request: NextRequest) {
       enlace_conexion: body.enlace_conexion || null,
       es_recurrente: false,
       activo: true,
+      tipo_clase: tipoClase,
     })
     .select()
     .single();
@@ -99,8 +104,8 @@ export async function POST(request: NextRequest) {
     nota_alumno: null,
   });
 
-  // If marked as exam, create a linked prueba record
-  if (body.es_prueba === true) {
+  // If marked as exam (interrogacion), create a linked prueba record
+  if (tipoClase === 'interrogacion') {
     await supabase.from('pruebas').insert({
       alumno_id: body.alumno_id,
       profesor_id: profesorId,
@@ -109,6 +114,28 @@ export async function POST(request: NextRequest) {
       fecha: body.fecha,
       estado: 'pendiente',
     });
+  }
+
+  // If simulacion, create comision and evaluaciones records
+  if (tipoClase === 'simulacion') {
+    // Build deduplicated comision: profesor responsable + selected ids
+    const comisionSet = new Set<string>([profesorId, ...(body.comision_ids || [])]);
+    const comisionIds = Array.from(comisionSet);
+
+    // Insert comision members
+    const comisionRows = comisionIds.map((pid: string) => ({
+      horario_id: horario.id,
+      profesor_id: pid,
+    }));
+    await supabase.from('simulacion_comision').insert(comisionRows);
+
+    // Insert pending evaluaciones for each comision member
+    const evaluacionRows = comisionIds.map((pid: string) => ({
+      horario_id: horario.id,
+      profesor_id: pid,
+      estado: 'pendiente',
+    }));
+    await supabase.from('simulacion_evaluaciones').insert(evaluacionRows);
   }
 
   // Envía el correo `nueva_clase` al alumno de forma NO bloqueante (fire-and-forget).

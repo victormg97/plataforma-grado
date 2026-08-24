@@ -284,7 +284,21 @@
       "confirmar_desc": "Se enviará un correo de recordatorio al alumno con los detalles de esta clase.",
       "confirmar_desc_con_envios": "Se han enviado {count} correo(s) sobre esta clase. ¿Enviar otro recordatorio?",
       "confirmar_enviar": "Enviar correo"
-    }
+    },
+    "tipo_clase_normal": "Clase",
+    "tipo_clase_interrogacion": "Interrogación",
+    "tipo_clase_simulacion": "Simulación",
+    "comision_label": "Comisión evaluadora",
+    "comision_incluido": "Incluido (responsable)",
+    "comision_placeholder": "Seleccionar profesores...",
+    "simulacion_badge": "Simulación",
+    "evaluacion_pendiente": "Pendiente",
+    "evaluacion_calificada": "Calificada",
+    "evaluacion_nota_label": "Nota (1-7)",
+    "evaluacion_feedback_label": "Feedback",
+    "evaluacion_btn_calificar": "Calificar",
+    "evaluacion_btn_editar": "Editar evaluación",
+    "evaluacion_titulo": "Evaluaciones de la comisión"
   },
   "asistencia": {
     "estados": {

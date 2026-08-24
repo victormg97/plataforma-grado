@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { format } from 'date-fns';
 import { es as esDateFns } from 'date-fns/locale';
-import { Calendar, Clock, FileText, MessageSquare, GraduationCap } from 'lucide-react';
+import { Calendar, Clock, FileText, MessageSquare, GraduationCap, Scale } from 'lucide-react';
 import { RichDescription } from '@/components/common/RichDescription';
 import { usePathname } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -21,6 +21,8 @@ import { Button } from '@/components/common/Button';
 import { ViewDetailButton } from '@/components/horarios/ViewDetailButton';
 import { useNotasCount } from '@/lib/hooks/useNotasCount';
 import { buildClaseDetailHref } from '@/lib/utils/horarioNavigation';
+import { SimulacionEvaluacionCard, type EvaluacionData } from '@/components/horarios/SimulacionEvaluacionCard';
+import type { TipoClase } from '@/lib/supabase/types';
 import type { HorarioConAsistencia } from '@/lib/hooks/useHorarios';
 
 export function HorarioDetailGlobal() {
@@ -95,6 +97,13 @@ export function HorarioDetailGlobal() {
             <span className="text-sm text-[var(--color-text-muted)]">{ta('estado_label')}:</span>
             <StatusBadge status={horario.asistencia?.[0]?.estado || 'pendiente'} />
             <NotasIndicator count={notasCounts[horario.id] ?? 0} />
+            {(horario as HorarioDetailWithSimulacion).tipo_clase === 'simulacion' && (
+              <span className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium"
+                style={{ backgroundColor: 'var(--color-brand-gold-muted)', borderColor: 'color-mix(in srgb, var(--color-brand-gold) 40%, transparent)', color: 'var(--color-brand-gold)' }}>
+                <Scale className="size-3" />
+                {t('simulacion_badge')}
+              </span>
+            )}
             {(horario.pruebas?.length ?? 0) > 0 && (
               <span className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium"
                 style={{ backgroundColor: 'var(--color-brand-gold-muted)', borderColor: 'color-mix(in srgb, var(--color-brand-gold) 40%, transparent)', color: 'var(--color-brand-gold)' }}>
@@ -180,6 +189,11 @@ export function HorarioDetailGlobal() {
             </div>
           )}
 
+          {/* Simulación section — comisión + evaluaciones */}
+          {(horario as HorarioDetailWithSimulacion).tipo_clase === 'simulacion' && (
+            <SimulacionSection horario={horario as HorarioDetailWithSimulacion} userId={user?.id ?? ''} queryClient={queryClient} horarioDetailId={horarioDetailId} />
+          )}
+
           {/* Link to detail page */}
           <ViewDetailButton
             href={buildClaseDetailHref(horario.id, userRol, pathname)}
@@ -188,5 +202,105 @@ export function HorarioDetailGlobal() {
         </div>
       )}
     </Modal>
+  );
+}
+
+// ─── Simulación Detail Types ──────────────────────────────────────────────────
+
+interface HorarioDetailWithSimulacion extends HorarioConAsistencia {
+  tipo_clase?: TipoClase;
+  simulacion_comision?: {
+    id: string;
+    profesor_id: string;
+    profesor: { id: string; nombre: string; apellido: string; avatar_url: string | null };
+  }[];
+  simulacion_evaluaciones?: {
+    id: string;
+    profesor_id: string;
+    profesor: { id: string; nombre: string; apellido: string };
+    nota: number | null;
+    feedback: string | null;
+    estado: 'pendiente' | 'calificada';
+  }[];
+}
+
+// ─── Simulación Section Component ─────────────────────────────────────────────
+
+function SimulacionSection({
+  horario,
+  userId,
+  queryClient,
+  horarioDetailId,
+}: {
+  horario: HorarioDetailWithSimulacion;
+  userId: string;
+  queryClient: ReturnType<typeof useQueryClient>;
+  horarioDetailId: string | null;
+}) {
+  const t = useTranslations('horarios');
+
+  const comision = horario.simulacion_comision ?? [];
+  const evaluaciones = horario.simulacion_evaluaciones ?? [];
+
+  async function handleEvaluacionSubmit(evaluacionId: string, data: { nota: number | null; feedback: string | null }) {
+    try {
+      const res = await fetch(`/api/simulacion-evaluaciones/${evaluacionId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...data, estado: 'calificada' }),
+      });
+      if (!res.ok) throw new Error('Error');
+      queryClient.invalidateQueries({ queryKey: ['horario-detail-global', horarioDetailId] });
+      queryClient.invalidateQueries({ queryKey: ['horarios'] });
+    } catch {
+      // Error handled silently — toast could be added
+    }
+  }
+
+  return (
+    <div className="space-y-3">
+      {/* Comisión members */}
+      {comision.length > 0 && (
+        <div>
+          <p className="mb-2 text-sm font-medium text-[var(--color-text-secondary)]">
+            {t('comision_label')}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {comision.map((c) => (
+              <div key={c.id} className="flex items-center gap-2 rounded-full bg-[var(--color-bg-secondary)] px-2.5 py-1">
+                <Avatar
+                  nombre={c.profesor.nombre}
+                  apellido={c.profesor.apellido}
+                  avatarUrl={c.profesor.avatar_url}
+                  size="sm"
+                />
+                <span className="text-xs text-[var(--color-text-primary)]">
+                  {c.profesor.nombre} {c.profesor.apellido}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Evaluaciones */}
+      {evaluaciones.length > 0 && (
+        <div>
+          <p className="mb-2 text-sm font-medium text-[var(--color-text-secondary)]">
+            {t('evaluacion_titulo')}
+          </p>
+          <div className="space-y-2">
+            {evaluaciones.map((ev) => (
+              <SimulacionEvaluacionCard
+                key={ev.id}
+                evaluacion={ev as EvaluacionData}
+                isOwner={ev.profesor_id === userId}
+                onSubmit={(data) => handleEvaluacionSubmit(ev.id, data)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

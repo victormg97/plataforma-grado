@@ -16,9 +16,9 @@ import { AppSelect } from '@/components/common/AppSelect';
 import type { Profile } from '@/lib/supabase/types';
 import type { HorarioConAsistencia } from '@/lib/hooks/useHorarios';
 import { AlumnoCombobox } from './components/AlumnoCombobox';
-import { ExamenToggle } from './components/ExamenToggle';
+import { TipoClaseSelector, type TipoClaseValue } from '@/components/horarios/TipoClaseSelector';
+import { ComisionMultiSelect, type ProfesorComisionOption } from '@/components/horarios/ComisionMultiSelect';
 import { SimpleRichEditor } from '@/components/common/SimpleRichEditor';
-import { usePruebaTerm } from '@/lib/hooks/usePruebaTerm';
 
 interface HorarioFormProps {
   open: boolean;
@@ -74,13 +74,13 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
   const tc = useTranslations('common');
   const ta = useTranslations('alumnos');
   const tConexion = useTranslations('agendaConexion');
-  const pruebaTerm = usePruebaTerm();
   const queryClient = useQueryClient();
   const [deleting, setDeleting] = useState(false);
   const [alumnoSearch, setAlumnoSearch] = useState('');
   // In admin mode, track which professor will teach this class
   const [activeProfId, setActiveProfId] = useState(profesorId);
-  const [esExamen, setEsExamen] = useState(false);
+  const [tipoClase, setTipoClase] = useState<TipoClaseValue>('normal');
+  const [comisionIds, setComisionIds] = useState<string[]>([]);
   // Bloqueo de horario mode — only available when creating (not editing)
   const [esBloqueo, setEsBloqueo] = useState(false);
   // Bloqueo form state — fully independent from the horario RHF form
@@ -172,14 +172,19 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
       setAlumnoSearch(
         horario.alumno ? `${horario.alumno.nombre} ${horario.alumno.apellido}` : ''
       );
-      // Check if this class already has a linked prueba
-      const supabase = createClient();
-      supabase
-        .from('pruebas')
-        .select('id')
-        .eq('horario_id', horario.id)
-        .maybeSingle()
-        .then(({ data }) => setEsExamen(!!data));
+      // Check if this class already has a linked prueba or tipo_clase
+      if (horario.tipo_clase) {
+        setTipoClase(horario.tipo_clase as TipoClaseValue);
+      } else {
+        const supabase = createClient();
+        supabase
+          .from('pruebas')
+          .select('id')
+          .eq('horario_id', horario.id)
+          .maybeSingle()
+          .then(({ data }) => setTipoClase(data ? 'interrogacion' : 'normal'));
+      }
+      setComisionIds([]);
     } else {
       const endTime = defaultEndTime
         ? defaultEndTime
@@ -196,7 +201,8 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
         enlace_conexion: '',
       });
       setAlumnoSearch('');
-      setEsExamen(false);
+      setTipoClase('normal');
+      setComisionIds([]);
     }
   }, [horario, defaultDate, defaultTime, defaultEndTime, defaultBloqueo, open, reset, adminProfesores, profesorId, isEditing]);
 
@@ -219,6 +225,23 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
     () => useCachedAlumnos ? (cachedAlumnos as Profile[]) : fetchedAlumnos,
     [useCachedAlumnos, cachedAlumnos, fetchedAlumnos]
   );
+
+  // Fetch profesores/admins for comisión multi-select (simulación)
+  const { data: profesoresComision = [] } = useQuery<ProfesorComisionOption[]>({
+    queryKey: ['profesores-comision'],
+    queryFn: async () => {
+      const supabase = createClient();
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, nombre, apellido, avatar_url')
+        .in('rol', ['admin', 'profesor'])
+        .eq('activo', true)
+        .order('nombre');
+      return (data ?? []) as ProfesorComisionOption[];
+    },
+    enabled: open && tipoClase === 'simulacion',
+    staleTime: 60_000,
+  });
 
   // Sync search text when selected alumno changes — derived during render, no effect needed
   const syncedAlumnoSearch = useMemo(() => {
@@ -303,7 +326,9 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
-          es_prueba: esExamen,
+          tipo_clase: tipoClase,
+          es_prueba: tipoClase === 'interrogacion',
+          ...(tipoClase === 'simulacion' ? { comision_ids: comisionIds } : {}),
           // Admin mode: send chosen professor_id
           ...(adminProfesores && activeProfId ? { profesor_id: activeProfId } : {}),
         }),
@@ -616,13 +641,24 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
             </div>
           </div>
 
-          {/* Es Examen toggle */}
-          <ExamenToggle
-            checked={esExamen}
-            onChange={setEsExamen}
-            label={t('es_examen', { term: pruebaTerm.singular })}
-            description={t('es_examen_desc', { term: pruebaTerm.singular })}
+          {/* Tipo de Clase selector (replaces ExamenToggle) */}
+          <TipoClaseSelector
+            value={tipoClase}
+            onChange={(tipo) => {
+              setTipoClase(tipo);
+              if (tipo !== 'simulacion') setComisionIds([]);
+            }}
           />
+
+          {/* Comision multi-select — only for simulacion */}
+          {tipoClase === 'simulacion' && (
+            <ComisionMultiSelect
+              selectedIds={comisionIds}
+              onChange={setComisionIds}
+              profesorResponsableId={activeProfId}
+              profesores={profesoresComision}
+            />
+          )}
         </>
       )}
     </form>

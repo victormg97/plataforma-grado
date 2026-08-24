@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { createClient } from '@/lib/supabase/client';
 import { useHorarioStore } from '@/stores/useHorarioStore';
 import { useUserStore } from '@/stores/useUserStore';
-import type { EstadoAsistencia } from '@/lib/supabase/types';
+import type { EstadoAsistencia, TipoClase } from '@/lib/supabase/types';
 
 let channelCounter = 0;
 
@@ -23,6 +23,7 @@ export type HorarioConAsistencia = {
   activo: boolean;
   /** Absent in the professor dashboard RPC payload; present when selecting the row directly. */
   enlace_conexion?: string | null;
+  tipo_clase?: TipoClase;
   created_at: string;
   updated_at: string;
   asistencia: {
@@ -127,7 +128,7 @@ export function useHorarios(profesorId?: string) {
   // Keep Zustand store in sync (for any legacy consumers)
   useEffect(() => {
     setHorarios(
-      rawData.map((h) => ({ ...h, enlace_conexion: h.enlace_conexion ?? null })),
+      rawData.map((h) => ({ ...h, enlace_conexion: h.enlace_conexion ?? null, tipo_clase: h.tipo_clase ?? 'normal' })),
     );
   }, [rawData, setHorarios]);
 

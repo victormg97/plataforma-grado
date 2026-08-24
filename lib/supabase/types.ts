@@ -631,6 +631,7 @@ export type Database = {
           hora_inicio: string
           id: string
           profesor_id: string
+          tipo_clase: Database["public"]["Enums"]["tipo_clase"]
           titulo: string
           updated_at: string
         }
@@ -647,6 +648,7 @@ export type Database = {
           hora_inicio: string
           id?: string
           profesor_id: string
+          tipo_clase?: Database["public"]["Enums"]["tipo_clase"]
           titulo: string
           updated_at?: string
         }
@@ -663,6 +665,7 @@ export type Database = {
           hora_inicio?: string
           id?: string
           profesor_id?: string
+          tipo_clase?: Database["public"]["Enums"]["tipo_clase"]
           titulo?: string
           updated_at?: string
         }
@@ -676,6 +679,90 @@ export type Database = {
           },
           {
             foreignKeyName: "horarios_profesor_id_fkey"
+            columns: ["profesor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      simulacion_comision: {
+        Row: {
+          id: string
+          horario_id: string
+          profesor_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          horario_id: string
+          profesor_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          horario_id?: string
+          profesor_id?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "simulacion_comision_horario_id_fkey"
+            columns: ["horario_id"]
+            isOneToOne: false
+            referencedRelation: "horarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "simulacion_comision_profesor_id_fkey"
+            columns: ["profesor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      simulacion_evaluaciones: {
+        Row: {
+          id: string
+          horario_id: string
+          profesor_id: string
+          nota: number | null
+          feedback: string | null
+          estado: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          horario_id: string
+          profesor_id: string
+          nota?: number | null
+          feedback?: string | null
+          estado?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          horario_id?: string
+          profesor_id?: string
+          nota?: number | null
+          feedback?: string | null
+          estado?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "simulacion_evaluaciones_horario_id_fkey"
+            columns: ["horario_id"]
+            isOneToOne: false
+            referencedRelation: "horarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "simulacion_evaluaciones_profesor_id_fkey"
             columns: ["profesor_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -2446,6 +2533,7 @@ export type Database = {
         | "cancelado"
         | "cambiado"
         | "no_asistio"
+      tipo_clase: "normal" | "interrogacion" | "simulacion"
       tipo_notificacion:
         | "confirmacion"
         | "cancelacion"
@@ -2609,6 +2697,7 @@ export const Constants = {
         "cambiado",
         "no_asistio",
       ],
+      tipo_clase: ["normal", "interrogacion", "simulacion"],
       tipo_notificacion: [
         "confirmacion",
         "cancelacion",
@@ -2647,6 +2736,12 @@ export type EnlaceInvitacion = Tables<'enlaces_invitacion'>;
 
 export type EmailPlantilla = Tables<'email_plantillas'>;
 export type EmailEnvio = Tables<'email_envios'>;
+
+// ─── Simulación type aliases ─────────────────────────────────────────────────
+
+export type TipoClase = Database['public']['Enums']['tipo_clase'];
+export type SimulacionComision = Tables<'simulacion_comision'>;
+export type SimulacionEvaluacion = Tables<'simulacion_evaluaciones'>;
 
 // ─── Agenda type aliases ─────────────────────────────────────────────────────
 
