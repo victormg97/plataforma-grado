@@ -26,7 +26,7 @@ import { Button } from '@/components/common/Button';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { RichDescription } from '@/components/common/RichDescription';
 import { ViewDetailButton } from '@/components/horarios/ViewDetailButton';
-import { Calendar, Clock, User, GraduationCap } from 'lucide-react';
+import { Calendar, Clock, User, BookOpen, Scale } from 'lucide-react';
 import { format } from 'date-fns';
 import { es as esDateFns, enUS } from 'date-fns/locale';
 
@@ -59,6 +59,7 @@ export function CalendarioAlumno() {
   const tc = useTranslations('common');
   const ta = useTranslations('asistencia');
   const tEp = useTranslations('agendaEntradasPersonales');
+  const th = useTranslations('horarios');
   const locale = useLocale();
   const [isMobile, setIsMobile] = useState(false);
   const [currentView, setCurrentView] = useState('dayGridMonth');
@@ -505,15 +506,21 @@ export function CalendarioAlumno() {
     >
       {selectedClase && (
         <div className="space-y-4">
-          {/* Status */}
-          <div className="flex items-center gap-2">
+          {/* Status + class type */}
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="text-sm text-[var(--color-text-muted)]">{ta('estado_label')}:</span>
             <StatusBadge status={selectedClase.estado} />
             {selectedClase.horario.tipo_clase === 'simulacion' && (
               <span className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium"
                 style={{ backgroundColor: 'var(--color-brand-gold-muted)', borderColor: 'color-mix(in srgb, var(--color-brand-gold) 40%, transparent)', color: 'var(--color-brand-gold)' }}>
-                <GraduationCap className="size-3" />
-                {locale === 'en' ? 'Simulation' : 'Simulación'}
+                <Scale className="size-3" />
+                {th('tipo_clase_simulacion')}
+              </span>
+            )}
+            {selectedClase.horario.tipo_clase === 'interrogacion' && (
+              <span className="inline-flex items-center gap-1 rounded-full border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-2 py-0.5 text-xs font-medium text-[var(--color-text-secondary)]">
+                <BookOpen className="size-3" />
+                {th('tipo_clase_interrogacion')}
               </span>
             )}
           </div>
@@ -537,6 +544,30 @@ export function CalendarioAlumno() {
             <div className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
               <User className="size-4 shrink-0 text-[var(--color-brand-gold)]" />
               <span>Prof. {selectedClase.horario.profesor.nombre} {selectedClase.horario.profesor.apellido}</span>
+            </div>
+          )}
+
+          {/* Comisión evaluadora (simulación) */}
+          {selectedClase.horario.tipo_clase === 'simulacion' && selectedClase.horario.simulacion_comision && selectedClase.horario.simulacion_comision.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-[var(--color-text-secondary)]">{th('comision_label')}</p>
+              <div className="flex flex-wrap gap-2">
+                {selectedClase.horario.simulacion_comision.map((m) => (
+                  <div key={m.id} className="flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-1.5">
+                    {m.profesor?.avatar_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={m.profesor.avatar_url} alt="" className="size-5 rounded-full object-cover" />
+                    ) : (
+                      <span className="flex size-5 items-center justify-center rounded-full bg-[var(--color-brand-gold)] text-[10px] font-medium text-white">
+                        {m.profesor?.nombre?.charAt(0) ?? '?'}
+                      </span>
+                    )}
+                    <span className="text-xs text-[var(--color-text-primary)]">
+                      {m.profesor?.nombre} {m.profesor?.apellido}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 

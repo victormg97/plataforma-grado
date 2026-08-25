@@ -16,8 +16,8 @@ export interface PopoverEventData {
   hora_inicio: string;
   hora_fin: string;
   estado: EstadoAsistencia;
-  alumno?: { nombre: string; apellido: string } | null;
-  profesor?: { nombre: string; apellido: string } | null;
+  alumno?: { nombre: string; apellido: string; apellido_materno?: string | null } | null;
+  profesor?: { nombre: string; apellido: string; apellido_materno?: string | null } | null;
   esPrueba?: boolean;
   /** Numeric nota for prueba (null = not graded yet) */
   notaPrueba?: number | null;
@@ -201,7 +201,7 @@ export function CalendarEventPopover({ data, anchorEl, rol, onClose }: CalendarE
           {(rol === 'admin' || rol === 'profesor') && data.alumno && (
             <div className="flex items-center gap-1.5 text-xs text-[var(--color-text-secondary)] mb-1.5">
               <User className="size-3 shrink-0" />
-              <span>{data.alumno.nombre} {data.alumno.apellido}</span>
+              <span>{[data.alumno.nombre, data.alumno.apellido, data.alumno.apellido_materno].filter(Boolean).join(' ')}</span>
             </div>
           )}
 
@@ -209,7 +209,7 @@ export function CalendarEventPopover({ data, anchorEl, rol, onClose }: CalendarE
           {(rol === 'admin' || rol === 'alumno') && data.profesor && (
             <div className="flex items-center gap-1.5 text-xs text-[var(--color-text-secondary)] mb-1.5">
               <User className="size-3 shrink-0 text-[var(--color-brand-gold)]" />
-              <span>Prof. {data.profesor.nombre} {data.profesor.apellido}</span>
+              <span>Prof. {[data.profesor.nombre, data.profesor.apellido, data.profesor.apellido_materno].filter(Boolean).join(' ')}</span>
             </div>
           )}
 

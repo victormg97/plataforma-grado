@@ -44,9 +44,9 @@ export type HorarioConAsistencia = {
   /** Populated only when fetching a single horario via GET /api/horarios/:id */
   pruebas?: { id: string; nombre: string; estado: string }[];
   /** Comision members for simulación type classes */
-  simulacion_comision?: { id: string; profesor_id: string; profesor: { id: string; nombre: string; apellido: string; avatar_url: string | null } }[];
+  simulacion_comision?: { id: string; profesor_id: string; profesor: { id: string; nombre: string; apellido: string; apellido_materno?: string | null; avatar_url: string | null } }[];
   /** Evaluaciones for simulación type classes */
-  simulacion_evaluaciones?: { id: string; profesor_id: string; profesor: { id: string; nombre: string; apellido: string }; nota: number | null; feedback: string | null; estado: string }[];
+  simulacion_evaluaciones?: { id: string; profesor_id: string; profesor: { id: string; nombre: string; apellido: string; apellido_materno?: string | null; avatar_url?: string | null }; nota: number | null; feedback: string | null; estado: string }[];
 };
 
 export type CalendarEvent = {

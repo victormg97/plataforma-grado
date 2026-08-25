@@ -19,7 +19,7 @@ interface EventDetailHorario {
   hora_inicio: string;
   hora_fin: string;
   enlace_conexion?: string | null;
-  alumno: { id: string; nombre: string; apellido: string; email: string; avatar_url: string | null } | null;
+  alumno: { id: string; nombre: string; apellido: string; apellido_materno?: string | null; email: string; avatar_url: string | null } | null;
   asistencia: { id: string; estado: string; nota_alumno: string | null }[];
 }
 
@@ -77,7 +77,7 @@ export function EventDetailModal({
             />
             <div>
               <p className="font-medium text-[var(--color-text-primary)]">
-                {horario.alumno?.nombre} {horario.alumno?.apellido}
+                {[horario.alumno?.nombre, horario.alumno?.apellido, horario.alumno?.apellido_materno].filter(Boolean).join(' ')}
               </p>
               <p className="text-sm text-[var(--color-text-muted)]">
                 {horario.alumno?.email}

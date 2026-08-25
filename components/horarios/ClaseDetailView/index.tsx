@@ -358,7 +358,7 @@ export function ClaseDetailView({ rol }: ClaseDetailViewProps) {
                         </span>
                       )}
                       <span className="text-xs text-[var(--color-text-primary)]">
-                        {m.profesor?.nombre} {m.profesor?.apellido}
+                        {[m.profesor?.nombre, m.profesor?.apellido, m.profesor?.apellido_materno].filter(Boolean).join(' ')}
                       </span>
                     </div>
                   ))}

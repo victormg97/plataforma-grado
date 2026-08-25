@@ -20,6 +20,7 @@ export type ClaseAlumno = {
     hora_fin: string;
     activo: boolean;
     tipo_clase?: string;
+    simulacion_comision?: { id: string; profesor_id: string; profesor: { id: string; nombre: string; apellido: string; apellido_materno?: string | null; avatar_url: string | null } }[] | null;
     profesor: {
       id: string;
       nombre: string;

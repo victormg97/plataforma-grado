@@ -636,6 +636,29 @@ function HorarioDetailView({ clase, user, confirmar, cancelar, pedirCambio: _ped
                 <span className="text-sm font-medium" style={{ color: 'var(--color-brand-gold)' }}>{t('badge_simulacion')}</span>
               </div>
             )}
+            {/* Comisión evaluadora (simulación) */}
+            {clase.horario.tipo_clase === 'simulacion' && clase.horario.simulacion_comision && clase.horario.simulacion_comision.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-[var(--color-text-secondary)]">{t('comision_label')}</p>
+                <div className="flex flex-wrap gap-2">
+                  {clase.horario.simulacion_comision.map((m) => (
+                    <div key={m.id} className="flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-1.5">
+                      {m.profesor?.avatar_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={m.profesor.avatar_url} alt="" className="size-5 rounded-full object-cover" />
+                      ) : (
+                        <span className="flex size-5 items-center justify-center rounded-full bg-[var(--color-brand-gold)] text-[10px] font-medium text-white">
+                          {m.profesor?.nombre?.charAt(0) ?? '?'}
+                        </span>
+                      )}
+                      <span className="text-xs text-[var(--color-text-primary)]">
+                        {m.profesor?.nombre} {m.profesor?.apellido}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="flex items-start justify-between">
               <h2 className="text-xl font-semibold text-[var(--color-text-primary)]">{clase.horario.titulo}</h2>
               <div className="flex items-center gap-2">

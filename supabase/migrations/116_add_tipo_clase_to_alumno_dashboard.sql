@@ -1,4 +1,6 @@
--- Add tipo_clase to get_alumno_dashboard RPC so students can see simulación-specific content
+-- Add tipo_clase and simulacion_comision to get_alumno_dashboard and get_alumno_prefetch
+-- so students see class type and commission data on first render
+
 CREATE OR REPLACE FUNCTION public.get_alumno_dashboard(p_alumno_id uuid)
 RETURNS json
 LANGUAGE plpgsql
@@ -24,7 +26,11 @@ BEGIN
                 'cancellation_deadline_hours', p.cancellation_deadline_hours
               )
               FROM profiles p WHERE p.id = h.profesor_id
-            )
+            ),
+            'simulacion_comision', CASE WHEN h.tipo_clase = 'simulacion' THEN (
+              SELECT coalesce(json_agg(json_build_object('id',sc.id,'profesor_id',sc.profesor_id,'profesor',json_build_object('id',pr.id,'nombre',pr.nombre,'apellido',pr.apellido,'apellido_materno',pr.apellido_materno,'avatar_url',pr.avatar_url))),'[]'::json)
+              FROM simulacion_comision sc JOIN profiles pr ON pr.id = sc.profesor_id WHERE sc.horario_id = h.id
+            ) ELSE NULL END
           ) AS horario
         FROM asistencia a
         INNER JOIN horarios h ON h.id = a.horario_id

@@ -121,6 +121,14 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
   const [activeProfId, setActiveProfId] = useState(profesorId);
   const [tipoClase, setTipoClase] = useState<TipoClaseValue>('normal');
   const [comisionIds, setComisionIds] = useState<string[]>([]);
+
+  // ─── Per-mode alumno snapshots: preserve alumno selection when switching tipo_clase ───
+  const modeAlumnoRef = useRef<Record<TipoClaseValue, { alumnoId: string; alumnoSearch: string }>>({
+    normal: { alumnoId: '', alumnoSearch: '' },
+    interrogacion: { alumnoId: '', alumnoSearch: '' },
+    simulacion: { alumnoId: '', alumnoSearch: '' },
+  });
+
   // Bloqueo de horario mode — only available when creating (not editing)
   const [esBloqueo, setEsBloqueo] = useState(false);
   // Bloqueo form state — fully independent from the horario RHF form
@@ -252,6 +260,12 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
       setAlumnoSearch('');
       setTipoClase('normal');
       setComisionIds([]);
+      // Reset per-mode alumno snapshots
+      modeAlumnoRef.current = {
+        normal: { alumnoId: '', alumnoSearch: '' },
+        interrogacion: { alumnoId: '', alumnoSearch: '' },
+        simulacion: { alumnoId: '', alumnoSearch: '' },
+      };
     }
     // Allow DOM events to flow after React finishes this render cycle
     setTimeout(() => { isResettingRef.current = false; }, 50);
@@ -583,8 +597,13 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
             value={tipoClase}
             onChange={(tipo) => {
               handleFormInteraction();
+              // Save current mode's alumno state
+              modeAlumnoRef.current[tipoClase] = { alumnoId: selectedAlumnoId || '', alumnoSearch: alumnoSearch };
+              // Restore target mode's alumno state
+              const restored = modeAlumnoRef.current[tipo];
+              setValue('alumno_id', restored.alumnoId);
+              setAlumnoSearch(restored.alumnoSearch);
               setTipoClase(tipo);
-              if (tipo !== 'simulacion') setComisionIds([]);
             }}
           />
 
@@ -594,7 +613,7 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
               {/* Comision multi-select — all members are equal, no "responsable" badge */}
               <ComisionMultiSelect
                 selectedIds={comisionIds}
-                onChange={(ids) => { handleFormInteraction(); setComisionIds(ids); setValue('alumno_id', ''); setAlumnoSearch(''); }}
+                onChange={(ids) => { handleFormInteraction(); setComisionIds(ids); }}
                 profesorResponsableId=""
                 showResponsableBadge={false}
                 profesores={profesoresComision}
