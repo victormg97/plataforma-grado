@@ -130,11 +130,7 @@ export function CalendarioAlumno() {
   }, [isMobile, currentView]);
 
   const events = clases.map((c) => {
-    // Simulaciones get a special brand-gold color
-    const isSimulacion = c.horario.tipo_clase === 'simulacion';
-    const colors = isSimulacion
-      ? { bg: 'var(--color-brand-gold)', border: 'var(--color-brand-gold)', text: '#1a1a1a' }
-      : (ESTADO_COLORS[c.estado] || ESTADO_COLORS.pendiente);
+    const colors = ESTADO_COLORS[c.estado] || ESTADO_COLORS.pendiente;
     return {
       id: c.horario.id,
       title: c.horario.titulo,
@@ -220,7 +216,12 @@ export function CalendarioAlumno() {
 
   function handleEventClick(info: EventClickArg) {
     closePopover();
-    // Agenda event
+    // Class event — always navigate to detail page
+    if (info.event.extendedProps.asistenciaId) {
+      router.push(buildAlumnoHorarioDetailHref(info.event.id, currentPath));
+      return;
+    }
+    // Agenda event (entrada personal or actividad)
     if (info.event.extendedProps.eventoAgendaId) {
       const eventoId = info.event.extendedProps.eventoAgendaId as string;
       const evento = eventosAgenda.find((e) => e.id === eventoId);
@@ -230,6 +231,7 @@ export function CalendarioAlumno() {
       }
       return;
     }
+    // Fallback: treat as class event
     router.push(buildAlumnoHorarioDetailHref(info.event.id, currentPath));
   }
 
