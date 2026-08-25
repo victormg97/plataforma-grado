@@ -13,6 +13,7 @@ import Image from 'next/image';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card } from '@/components/common/Card';
 import { StatusBadge } from '@/components/common/StatusBadge';
+import { Avatar } from '@/components/common/Avatar';
 import { NotasIndicator } from '@/components/notas/NotasIndicator';
 import { ConfirmacionForm } from '@/components/horarios/ConfirmacionForm';
 import { CancelacionForm } from '@/components/horarios/CancelacionForm';
@@ -572,7 +573,7 @@ function HorarioDetailView({ clase, user, confirmar, cancelar, pedirCambio: _ped
   const { data: simulacionEvals = [] } = useQuery<Array<{
     id: string;
     profesor_id: string;
-    profesor: { id: string; nombre: string; apellido: string; apellido_materno?: string | null };
+    profesor: { id: string; nombre: string; apellido: string; apellido_materno?: string | null; avatar_url?: string | null };
     nota: number | null;
     feedback: string | null;
     estado: string;
@@ -757,8 +758,13 @@ function HorarioDetailView({ clase, user, confirmar, cancelar, pedirCambio: _ped
                     return (
                       <div key={ev.id} className="flex items-center justify-between rounded-[var(--radius-md)] border border-[var(--color-border)] p-3">
                         <div className="flex items-center gap-2">
-                          <User className="size-3.5 text-[var(--color-brand-gold)]" />
-                          <span className="text-sm text-[var(--color-text-primary)]">{profName}</span>
+                          <Avatar
+                            nombre={ev.profesor?.nombre ?? ''}
+                            apellido={ev.profesor?.apellido ?? ''}
+                            avatarUrl={ev.profesor?.avatar_url ?? null}
+                            size="sm"
+                          />
+                          <span className="text-sm font-medium text-[var(--color-text-primary)]">{profName}</span>
                         </div>
                         {aprobado ? (
                           <div className="flex size-9 items-center justify-center rounded-full bg-[var(--color-success)]/10">

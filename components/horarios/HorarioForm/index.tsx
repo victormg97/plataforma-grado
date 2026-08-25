@@ -241,7 +241,12 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
           .maybeSingle()
           .then(({ data }) => setTipoClase(data ? 'interrogacion' : 'normal'));
       }
-      setComisionIds([]);
+      // Load existing comisión members for simulación classes
+      if (horario.tipo_clase === 'simulacion' && horario.simulacion_comision?.length) {
+        setComisionIds(horario.simulacion_comision.map((m) => m.profesor_id));
+      } else {
+        setComisionIds([]);
+      }
     } else {
       const endTime = defaultEndTime
         ? defaultEndTime
