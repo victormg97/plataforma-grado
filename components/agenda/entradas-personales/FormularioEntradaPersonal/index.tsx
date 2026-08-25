@@ -4,7 +4,7 @@
  * Formulario de creación/edición de una Entrada_Personal.
  * Requisitos: 3.8, 8.1, 10.2, 10.7, 10.15, 11.2, 15.1, 15.2, 15.4, 17.10
  */
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
@@ -93,7 +93,14 @@ export function FormularioEntradaPersonal({
   const queryClient = useQueryClient();
   const isEditing = !!entradaExistente;
 
-  const { register, handleSubmit, reset, watch, control, formState: { errors, isSubmitting, isDirty } } =
+  // ─── Custom dirty tracking: ignores programmatic setValue / reset ───
+  const [hasUserInteracted, setHasUserInteracted] = useState(false);
+  const isResettingRef = useRef(false);
+  const handleFormInteraction = useCallback(() => {
+    if (!hasUserInteracted && !isResettingRef.current) setHasUserInteracted(true);
+  }, [hasUserInteracted]);
+
+  const { register, handleSubmit, reset, watch, control, formState: { errors, isSubmitting } } =
     useForm<EntradaPersonalFormData>({
       resolver: zodResolver(crearEntradaPersonalSchema) as never,
       defaultValues: {
@@ -110,11 +117,13 @@ export function FormularioEntradaPersonal({
 
   // Report dirty state to parent (inline mode)
   useEffect(() => {
-    onDirtyChange?.(isDirty);
-  }, [isDirty, onDirtyChange]);
+    onDirtyChange?.(hasUserInteracted);
+  }, [hasUserInteracted, onDirtyChange]);
 
   useEffect(() => {
     if (!open) return;
+    isResettingRef.current = true;
+    setHasUserInteracted(false);
     if (entradaExistente) {
       reset({
         titulo: entradaExistente.titulo, fecha: entradaExistente.fecha,
@@ -137,6 +146,7 @@ export function FormularioEntradaPersonal({
         descripcion: '', nota: '', lugar: '', enlace_conexion: '',
       });
     }
+    setTimeout(() => { isResettingRef.current = false; }, 50);
   }, [open, entradaExistente, defaultDate, defaultTime, defaultEndTime, reset]);
 
   // TODO Fase 4: obtener elementos del calendario para useConflictoLocal
@@ -200,7 +210,7 @@ export function FormularioEntradaPersonal({
   );
 
   const formContent = (
-    <form className="space-y-4">
+    <form className="space-y-4" onChangeCapture={handleFormInteraction} onInputCapture={handleFormInteraction}>
       {/* Título */}
       <div>
         <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">
@@ -219,7 +229,7 @@ export function FormularioEntradaPersonal({
           control={control}
           name="categoria"
           render={({ field }) => (
-            <AppSelect value={field.value} onChange={field.onChange} options={categoriaOptions} className="w-full" />
+            <AppSelect value={field.value} onChange={(v) => { handleFormInteraction(); field.onChange(v); }} options={categoriaOptions} className="w-full" />
           )}
         />
       </div>
@@ -273,7 +283,7 @@ export function FormularioEntradaPersonal({
           control={control}
           name="descripcion"
           render={({ field }) => (
-            <SimpleRichEditor content={field.value ?? ''} onChange={field.onChange} placeholder={t('campo_descripcion_placeholder')} />
+            <SimpleRichEditor content={field.value ?? ''} onChange={(v) => { handleFormInteraction(); field.onChange(v); }} placeholder={t('campo_descripcion_placeholder')} />
           )}
         />
       </div>
@@ -287,7 +297,7 @@ export function FormularioEntradaPersonal({
           control={control}
           name="nota"
           render={({ field }) => (
-            <SimpleRichEditor content={field.value ?? ''} onChange={field.onChange} placeholder={t('campo_nota_placeholder')} />
+            <SimpleRichEditor content={field.value ?? ''} onChange={(v) => { handleFormInteraction(); field.onChange(v); }} placeholder={t('campo_nota_placeholder')} />
           )}
         />
       </div>
@@ -318,7 +328,7 @@ export function FormularioEntradaPersonal({
         <Controller
           control={control}
           name="visibilidad"
-          render={({ field }) => <SelectorVisibilidad value={field.value} onChange={field.onChange} />}
+          render={({ field }) => <SelectorVisibilidad value={field.value} onChange={(v) => { handleFormInteraction(); field.onChange(v); }} />}
         />
       </div>
 

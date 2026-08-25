@@ -4,7 +4,7 @@
  * Formulario de creación/edición de una Actividad.
  * Requisitos: 4.1, 4.3, 4.4, 10.2, 10.7, 11.2, 15.1, 15.2, 17.10
  */
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
@@ -90,9 +90,16 @@ export function FormularioActividad({
   const queryClient = useQueryClient();
   const isEditing = !!actividadExistente;
 
+  // ─── Custom dirty tracking: ignores programmatic setValue / reset ───
+  const [hasUserInteracted, setHasUserInteracted] = useState(false);
+  const isResettingRef = useRef(false);
+  const handleFormInteraction = useCallback(() => {
+    if (!hasUserInteracted && !isResettingRef.current) setHasUserInteracted(true);
+  }, [hasUserInteracted]);
+
   const {
     register, handleSubmit, reset, watch, control, setValue,
-    formState: { errors, isSubmitting, isDirty },
+    formState: { errors, isSubmitting },
   } = useForm<ActividadFormData>({
     resolver: zodResolver(crearActividadSchema) as never,
     defaultValues: {
@@ -111,11 +118,13 @@ export function FormularioActividad({
 
   // Report dirty state to parent (inline mode)
   useEffect(() => {
-    onDirtyChange?.(isDirty);
-  }, [isDirty, onDirtyChange]);
+    onDirtyChange?.(hasUserInteracted);
+  }, [hasUserInteracted, onDirtyChange]);
 
   useEffect(() => {
     if (!open) return;
+    isResettingRef.current = true;
+    setHasUserInteracted(false);
     if (actividadExistente) {
       reset({
         titulo: actividadExistente.titulo, fecha: actividadExistente.fecha,
@@ -140,6 +149,7 @@ export function FormularioActividad({
         descripcion: '', nota: '', lugar: '', enlace_conexion: '',
       });
     }
+    setTimeout(() => { isResettingRef.current = false; }, 50);
   }, [open, actividadExistente, defaultDate, defaultTime, defaultEndTime, reset]);
 
   // ─── Fetch alumnos ──────────────────────────────────────────────────────
@@ -218,7 +228,7 @@ export function FormularioActividad({
   );
 
   const formContent = (
-    <form className="space-y-4">
+    <form className="space-y-4" onChangeCapture={handleFormInteraction} onInputCapture={handleFormInteraction}>
       {/* Título */}
       <div>
         <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">
@@ -237,7 +247,7 @@ export function FormularioActividad({
           control={control}
           name="categoria"
           render={({ field }) => (
-            <AppSelect value={field.value} onChange={field.onChange} options={categoriaOptions} className="w-full" />
+            <AppSelect value={field.value} onChange={(v) => { handleFormInteraction(); field.onChange(v); }} options={categoriaOptions} className="w-full" />
           )}
         />
       </div>
@@ -291,7 +301,7 @@ export function FormularioActividad({
           control={control}
           name="descripcion"
           render={({ field }) => (
-            <SimpleRichEditor content={field.value ?? ''} onChange={field.onChange} placeholder={t('campo_descripcion_placeholder')} />
+            <SimpleRichEditor content={field.value ?? ''} onChange={(v) => { handleFormInteraction(); field.onChange(v); }} placeholder={t('campo_descripcion_placeholder')} />
           )}
         />
       </div>
@@ -305,7 +315,7 @@ export function FormularioActividad({
           control={control}
           name="nota"
           render={({ field }) => (
-            <SimpleRichEditor content={field.value ?? ''} onChange={field.onChange} placeholder={t('campo_nota_placeholder')} />
+            <SimpleRichEditor content={field.value ?? ''} onChange={(v) => { handleFormInteraction(); field.onChange(v); }} placeholder={t('campo_nota_placeholder')} />
           )}
         />
       </div>
@@ -340,6 +350,7 @@ export function FormularioActividad({
             <SelectorAlcance
               value={field.value}
               onChange={(val) => {
+                handleFormInteraction();
                 field.onChange(val);
                 if (val === 'todos_alumnos') setValue('destinatarios', []);
               }}
@@ -354,7 +365,7 @@ export function FormularioActividad({
           control={control}
           name="destinatarios"
           render={({ field }) => (
-            <SelectorDestinatarios alumnos={alumnos} selectedIds={field.value} onChange={field.onChange} />
+            <SelectorDestinatarios alumnos={alumnos} selectedIds={field.value} onChange={(v) => { handleFormInteraction(); field.onChange(v); }} />
           )}
         />
       )}
@@ -364,7 +375,7 @@ export function FormularioActividad({
         <Controller
           control={control}
           name="visibilidad"
-          render={({ field }) => <SelectorVisibilidad value={field.value} onChange={field.onChange} />}
+          render={({ field }) => <SelectorVisibilidad value={field.value} onChange={(v) => { handleFormInteraction(); field.onChange(v); }} />}
         />
       </div>
 

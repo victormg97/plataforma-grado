@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef, useMemo } from 'react';
+import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
@@ -91,7 +91,14 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
   const [submittingBloqueo, setSubmittingBloqueo] = useState(false);
   const isEditing = !!horario;
 
-  const { register, handleSubmit, reset, watch, setValue, formState: { errors, isSubmitting, isDirty } } = useForm<HorarioFormData>({
+  // ─── Custom dirty tracking: ignores programmatic setValue / reset ───
+  const [hasUserInteracted, setHasUserInteracted] = useState(false);
+  const isResettingRef = useRef(false);
+  const handleFormInteraction = useCallback(() => {
+    if (!hasUserInteracted && !isResettingRef.current) setHasUserInteracted(true);
+  }, [hasUserInteracted]);
+
+  const { register, handleSubmit, reset, watch, setValue, formState: { errors, isSubmitting } } = useForm<HorarioFormData>({
     resolver: zodResolver(horarioSchema),
     defaultValues: {
       alumno_id: '',
@@ -125,8 +132,8 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
 
   // Report dirty state to parent (inline mode)
   useEffect(() => {
-    onDirtyChange?.(isDirty);
-  }, [isDirty, onDirtyChange]);
+    onDirtyChange?.(hasUserInteracted);
+  }, [hasUserInteracted, onDirtyChange]);
 
   // Auto-fill hora_fin = hora_inicio + 1h (only when creating)
   useEffect(() => {
@@ -140,6 +147,8 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
   // Reset form when horario or open changes
   useEffect(() => {
     if (!open) return;
+    isResettingRef.current = true;
+    setHasUserInteracted(false);
     // Reset bloqueo mode when opening — honor defaultBloqueo (e.g. all-day cell click)
     setEsBloqueo(!isEditing && !!defaultBloqueo);
     setMotivoBloqueo('');
@@ -204,6 +213,8 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
       setTipoClase('normal');
       setComisionIds([]);
     }
+    // Allow DOM events to flow after React finishes this render cycle
+    setTimeout(() => { isResettingRef.current = false; }, 50);
   }, [horario, defaultDate, defaultTime, defaultEndTime, defaultBloqueo, open, reset, adminProfesores, profesorId, isEditing]);
 
   // Fetch alumnos using React Query — eliminates the effect chain
@@ -437,7 +448,7 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
   );
 
   const formContent = (
-    <form className="space-y-4">
+    <form className="space-y-4" onChangeCapture={handleFormInteraction} onInputCapture={handleFormInteraction}>
       {/* Admin: professor selector */}
       {adminProfesores && adminProfesores.length > 0 && (
         <div>
@@ -445,6 +456,7 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
           <AppSelect
             value={activeProfId}
             onChange={(value) => {
+              handleFormInteraction();
               setActiveProfId(value);
               // Clear alumno when professor changes
               setValue('alumno_id', '');
@@ -541,10 +553,12 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
               selectedId={selectedAlumnoId}
               searchText={alumnoSearch}
               onSearchChange={(text) => {
+                handleFormInteraction();
                 setAlumnoSearch(text);
                 if (!text) setValue('alumno_id', '');
               }}
               onSelect={(id, displayName) => {
+                handleFormInteraction();
                 setValue('alumno_id', id, { shouldValidate: true });
                 setAlumnoSearch(displayName);
               }}
@@ -578,7 +592,7 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
             <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">{t('descripcion')} <span className="text-[var(--color-text-muted)]">{t('opcional')}</span></label>
             <SimpleRichEditor
               content={watchedDescripcion}
-              onChange={(html) => setValue('descripcion', html)}
+              onChange={(html) => { handleFormInteraction(); setValue('descripcion', html); }}
               placeholder={t('descripcion_placeholder')}
             />
             {errors.descripcion && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.descripcion.message}</p>}
@@ -645,6 +659,7 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
           <TipoClaseSelector
             value={tipoClase}
             onChange={(tipo) => {
+              handleFormInteraction();
               setTipoClase(tipo);
               if (tipo !== 'simulacion') setComisionIds([]);
             }}
@@ -654,7 +669,7 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
           {tipoClase === 'simulacion' && (
             <ComisionMultiSelect
               selectedIds={comisionIds}
-              onChange={setComisionIds}
+              onChange={(ids) => { handleFormInteraction(); setComisionIds(ids); }}
               profesorResponsableId={activeProfId}
               profesores={profesoresComision}
             />
