@@ -140,6 +140,7 @@
     "filtro_calendario_yo": "(you)",
     "filtro_calendario_label": "Show schedule of",
     "debe_seleccionar_profesor": "You must select a professor",
+    "debe_seleccionar_comision": "Select commission professors first",
     "bloqueo_campos_requeridos": "Please fill in the date and times",
     "error_hora_fin": "End time must be after start time",
     "nueva_descripcion": "Schedule a new class with a student",

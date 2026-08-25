@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -11,6 +11,7 @@ import esLocale from '@fullcalendar/core/locales/es';
 import type { EventClickArg, DatesSetArg, EventInput } from '@fullcalendar/core';
 import type { DateClickArg } from '@fullcalendar/interaction';
 import { useAsistencia } from '@/lib/hooks/useAsistencia';
+import type { ClaseAlumno } from '@/lib/hooks/useAsistencia';
 import { usePruebas } from '@/lib/hooks/usePruebas';
 import { buildAlumnoHorarioDetailHref } from '@/lib/utils/horarioNavigation';
 import { useTranslations, useLocale } from 'next-intl';
@@ -20,6 +21,14 @@ import { useUserStore } from '@/stores/useUserStore';
 import { CalendarEventPopover, useCalendarPopover, type PopoverEventData } from '@/components/calendario/CalendarEventPopover';
 import type { EstadoAsistencia } from '@/lib/supabase/types';
 import { useQueryClient } from '@tanstack/react-query';
+import { Modal } from '@/components/common/Modal';
+import { Button } from '@/components/common/Button';
+import { StatusBadge } from '@/components/common/StatusBadge';
+import { RichDescription } from '@/components/common/RichDescription';
+import { ViewDetailButton } from '@/components/horarios/ViewDetailButton';
+import { Calendar, Clock, User, GraduationCap } from 'lucide-react';
+import { format } from 'date-fns';
+import { es as esDateFns, enUS } from 'date-fns/locale';
 
 // ─── Agenda imports ─────────────────────────────────────────────────────────
 import { useEventosAgenda } from '@/lib/agenda/nucleo';
@@ -42,7 +51,6 @@ const ESTADO_COLORS: Record<string, { bg: string; border: string; text: string }
 };
 
 export function CalendarioAlumno() {
-  const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { clases, loading } = useAsistencia();
@@ -67,6 +75,10 @@ export function CalendarioAlumno() {
   const [agendaDetailOpen, setAgendaDetailOpen] = useState(false);
   const [agendaFormOpen, setAgendaFormOpen] = useState(false);
   const [agendaEditOpen, setAgendaEditOpen] = useState(false);
+
+  // ─── Class detail modal state ───────────────────────────────────────────
+  const [selectedClase, setSelectedClase] = useState<ClaseAlumno | null>(null);
+  const [claseDetailOpen, setClaseDetailOpen] = useState(false);
   const [agendaFormDate, setAgendaFormDate] = useState<string | undefined>(undefined);
   const [agendaFormTime, setAgendaFormTime] = useState<string | undefined>(undefined);
   const [agendaFormEndTime, setAgendaFormEndTime] = useState<string | undefined>(undefined);
@@ -216,9 +228,13 @@ export function CalendarioAlumno() {
 
   function handleEventClick(info: EventClickArg) {
     closePopover();
-    // Class event — always navigate to detail page
+    // Class event — open detail modal
     if (info.event.extendedProps.asistenciaId) {
-      router.push(buildAlumnoHorarioDetailHref(info.event.id, currentPath));
+      const clase = info.event.extendedProps.clase as ClaseAlumno;
+      if (clase) {
+        setSelectedClase(clase);
+        setClaseDetailOpen(true);
+      }
       return;
     }
     // Agenda event (entrada personal or actividad)
@@ -231,8 +247,6 @@ export function CalendarioAlumno() {
       }
       return;
     }
-    // Fallback: treat as class event
-    router.push(buildAlumnoHorarioDetailHref(info.event.id, currentPath));
   }
 
   // ─── Agenda: dateClick opens FormularioAgenda in entrada_personal mode ──
@@ -483,6 +497,68 @@ export function CalendarioAlumno() {
       rol="alumno"
       onClose={closePopover}
     />
+
+    {/* Class detail modal (alumno) */}
+    <Modal
+      open={claseDetailOpen}
+      onClose={() => setClaseDetailOpen(false)}
+      title={selectedClase?.horario.titulo || tc('detalle')}
+      footer={
+        <div className="flex gap-2">
+          <Button variant="ghost" onClick={() => setClaseDetailOpen(false)}>{tc('cerrar')}</Button>
+        </div>
+      }
+    >
+      {selectedClase && (
+        <div className="space-y-4">
+          {/* Status */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-[var(--color-text-muted)]">{ta('estado_label')}:</span>
+            <StatusBadge status={selectedClase.estado} />
+            {selectedClase.horario.tipo_clase === 'simulacion' && (
+              <span className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium"
+                style={{ backgroundColor: 'var(--color-brand-gold-muted)', borderColor: 'color-mix(in srgb, var(--color-brand-gold) 40%, transparent)', color: 'var(--color-brand-gold)' }}>
+                <GraduationCap className="size-3" />
+                {locale === 'en' ? 'Simulation' : 'Simulación'}
+              </span>
+            )}
+          </div>
+
+          {/* Date & time */}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-bg-secondary)] px-2.5 py-1 text-xs text-[var(--color-text-secondary)]">
+              <Calendar className="size-3.5" style={{ color: 'var(--color-brand-gold)' }} />
+              <span className="capitalize">
+                {format(new Date(selectedClase.horario.fecha + 'T12:00:00'), locale === 'en' ? "EEEE, MMMM d" : "EEEE d 'de' MMMM", { locale: locale === 'en' ? enUS : esDateFns })}
+              </span>
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-bg-secondary)] px-2.5 py-1 text-xs text-[var(--color-text-secondary)]">
+              <Clock className="size-3.5" style={{ color: 'var(--color-brand-gold)' }} />
+              {selectedClase.horario.hora_inicio.slice(0, 5)} - {selectedClase.horario.hora_fin.slice(0, 5)}
+            </span>
+          </div>
+
+          {/* Professor */}
+          {selectedClase.horario.profesor && (
+            <div className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
+              <User className="size-4 shrink-0 text-[var(--color-brand-gold)]" />
+              <span>Prof. {selectedClase.horario.profesor.nombre} {selectedClase.horario.profesor.apellido}</span>
+            </div>
+          )}
+
+          {/* Description */}
+          {selectedClase.horario.descripcion && (
+            <RichDescription html={selectedClase.horario.descripcion} />
+          )}
+
+          {/* Link to full detail page */}
+          <ViewDetailButton
+            href={buildAlumnoHorarioDetailHref(selectedClase.horario.id, currentPath)}
+            onClick={() => setClaseDetailOpen(false)}
+          />
+        </div>
+      )}
+    </Modal>
 
     {/* Agenda event detail */}
     <DetalleEventoAgenda

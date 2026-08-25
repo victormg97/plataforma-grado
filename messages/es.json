@@ -140,6 +140,7 @@
     "filtro_calendario_yo": "(tú)",
     "filtro_calendario_label": "Ver horario de",
     "debe_seleccionar_profesor": "Debe seleccionar un profesor",
+    "debe_seleccionar_comision": "Seleccione profesores de la comisión",
     "bloqueo_campos_requeridos": "Completa la fecha y los horarios",
     "error_hora_fin": "La hora de fin debe ser posterior a la hora de inicio",
     "nueva_descripcion": "Programa una nueva clase con un alumno",

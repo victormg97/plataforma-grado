@@ -69,6 +69,42 @@ async function fetchAlumnosForProfesor(fetchTargetId: string, isAdmin: boolean):
   return (profiles as Profile[]) ?? [];
 }
 
+/** Fetch alumnos assigned to any of the given professor IDs (for simulación comisión mode).
+ *  Also includes unassigned alumnos (not in alumnos_extra at all) so admins can pick them too. */
+async function fetchAlumnosForComision(profesorIds: string[]): Promise<Profile[]> {
+  const supabase = createClient();
+
+  // 1. Get all active alumnos
+  const { data: allAlumnos } = await supabase
+    .from('profiles')
+    .select('id, nombre, apellido, email, telefono, avatar_url, activo, rol, created_at, updated_at')
+    .eq('rol', 'alumno')
+    .eq('activo', true)
+    .order('nombre');
+  if (!allAlumnos || allAlumnos.length === 0) return [];
+
+  // 2. Get all alumno IDs that have ANY assignment in alumnos_extra
+  const { data: assignedRows } = await supabase
+    .from('alumnos_extra')
+    .select('alumno_id');
+  const allAssignedIds = new Set((assignedRows ?? []).map((r) => r.alumno_id));
+
+  // 3. Get alumno IDs assigned specifically to the selected comisión professors
+  let comisionAssignedIds = new Set<string>();
+  if (profesorIds.length > 0) {
+    const { data: comisionRows } = await supabase
+      .from('alumnos_extra')
+      .select('alumno_id')
+      .in('profesor_id', profesorIds);
+    comisionAssignedIds = new Set((comisionRows ?? []).map((r) => r.alumno_id));
+  }
+
+  // 4. Return: alumnos assigned to comisión professors + unassigned alumnos
+  return (allAlumnos as Profile[]).filter(
+    (a) => comisionAssignedIds.has(a.id) || !allAssignedIds.has(a.id)
+  );
+}
+
 export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, defaultTime, defaultEndTime, defaultBloqueo, onSuccess, cachedAlumnos, adminProfesores, renderMode = 'modal', onDirtyChange }: HorarioFormProps) {
   const t = useTranslations('horarios');
   const tc = useTranslations('common');
@@ -222,20 +258,31 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
   const useCachedAlumnos = !adminProfesores && cachedAlumnos && cachedAlumnos.length > 0;
 
   // In admin mode the alumno selector is locked until a professor is chosen.
-  const alumnoSelectorDisabled = !!adminProfesores && !isEditing && !activeProfId;
+  const alumnoSelectorDisabled = !!adminProfesores && !isEditing && !activeProfId && tipoClase !== 'simulacion';
 
   const { data: fetchedAlumnos = [], isLoading: loadingAlumnos } = useQuery({
     queryKey: ['form-alumnos', fetchTargetId, !!adminProfesores],
     queryFn: () => fetchAlumnosForProfesor(fetchTargetId, !!adminProfesores),
-    enabled: open && !!fetchTargetId && !useCachedAlumnos,
+    enabled: open && !!fetchTargetId && !useCachedAlumnos && tipoClase !== 'simulacion',
     staleTime: 60_000,
   });
 
-  // Derive alumnos list: use cached if available, otherwise fetched
-  const alumnos: Profile[] = useMemo(
-    () => useCachedAlumnos ? (cachedAlumnos as Profile[]) : fetchedAlumnos,
-    [useCachedAlumnos, cachedAlumnos, fetchedAlumnos]
-  );
+  // Fetch alumnos for simulación: union of students from all selected comisión professors
+  const sortedComisionIds = useMemo(() => [...comisionIds].sort(), [comisionIds]);
+  const { data: comisionAlumnos = [], isLoading: loadingComisionAlumnos } = useQuery({
+    queryKey: ['form-alumnos-comision', sortedComisionIds],
+    queryFn: () => fetchAlumnosForComision(sortedComisionIds),
+    enabled: open && tipoClase === 'simulacion' && sortedComisionIds.length > 0,
+    staleTime: 60_000,
+  });
+
+  // Derive alumnos list based on mode
+  const alumnos: Profile[] = useMemo(() => {
+    if (tipoClase === 'simulacion') return comisionAlumnos;
+    return useCachedAlumnos ? (cachedAlumnos as Profile[]) : fetchedAlumnos;
+  }, [tipoClase, comisionAlumnos, useCachedAlumnos, cachedAlumnos, fetchedAlumnos]);
+
+  const loadingAlumnosResolved = tipoClase === 'simulacion' ? loadingComisionAlumnos : loadingAlumnos;
 
   // Fetch profesores/admins for comisión multi-select (simulación)
   const { data: profesoresComision = [] } = useQuery<ProfesorComisionOption[]>({
@@ -452,26 +499,6 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
 
   const formContent = (
     <form className="space-y-4" onChangeCapture={handleFormInteraction} onInputCapture={handleFormInteraction}>
-      {/* Admin: professor selector — hidden in simulacion mode */}
-      {adminProfesores && adminProfesores.length > 0 && tipoClase !== 'simulacion' && (
-        <div>
-          <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">Profesor</label>
-          <AppSelect
-            value={activeProfId}
-            onChange={(value) => {
-              handleFormInteraction();
-              setActiveProfId(value);
-              // Clear alumno when professor changes
-              setValue('alumno_id', '');
-              setAlumnoSearch('');
-            }}
-            options={adminProfesores.map((p) => ({ value: p.id, label: `${p.nombre} ${p.apellido}` }))}
-            placeholder="Seleccionar profesor"
-            className="w-full"
-          />
-        </div>
-      )}
-
       {/* ── Modo bloqueo: solo fecha, horas y motivo ── */}
       {esBloqueo && !isEditing ? (
         <>
@@ -563,7 +590,7 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
               {/* Comision multi-select — all members are equal, no "responsable" badge */}
               <ComisionMultiSelect
                 selectedIds={comisionIds}
-                onChange={(ids) => { handleFormInteraction(); setComisionIds(ids); }}
+                onChange={(ids) => { handleFormInteraction(); setComisionIds(ids); setValue('alumno_id', ''); setAlumnoSearch(''); }}
                 profesorResponsableId=""
                 showResponsableBadge={false}
                 profesores={profesoresComision}
@@ -574,7 +601,7 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
                 <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">{t('campo_alumno')}</label>
                 <AlumnoCombobox
                   alumnos={alumnos}
-                  loading={loadingAlumnos}
+                  loading={loadingAlumnosResolved}
                   selectedId={selectedAlumnoId}
                   searchText={alumnoSearch}
                   onSearchChange={(text) => {
@@ -587,13 +614,13 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
                     setValue('alumno_id', id, { shouldValidate: true });
                     setAlumnoSearch(displayName);
                   }}
-                  placeholder={t('buscar_alumno_placeholder')}
-                  emptyMessage={ta('sin_alumnos')}
+                  placeholder={comisionIds.length === 0 ? t('debe_seleccionar_comision') : t('buscar_alumno_placeholder')}
+                  emptyMessage={comisionIds.length === 0 ? t('debe_seleccionar_comision') : ta('sin_alumnos')}
                   noResultsMessage={t('no_alumnos_encontrados')}
                   loadingMessage={tc('cargando')}
                   inputClassName={inputClass}
                   filteredAlumnos={filteredAlumnos}
-                  disabled={false}
+                  disabled={comisionIds.length === 0}
                 />
                 {errors.alumno_id && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.alumno_id.message}</p>}
               </div>
@@ -684,12 +711,32 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
             <>
               {/* ── Normal / Interrogación mode ── */}
 
+              {/* Admin: professor selector */}
+              {adminProfesores && adminProfesores.length > 0 && (
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">Profesor</label>
+                  <AppSelect
+                    value={activeProfId}
+                    onChange={(value) => {
+                      handleFormInteraction();
+                      setActiveProfId(value);
+                      // Clear alumno when professor changes
+                      setValue('alumno_id', '');
+                      setAlumnoSearch('');
+                    }}
+                    options={adminProfesores.map((p) => ({ value: p.id, label: `${p.nombre} ${p.apellido}` }))}
+                    placeholder="Seleccionar profesor"
+                    className="w-full"
+                  />
+                </div>
+              )}
+
               {/* Alumno — searchable combo dropdown */}
               <div>
                 <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">{t('campo_alumno')}</label>
                 <AlumnoCombobox
                   alumnos={alumnos}
-                  loading={loadingAlumnos}
+                  loading={loadingAlumnosResolved}
                   selectedId={selectedAlumnoId}
                   searchText={alumnoSearch}
                   onSearchChange={(text) => {
