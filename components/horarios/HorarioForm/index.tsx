@@ -69,8 +69,8 @@ async function fetchAlumnosForProfesor(fetchTargetId: string, isAdmin: boolean):
   return (profiles as Profile[]) ?? [];
 }
 
-/** Fetch alumnos assigned to any of the given professor IDs (for simulación comisión mode).
- *  Also includes unassigned alumnos (not in alumnos_extra at all) so admins can pick them too. */
+/** Fetch alumnos for simulación comisión mode.
+ *  Returns: alumnos assigned to any selected comisión professor + unassigned alumnos (profesor_id IS NULL in alumnos_extra or no entry at all). */
 async function fetchAlumnosForComision(profesorIds: string[]): Promise<Profile[]> {
   const supabase = createClient();
 
@@ -83,26 +83,30 @@ async function fetchAlumnosForComision(profesorIds: string[]): Promise<Profile[]
     .order('nombre');
   if (!allAlumnos || allAlumnos.length === 0) return [];
 
-  // 2. Get all alumno IDs that have ANY assignment in alumnos_extra
-  const { data: assignedRows } = await supabase
+  // 2. Get assignment info from alumnos_extra
+  const { data: extraRows } = await supabase
     .from('alumnos_extra')
-    .select('alumno_id');
-  const allAssignedIds = new Set((assignedRows ?? []).map((r) => r.alumno_id));
+    .select('alumno_id, profesor_id');
 
-  // 3. Get alumno IDs assigned specifically to the selected comisión professors
-  let comisionAssignedIds = new Set<string>();
-  if (profesorIds.length > 0) {
-    const { data: comisionRows } = await supabase
-      .from('alumnos_extra')
-      .select('alumno_id')
-      .in('profesor_id', profesorIds);
-    comisionAssignedIds = new Set((comisionRows ?? []).map((r) => r.alumno_id));
+  // Build a map: alumno_id → profesor_id (null means unassigned)
+  const assignmentMap = new Map<string, string | null>();
+  for (const row of extraRows ?? []) {
+    assignmentMap.set(row.alumno_id, row.profesor_id);
   }
 
-  // 4. Return: alumnos assigned to comisión professors + unassigned alumnos
-  return (allAlumnos as Profile[]).filter(
-    (a) => comisionAssignedIds.has(a.id) || !allAssignedIds.has(a.id)
-  );
+  const comisionSet = new Set(profesorIds);
+
+  // 3. Filter: include if assigned to a comisión professor, unassigned (null), or not in alumnos_extra at all
+  return (allAlumnos as Profile[]).filter((a) => {
+    const assignedTo = assignmentMap.get(a.id);
+    // Not in alumnos_extra → unassigned → include
+    if (!assignmentMap.has(a.id)) return true;
+    // In alumnos_extra but profesor_id is null → unassigned → include
+    if (assignedTo === null) return true;
+    // Assigned to one of the selected comisión professors → include
+    if (assignedTo && comisionSet.has(assignedTo)) return true;
+    return false;
+  });
 }
 
 export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, defaultTime, defaultEndTime, defaultBloqueo, onSuccess, cachedAlumnos, adminProfesores, renderMode = 'modal', onDirtyChange }: HorarioFormProps) {
