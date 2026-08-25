@@ -7,7 +7,7 @@
  *
  * Requisitos: 3.8, 5.9, 12.8, 12.9, 17.8
  */
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useQueryParam } from '@/lib/hooks/useQueryParam';
 import type { UserRol } from '@/lib/supabase/types';
@@ -48,7 +48,10 @@ export function FormularioAgenda({
   const t = useTranslations('agendaFormulario');
   const [agendaTipo, setAgendaTipo] = useQueryParam('agendaTipo');
 
-  // Dirty state tracking from child forms
+  // Dirty state tracking per tab
+  const [dirtyByTab, setDirtyByTab] = useState<Record<TipoEvento, boolean>>({
+    clase: false, entrada_personal: false, actividad: false,
+  });
   const [isDirty, setIsDirty] = useState(false);
   // Confirmation dialog state
   const [confirmandoCierre, setConfirmandoCierre] = useState(false);
@@ -65,10 +68,21 @@ export function FormularioAgenda({
     }
   }
 
-  // Handle dirty state from child forms
-  const handleDirtyChange = useCallback((dirty: boolean) => {
-    setIsDirty(dirty);
+  // Handle dirty state from child forms — per-tab tracking
+  const handleDirtyClase = useCallback((dirty: boolean) => {
+    setDirtyByTab(prev => ({ ...prev, clase: dirty }));
   }, []);
+  const handleDirtyEntradaPersonal = useCallback((dirty: boolean) => {
+    setDirtyByTab(prev => ({ ...prev, entrada_personal: dirty }));
+  }, []);
+  const handleDirtyActividad = useCallback((dirty: boolean) => {
+    setDirtyByTab(prev => ({ ...prev, actividad: dirty }));
+  }, []);
+
+  // Report dirty state of the currently active tab
+  useEffect(() => {
+    setIsDirty(dirtyByTab[tipoActivo] ?? false);
+  }, [dirtyByTab, tipoActivo]);
 
   // Handle close attempt with unsaved data protection
   function handleCloseAttempt() {
@@ -82,6 +96,7 @@ export function FormularioAgenda({
   function handleActualClose() {
     setConfirmandoCierre(false);
     setIsDirty(false);
+    setDirtyByTab({ clase: false, entrada_personal: false, actividad: false });
     onClose();
   }
 
@@ -121,27 +136,29 @@ export function FormularioAgenda({
           </div>
         )}
 
-        {/* Sub-form in inline mode */}
-        {tipoActivo === 'clase' && (
-          <HorarioForm
-            open={true}
-            onClose={handleCloseAttempt}
-            profesorId={profesorId}
-            defaultDate={defaultDate}
-            defaultTime={defaultTime}
-            defaultEndTime={defaultEndTime}
-            onSuccess={() => {
-              setIsDirty(false);
-              onSuccess();
-            }}
-            cachedAlumnos={cachedAlumnos}
-            adminProfesores={adminProfesores}
-            renderMode="inline"
-            onDirtyChange={handleDirtyChange}
-          />
+        {/* Sub-forms always mounted (hidden when inactive) for instant tab switching */}
+        {!isAlumno && (
+          <div style={{ display: tipoActivo === 'clase' ? undefined : 'none' }}>
+            <HorarioForm
+              open={true}
+              onClose={handleCloseAttempt}
+              profesorId={profesorId}
+              defaultDate={defaultDate}
+              defaultTime={defaultTime}
+              defaultEndTime={defaultEndTime}
+              onSuccess={() => {
+                setDirtyByTab(prev => ({ ...prev, clase: false }));
+                onSuccess();
+              }}
+              cachedAlumnos={cachedAlumnos}
+              adminProfesores={adminProfesores}
+              renderMode="inline"
+              onDirtyChange={handleDirtyClase}
+            />
+          </div>
         )}
 
-        {tipoActivo === 'entrada_personal' && (
+        <div style={{ display: tipoActivo === 'entrada_personal' ? undefined : 'none' }}>
           <FormularioEntradaPersonal
             open={true}
             onClose={handleCloseAttempt}
@@ -150,32 +167,34 @@ export function FormularioAgenda({
             defaultEndTime={defaultEndTime}
             rol={rol}
             onSuccess={() => {
-              setIsDirty(false);
+              setDirtyByTab(prev => ({ ...prev, entrada_personal: false }));
               onSuccess();
             }}
             renderMode="inline"
-            onDirtyChange={handleDirtyChange}
+            onDirtyChange={handleDirtyEntradaPersonal}
           />
-        )}
+        </div>
 
-        {tipoActivo === 'actividad' && !isAlumno && (
-          <FormularioActividad
-            open={true}
-            onClose={handleCloseAttempt}
-            defaultDate={defaultDate}
-            defaultTime={defaultTime}
-            defaultEndTime={defaultEndTime}
-            rol={rol}
-            profesorId={profesorId}
-            onSuccess={() => {
-              setIsDirty(false);
-              onSuccess();
-            }}
-            cachedAlumnos={cachedAlumnos}
-            adminProfesores={adminProfesores}
-            renderMode="inline"
-            onDirtyChange={handleDirtyChange}
-          />
+        {!isAlumno && (
+          <div style={{ display: tipoActivo === 'actividad' ? undefined : 'none' }}>
+            <FormularioActividad
+              open={true}
+              onClose={handleCloseAttempt}
+              defaultDate={defaultDate}
+              defaultTime={defaultTime}
+              defaultEndTime={defaultEndTime}
+              rol={rol}
+              profesorId={profesorId}
+              onSuccess={() => {
+                setDirtyByTab(prev => ({ ...prev, actividad: false }));
+                onSuccess();
+              }}
+              cachedAlumnos={cachedAlumnos}
+              adminProfesores={adminProfesores}
+              renderMode="inline"
+              onDirtyChange={handleDirtyActividad}
+            />
+          </div>
         )}
       </Modal>
 

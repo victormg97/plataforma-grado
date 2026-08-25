@@ -22,6 +22,8 @@ import { AppSelect } from '@/components/common/AppSelect';
 import { SimpleRichEditor } from '@/components/common/SimpleRichEditor';
 import { AvisoSolapamiento } from '@/components/agenda/solapamiento/AvisoSolapamiento';
 import { SelectorVisibilidad } from '@/components/agenda/entradas-personales/SelectorVisibilidad';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 import { SelectorAlcance } from './SelectorAlcance';
 import { SelectorDestinatarios, type AlumnoOption } from './SelectorDestinatarios';
@@ -253,14 +255,21 @@ export function FormularioActividad({
       </div>
 
       {/* Día completo */}
-      <div className="flex items-center gap-2">
-        <input
-          type="checkbox" id="actividad_dia_completo" {...register('dia_completo')}
-          className="size-4 rounded border-[var(--color-border)] text-[var(--color-brand-gold)] focus:ring-[var(--color-brand-gold)]"
-        />
-        <label htmlFor="actividad_dia_completo" className="text-sm text-[var(--color-text-primary)]">
+      <div className="flex items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 py-2.5">
+        <Label htmlFor="actividad_dia_completo" className="text-sm font-medium text-[var(--color-text-primary)] cursor-pointer">
           {t('campo_dia_completo')}
-        </label>
+        </Label>
+        <Controller
+          control={control}
+          name="dia_completo"
+          render={({ field }) => (
+            <Switch
+              id="actividad_dia_completo"
+              checked={field.value}
+              onCheckedChange={(checked) => { handleFormInteraction(); field.onChange(checked); }}
+            />
+          )}
+        />
       </div>
 
       {/* Fecha */}
