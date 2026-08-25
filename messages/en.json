@@ -242,6 +242,7 @@
     "es_examen": "{term} class",
     "es_examen_desc": "Mark this class as a {term} session",
     "badge_examen": "{term}",
+    "badge_simulacion": "Simulation",
     "nota_prueba": "{term} grade",
     "calificar_prueba": "Grade {term}",
     "guardar_nota": "Save grade",
@@ -255,7 +256,9 @@
       "sin_graduar": "Not graded",
       "reprobado": "Failed",
       "bloqueo_badge": "Unavailable",
-      "bloqueo_sin_motivo": "No reason specified"
+      "bloqueo_sin_motivo": "No reason specified",
+      "simulacion_badge": "Simulation",
+      "comision_mas": "+{count} more"
     },
     "cambio": {
       "titulo": "Request schedule change",
@@ -1398,7 +1401,8 @@
       "invitacion_acceso": "Access invitation",
       "nueva_nota_clase": "New class note",
       "bienvenida_registro": "Welcome email",
-      "recordatorio_clase": "Class reminder"
+      "recordatorio_clase": "Class reminder",
+      "nueva_simulacion": "New exam simulation"
     },
     "asunto_label": "Subject",
     "asunto_placeholder": "Write the email subject…",
@@ -1422,7 +1426,9 @@
       "enlace_acceso": "Link for the user to set up their access",
       "email_acceso": "Email the user will sign in with",
       "contenido_nota": "Content of the note left on the class",
-      "nombre_autor": "Name of the person who wrote the note"
+      "nombre_autor": "Name of the person who wrote the note",
+      "comision_profesores": "List of evaluation commission professors",
+      "enlace_conexion": "Meeting connection link"
     },
     "cuerpo": {
       "modoLabel": "Body editing mode",
@@ -1719,7 +1725,8 @@
     "exito_creado": "Personal entry created",
     "exito_editado": "Personal entry updated",
     "exito_eliminado": "Personal entry deleted",
-    "error_guardar": "Error saving the entry"
+    "error_guardar": "Error saving the entry",
+    "error_eliminar": "Error deleting the entry"
   },
   "agendaNucleo": {
     "campo_fecha": "Date",

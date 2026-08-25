@@ -331,6 +331,39 @@ export function ClaseDetailView({ rol }: ClaseDetailViewProps) {
                 <span className="text-sm font-medium" style={{ color: 'var(--color-brand-gold)' }}>{t('es_examen', { term: pruebaTerm.singular })}</span>
               </div>
             )}
+
+            {/* Simulación banner */}
+            {horario.tipo_clase === 'simulacion' && (
+              <div className="flex items-center gap-2 rounded-[var(--radius-md)] px-3 py-2.5"
+                style={{ backgroundColor: 'var(--color-brand-gold-muted)', border: '1px solid color-mix(in srgb, var(--color-brand-gold) 40%, transparent)' }}>
+                <GraduationCap className="size-4 shrink-0" style={{ color: 'var(--color-brand-gold)' }} />
+                <span className="text-sm font-medium" style={{ color: 'var(--color-brand-gold)' }}>{t('badge_simulacion')}</span>
+              </div>
+            )}
+
+            {/* Comisión evaluadora (simulación) */}
+            {horario.tipo_clase === 'simulacion' && horario.simulacion_comision && horario.simulacion_comision.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-[var(--color-text-secondary)]">{t('comision_label')}</p>
+                <div className="flex flex-wrap gap-2">
+                  {horario.simulacion_comision.map((m) => (
+                    <div key={m.id} className="flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-1.5">
+                      {m.profesor?.avatar_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={m.profesor.avatar_url} alt="" className="size-5 rounded-full object-cover" />
+                      ) : (
+                        <span className="flex size-5 items-center justify-center rounded-full bg-[var(--color-brand-gold)] text-[10px] font-medium text-white">
+                          {m.profesor?.nombre?.charAt(0) ?? '?'}
+                        </span>
+                      )}
+                      <span className="text-xs text-[var(--color-text-primary)]">
+                        {m.profesor?.nombre} {m.profesor?.apellido}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             {/* Student info */}
             {horario.alumno && (
               <div className="flex items-center gap-3">

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { Clock, GraduationCap, Lock, User, FileText } from 'lucide-react';
+import { Clock, GraduationCap, Lock, Scale, User, FileText } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { cn, stripHtml } from '@/lib/utils';
 import { StatusBadge } from '@/components/common/StatusBadge';
@@ -24,6 +24,10 @@ export interface PopoverEventData {
   descripcion?: string | null;
   /** True when this event is a bloqueo de horario (not a class) */
   esBloqueo?: boolean;
+  /** True when this event is a simulación (tipo_clase = 'simulacion') */
+  esSimulacion?: boolean;
+  /** Commission professors for simulación events */
+  comisionProfesores?: { nombre: string; apellido: string; apellido_materno?: string | null }[];
 }
 
 interface CalendarEventPopoverProps {
@@ -225,6 +229,35 @@ export function CalendarEventPopover({ data, anchorEl, rol, onClose }: CalendarE
                 {t('prueba', { term: pruebaTerm.singular })}
               </span>
               {renderNotaPrueba()}
+            </div>
+          )}
+
+          {/* Simulación badge + commission */}
+          {data.esSimulacion && (
+            <div className="mt-2 pt-2 border-t border-[var(--color-border)]">
+              <div className="flex items-center gap-1.5">
+                <Scale className="size-3.5 text-[var(--color-brand-gold)]" />
+                <span className="text-xs font-medium text-[var(--color-brand-gold)]">
+                  {t('simulacion_badge')}
+                </span>
+              </div>
+              {data.comisionProfesores && data.comisionProfesores.length > 0 && (
+                <div className="mt-1.5 space-y-1">
+                  {data.comisionProfesores.slice(0, 3).map((prof, i) => (
+                    <div key={i} className="flex items-center gap-1.5 text-xs text-[var(--color-text-secondary)]">
+                      <User className="size-3 shrink-0 text-[var(--color-brand-gold)]" />
+                      <span className="truncate">
+                        {prof.nombre} {prof.apellido}{prof.apellido_materno ? ` ${prof.apellido_materno}` : ''}
+                      </span>
+                    </div>
+                  ))}
+                  {data.comisionProfesores.length > 3 && (
+                    <span className="text-[10px] text-[var(--color-text-muted)] pl-4.5">
+                      {t('comision_mas', { count: data.comisionProfesores.length - 3 })}
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </>

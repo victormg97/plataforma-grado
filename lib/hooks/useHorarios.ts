@@ -42,6 +42,10 @@ export type HorarioConAsistencia = {
   notas_count?: number;
   /** Populated only when fetching a single horario via GET /api/horarios/:id */
   pruebas?: { id: string; nombre: string; estado: string }[];
+  /** Comision members for simulación type classes */
+  simulacion_comision?: { id: string; profesor_id: string; profesor: { id: string; nombre: string; apellido: string; avatar_url: string | null } }[];
+  /** Evaluaciones for simulación type classes */
+  simulacion_evaluaciones?: { id: string; profesor_id: string; profesor: { id: string; nombre: string; apellido: string }; nota: number | null; feedback: string | null; estado: string }[];
 };
 
 export type CalendarEvent = {
@@ -156,8 +160,12 @@ export function useHorarios(profesorId?: string) {
   const events: CalendarEvent[] = useMemo(
     () =>
       rawData.map((h) => {
+        // Simulaciones get a special brand-gold color
+        const isSimulacion = h.tipo_clase === 'simulacion';
         const estado = h.asistencia?.[0]?.estado || 'pendiente';
-        const colors = estadoColors[estado];
+        const colors = isSimulacion
+          ? { bg: 'var(--color-brand-gold)', border: 'var(--color-brand-gold)', text: 'var(--color-brand-black, #1a1a1a)' }
+          : estadoColors[estado];
         return {
           id: h.id,
           title: `${h.titulo} - ${h.alumno?.nombre || 'Sin alumno'}`,

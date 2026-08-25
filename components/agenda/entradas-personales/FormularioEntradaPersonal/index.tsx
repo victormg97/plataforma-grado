@@ -166,13 +166,15 @@ export function FormularioEntradaPersonal({
 
   async function onSubmit(data: EntradaPersonalFormData) {
     try {
+      // Force private visibility for students
+      const payload = rol === 'alumno' ? { ...data, visibilidad: 'privada' as const } : data;
       const url = isEditing
         ? `/api/agenda/entradas-personales/${entradaExistente!.id}`
         : '/api/agenda/entradas-personales';
       const res = await fetch(url, {
         method: isEditing ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       });
       if (res.status === 409) { toast.error(t('error_guardar')); return; }
       if (!res.ok) {
@@ -329,17 +331,19 @@ export function FormularioEntradaPersonal({
         {errors.enlace_conexion && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.enlace_conexion.message}</p>}
       </div>
 
-      {/* Visibilidad */}
-      <div>
-        <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">
-          {tVis('label')}
-        </label>
-        <Controller
-          control={control}
-          name="visibilidad"
-          render={({ field }) => <SelectorVisibilidad value={field.value} onChange={(v) => { handleFormInteraction(); field.onChange(v); }} />}
-        />
-      </div>
+      {/* Visibilidad — hidden for alumno (always private) */}
+      {rol !== 'alumno' && (
+        <div>
+          <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">
+            {tVis('label')}
+          </label>
+          <Controller
+            control={control}
+            name="visibilidad"
+            render={({ field }) => <SelectorVisibilidad value={field.value} onChange={(v) => { handleFormInteraction(); field.onChange(v); }} />}
+          />
+        </div>
+      )}
 
       {/* Aviso de solapamiento */}
       <AvisoSolapamiento conflictos={conflictos} modo={modoSolapamiento} />

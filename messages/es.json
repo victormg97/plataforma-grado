@@ -242,6 +242,7 @@
     "es_examen": "Clase de {term}",
     "es_examen_desc": "Marcar esta clase como una sesión de {term}",
     "badge_examen": "{term}",
+    "badge_simulacion": "Simulación",
     "nota_prueba": "Nota de la {term}",
     "calificar_prueba": "Calificar {term}",
     "guardar_nota": "Guardar nota",
@@ -255,7 +256,9 @@
       "sin_graduar": "Sin graduar",
       "reprobado": "Reprobado",
       "bloqueo_badge": "No disponible",
-      "bloqueo_sin_motivo": "Sin motivo especificado"
+      "bloqueo_sin_motivo": "Sin motivo especificado",
+      "simulacion_badge": "Simulación",
+      "comision_mas": "+{count} más"
     },
     "cambio": {
       "titulo": "Solicitar cambio de horario",
@@ -1398,7 +1401,8 @@
       "invitacion_acceso": "Invitación de acceso",
       "bienvenida_registro": "Bienvenida de registro",
       "nueva_nota_clase": "Nueva nota en clase",
-      "recordatorio_clase": "Recordatorio de clase"
+      "recordatorio_clase": "Recordatorio de clase",
+      "nueva_simulacion": "Nueva simulación de examen"
     },
     "asunto_label": "Asunto",
     "asunto_placeholder": "Escribe el asunto del correo…",
@@ -1422,7 +1426,9 @@
       "enlace_acceso": "Enlace para configurar el acceso del usuario",
       "email_acceso": "Correo con el que el usuario accederá",
       "contenido_nota": "Contenido de la nota dejada en la clase",
-      "nombre_autor": "Nombre de quien escribió la nota"
+      "nombre_autor": "Nombre de quien escribió la nota",
+      "comision_profesores": "Lista de profesores de la comisión evaluadora",
+      "enlace_conexion": "Enlace de conexión a la reunión"
     },
     "cuerpo": {
       "modoLabel": "Modo de edición del cuerpo",
@@ -1723,7 +1729,8 @@
     "exito_creado": "Entrada personal creada",
     "exito_editado": "Entrada personal actualizada",
     "exito_eliminado": "Entrada personal eliminada",
-    "error_guardar": "Error al guardar la entrada"
+    "error_guardar": "Error al guardar la entrada",
+    "error_eliminar": "Error al eliminar la entrada"
   },
   "agendaNucleo": {
     "campo_fecha": "Fecha",

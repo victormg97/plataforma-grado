@@ -340,8 +340,11 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
           tipo_clase: tipoClase,
           es_prueba: tipoClase === 'interrogacion',
           ...(tipoClase === 'simulacion' ? { comision_ids: comisionIds } : {}),
-          // Admin mode: send chosen professor_id
-          ...(adminProfesores && activeProfId ? { profesor_id: activeProfId } : {}),
+          // Admin mode: send chosen professor_id; for simulacion use first comision member
+          ...(tipoClase === 'simulacion'
+            ? { profesor_id: comisionIds[0] || activeProfId || undefined }
+            : (adminProfesores && activeProfId ? { profesor_id: activeProfId } : {})
+          ),
         }),
       });
 
@@ -449,8 +452,8 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
 
   const formContent = (
     <form className="space-y-4" onChangeCapture={handleFormInteraction} onInputCapture={handleFormInteraction}>
-      {/* Admin: professor selector */}
-      {adminProfesores && adminProfesores.length > 0 && (
+      {/* Admin: professor selector — hidden in simulacion mode */}
+      {adminProfesores && adminProfesores.length > 0 && tipoClase !== 'simulacion' && (
         <div>
           <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">Profesor</label>
           <AppSelect
@@ -544,118 +547,7 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
         <>
           {/* ── Modo clase normal ── */}
 
-          {/* Alumno — searchable combo dropdown */}
-          <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">{t('campo_alumno')}</label>
-            <AlumnoCombobox
-              alumnos={alumnos}
-              loading={loadingAlumnos}
-              selectedId={selectedAlumnoId}
-              searchText={alumnoSearch}
-              onSearchChange={(text) => {
-                handleFormInteraction();
-                setAlumnoSearch(text);
-                if (!text) setValue('alumno_id', '');
-              }}
-              onSelect={(id, displayName) => {
-                handleFormInteraction();
-                setValue('alumno_id', id, { shouldValidate: true });
-                setAlumnoSearch(displayName);
-              }}
-              placeholder={alumnoSelectorDisabled ? t('debe_seleccionar_profesor') : t('buscar_alumno_placeholder')}
-              emptyMessage={alumnoSelectorDisabled ? t('debe_seleccionar_profesor') : ta('sin_alumnos')}
-              noResultsMessage={t('no_alumnos_encontrados')}
-              loadingMessage={tc('cargando')}
-              inputClassName={inputClass}
-              filteredAlumnos={filteredAlumnos}
-              disabled={alumnoSelectorDisabled}
-            />
-            {errors.alumno_id && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.alumno_id.message}</p>}
-          </div>
-
-          {/* Titulo */}
-          <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">{t('titulo_clase')}</label>
-            <input
-              type="text"
-              value={watchedTitulo}
-              onChange={(e) => setValue('titulo', e.target.value, { shouldValidate: !!errors.titulo })}
-              onBlur={() => setValue('titulo', watchedTitulo, { shouldValidate: true })}
-              placeholder={t('titulo_placeholder')}
-              className={inputClass}
-            />
-            {errors.titulo && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.titulo.message}</p>}
-          </div>
-
-          {/* Descripcion */}
-          <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">{t('descripcion')} <span className="text-[var(--color-text-muted)]">{t('opcional')}</span></label>
-            <SimpleRichEditor
-              content={watchedDescripcion}
-              onChange={(html) => { handleFormInteraction(); setValue('descripcion', html); }}
-              placeholder={t('descripcion_placeholder')}
-            />
-            {errors.descripcion && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.descripcion.message}</p>}
-          </div>
-
-          {/* Enlace de conexión (opcional) */}
-          <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">
-              {tConexion('campo_label')} <span className="text-[var(--color-text-muted)]">{t('opcional')}</span>
-            </label>
-            <input
-              type="url"
-              value={watchedEnlaceConexion}
-              onChange={(e) => setValue('enlace_conexion', e.target.value, { shouldValidate: !!errors.enlace_conexion })}
-              placeholder={tConexion('campo_placeholder')}
-              className={inputClass}
-            />
-            {errors.enlace_conexion && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.enlace_conexion.message}</p>}
-          </div>
-
-          {/* Fecha */}
-          <div>
-            <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">{t('fecha')}</label>
-            <Tooltip content={t('tooltip_fecha')} position="top" className="w-full">
-              <input
-                type="date"
-                value={watchedFecha}
-                onChange={(e) => setValue('fecha', e.target.value, { shouldValidate: !!errors.fecha })}
-                className={`${inputClass} w-full`}
-              />
-            </Tooltip>
-            {errors.fecha && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.fecha.message}</p>}
-          </div>
-
-          {/* Horas */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">{t('hora_inicio')}</label>
-              <Tooltip content={t('tooltip_hora_inicio')} position="top" className="w-full">
-                <input
-                  type="time"
-                  value={watchedHoraInicio}
-                  onChange={(e) => setValue('hora_inicio', e.target.value, { shouldValidate: !!errors.hora_inicio })}
-                  className={`${inputClass} w-full`}
-                />
-              </Tooltip>
-              {errors.hora_inicio && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.hora_inicio.message}</p>}
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">{t('hora_fin')}</label>
-              <Tooltip content={t('tooltip_hora_fin')} position="top" className="w-full">
-                <input
-                  type="time"
-                  value={watchedHoraFin}
-                  onChange={(e) => setValue('hora_fin', e.target.value, { shouldValidate: !!errors.hora_fin })}
-                  className={`${inputClass} w-full`}
-                />
-              </Tooltip>
-              {errors.hora_fin && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.hora_fin.message}</p>}
-            </div>
-          </div>
-
-          {/* Tipo de Clase selector (replaces ExamenToggle) */}
+          {/* Tipo de Clase selector — at the top of the form */}
           <TipoClaseSelector
             value={tipoClase}
             onChange={(tipo) => {
@@ -665,14 +557,246 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
             }}
           />
 
-          {/* Comision multi-select — only for simulacion */}
-          {tipoClase === 'simulacion' && (
-            <ComisionMultiSelect
-              selectedIds={comisionIds}
-              onChange={(ids) => { handleFormInteraction(); setComisionIds(ids); }}
-              profesorResponsableId={activeProfId}
-              profesores={profesoresComision}
-            />
+          {/* ── Simulación mode: Comisión first, no profesor selector ── */}
+          {tipoClase === 'simulacion' ? (
+            <>
+              {/* Comision multi-select — all members are equal, no "responsable" badge */}
+              <ComisionMultiSelect
+                selectedIds={comisionIds}
+                onChange={(ids) => { handleFormInteraction(); setComisionIds(ids); }}
+                profesorResponsableId=""
+                showResponsableBadge={false}
+                profesores={profesoresComision}
+              />
+
+              {/* Alumno */}
+              <div>
+                <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">{t('campo_alumno')}</label>
+                <AlumnoCombobox
+                  alumnos={alumnos}
+                  loading={loadingAlumnos}
+                  selectedId={selectedAlumnoId}
+                  searchText={alumnoSearch}
+                  onSearchChange={(text) => {
+                    handleFormInteraction();
+                    setAlumnoSearch(text);
+                    if (!text) setValue('alumno_id', '');
+                  }}
+                  onSelect={(id, displayName) => {
+                    handleFormInteraction();
+                    setValue('alumno_id', id, { shouldValidate: true });
+                    setAlumnoSearch(displayName);
+                  }}
+                  placeholder={t('buscar_alumno_placeholder')}
+                  emptyMessage={ta('sin_alumnos')}
+                  noResultsMessage={t('no_alumnos_encontrados')}
+                  loadingMessage={tc('cargando')}
+                  inputClassName={inputClass}
+                  filteredAlumnos={filteredAlumnos}
+                  disabled={false}
+                />
+                {errors.alumno_id && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.alumno_id.message}</p>}
+              </div>
+
+              {/* Titulo */}
+              <div>
+                <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">{t('titulo_clase')}</label>
+                <input
+                  type="text"
+                  value={watchedTitulo}
+                  onChange={(e) => setValue('titulo', e.target.value, { shouldValidate: !!errors.titulo })}
+                  onBlur={() => setValue('titulo', watchedTitulo, { shouldValidate: true })}
+                  placeholder={t('titulo_placeholder')}
+                  className={inputClass}
+                />
+                {errors.titulo && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.titulo.message}</p>}
+              </div>
+
+              {/* Descripcion */}
+              <div>
+                <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">{t('descripcion')} <span className="text-[var(--color-text-muted)]">{t('opcional')}</span></label>
+                <SimpleRichEditor
+                  content={watchedDescripcion}
+                  onChange={(html) => { handleFormInteraction(); setValue('descripcion', html); }}
+                  placeholder={t('descripcion_placeholder')}
+                />
+                {errors.descripcion && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.descripcion.message}</p>}
+              </div>
+
+              {/* Enlace de conexión (opcional) */}
+              <div>
+                <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">
+                  {tConexion('campo_label')} <span className="text-[var(--color-text-muted)]">{t('opcional')}</span>
+                </label>
+                <input
+                  type="url"
+                  value={watchedEnlaceConexion}
+                  onChange={(e) => setValue('enlace_conexion', e.target.value, { shouldValidate: !!errors.enlace_conexion })}
+                  placeholder={tConexion('campo_placeholder')}
+                  className={inputClass}
+                />
+                {errors.enlace_conexion && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.enlace_conexion.message}</p>}
+              </div>
+
+              {/* Fecha */}
+              <div>
+                <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">{t('fecha')}</label>
+                <Tooltip content={t('tooltip_fecha')} position="top" className="w-full">
+                  <input
+                    type="date"
+                    value={watchedFecha}
+                    onChange={(e) => setValue('fecha', e.target.value, { shouldValidate: !!errors.fecha })}
+                    className={`${inputClass} w-full`}
+                  />
+                </Tooltip>
+                {errors.fecha && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.fecha.message}</p>}
+              </div>
+
+              {/* Horas */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">{t('hora_inicio')}</label>
+                  <Tooltip content={t('tooltip_hora_inicio')} position="top" className="w-full">
+                    <input
+                      type="time"
+                      value={watchedHoraInicio}
+                      onChange={(e) => setValue('hora_inicio', e.target.value, { shouldValidate: !!errors.hora_inicio })}
+                      className={`${inputClass} w-full`}
+                    />
+                  </Tooltip>
+                  {errors.hora_inicio && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.hora_inicio.message}</p>}
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">{t('hora_fin')}</label>
+                  <Tooltip content={t('tooltip_hora_fin')} position="top" className="w-full">
+                    <input
+                      type="time"
+                      value={watchedHoraFin}
+                      onChange={(e) => setValue('hora_fin', e.target.value, { shouldValidate: !!errors.hora_fin })}
+                      className={`${inputClass} w-full`}
+                    />
+                  </Tooltip>
+                  {errors.hora_fin && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.hora_fin.message}</p>}
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* ── Normal / Interrogación mode ── */}
+
+              {/* Alumno — searchable combo dropdown */}
+              <div>
+                <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">{t('campo_alumno')}</label>
+                <AlumnoCombobox
+                  alumnos={alumnos}
+                  loading={loadingAlumnos}
+                  selectedId={selectedAlumnoId}
+                  searchText={alumnoSearch}
+                  onSearchChange={(text) => {
+                    handleFormInteraction();
+                    setAlumnoSearch(text);
+                    if (!text) setValue('alumno_id', '');
+                  }}
+                  onSelect={(id, displayName) => {
+                    handleFormInteraction();
+                    setValue('alumno_id', id, { shouldValidate: true });
+                    setAlumnoSearch(displayName);
+                  }}
+                  placeholder={alumnoSelectorDisabled ? t('debe_seleccionar_profesor') : t('buscar_alumno_placeholder')}
+                  emptyMessage={alumnoSelectorDisabled ? t('debe_seleccionar_profesor') : ta('sin_alumnos')}
+                  noResultsMessage={t('no_alumnos_encontrados')}
+                  loadingMessage={tc('cargando')}
+                  inputClassName={inputClass}
+                  filteredAlumnos={filteredAlumnos}
+                  disabled={alumnoSelectorDisabled}
+                />
+                {errors.alumno_id && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.alumno_id.message}</p>}
+              </div>
+
+              {/* Titulo */}
+              <div>
+                <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">{t('titulo_clase')}</label>
+                <input
+                  type="text"
+                  value={watchedTitulo}
+                  onChange={(e) => setValue('titulo', e.target.value, { shouldValidate: !!errors.titulo })}
+                  onBlur={() => setValue('titulo', watchedTitulo, { shouldValidate: true })}
+                  placeholder={t('titulo_placeholder')}
+                  className={inputClass}
+                />
+                {errors.titulo && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.titulo.message}</p>}
+              </div>
+
+              {/* Descripcion */}
+              <div>
+                <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">{t('descripcion')} <span className="text-[var(--color-text-muted)]">{t('opcional')}</span></label>
+                <SimpleRichEditor
+                  content={watchedDescripcion}
+                  onChange={(html) => { handleFormInteraction(); setValue('descripcion', html); }}
+                  placeholder={t('descripcion_placeholder')}
+                />
+                {errors.descripcion && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.descripcion.message}</p>}
+              </div>
+
+              {/* Enlace de conexión (opcional) */}
+              <div>
+                <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">
+                  {tConexion('campo_label')} <span className="text-[var(--color-text-muted)]">{t('opcional')}</span>
+                </label>
+                <input
+                  type="url"
+                  value={watchedEnlaceConexion}
+                  onChange={(e) => setValue('enlace_conexion', e.target.value, { shouldValidate: !!errors.enlace_conexion })}
+                  placeholder={tConexion('campo_placeholder')}
+                  className={inputClass}
+                />
+                {errors.enlace_conexion && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.enlace_conexion.message}</p>}
+              </div>
+
+              {/* Fecha */}
+              <div>
+                <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">{t('fecha')}</label>
+                <Tooltip content={t('tooltip_fecha')} position="top" className="w-full">
+                  <input
+                    type="date"
+                    value={watchedFecha}
+                    onChange={(e) => setValue('fecha', e.target.value, { shouldValidate: !!errors.fecha })}
+                    className={`${inputClass} w-full`}
+                  />
+                </Tooltip>
+                {errors.fecha && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.fecha.message}</p>}
+              </div>
+
+              {/* Horas */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">{t('hora_inicio')}</label>
+                  <Tooltip content={t('tooltip_hora_inicio')} position="top" className="w-full">
+                    <input
+                      type="time"
+                      value={watchedHoraInicio}
+                      onChange={(e) => setValue('hora_inicio', e.target.value, { shouldValidate: !!errors.hora_inicio })}
+                      className={`${inputClass} w-full`}
+                    />
+                  </Tooltip>
+                  {errors.hora_inicio && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.hora_inicio.message}</p>}
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-[var(--color-text-primary)]">{t('hora_fin')}</label>
+                  <Tooltip content={t('tooltip_hora_fin')} position="top" className="w-full">
+                    <input
+                      type="time"
+                      value={watchedHoraFin}
+                      onChange={(e) => setValue('hora_fin', e.target.value, { shouldValidate: !!errors.hora_fin })}
+                      className={`${inputClass} w-full`}
+                    />
+                  </Tooltip>
+                  {errors.hora_fin && <p className="mt-1 text-xs text-[var(--color-error)]">{errors.hora_fin.message}</p>}
+                </div>
+              </div>
+
+              {/* Comision multi-select — only for interrogacion if needed in future */}
+            </>
           )}
         </>
       )}

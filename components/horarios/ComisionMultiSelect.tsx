@@ -23,6 +23,8 @@ export interface ComisionMultiSelectProps {
   profesorResponsableId: string;
   profesores: ProfesorComisionOption[];
   disabled?: boolean;
+  /** When false, hides the "responsable" badge. Default: true. */
+  showResponsableBadge?: boolean;
 }
 
 export function ComisionMultiSelect({
@@ -31,23 +33,28 @@ export function ComisionMultiSelect({
   profesorResponsableId,
   profesores,
   disabled = false,
+  showResponsableBadge = true,
 }: ComisionMultiSelectProps) {
   const t = useTranslations('horarios');
   const [search, setSearch] = useState('');
 
   const filteredProfesores = useMemo(() => {
-    // Exclude the profesor responsable from the selectable list — they are always implicit
-    const selectable = profesores.filter((p) => p.id !== profesorResponsableId);
+    // When showResponsableBadge is true, exclude the profesor responsable from the selectable list
+    const selectable = showResponsableBadge && profesorResponsableId
+      ? profesores.filter((p) => p.id !== profesorResponsableId)
+      : profesores;
     if (!search.trim()) return selectable;
     const q = search.toLowerCase();
     return selectable.filter(
       (p) => `${p.nombre} ${p.apellido}`.toLowerCase().includes(q),
     );
-  }, [profesores, profesorResponsableId, search]);
+  }, [profesores, profesorResponsableId, search, showResponsableBadge]);
 
   const profesorResponsable = useMemo(
-    () => profesores.find((p) => p.id === profesorResponsableId),
-    [profesores, profesorResponsableId],
+    () => showResponsableBadge && profesorResponsableId
+      ? profesores.find((p) => p.id === profesorResponsableId)
+      : null,
+    [profesores, profesorResponsableId, showResponsableBadge],
   );
 
   function toggleProfesor(id: string) {

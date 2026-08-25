@@ -24,6 +24,7 @@ import { plantilla as bienvenidaRegistro } from './bienvenidaRegistro';
 import { plantilla as nuevaNotaClase } from './nuevaNotaClase';
 import { plantilla as recordatorioClase } from './recordatorioClase';
 import { plantilla as nuevaActividad } from './nuevaActividad';
+import { plantilla as nuevaSimulacion } from './nuevaSimulacion';
 
 /**
  * Normaliza el idioma del perfil del destinatario a un `IdiomaCorreo` soportado.
@@ -59,6 +60,7 @@ const PLANTILLAS: Record<TipoCorreo, Record<IdiomaCorreo, ContenidoPlantilla>> =
   nueva_nota_clase: nuevaNotaClase,
   recordatorio_clase: recordatorioClase,
   nueva_actividad: nuevaActividad,
+  nueva_simulacion: nuevaSimulacion,
 };
 
 /**

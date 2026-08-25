@@ -2550,6 +2550,7 @@ export type Database = {
         | "nueva_nota_clase"
         | "recordatorio_clase"
         | "nueva_actividad"
+        | "nueva_simulacion"
       user_rol: "admin" | "profesor" | "alumno" | "lector"
     }
     CompositeTypes: {
@@ -2714,6 +2715,7 @@ export const Constants = {
         "nueva_nota_clase",
         "recordatorio_clase",
         "nueva_actividad",
+        "nueva_simulacion",
       ],
       user_rol: ["admin", "profesor", "alumno", "lector"],
     },

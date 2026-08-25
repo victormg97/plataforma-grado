@@ -435,6 +435,10 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
               esPrueba: isPrueba,
               notaPrueba: prueba?.nota ?? null,
               descripcion: h.descripcion,
+              esSimulacion: h.tipo_clase === 'simulacion',
+              comisionProfesores: h.tipo_clase === 'simulacion'
+                ? h.simulacion_comision?.map(m => m.profesor) ?? []
+                : undefined,
             };
             handleMouseEnter(data, info.el);
           }}

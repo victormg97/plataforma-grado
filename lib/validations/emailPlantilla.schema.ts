@@ -15,6 +15,7 @@ export const TIPOS_CORREO = [
   'bienvenida_registro',
   'nueva_nota_clase',
   'recordatorio_clase',
+  'nueva_simulacion',
 ] as const;
 
 /** Enum Zod para validar el parámetro `tipo` de las rutas del editor de plantillas. */

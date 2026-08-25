@@ -19,6 +19,7 @@ export type ClaseAlumno = {
     hora_inicio: string;
     hora_fin: string;
     activo: boolean;
+    tipo_clase?: string;
     profesor: {
       id: string;
       nombre: string;

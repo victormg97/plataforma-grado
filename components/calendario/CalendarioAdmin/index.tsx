@@ -59,13 +59,15 @@ type HorarioGlobal = {
   alumno: { id: string; nombre: string; apellido: string; email: string; avatar_url: string | null } | null;
   profesor: { id: string; nombre: string; apellido: string; avatar_url: string | null; color_calendario: string | null } | null;
   pruebas?: { id: string; nota: number | null }[];
+  tipo_clase?: string | null;
+  simulacion_comision?: { id: string; profesor_id: string; profesor: { id: string; nombre: string; apellido: string; apellido_materno?: string | null; avatar_url: string | null } }[];
 };
 
 async function fetchAdminHorarios() {
   const supabase = createClient();
   const { data, error } = await supabase
     .from('horarios')
-    .select('*, asistencia:asistencia!asistencia_horario_id_fkey(*), alumno:profiles!horarios_alumno_id_fkey(*), profesor:profiles!horarios_profesor_id_fkey(id, nombre, apellido, avatar_url, color_calendario), pruebas:pruebas!pruebas_horario_id_fkey(id, nota)')
+    .select('*, asistencia:asistencia!asistencia_horario_id_fkey(*), alumno:profiles!horarios_alumno_id_fkey(*), profesor:profiles!horarios_profesor_id_fkey(id, nombre, apellido, avatar_url, color_calendario), pruebas:pruebas!pruebas_horario_id_fkey(id, nota), simulacion_comision(id, profesor_id, profesor:profiles!simulacion_comision_profesor_id_fkey(id, nombre, apellido, apellido_materno, avatar_url))')
     .eq('activo', true)
     .order('fecha', { ascending: true });
   if (error) throw new Error(error.message);
@@ -262,7 +264,11 @@ export function CalendarioAdmin() {
   const events = useMemo(
     () =>
       filteredHorarios.map((h) => {
-        const colors = profesorColorMap[h.profesor_id] || { bg: 'var(--color-brand-gold)', border: 'var(--color-brand-gold)', text: 'var(--color-brand-black)' };
+        // Simulaciones get a special brand-gold color regardless of professor
+        const isSimulacion = h.tipo_clase === 'simulacion';
+        const colors = isSimulacion
+          ? { bg: 'var(--color-brand-gold)', border: 'var(--color-brand-gold)', text: 'var(--color-brand-black, #1a1a1a)' }
+          : (profesorColorMap[h.profesor_id] || { bg: 'var(--color-brand-gold)', border: 'var(--color-brand-gold)', text: 'var(--color-brand-black)' });
         return {
           id: h.id,
           title: `${h.titulo} - ${h.alumno?.nombre || 'Sin alumno'}`,
@@ -534,6 +540,10 @@ export function CalendarioAdmin() {
               esPrueba: (h.pruebas?.length ?? 0) > 0,
               notaPrueba: prueba?.nota ?? null,
               descripcion: h.descripcion,
+              esSimulacion: h.tipo_clase === 'simulacion',
+              comisionProfesores: h.tipo_clase === 'simulacion'
+                ? h.simulacion_comision?.map(m => m.profesor) ?? []
+                : undefined,
             };
             handleMouseEnter(data, info.el);
           }}

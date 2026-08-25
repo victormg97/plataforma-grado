@@ -27,7 +27,7 @@ import type { TipoNotificacion } from '@/lib/supabase/types';
  */
 export type TipoCorreo = Extract<
   TipoNotificacion,
-  'confirmacion' | 'cancelacion' | 'solicitud_cambio_horario' | 'programa_asignado' | 'nueva_clase' | 'invitacion_acceso' | 'bienvenida_registro' | 'nueva_nota_clase' | 'recordatorio_clase' | 'nueva_actividad'
+  'confirmacion' | 'cancelacion' | 'solicitud_cambio_horario' | 'programa_asignado' | 'nueva_clase' | 'invitacion_acceso' | 'bienvenida_registro' | 'nueva_nota_clase' | 'recordatorio_clase' | 'nueva_actividad' | 'nueva_simulacion'
 >;
 
 /**
@@ -111,6 +111,12 @@ export interface VariablesCorreo {
   contenido_nota?: string;
   /** Nombre completo del autor de la nota (`{nombre_autor}`). */
   nombre_autor?: string;
+
+  // Variables específicas de `nueva_simulacion`:
+  /** Lista de profesores de la comisión evaluadora, separados por coma (`{comision_profesores}`). */
+  comision_profesores?: string;
+  /** Enlace de conexión a la reunión (`{enlace_conexion}`). */
+  enlace_conexion?: string;
 }
 
 /**

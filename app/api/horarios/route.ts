@@ -167,8 +167,23 @@ export async function POST(request: NextRequest) {
 
         const nombreAlumno = [alumno.nombre, alumno.apellido, alumno.apellido_materno].filter(Boolean).join(' ').trim();
 
+        // For simulacion, fetch commission professor names
+        let comisionNames = '';
+        if (tipoClase === 'simulacion') {
+          const { data: comision } = await admin
+            .from('simulacion_comision')
+            .select('profesor:profiles!simulacion_comision_profesor_id_fkey(nombre, apellido, apellido_materno)')
+            .eq('horario_id', horario.id);
+          if (comision) {
+            comisionNames = comision
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              .map((c: any) => [c.profesor?.nombre, c.profesor?.apellido, c.profesor?.apellido_materno].filter(Boolean).join(' '))
+              .join(', ');
+          }
+        }
+
         const solicitud: SolicitudCorreo = {
-          tipo: 'nueva_clase',
+          tipo: tipoClase === 'simulacion' ? 'nueva_simulacion' : 'nueva_clase',
           originadorId: profesorId,
           destinatarioId: body.alumno_id,
           destinatarioEmail: alumno.email,
@@ -182,9 +197,13 @@ export async function POST(request: NextRequest) {
             hora_inicio: horario.hora_inicio?.slice(0, 5) ?? '',
             hora_fin: horario.hora_fin?.slice(0, 5) ?? '',
             enlace_clase: buildEnlaceClase(horario.id, 'alumno'),
+            ...(tipoClase === 'simulacion' ? {
+              comision_profesores: comisionNames,
+              enlace_conexion: body.enlace_conexion || '',
+            } : {}),
           },
           horarioId: horario.id,
-          eventoId: `nueva_clase:${horario.id}`,
+          eventoId: `${tipoClase === 'simulacion' ? 'nueva_simulacion' : 'nueva_clase'}:${horario.id}`,
         };
 
         const resultado = await sendNotificationEmail(solicitud);

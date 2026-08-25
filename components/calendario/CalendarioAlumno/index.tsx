@@ -30,7 +30,9 @@ import { FiltroAgenda } from '@/components/agenda/calendario/FiltroAgenda';
 import { LeyendaAgenda } from '@/components/agenda/calendario/LeyendaAgenda';
 import { DetalleEventoAgenda } from '@/components/agenda/calendario/DetalleEventoAgenda';
 import { FormularioAgenda } from '@/components/agenda/FormularioAgenda';
+import { FormularioEntradaPersonal } from '@/components/agenda/entradas-personales/FormularioEntradaPersonal';
 import { PanelActividadesOcultas } from '@/components/agenda/ocultacion/PanelActividadesOcultas';
+import { toast } from 'sonner';
 
 const ESTADO_COLORS: Record<string, { bg: string; border: string; text: string }> = {
   pendiente:  { bg: 'var(--color-brand-gold)',  border: 'var(--color-brand-gold)',  text: '#1a1a1a' },
@@ -48,6 +50,7 @@ export function CalendarioAlumno() {
   const { data: pruebas = [] } = usePruebas(user?.id);
   const tc = useTranslations('common');
   const ta = useTranslations('asistencia');
+  const tEp = useTranslations('agendaEntradasPersonales');
   const locale = useLocale();
   const [isMobile, setIsMobile] = useState(false);
   const [currentView, setCurrentView] = useState('dayGridMonth');
@@ -63,6 +66,7 @@ export function CalendarioAlumno() {
   const [selectedAgendaEvento, setSelectedAgendaEvento] = useState<EventoAgendaProyectado | null>(null);
   const [agendaDetailOpen, setAgendaDetailOpen] = useState(false);
   const [agendaFormOpen, setAgendaFormOpen] = useState(false);
+  const [agendaEditOpen, setAgendaEditOpen] = useState(false);
   const [agendaFormDate, setAgendaFormDate] = useState<string | undefined>(undefined);
   const [agendaFormTime, setAgendaFormTime] = useState<string | undefined>(undefined);
   const [agendaFormEndTime, setAgendaFormEndTime] = useState<string | undefined>(undefined);
@@ -126,7 +130,11 @@ export function CalendarioAlumno() {
   }, [isMobile, currentView]);
 
   const events = clases.map((c) => {
-    const colors = ESTADO_COLORS[c.estado] || ESTADO_COLORS.pendiente;
+    // Simulaciones get a special brand-gold color
+    const isSimulacion = c.horario.tipo_clase === 'simulacion';
+    const colors = isSimulacion
+      ? { bg: 'var(--color-brand-gold)', border: 'var(--color-brand-gold)', text: '#1a1a1a' }
+      : (ESTADO_COLORS[c.estado] || ESTADO_COLORS.pendiente);
     return {
       id: c.horario.id,
       title: c.horario.titulo,
@@ -232,6 +240,30 @@ export function CalendarioAlumno() {
     setAgendaFormTime(timeMatch ? timeMatch[1] : undefined);
     setAgendaFormEndTime(undefined);
     setAgendaFormOpen(true);
+  }
+
+  // ─── Agenda: edit personal entry ────────────────────────────────────────
+  function handleAgendaEditar() {
+    if (!selectedAgendaEvento || selectedAgendaEvento.tipo !== 'entrada_personal') return;
+    setAgendaDetailOpen(false);
+    setAgendaEditOpen(true);
+  }
+
+  // ─── Agenda: delete personal entry ──────────────────────────────────────
+  async function handleAgendaEliminar() {
+    if (!selectedAgendaEvento || selectedAgendaEvento.tipo !== 'entrada_personal') return;
+    try {
+      const res = await fetch(`/api/agenda/entradas-personales/${selectedAgendaEvento.id}`, {
+        method: 'DELETE',
+      });
+      if (!res.ok) throw new Error();
+      toast.success(tEp('exito_eliminado'));
+      queryClient.invalidateQueries({ queryKey: ['agenda-eventos'] });
+      setAgendaDetailOpen(false);
+      setSelectedAgendaEvento(null);
+    } catch {
+      toast.error(tEp('error_eliminar'));
+    }
   }
 
   // ─── Agenda: handle datesSet to update rango ────────────────────────────
@@ -394,6 +426,7 @@ export function CalendarioAlumno() {
             esPrueba: isPrueba,
             notaPrueba: prueba?.nota ?? null,
             descripcion: c.horario.descripcion,
+            esSimulacion: c.horario.tipo_clase === 'simulacion',
           };
           handleMouseEnter(data, info.el);
         }}
@@ -454,7 +487,39 @@ export function CalendarioAlumno() {
       evento={selectedAgendaEvento}
       open={agendaDetailOpen}
       onClose={() => setAgendaDetailOpen(false)}
+      onEditar={handleAgendaEditar}
+      onEliminar={handleAgendaEliminar}
       usuarioId={user?.id ?? ''}
+    />
+
+    {/* Agenda edit form for personal entries */}
+    <FormularioEntradaPersonal
+      open={agendaEditOpen}
+      onClose={() => { setAgendaEditOpen(false); setSelectedAgendaEvento(null); }}
+      entradaExistente={
+        selectedAgendaEvento && selectedAgendaEvento.tipo === 'entrada_personal' && selectedAgendaEvento.lectura === 'completa'
+          ? {
+              id: selectedAgendaEvento.id,
+              titulo: selectedAgendaEvento.titulo,
+              categoria: selectedAgendaEvento.categoria,
+              visibilidad: selectedAgendaEvento.visibilidad as 'privada' | 'publica',
+              fecha: selectedAgendaEvento.fecha,
+              hora_inicio: selectedAgendaEvento.hora_inicio,
+              hora_fin: selectedAgendaEvento.hora_fin,
+              dia_completo: selectedAgendaEvento.dia_completo,
+              descripcion: selectedAgendaEvento.descripcion,
+              nota: selectedAgendaEvento.nota,
+              lugar: selectedAgendaEvento.lugar,
+              enlace_conexion: selectedAgendaEvento.enlace_conexion,
+            }
+          : null
+      }
+      rol="alumno"
+      onSuccess={() => {
+        setAgendaEditOpen(false);
+        setSelectedAgendaEvento(null);
+        queryClient.invalidateQueries({ queryKey: ['agenda-eventos'] });
+      }}
     />
 
     {/* Agenda form (empty range click) — always entrada_personal for alumno */}

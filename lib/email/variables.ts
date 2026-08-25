@@ -109,6 +109,17 @@ const CLAVES_NUEVA_NOTA_CLASE = [
 ] as const satisfies readonly (keyof VariablesCorreo)[];
 
 /**
+ * Claves base de las Variables_Dinamicas específicas del tipo
+ * `nueva_simulacion`, añadidas a las comunes para ese tipo.
+ *
+ * _Requisito_: lista de la comisión evaluadora y enlace de conexión.
+ */
+const CLAVES_NUEVA_SIMULACION = [
+  'comision_profesores',
+  'enlace_conexion',
+] as const satisfies readonly (keyof VariablesCorreo)[];
+
+/**
  * Conjunto completo de claves conocidas por el motor (las 14 claves de
  * `VariablesCorreo`).
  *
@@ -123,6 +134,7 @@ const CLAVES_CONOCIDAS = [
   ...CLAVES_INVITACION,
   ...CLAVES_BIENVENIDA_REGISTRO,
   ...CLAVES_NUEVA_NOTA_CLASE,
+  ...CLAVES_NUEVA_SIMULACION,
 ] as const satisfies readonly (keyof VariablesCorreo)[];
 
 /** Construye el token insertable (`{clave}`) a partir de una clave base. */
@@ -169,6 +181,9 @@ export function variablesDisponibles(tipo: TipoCorreo): DefinicionVariable[] {
       break;
     case 'nueva_nota_clase':
       claves = ['nombre_destinatario', 'nombre_autor', 'contenido_nota', 'titulo_clase', 'fecha', 'hora_inicio', 'hora_fin', 'enlace_clase'];
+      break;
+    case 'nueva_simulacion':
+      claves = [...CLAVES_COMUNES, ...CLAVES_NUEVA_SIMULACION];
       break;
     default:
       claves = CLAVES_COMUNES;
