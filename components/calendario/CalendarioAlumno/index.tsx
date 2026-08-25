@@ -141,7 +141,7 @@ export function CalendarioAlumno() {
     return () => clearTimeout(timer);
   }, [isMobile, currentView]);
 
-  const events = clases.map((c) => {
+  const events = useMemo(() => clases.map((c) => {
     const colors = ESTADO_COLORS[c.estado] || ESTADO_COLORS.pendiente;
     return {
       id: c.horario.id,
@@ -153,7 +153,7 @@ export function CalendarioAlumno() {
       textColor: colors.text,
       extendedProps: { asistenciaId: c.id, estado: c.estado, clase: c },
     };
-  });
+  }), [clases]);
 
   // ─── Agenda: eventos mapeados a FullCalendar ────────────────────────────
   const agendaFcEvents = useMemo(
@@ -218,13 +218,7 @@ export function CalendarioAlumno() {
     [clases, eventosAgenda, filtroAgenda, ocultaIds],
   );
 
-  // Sync events imperatively
-  useEffect(() => {
-    const api = calendarRef.current?.getApi();
-    if (!api) return;
-    api.removeAllEvents();
-    combinedEvents.forEach((e) => api.addEvent(e));
-  }, [combinedEvents]);
+  // No imperative sync needed — events are passed declaratively via the events prop
 
   function handleEventClick(info: EventClickArg) {
     closePopover();
@@ -424,7 +418,7 @@ export function CalendarioAlumno() {
           },
           descargar: { text: ' ', hint: locale === 'es' ? 'Descargar' : 'Download', click: () => {} },
         }}
-        events={[]}
+        events={combinedEvents}
         eventClick={handleEventClick}
         dateClick={handleDateClick}
         selectable={true}
