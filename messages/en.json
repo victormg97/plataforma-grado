@@ -216,6 +216,7 @@
     "col_hora": "Time",
     "col_titulo_tabla": "Title",
     "confirmar_eliminar": "Delete this schedule?",
+    "confirmar_eliminar_desc": "This action will permanently delete the class. This cannot be undone.",
     "clase_en_curso": "This class is currently in progress.",
     "clase_ya_paso": "This class has already ended.",
     "clase_finalizo_solo_profesor": "The class has ended. Only a teacher can modify the status.",

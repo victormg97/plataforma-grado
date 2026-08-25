@@ -216,6 +216,7 @@
     "col_hora": "Hora",
     "col_titulo_tabla": "Título",
     "confirmar_eliminar": "¿Eliminar este horario?",
+    "confirmar_eliminar_desc": "Esta acción eliminará la clase permanentemente. No se puede deshacer.",
     "clase_en_curso": "Esta clase está en curso.",
     "clase_ya_paso": "Esta clase ya finalizó.",
     "clase_finalizo_solo_profesor": "La clase ya finalizó. Solo un profesor puede modificar el estado.",

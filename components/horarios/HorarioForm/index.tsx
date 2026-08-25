@@ -116,6 +116,7 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
   const tConexion = useTranslations('agendaConexion');
   const queryClient = useQueryClient();
   const [deleting, setDeleting] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [alumnoSearch, setAlumnoSearch] = useState('');
   // In admin mode, track which professor will teach this class
   const [activeProfId, setActiveProfId] = useState(profesorId);
@@ -474,7 +475,7 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
     <div className="flex w-full items-center justify-between gap-3">
       {/* Izquierda: eliminar (editing) | switch bloqueo (creating) */}
       {isEditing ? (
-        <Button variant="danger" size="sm" onClick={handleDelete} loading={deleting}>
+        <Button variant="danger" size="sm" onClick={() => setConfirmingDelete(true)} loading={deleting}>
           {tc('eliminar')}
         </Button>
       ) : (
@@ -889,26 +890,50 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
   }
 
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      title={
-        isEditing
-          ? t('editar_clase')
-          : esBloqueo
-            ? t('bloqueo_titulo')
-            : t('nueva_clase')
-      }
-      description={
-        isEditing
-          ? t('editar_descripcion')
-          : esBloqueo
-            ? t('bloqueo_descripcion')
-            : t('nueva_descripcion')
-      }
-      footer={footerContent}
-    >
-      {formContent}
-    </Modal>
+    <>
+      <Modal
+        open={open}
+        onClose={onClose}
+        title={
+          isEditing
+            ? t('editar_clase')
+            : esBloqueo
+              ? t('bloqueo_titulo')
+              : t('nueva_clase')
+        }
+        description={
+          isEditing
+            ? t('editar_descripcion')
+            : esBloqueo
+              ? t('bloqueo_descripcion')
+              : t('nueva_descripcion')
+        }
+        footer={footerContent}
+      >
+        {formContent}
+      </Modal>
+
+      {/* Delete confirmation dialog */}
+      {confirmingDelete && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50">
+          <div className="mx-4 w-full max-w-sm rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg)] p-6 shadow-xl">
+            <h3 className="text-base font-semibold text-[var(--color-text-primary)]">
+              {t('confirmar_eliminar')}
+            </h3>
+            <p className="mt-2 text-sm text-[var(--color-text-muted)]">
+              {t('confirmar_eliminar_desc')}
+            </p>
+            <div className="mt-4 flex justify-end gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setConfirmingDelete(false)}>
+                {tc('cancelar')}
+              </Button>
+              <Button variant="danger" size="sm" loading={deleting} onClick={() => { setConfirmingDelete(false); handleDelete(); }}>
+                {tc('eliminar')}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
