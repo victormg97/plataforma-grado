@@ -26,6 +26,7 @@ import { cn } from '@/lib/utils';
 import { useCalificarPrueba } from '@/lib/hooks/usePruebas';
 import { useClaseTimeStatus } from '@/lib/hooks/useServerTime';
 import { ReminderButton } from './ReminderButton';
+import { SimulacionGradeSection } from './SimulacionGradeSection';
 
 const inputCls = cn(
   'w-full rounded-[var(--radius-md)] border border-[var(--color-border)]',
@@ -450,6 +451,11 @@ export function ClaseDetailView({ rol }: ClaseDetailViewProps) {
             {/* Prueba Grading */}
             {(horario.pruebas?.length ?? 0) > 0 && (
               <GradeInlineForm horario={horario} tc={tc} th={t} pruebaTerm={pruebaTerm} />
+            )}
+
+            {/* Simulación Grading */}
+            {horario.tipo_clase === 'simulacion' && horario.simulacion_evaluaciones && horario.simulacion_evaluaciones.length > 0 && (
+              <SimulacionGradeSection evaluaciones={horario.simulacion_evaluaciones} horarioId={horario.id} />
             )}
 
             {/* Email reminder button */}

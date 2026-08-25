@@ -20,7 +20,7 @@ import { usePathname } from 'next/navigation';
 import { buildProfesorColorMap, buildProfesorHexMap } from '@/lib/utils/profesorColors';
 import { buildClaseDetailHref } from '@/lib/utils/horarioNavigation';
 import { CalendarioDownloadButton, type CalendarioExportEvent } from '@/components/calendario/CalendarioDownloadButton';
-import { resolveCssVar } from '@/lib/utils/cssTokens';
+import { resolveCssVar, getContrastTextColor } from '@/lib/utils/cssTokens';
 import { CalendarioStyles } from '@/components/calendario/CalendarioStyles';
 import { EventDetailModal } from '@/components/calendario/EventDetailModal';
 import { CalendarEventPopover, useCalendarPopover, type PopoverEventData } from '@/components/calendario/CalendarEventPopover';
@@ -267,8 +267,8 @@ export function CalendarioAdmin() {
         // Simulaciones get a special brand-gold color regardless of professor
         const isSimulacion = h.tipo_clase === 'simulacion';
         const colors = isSimulacion
-          ? { bg: 'var(--color-brand-gold)', border: 'var(--color-brand-gold)', text: 'var(--color-brand-black, #1a1a1a)' }
-          : (profesorColorMap[h.profesor_id] || { bg: 'var(--color-brand-gold)', border: 'var(--color-brand-gold)', text: 'var(--color-brand-black)' });
+          ? { bg: 'var(--color-brand-gold)', border: 'var(--color-brand-gold)', text: getContrastTextColor('var(--color-brand-gold)') }
+          : (profesorColorMap[h.profesor_id] || { bg: 'var(--color-brand-gold)', border: 'var(--color-brand-gold)', text: getContrastTextColor('var(--color-brand-gold)') });
         return {
           id: h.id,
           title: `${h.titulo} - ${h.alumno?.nombre || 'Sin alumno'}`,

@@ -33,7 +33,8 @@
     "guardar_cambios": "Save changes",
     "nombre_completo": "Full name",
     "telefono": "Phone",
-    "opcional": "(optional)"
+    "opcional": "(optional)",
+    "actualizar": "Update"
   },
   "auth": {
     "login": {
@@ -301,7 +302,11 @@
     "evaluacion_feedback_label": "Feedback",
     "evaluacion_btn_calificar": "Grade",
     "evaluacion_btn_editar": "Edit grade",
-    "evaluacion_titulo": "Committee evaluations"
+    "evaluacion_titulo": "Committee evaluations",
+    "simulacion_calificaciones": "Commission grades",
+    "tu_evaluacion": "you",
+    "pendiente_calificacion": "Pending",
+    "simulacion_sin_calificar": "No grades available yet"
   },
   "asistencia": {
     "estados": {

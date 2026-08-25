@@ -74,3 +74,33 @@ export function resolveCssVarToRgb(
 ): [number, number, number] {
   return parseColorToRgb(resolveCssVarLight(name, fallback));
 }
+
+/**
+ * Returns a legible text color (white or dark) for the given background color.
+ * Uses WCAG relative luminance to decide contrast.
+ *
+ * Accepts:
+ * - Hex values: "#C9993F", "#fff"
+ * - CSS variable references: "var(--color-brand-gold)" or "var(--color-brand-gold, #C9993F)"
+ * - rgb()/rgba() strings
+ *
+ * When given a CSS variable, it resolves the value at runtime via getComputedStyle.
+ * Falls back to white text if the color cannot be parsed (safe for dark backgrounds).
+ */
+export function getContrastTextColor(color: string): string {
+  let resolved = color.trim();
+
+  // If it's a CSS variable reference, resolve it
+  const varMatch = resolved.match(/^var\(\s*(--[^,)]+)(?:,\s*([^)]+))?\s*\)$/);
+  if (varMatch) {
+    const [, varName, fallback] = varMatch;
+    resolved = resolveCssVar(varName, fallback?.trim() || '#000000');
+  }
+
+  const [r, g, b] = parseColorToRgb(resolved);
+
+  // Relative luminance (simplified linear — sufficient for contrast decision)
+  const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+
+  return luminance > 0.45 ? '#1a1a1a' : '#FFFFFF';
+}

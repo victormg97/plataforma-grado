@@ -2,6 +2,7 @@ import { QueryClient, dehydrate } from '@tanstack/react-query';
 import { createClient } from '@/lib/supabase/server';
 import { tenantConfig } from '@/config';
 import type { UserRol } from '@/lib/supabase/types';
+import { clavesAgenda, leerEventosEnRango } from '@/lib/agenda/nucleo';
 
 /**
  * Create a pre-populated QueryClient for the given user role and return
@@ -245,6 +246,21 @@ export async function prefetchDashboardData(userId: string, rol: UserRol) {
       // Recursos sort preference
       queryClient.setQueryData(['recursos_sort_pref', userId], sortPrefResult.data?.sort_by ?? 'created_at_desc');
     }
+
+    // ── Agenda: prefetch personal entries for initial calendar range ─────────
+    // Matches the initial range used by CalendarioAlumno's useState initializer.
+    const hoy = new Date();
+    const desde = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+    const hasta = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 6);
+    const rango = {
+      desde: desde.toISOString().slice(0, 10),
+      hasta: hasta.toISOString().slice(0, 10),
+    };
+    await queryClient.prefetchQuery({
+      queryKey: clavesAgenda.eventos(userId, rango),
+      queryFn: () => leerEventosEnRango(supabase, rango),
+      staleTime: 5 * 60 * 1000,
+    });
   }
 
   if (rol === 'lector') {

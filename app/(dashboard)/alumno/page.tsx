@@ -113,6 +113,13 @@ function AlumnoDashboardContent() {
                           {t('badge_examen', { term: pruebaTerm.singular })}
                         </span>
                       )}
+                      {proximaClase.horario.tipo_clase === 'simulacion' && !pruebaHorarioIds.has(proximaClase.horario.id) && (
+                        <span className="inline-flex items-center gap-0.5 rounded-full border px-1.5 py-0.5 text-[10px] font-semibold"
+                          style={{ backgroundColor: 'var(--color-brand-gold-muted)', borderColor: 'color-mix(in srgb, var(--color-brand-gold) 40%, transparent)', color: 'var(--color-brand-gold)' }}>
+                          <GraduationCap className="size-2.5" />
+                          {t('badge_simulacion')}
+                        </span>
+                      )}
                     </div>
                     {proximaClase.horario.descripcion && (
                       <RichDescription html={proximaClase.horario.descripcion} className="mt-0.5" />

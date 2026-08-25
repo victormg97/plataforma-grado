@@ -33,7 +33,8 @@
     "guardar_cambios": "Guardar cambios",
     "nombre_completo": "Nombre completo",
     "telefono": "Teléfono",
-    "opcional": "(opcional)"
+    "opcional": "(opcional)",
+    "actualizar": "Actualizar"
   },
   "auth": {
     "login": {
@@ -301,7 +302,11 @@
     "evaluacion_feedback_label": "Feedback",
     "evaluacion_btn_calificar": "Calificar",
     "evaluacion_btn_editar": "Editar evaluación",
-    "evaluacion_titulo": "Evaluaciones de la comisión"
+    "evaluacion_titulo": "Evaluaciones de la comisión",
+    "simulacion_calificaciones": "Calificaciones de la comisión",
+    "tu_evaluacion": "tú",
+    "pendiente_calificacion": "Pendiente",
+    "simulacion_sin_calificar": "Aún no hay calificaciones disponibles"
   },
   "asistencia": {
     "estados": {

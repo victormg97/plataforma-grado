@@ -6,7 +6,7 @@ import { es, enUS, type Locale } from 'date-fns/locale';
 import {
   Calendar, Clock, User, ArrowLeft, CheckCircle, XCircle, ArrowRight,
   CalendarOff, Search, X, SlidersHorizontal, BookOpen, History,
-  ChevronDown, FileText, GraduationCap,
+  ChevronDown, FileText, GraduationCap, Scale,
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -23,6 +23,7 @@ import {
   DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { useAsistencia } from '@/lib/hooks/useAsistencia';
+import { useQuery } from '@tanstack/react-query';
 import { useNotasCount } from '@/lib/hooks/useNotasCount';
 import { useClaseTimeStatus } from '@/lib/hooks/useServerTime';
 import { useQueryParam } from '@/lib/hooks/useQueryParam';
@@ -567,6 +568,26 @@ function HorarioDetailView({ clase, user, confirmar, cancelar, pedirCambio: _ped
   });
   const hasPendingSolicitud = solicitudesPendientes.length > 0;
 
+  // Fetch simulacion evaluaciones if this is a simulacion class
+  const { data: simulacionEvals = [] } = useQuery<Array<{
+    id: string;
+    profesor_id: string;
+    profesor: { id: string; nombre: string; apellido: string; apellido_materno?: string | null };
+    nota: number | null;
+    feedback: string | null;
+    estado: string;
+  }>>({
+    queryKey: ['simulacion-evaluaciones', clase.horario.id],
+    queryFn: async () => {
+      const res = await fetch(`/api/horarios/${clase.horario.id}`);
+      if (!res.ok) return [];
+      const data = await res.json();
+      return data.simulacion_evaluaciones ?? [];
+    },
+    enabled: clase.horario.tipo_clase === 'simulacion',
+    staleTime: 30_000,
+  });
+
   const { enCurso, yaPaso, plazoVencido } = useClaseTimeStatus(
     clase.horario.fecha,
     clase.horario.hora_inicio,
@@ -605,6 +626,14 @@ function HorarioDetailView({ clase, user, confirmar, cancelar, pedirCambio: _ped
                 style={{ backgroundColor: 'var(--color-brand-gold-muted)', border: '1px solid color-mix(in srgb, var(--color-brand-gold) 40%, transparent)' }}>
                 <GraduationCap className="size-4 shrink-0" style={{ color: 'var(--color-brand-gold)' }} />
                 <span className="text-sm font-medium" style={{ color: 'var(--color-brand-gold)' }}>{t('es_examen', { term: pruebaTerm.singular })}</span>
+              </div>
+            )}
+            {/* Simulación banner */}
+            {clase.horario.tipo_clase === 'simulacion' && !isExamen && (
+              <div className="flex items-center gap-2 rounded-[var(--radius-md)] px-3 py-2.5"
+                style={{ backgroundColor: 'var(--color-brand-gold-muted)', border: '1px solid color-mix(in srgb, var(--color-brand-gold) 40%, transparent)' }}>
+                <GraduationCap className="size-4 shrink-0" style={{ color: 'var(--color-brand-gold)' }} />
+                <span className="text-sm font-medium" style={{ color: 'var(--color-brand-gold)' }}>{t('badge_simulacion')}</span>
               </div>
             )}
             <div className="flex items-start justify-between">
@@ -686,6 +715,46 @@ function HorarioDetailView({ clase, user, confirmar, cancelar, pedirCambio: _ped
                       {t('reprobado')}
                     </span>
                   </div>
+                )}
+              </div>
+            )}
+
+            {/* Simulación grades (alumno view) */}
+            {clase.horario.tipo_clase === 'simulacion' && simulacionEvals.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-[var(--color-text-primary)] flex items-center gap-1.5">
+                  <Scale className="size-4 text-[var(--color-brand-gold)]" />
+                  {t('simulacion_calificaciones')}
+                </p>
+                {simulacionEvals
+                  .filter((ev) => ev.estado === 'calificada' && ev.nota != null)
+                  .map((ev) => {
+                    const profName = [ev.profesor?.nombre, ev.profesor?.apellido, ev.profesor?.apellido_materno].filter(Boolean).join(' ');
+                    const aprobado = (ev.nota ?? 0) >= 4.0;
+                    return (
+                      <div key={ev.id} className="flex items-center justify-between rounded-[var(--radius-md)] border border-[var(--color-border)] p-3">
+                        <div className="flex items-center gap-2">
+                          <User className="size-3.5 text-[var(--color-brand-gold)]" />
+                          <span className="text-sm text-[var(--color-text-primary)]">{profName}</span>
+                        </div>
+                        {aprobado ? (
+                          <div className="flex size-9 items-center justify-center rounded-full bg-[var(--color-success)]/10">
+                            <span className="text-sm font-bold text-[var(--color-success)]">
+                              {ev.nota!.toFixed(1)}
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-center rounded-full bg-[var(--color-error)]/10 px-2.5 py-1">
+                            <span className="text-xs font-bold text-[var(--color-error)]">
+                              {t('reprobado')}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                {simulacionEvals.every((ev) => ev.estado !== 'calificada') && (
+                  <p className="text-xs text-[var(--color-text-muted)] italic">{t('simulacion_sin_calificar')}</p>
                 )}
               </div>
             )}

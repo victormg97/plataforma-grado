@@ -9,24 +9,10 @@
  * professors without a custom color get the tenant's brand color by default.
  */
 
-import { resolveCssVar } from '@/lib/utils/cssTokens';
+import { resolveCssVar, getContrastTextColor } from '@/lib/utils/cssTokens';
 
 /** Default brand color used for professors who haven't chosen a custom color. */
 const DEFAULT_COLOR_VAR = '--color-brand-gold';
-
-/**
- * Determine whether white or dark text has better contrast against a bg color.
- * Uses relative luminance formula.
- */
-function getContrastText(hex: string): string {
-  const clean = hex.replace('#', '');
-  if (clean.length !== 6) return '#FFFFFF';
-  const r = parseInt(clean.slice(0, 2), 16) / 255;
-  const g = parseInt(clean.slice(2, 4), 16) / 255;
-  const b = parseInt(clean.slice(4, 6), 16) / 255;
-  const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-  return luminance > 0.45 ? '#1a1a1a' : '#FFFFFF';
-}
 
 export interface ProfesorColor {
   bg: string;
@@ -52,11 +38,12 @@ export function buildProfesorColorMap(
     const stored = storedColors?.[id];
     if (stored) {
       // Professor chose a custom color
-      const text = getContrastText(stored);
+      const text = getContrastTextColor(stored);
       map[id] = { bg: stored, border: stored, text };
     } else {
-      // No custom color: use brand color with dark text (gold is light)
-      map[id] = { bg: defaultBg, border: defaultBg, text: 'var(--color-brand-black)' };
+      // No custom color: use brand color — compute contrast text dynamically
+      const text = getContrastTextColor(`var(${DEFAULT_COLOR_VAR})`);
+      map[id] = { bg: defaultBg, border: defaultBg, text };
     }
   });
 

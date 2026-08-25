@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { useHorarioStore } from '@/stores/useHorarioStore';
 import { useUserStore } from '@/stores/useUserStore';
 import type { EstadoAsistencia, TipoClase } from '@/lib/supabase/types';
+import { getContrastTextColor } from '@/lib/utils/cssTokens';
 
 let channelCounter = 0;
 
@@ -164,7 +165,7 @@ export function useHorarios(profesorId?: string) {
         const isSimulacion = h.tipo_clase === 'simulacion';
         const estado = h.asistencia?.[0]?.estado || 'pendiente';
         const colors = isSimulacion
-          ? { bg: 'var(--color-brand-gold)', border: 'var(--color-brand-gold)', text: 'var(--color-brand-black, #1a1a1a)' }
+          ? { bg: 'var(--color-brand-gold)', border: 'var(--color-brand-gold)', text: getContrastTextColor('var(--color-brand-gold)') }
           : estadoColors[estado];
         return {
           id: h.id,

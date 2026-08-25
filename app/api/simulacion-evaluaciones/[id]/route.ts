@@ -42,7 +42,7 @@ export async function PATCH(
     .update({
       nota: parsed.data.nota,
       feedback: parsed.data.feedback ?? null,
-      estado: 'calificada',
+      estado: parsed.data.nota != null ? 'calificada' : 'pendiente',
     })
     .eq('id', id)
     .select()
