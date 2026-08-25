@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
 
   let query = supabase
     .from('horarios')
-    .select('*, asistencia:asistencia!asistencia_horario_id_fkey(*), alumno:profiles!horarios_alumno_id_fkey(*), profesor:profiles!horarios_profesor_id_fkey(*), simulacion_comision(id, profesor_id, profesor:profiles!simulacion_comision_profesor_id_fkey(id, nombre, apellido, avatar_url)), simulacion_evaluaciones(id, profesor_id, profesor:profiles!simulacion_evaluaciones_profesor_id_fkey(id, nombre, apellido), nota, feedback, estado)')
+    .select('*, asistencia:asistencia!asistencia_horario_id_fkey(*), alumno:profiles!horarios_alumno_id_fkey(*), profesor:profiles!horarios_profesor_id_fkey(*), simulacion_comision(id, profesor_id, profesor:profiles!simulacion_comision_profesor_id_fkey(id, nombre, apellido, apellido_materno, avatar_url)), simulacion_evaluaciones(id, profesor_id, profesor:profiles!simulacion_evaluaciones_profesor_id_fkey(id, nombre, apellido, apellido_materno), nota, feedback, estado)')
     .eq('activo', true);
 
   if (fecha) {

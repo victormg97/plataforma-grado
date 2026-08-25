@@ -212,12 +212,12 @@ interface HorarioDetailWithSimulacion extends HorarioConAsistencia {
   simulacion_comision?: {
     id: string;
     profesor_id: string;
-    profesor: { id: string; nombre: string; apellido: string; avatar_url: string | null };
+    profesor: { id: string; nombre: string; apellido: string; apellido_materno?: string | null; avatar_url: string | null };
   }[];
   simulacion_evaluaciones?: {
     id: string;
     profesor_id: string;
-    profesor: { id: string; nombre: string; apellido: string };
+    profesor: { id: string; nombre: string; apellido: string; apellido_materno?: string | null };
     nota: number | null;
     feedback: string | null;
     estado: 'pendiente' | 'calificada';
@@ -275,7 +275,7 @@ function SimulacionSection({
                   size="sm"
                 />
                 <span className="text-xs text-[var(--color-text-primary)]">
-                  {c.profesor.nombre} {c.profesor.apellido}
+                  {[c.profesor.nombre, c.profesor.apellido, c.profesor.apellido_materno].filter(Boolean).join(' ')}
                 </span>
               </div>
             ))}

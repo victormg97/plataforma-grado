@@ -13,6 +13,7 @@ export interface ProfesorComisionOption {
   id: string;
   nombre: string;
   apellido: string;
+  apellido_materno?: string | null;
   avatar_url: string | null;
 }
 
@@ -80,7 +81,7 @@ export function ComisionMultiSelect({
             </span>
           )}
           <span className="text-sm text-[var(--color-text-primary)]">
-            {profesorResponsable.nombre} {profesorResponsable.apellido}
+            {[profesorResponsable.nombre, profesorResponsable.apellido, profesorResponsable.apellido_materno].filter(Boolean).join(' ')}
           </span>
           <span className="ml-auto text-xs text-[var(--color-brand-gold)]">
             {t('comision_incluido')}
@@ -137,7 +138,7 @@ export function ComisionMultiSelect({
                   </span>
                 )}
                 <span className="truncate text-sm text-[var(--color-text-primary)]">
-                  {profesor.nombre} {profesor.apellido}
+                  {[profesor.nombre, profesor.apellido, profesor.apellido_materno].filter(Boolean).join(' ')}
                 </span>
               </button>
             );

@@ -244,7 +244,7 @@ export function HorarioForm({ open, onClose, profesorId, horario, defaultDate, d
       const supabase = createClient();
       const { data } = await supabase
         .from('profiles')
-        .select('id, nombre, apellido, avatar_url')
+        .select('id, nombre, apellido, apellido_materno, avatar_url')
         .in('rol', ['admin', 'profesor'])
         .eq('activo', true)
         .order('nombre');

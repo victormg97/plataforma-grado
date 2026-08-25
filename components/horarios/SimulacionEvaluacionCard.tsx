@@ -11,7 +11,7 @@ import { Avatar } from '@/components/common/Avatar';
 export interface EvaluacionData {
   id: string;
   profesor_id: string;
-  profesor: { id: string; nombre: string; apellido: string };
+  profesor: { id: string; nombre: string; apellido: string; apellido_materno?: string | null };
   nota: number | null;
   feedback: string | null;
   estado: 'pendiente' | 'calificada';
@@ -53,7 +53,7 @@ export function SimulacionEvaluacionCard({ evaluacion, isOwner, onSubmit }: Simu
         />
         <div className="flex-1">
           <p className="text-sm font-medium text-[var(--color-text-primary)]">
-            {evaluacion.profesor.nombre} {evaluacion.profesor.apellido}
+            {[evaluacion.profesor.nombre, evaluacion.profesor.apellido, evaluacion.profesor.apellido_materno].filter(Boolean).join(' ')}
           </p>
         </div>
         <span
