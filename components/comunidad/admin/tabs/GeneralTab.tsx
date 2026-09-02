@@ -1,13 +1,21 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
+import Image from 'next/image';
+import { ImageIcon, Trash2 } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { AppSelect } from '@/components/common/AppSelect';
 import { useGameSettings, type GameSettingsResponse } from '@/lib/hooks/useComunidad';
-import { useUpdateGameSettings } from '@/lib/hooks/useComunidadAdmin';
+import {
+  useUpdateGameSettings,
+  useUploadHeroImage,
+  useDeleteHeroImage,
+} from '@/lib/hooks/useComunidadAdmin';
+import { heroImageUrl } from '@/components/comunidad/heroImageUrl';
+import { HERO_IMAGE_ACCEPTED_EXT } from '@/lib/comunidad/game-config';
 import type { GameSettings } from '@/lib/supabase/types';
 
 /**
@@ -33,12 +41,40 @@ type FullSettings = GameSettingsResponse & Partial<GameSettings>;
 function GeneralForm({ settings }: { settings: GameSettingsResponse }) {
   const t = useTranslations('comunidadEstrategica');
   const update = useUpdateGameSettings();
+  const uploadHero = useUploadHeroImage();
+  const deleteHero = useDeleteHeroImage();
+  const heroInputRef = useRef<HTMLInputElement>(null);
   const initial = settings as FullSettings;
 
   const [form, setForm] = useState<FullSettings>(initial);
 
   const set = <K extends keyof FullSettings>(key: K, value: FullSettings[K]) =>
     setForm((f) => ({ ...f, [key]: value }));
+
+  const heroUrl = heroImageUrl(form.hero_image_path);
+
+  const onHeroFile = async (file: File) => {
+    try {
+      const res = await uploadHero.mutateAsync(file);
+      set('hero_image_path', res.image_path as never);
+      toast.success(t('admin_saved'));
+    } catch (e) {
+      const code = (e as { message?: string })?.message;
+      if (code === 'INVALID_FORMAT') toast.error(t('hero_image_error_format'));
+      else if (code === 'TOO_LARGE') toast.error(t('hero_image_error_size'));
+      else toast.error(t('admin_error'));
+    }
+  };
+
+  const onHeroDelete = async () => {
+    try {
+      await deleteHero.mutateAsync();
+      set('hero_image_path', null as never);
+      toast.success(t('admin_deleted'));
+    } catch {
+      toast.error(t('admin_error'));
+    }
+  };
 
   const onSave = async () => {
     try {
@@ -53,6 +89,7 @@ function GeneralForm({ settings }: { settings: GameSettingsResponse }) {
         section_name_weekly_case: form.section_name_weekly_case,
         badge_image_max_bytes: form.badge_image_max_bytes,
         badge_image_recommended_px: form.badge_image_recommended_px,
+        recent_achievements_count: form.recent_achievements_count,
       });
       toast.success(t('admin_saved'));
     } catch {
@@ -135,6 +172,77 @@ function GeneralForm({ settings }: { settings: GameSettingsResponse }) {
             />
           </label>
         </div>
+      </div>
+
+      <div>
+        <h3 className="mb-2 text-sm font-semibold text-[var(--color-text-secondary)]">
+          {t('hero_image_title')}
+        </h3>
+        <p className="mb-3 text-xs text-[var(--color-text-muted)]">{t('hero_image_hint')}</p>
+        <div className="flex items-center gap-4">
+          <div className="flex h-24 w-40 items-center justify-center overflow-hidden rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
+            {heroUrl ? (
+              <Image
+                src={heroUrl}
+                alt={t('hero_image_preview_alt')}
+                width={160}
+                height={96}
+                className="h-full w-full object-contain"
+                unoptimized
+              />
+            ) : (
+              <ImageIcon className="size-8 text-[var(--color-text-muted)]" />
+            )}
+          </div>
+          <div className="flex flex-col gap-2">
+            <input
+              ref={heroInputRef}
+              type="file"
+              accept={HERO_IMAGE_ACCEPTED_EXT.join(',')}
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) void onHeroFile(f);
+                e.target.value = '';
+              }}
+            />
+            <Button
+              variant="secondary"
+              onClick={() => heroInputRef.current?.click()}
+              loading={uploadHero.isPending}
+            >
+              {t('hero_image_upload')}
+            </Button>
+            {form.hero_image_path && (
+              <Button
+                variant="ghost"
+                icon={<Trash2 className="size-4" />}
+                onClick={onHeroDelete}
+                loading={deleteHero.isPending}
+              >
+                {t('hero_image_remove')}
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="mb-2 text-sm font-semibold text-[var(--color-text-secondary)]">
+          {t('achievements_config_title')}
+        </h3>
+        <label className="flex max-w-xs flex-col gap-1">
+          <span className="text-sm font-medium text-[var(--color-text-primary)]">
+            {t('achievements_config_count')}
+          </span>
+          <input
+            type="number"
+            min={1}
+            value={form.recent_achievements_count ?? 3}
+            onChange={(e) => set('recent_achievements_count', Number(e.target.value) as never)}
+            className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm focus:border-[var(--color-brand-gold)] focus:outline-none"
+          />
+        </label>
       </div>
 
       <div className="flex justify-end">

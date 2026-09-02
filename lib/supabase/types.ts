@@ -2336,6 +2336,14 @@ export type Database = {
           show_real_name: boolean
           badge_image_max_bytes: number
           badge_image_recommended_px: number
+          hero_image_path: string | null
+          recent_achievements_count: number
+          lives_enabled: boolean
+          lives_max: number
+          lives_start: number
+          lives_block_when_empty: boolean
+          lives_regen_mode: Database["public"]["Enums"]["game_lives_regen_mode"]
+          lives_regen_hours: number
           section_name_daily_question: string
           section_name_streak: string
           section_name_ranking: string
@@ -2358,6 +2366,14 @@ export type Database = {
           show_real_name?: boolean
           badge_image_max_bytes?: number
           badge_image_recommended_px?: number
+          hero_image_path?: string | null
+          recent_achievements_count?: number
+          lives_enabled?: boolean
+          lives_max?: number
+          lives_start?: number
+          lives_block_when_empty?: boolean
+          lives_regen_mode?: Database["public"]["Enums"]["game_lives_regen_mode"]
+          lives_regen_hours?: number
           section_name_daily_question?: string
           section_name_streak?: string
           section_name_ranking?: string
@@ -2380,6 +2396,14 @@ export type Database = {
           show_real_name?: boolean
           badge_image_max_bytes?: number
           badge_image_recommended_px?: number
+          hero_image_path?: string | null
+          recent_achievements_count?: number
+          lives_enabled?: boolean
+          lives_max?: number
+          lives_start?: number
+          lives_block_when_empty?: boolean
+          lives_regen_mode?: Database["public"]["Enums"]["game_lives_regen_mode"]
+          lives_regen_hours?: number
           section_name_daily_question?: string
           section_name_streak?: string
           section_name_ranking?: string
@@ -2400,6 +2424,7 @@ export type Database = {
           points_value: number
           enabled: boolean
           counts_for_streak: boolean
+          costs_life: boolean
           created_at: string
           updated_at: string
         }
@@ -2410,6 +2435,7 @@ export type Database = {
           points_value?: number
           enabled?: boolean
           counts_for_streak?: boolean
+          costs_life?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -2420,6 +2446,7 @@ export type Database = {
           points_value?: number
           enabled?: boolean
           counts_for_streak?: boolean
+          costs_life?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -2449,6 +2476,36 @@ export type Database = {
         }
         Relationships: []
       }
+      game_level_thresholds: {
+        Row: {
+          id: string
+          tenant: string
+          level: number
+          min_points: number
+          label: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          tenant: string
+          level: number
+          min_points: number
+          label?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          tenant?: string
+          level?: number
+          min_points?: number
+          label?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       game_profiles: {
         Row: {
           id: string
@@ -2460,6 +2517,16 @@ export type Database = {
           current_streak: number
           longest_streak: number
           last_activity_date: string | null
+          current_lives: number | null
+          lives_updated_at: string | null
+          xp_reset_at: string | null
+          is_restricted: boolean
+          restricted_at: string | null
+          restricted_by: string | null
+          is_banned: boolean
+          banned_at: string | null
+          banned_by: string | null
+          ban_reason: string | null
           created_at: string
           updated_at: string
         }
@@ -2473,6 +2540,16 @@ export type Database = {
           current_streak?: number
           longest_streak?: number
           last_activity_date?: string | null
+          current_lives?: number | null
+          lives_updated_at?: string | null
+          xp_reset_at?: string | null
+          is_restricted?: boolean
+          restricted_at?: string | null
+          restricted_by?: string | null
+          is_banned?: boolean
+          banned_at?: string | null
+          banned_by?: string | null
+          ban_reason?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -2486,6 +2563,16 @@ export type Database = {
           current_streak?: number
           longest_streak?: number
           last_activity_date?: string | null
+          current_lives?: number | null
+          lives_updated_at?: string | null
+          xp_reset_at?: string | null
+          is_restricted?: boolean
+          restricted_at?: string | null
+          restricted_by?: string | null
+          is_banned?: boolean
+          banned_at?: string | null
+          banned_by?: string | null
+          ban_reason?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -3306,6 +3393,42 @@ export type Database = {
         Args: { p_tenant: string; p_subject_id: string }
         Returns: Json
       }
+      get_game_profile: {
+        Args: { p_tenant: string }
+        Returns: Json
+      }
+      get_recent_achievements: {
+        Args: { p_tenant: string; p_limit?: number }
+        Returns: Json
+      }
+      list_game_players: {
+        Args: { p_tenant: string; p_search?: string }
+        Returns: Json
+      }
+      restrict_player: {
+        Args: { p_tenant: string; p_user_id: string }
+        Returns: Json
+      }
+      unrestrict_player: {
+        Args: { p_tenant: string; p_user_id: string }
+        Returns: Json
+      }
+      ban_player: {
+        Args: { p_tenant: string; p_user_id: string; p_reason?: string }
+        Returns: Json
+      }
+      unban_player: {
+        Args: { p_tenant: string; p_user_id: string }
+        Returns: Json
+      }
+      set_player_lives: {
+        Args: { p_tenant: string; p_user_id: string; p_lives: number }
+        Returns: Json
+      }
+      reset_player_level: {
+        Args: { p_tenant: string; p_user_id: string }
+        Returns: Json
+      }
       get_current_weekly_case: {
         Args: { p_tenant: string }
         Returns: Json
@@ -3383,6 +3506,7 @@ export type Database = {
       game_score_reset_scope: "current-month-ranking-only" | "full-history-archive"
       game_weekly_case_status: "draft" | "open" | "closed" | "resolved"
       game_resolution_visibility: "participants_only" | "all_users"
+      game_lives_regen_mode: "per_life" | "full_refill"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -3564,6 +3688,7 @@ export const Constants = {
       game_score_reset_scope: ["current-month-ranking-only", "full-history-archive"],
       game_weekly_case_status: ["draft", "open", "closed", "resolved"],
       game_resolution_visibility: ["participants_only", "all_users"],
+      game_lives_regen_mode: ["per_life", "full_refill"],
     },
   },
 } as const
@@ -3607,6 +3732,8 @@ export type GameWeeklyCaseStatus = Database['public']['Enums']['game_weekly_case
 export type GameResolutionVisibility = Database['public']['Enums']['game_resolution_visibility'];
 export type GameWeeklyCase = Tables<'game_weekly_cases'>;
 export type GameWeeklyCaseAnswer = Tables<'game_weekly_case_answers'>;
+export type GameLivesRegenMode = Database['public']['Enums']['game_lives_regen_mode'];
+export type GameLevelThreshold = Tables<'game_level_thresholds'>;
 
 export type EmailPlantilla = Tables<'email_plantillas'>;
 export type EmailEnvio = Tables<'email_envios'>;

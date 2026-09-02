@@ -13,35 +13,19 @@ export async function GET(_req: NextRequest) {
     return NextResponse.json({ error: 'NO_AUTORIZADO' }, { status: 401 });
   }
 
-  // Gate on game accessibility (fail-safe if disabled / not allowed).
-  const { data: accessible } = await supabase.rpc('game_is_accessible', {
+  // Extended profile (nickname + streak + lives + level + recent achievements
+  // + moderation) via the SECURITY DEFINER RPC, which also gates on
+  // game_is_accessible and lazily regenerates lives.
+  const { data, error } = await supabase.rpc('get_game_profile', {
     p_tenant: tenantConfig.id,
   });
 
-  if (!accessible) {
-    return NextResponse.json({ error: 'PROHIBIDO' }, { status: 403 });
-  }
-
-  const { data: profile, error } = await supabase
-    .from('game_profiles')
-    .select('nickname, current_streak, longest_streak, last_activity_date, nickname_updated_at')
-    .eq('tenant', tenantConfig.id)
-    .eq('user_id', user.id)
-    .maybeSingle();
-
   if (error) {
-    return NextResponse.json({ error: 'ERROR_DB', message: error.message }, { status: 500 });
+    const status = error.code === '42501' ? 403 : 500;
+    return NextResponse.json({ error: 'ERROR', message: error.message }, { status });
   }
 
-  return NextResponse.json(
-    profile ?? {
-      nickname: null,
-      current_streak: 0,
-      longest_streak: 0,
-      last_activity_date: null,
-      nickname_updated_at: null,
-    }
-  );
+  return NextResponse.json(data);
 }
 
 // PUT: set / change the nickname through the SECURITY DEFINER RPC, which

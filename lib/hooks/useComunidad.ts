@@ -20,6 +20,7 @@ import type {
   WeeklyCaseAnswerPayload,
   SubmitWeeklyCaseAnswerResult,
 } from '@/lib/comunidad/weekly-case';
+import type { GameProfileResult } from '@/lib/comunidad/game-config';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -38,15 +39,19 @@ export type GameSettingsResponse = Pick<
   | 'section_name_badges'
   | 'section_name_weekly_case'
   | 'icon'
+  | 'hero_image_path'
+  | 'recent_achievements_count'
+  | 'lives_enabled'
+  | 'lives_max'
+  | 'lives_start'
+  | 'lives_block_when_empty'
+  | 'lives_regen_mode'
+  | 'lives_regen_hours'
 >;
 
-export interface GameProfileResponse {
-  nickname: string | null;
-  current_streak: number;
-  longest_streak: number;
-  last_activity_date: string | null;
-  nickname_updated_at: string | null;
-}
+/** Extended player profile (get_game_profile RPC): streak + lives + level +
+ * recent achievements + moderation state. */
+export type GameProfileResponse = GameProfileResult;
 
 export interface DailyQuestionOption {
   text: string;

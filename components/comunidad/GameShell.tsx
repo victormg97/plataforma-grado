@@ -7,6 +7,7 @@ import { Modal } from '@/components/common/Modal';
 import { GameNav } from './GameNav';
 import { GameHeader } from './GameHeader';
 import { GameNavGuardProvider, useGameNavGuard } from './GameNavGuard';
+import { BannedNotice } from './BannedNotice';
 import { isGameView, type GameView } from './views';
 import { GameHome } from './views/GameHome';
 import { StreakView } from './views/StreakView';
@@ -92,6 +93,7 @@ export function GameShell() {
               setLastResult(result);
               navigate('daily-result');
             }}
+            onNavigate={navigate}
           />
         );
       case 'daily-result':
@@ -177,16 +179,32 @@ function GameShellInner({
     [guardedRun, doNavigate]
   );
 
+  const isBanned = !!profile?.moderation?.is_banned;
+
   return (
     <div className="flex flex-col gap-5 text-[var(--game-text)]">
       <GameHeader
         settings={settings}
         nickname={profile?.nickname ?? null}
         currentStreak={profile?.current_streak ?? 0}
+        lives={profile?.lives}
+        level={profile?.level}
       />
 
-      {/* Onboarding is a full-screen gate; hide nav until nickname is set. */}
-      {active !== 'onboarding' && (
+      {/* Restricted players can keep playing, but their nickname is hidden
+          from others until they change it. */}
+      {active !== 'onboarding' && !isBanned && profile?.moderation?.is_restricted && (
+        <div
+          className="rounded-[var(--game-radius-sm)] border border-[var(--game-incorrect)]/40 bg-[var(--game-surface-muted)] px-4 py-3 text-sm text-[var(--game-text)]"
+          role="alert"
+        >
+          {t('restricted_notice')}
+        </div>
+      )}
+
+      {/* Onboarding is a full-screen gate; hide nav until nickname is set.
+          Banned players see only the ban notice (no nav, no gameplay). */}
+      {active !== 'onboarding' && !isBanned && (
         <GameNav active={active} onNavigate={navigate} settings={settings} />
       )}
 
@@ -200,6 +218,8 @@ function GameShellInner({
           >
             <div className="size-8 animate-spin rounded-full border-4 border-[var(--game-accent)] border-t-transparent" />
           </div>
+        ) : isBanned ? (
+          <BannedNotice reason={profile?.moderation?.ban_reason ?? null} />
         ) : (
           renderView(navigate)
         )}

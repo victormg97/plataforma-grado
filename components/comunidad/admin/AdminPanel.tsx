@@ -13,6 +13,9 @@ import {
   Scale,
   BarChart3,
   AlertTriangle,
+  TrendingUp,
+  Heart,
+  Users,
 } from 'lucide-react';
 import { PageHeader } from '@/components/common/PageHeader';
 import { BackButton } from '@/components/common/BackButton';
@@ -29,19 +32,25 @@ import { BadgesTab } from './tabs/BadgesTab';
 import { WeeklyCaseTab } from './tabs/WeeklyCaseTab';
 import { StatsTab } from './tabs/StatsTab';
 import { DangerZoneTab } from './tabs/DangerZoneTab';
+import { LevelsTab } from './tabs/LevelsTab';
+import { LivesTab } from './tabs/LivesTab';
+import { PlayersTab } from './tabs/PlayersTab';
 
 type TabKey =
   | 'general'
   | 'points'
   | 'streak'
+  | 'levels'
+  | 'lives'
   | 'daily'
   | 'challenges'
   | 'badges'
   | 'weekly-case'
+  | 'players'
   | 'stats'
   | 'danger';
 
-const TAB_KEYS: TabKey[] = ['general', 'points', 'streak', 'daily', 'challenges', 'badges', 'weekly-case', 'stats', 'danger'];
+const TAB_KEYS: TabKey[] = ['general', 'points', 'streak', 'levels', 'lives', 'daily', 'challenges', 'badges', 'weekly-case', 'players', 'stats', 'danger'];
 
 /**
  * Comunidad Estratégica admin panel (Req. 9). Tab navigation persisted in ?tab=.
@@ -75,10 +84,13 @@ export function AdminPanel() {
     { key: 'general', label: t('admin_tab_general'), icon: <Settings className="size-4" /> },
     { key: 'points', label: t('admin_tab_points'), icon: <Star className="size-4" /> },
     { key: 'streak', label: t('admin_tab_streak'), icon: <Flame className="size-4" /> },
+    { key: 'levels', label: t('admin_tab_levels'), icon: <TrendingUp className="size-4" /> },
+    { key: 'lives', label: t('admin_tab_lives'), icon: <Heart className="size-4" /> },
     { key: 'daily', label: t('admin_tab_daily'), icon: <CalendarCheck className="size-4" /> },
     { key: 'challenges', label: t('admin_tab_challenges'), icon: <Swords className="size-4" /> },
     { key: 'badges', label: t('admin_tab_badges'), icon: <Award className="size-4" /> },
     { key: 'weekly-case', label: t('admin_tab_weekly_case'), icon: <Scale className="size-4" /> },
+    { key: 'players', label: t('admin_tab_players'), icon: <Users className="size-4" /> },
     { key: 'stats', label: t('admin_tab_stats'), icon: <BarChart3 className="size-4" /> },
     { key: 'danger', label: t('admin_tab_danger'), icon: <AlertTriangle className="size-4" /> },
   ];
@@ -106,10 +118,13 @@ export function AdminPanel() {
         {active === 'general' && <GeneralTab />}
         {active === 'points' && <PointsTab />}
         {active === 'streak' && <StreakTab />}
+        {active === 'levels' && <LevelsTab />}
+        {active === 'lives' && <LivesTab />}
         {active === 'daily' && <DailyQuestionTab />}
         {active === 'challenges' && <ChallengesTab />}
         {active === 'badges' && <BadgesTab />}
         {active === 'weekly-case' && <WeeklyCaseTab />}
+        {active === 'players' && <PlayersTab />}
         {active === 'stats' && <StatsTab />}
         {active === 'danger' && <DangerZoneTab />}
       </div>

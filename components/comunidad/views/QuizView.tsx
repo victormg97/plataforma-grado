@@ -50,8 +50,8 @@ export function QuizView() {
       setSubject(picked);
       setQuestions(res.questions);
       setStage('run');
-    } catch {
-      setError('ERROR');
+    } catch (e) {
+      setError((e as { message?: string })?.message ?? 'ERROR');
     }
   };
 
@@ -72,8 +72,8 @@ export function QuizView() {
       const res = await submitQuiz.mutateAsync({ subject_id: subject.id, answers });
       setResult(res);
       setStage('result');
-    } catch {
-      setError('ERROR');
+    } catch (e) {
+      setError((e as { message?: string })?.message ?? 'ERROR');
     }
   };
 
@@ -106,7 +106,13 @@ export function QuizView() {
 
       {error && (
         <p className="text-sm text-[var(--game-incorrect)]" role="alert">
-          {error === 'NO_QUESTIONS' ? t('quiz_no_questions') : t('quiz_error')}
+          {error === 'NO_QUESTIONS'
+            ? t('quiz_no_questions')
+            : error === 'NO_LIVES'
+              ? t('lives_none_message')
+              : error === 'PLAYER_BANNED'
+                ? t('banned_short')
+                : t('quiz_error')}
         </p>
       )}
     </div>

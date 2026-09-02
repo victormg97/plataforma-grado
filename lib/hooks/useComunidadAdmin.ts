@@ -18,8 +18,15 @@ import type {
   GameChallenge,
   GameDailyQuestion,
   GameWeeklyCase,
+  GameLevelThreshold,
 } from '@/lib/supabase/types';
 import type { WeeklyCasePayload, WeeklyCaseResolutionPayload } from '@/lib/comunidad/weekly-case';
+import type {
+  LevelThresholdsPayload,
+  GamePlayer,
+  BanPlayerPayload,
+  SetPlayerLivesPayload,
+} from '@/lib/comunidad/game-config';
 
 /**
  * Admin-only React Query hooks for the Comunidad Estratégica admin panel
@@ -420,5 +427,96 @@ export function usePublishResolution() {
         body: JSON.stringify(payload),
       }),
     onSuccess: () => invalidateWeeklyCases(qc),
+  });
+}
+
+// ─── Level thresholds ────────────────────────────────────────────────────────
+
+export function useAdminLevels() {
+  return useQuery({
+    queryKey: ['game-admin-levels'],
+    queryFn: () => jsonFetch<GameLevelThreshold[]>('/api/game/admin/levels'),
+    staleTime: 30_000,
+  });
+}
+
+export function useUpdateLevels() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: LevelThresholdsPayload) =>
+      jsonFetch<GameLevelThreshold[]>('/api/game/admin/levels', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      }),
+    onSuccess: () =>
+      Promise.all([
+        qc.invalidateQueries({ queryKey: ['game-admin-levels'] }),
+        qc.invalidateQueries({ queryKey: ['game-admin-players'] }),
+        qc.invalidateQueries({ queryKey: ['game-ranking'] }),
+      ]),
+  });
+}
+
+// ─── Hero image ──────────────────────────────────────────────────────────────
+
+export function useUploadHeroImage() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (file: File): Promise<{ image_path: string; public_url: string }> => {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/game/admin/hero-image', { method: 'POST', body: fd });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const err = new Error(json.error ?? 'ERROR') as Error & { payload?: unknown };
+        err.payload = json;
+        throw err;
+      }
+      return json;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['game-settings'] }),
+  });
+}
+
+export function useDeleteHeroImage() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => jsonFetch<{ ok: boolean }>('/api/game/admin/hero-image', { method: 'DELETE' }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['game-settings'] }),
+  });
+}
+
+// ─── Players (moderation) ─────────────────────────────────────────────────────
+
+export function useAdminPlayers(q: string) {
+  const params = new URLSearchParams();
+  if (q) params.set('q', q);
+  return useQuery({
+    queryKey: ['game-admin-players', q],
+    queryFn: () => jsonFetch<{ players: GamePlayer[] }>(`/api/game/admin/players?${params.toString()}`),
+    staleTime: 15_000,
+  });
+}
+
+type PlayerAction =
+  | { action: 'restrict' | 'unrestrict' | 'unban' | 'reset_level'; user_id: string }
+  | ({ action: 'ban' } & BanPlayerPayload)
+  | ({ action: 'set_lives' } & SetPlayerLivesPayload);
+
+export function usePlayerAction() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: PlayerAction) =>
+      jsonFetch<{ ok: boolean }>('/api/game/admin/players', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      }),
+    onSuccess: () =>
+      Promise.all([
+        qc.invalidateQueries({ queryKey: ['game-admin-players'] }),
+        qc.invalidateQueries({ queryKey: ['game-ranking'] }),
+      ]),
   });
 }

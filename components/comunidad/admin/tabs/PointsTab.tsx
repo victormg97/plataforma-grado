@@ -20,6 +20,7 @@ export function PointsTab() {
         points_value: patch.points_value ?? src.points_value,
         enabled: patch.enabled ?? src.enabled,
         counts_for_streak: patch.counts_for_streak ?? src.counts_for_streak,
+        costs_life: patch.costs_life ?? src.costs_life,
       });
       toast.success(t('admin_saved'));
     } catch {
@@ -55,6 +56,12 @@ export function PointsTab() {
             checked={src.enabled}
             onChange={(v) => save(src, { enabled: v })}
             label={t('admin_enabled')}
+            size="sm"
+          />
+          <AppSwitch
+            checked={src.costs_life ?? false}
+            onChange={(v) => save(src, { costs_life: v })}
+            label={t('admin_costs_life')}
             size="sm"
           />
         </Card>

@@ -63,6 +63,7 @@ export const pointSourceSchema = z.object({
   points_value: z.number().int().min(0, 'RANGO_INVALIDO'),
   enabled: z.boolean(),
   counts_for_streak: z.boolean(),
+  costs_life: z.boolean().optional(),
 });
 export type PointSourcePayload = z.infer<typeof pointSourceSchema>;
 

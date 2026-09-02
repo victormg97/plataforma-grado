@@ -2,26 +2,30 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Gamepad2, Flame, Heart, Pencil } from 'lucide-react';
+import { Gamepad2, Flame, Pencil } from 'lucide-react';
 import { Modal } from '@/components/common/Modal';
 import { NicknameForm } from './NicknameForm';
+import { LivesIndicator } from './LivesIndicator';
 import type { GameSettingsResponse } from '@/lib/hooks/useComunidad';
+import type { PlayerLives, PlayerLevel } from '@/lib/comunidad/game-config';
 
 /**
  * Dark burgundy header bar used across the mini-app (mockup 2).
- *
- * The streak is real (Slice 1). "Vidas" (lives) and "Nivel" (level) are
- * VISUAL PLACEHOLDERS for later slices — they render with a muted "Pronto"
- * treatment and carry no logic. currentStreak is the only live value.
+ * Streak, lives and level are all live. Lives only render when the lives
+ * system is enabled for the tenant. Nickname is editable via a modal.
  */
 export function GameHeader({
   settings,
   nickname,
   currentStreak,
+  lives,
+  level,
 }: {
   settings?: GameSettingsResponse;
   nickname: string | null;
   currentStreak: number;
+  lives?: PlayerLives;
+  level?: PlayerLevel;
 }) {
   const t = useTranslations('comunidadEstrategica');
   const [editOpen, setEditOpen] = useState(false);
@@ -53,20 +57,10 @@ export function GameHeader({
             </div>
           </div>
 
-          {/* Lives — visual placeholder (later slice) */}
-          <div className="flex items-center gap-2 opacity-70" title={t('coming_soon_desc')}>
-            <Heart className="size-6 text-[#e57373]" />
-            <div className="leading-tight">
-              <div className="text-[11px] uppercase tracking-wide text-white/70">
-                {t('lives_label')}
-              </div>
-              <div className="text-sm font-bold">
-                — <span className="text-[10px] font-medium">{t('coming_soon_tag')}</span>
-              </div>
-            </div>
-          </div>
+          {/* Lives — real, only when the lives system is enabled */}
+          {lives?.enabled && <LivesIndicator lives={lives} />}
 
-          {/* Player + level — nickname real (editable), level placeholder */}
+          {/* Player + level — both real; nickname editable */}
           <div className="flex items-center gap-2">
             <div className="flex size-9 items-center justify-center rounded-full bg-white/15 text-sm font-semibold">
               {(nickname ?? '?').charAt(0).toUpperCase()}
@@ -87,7 +81,7 @@ export function GameHeader({
                 )}
               </div>
               <div className="text-[11px] text-white/70">
-                {t('level_label')} — <span className="text-[10px]">{t('coming_soon_tag')}</span>
+                {t('level_label')} {level?.level ?? 1}
               </div>
             </div>
           </div>

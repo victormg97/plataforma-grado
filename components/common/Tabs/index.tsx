@@ -74,7 +74,7 @@ export function Tabs({ items, active, onChange, className, idPrefix = 'tab', ...
       aria-label={rest['aria-label']}
       aria-orientation="horizontal"
       className={cn(
-        'flex gap-1 overflow-x-auto border-b border-[var(--color-border)]',
+        'flex items-stretch gap-1 overflow-x-auto overflow-y-hidden border-b border-[var(--color-border)]',
         className
       )}
     >

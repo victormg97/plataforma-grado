@@ -39,6 +39,7 @@ export async function PUT(req: NextRequest) {
       points_value: parsed.data.points_value,
       enabled: parsed.data.enabled,
       counts_for_streak: parsed.data.counts_for_streak,
+      ...(parsed.data.costs_life !== undefined ? { costs_life: parsed.data.costs_life } : {}),
     })
     .eq('tenant', tenantConfig.id)
     .eq('action_type', parsed.data.action_type)

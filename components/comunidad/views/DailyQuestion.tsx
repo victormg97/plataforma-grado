@@ -4,24 +4,28 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/common/Card';
-import { Award, Medal, Scale } from 'lucide-react';
-import { useDailyQuestion, useAnswerDailyQuestion } from '@/lib/hooks/useComunidad';
+import { Scale } from 'lucide-react';
+import { useDailyQuestion, useAnswerDailyQuestion, useGameProfile } from '@/lib/hooks/useComunidad';
+import { RecentAchievements } from '../RecentAchievements';
 import type { DailyAnswer, DailyAnswerResult } from '@/lib/comunidad/answer';
+import type { GameView } from '../views';
 
 const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
 
 /**
- * Daily Question screen, styled after mockup 2. Question + A/B/C/D options is
- * live (Slice 1). The right column ("Rango/Nivel" and "Logros recientes") is
- * a VISUAL PLACEHOLDER for later slices (no logic).
+ * Daily Question screen, styled after mockup 2. The right column shows the
+ * player's real level and recent achievements.
  */
 export function DailyQuestion({
   onAnswered,
+  onNavigate,
 }: {
   onAnswered: (result: DailyAnswerResult) => void;
+  onNavigate?: (view: GameView) => void;
 }) {
   const t = useTranslations('comunidadEstrategica');
   const { data, isLoading } = useDailyQuestion();
+  const { data: profile } = useGameProfile();
   const mutation = useAnswerDailyQuestion();
 
   const [selected, setSelected] = useState<number[]>([]);
@@ -49,6 +53,15 @@ export function DailyQuestion({
     return (
       <Card padding="lg" className="border-none bg-[var(--game-surface)] text-center shadow-[var(--game-shadow)]">
         <p className="text-sm text-[var(--game-text-muted)]">{t('daily_already_answered')}</p>
+      </Card>
+    );
+  }
+
+  // No lives left (and the tenant blocks play when empty): show a notice.
+  if (profile?.lives?.enabled && profile.lives.block_when_empty && (profile.lives.current ?? 0) <= 0) {
+    return (
+      <Card padding="lg" className="border-none bg-[var(--game-surface)] text-center shadow-[var(--game-shadow)]">
+        <p className="text-sm text-[var(--game-text-muted)]">{t('lives_none_message')}</p>
       </Card>
     );
   }
@@ -178,49 +191,36 @@ export function DailyQuestion({
 
         {mutation.isError && (
           <p className="text-sm text-[var(--game-incorrect)]" role="alert">
-            {t('daily_submit_error')}
+            {(() => {
+              const code = (mutation.error as { message?: string })?.message;
+              if (code === 'NO_LIVES') return t('lives_none_message');
+              if (code === 'PLAYER_BANNED') return t('banned_short');
+              return t('daily_submit_error');
+            })()}
           </p>
         )}
       </Card>
 
-      {/* Side column — visual placeholders for later slices */}
+      {/* Side column — real level + recent achievements */}
       <div className="flex flex-col gap-4">
-        <Card padding="lg" className="flex items-center gap-4 border-none bg-[var(--game-surface)] shadow-[var(--game-shadow)] opacity-90">
+        <Card padding="lg" className="flex items-center gap-4 border-none bg-[var(--game-surface)] shadow-[var(--game-shadow)]">
           <div className="flex size-14 items-center justify-center rounded-full bg-[var(--game-accent)] text-[var(--game-on-accent)]">
             <Scale className="size-7" />
           </div>
           <div>
-            <div className="text-sm text-[var(--game-text-muted)]">
-              {t('level_label')}{' '}
-              <span className="rounded-full bg-[var(--game-accent-muted)] px-1.5 py-0.5 text-[10px] font-semibold uppercase text-[var(--game-accent)]">
-                {t('coming_soon_tag')}
-              </span>
-            </div>
-            <div className="text-xl font-bold text-[var(--game-gold)]">—</div>
+            <div className="text-sm text-[var(--game-text-muted)]">{t('level_label')}</div>
+            <div className="text-xl font-bold text-[var(--game-gold)]">{profile?.level?.level ?? 1}</div>
+            {typeof profile?.level?.next_min === 'number' && (
+              <div className="text-[11px] text-[var(--game-text-muted)]">
+                {t('level_xp_to_next', {
+                  points: Math.max((profile.level.next_min ?? 0) - (profile.level.xp ?? 0), 0),
+                })}
+              </div>
+            )}
           </div>
         </Card>
 
-        <Card padding="lg" className="border-none bg-[var(--game-surface)] shadow-[var(--game-shadow)] opacity-90">
-          <div className="mb-3 flex items-center gap-2">
-            <h3 className="text-lg font-bold text-[var(--game-text)]">{t('achievements_title')}</h3>
-            <span className="ml-auto rounded-full bg-[var(--game-accent-muted)] px-2 py-0.5 text-[10px] font-semibold uppercase text-[var(--game-accent)]">
-              {t('coming_soon_tag')}
-            </span>
-          </div>
-          <ul className="flex flex-col gap-3">
-            {[Award, Medal, Scale].map((Icon, i) => (
-              <li key={i} className="flex items-center gap-3">
-                <div className="flex size-9 items-center justify-center rounded-full bg-[var(--game-accent)] text-[var(--game-on-accent)]">
-                  <Icon className="size-4" />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <span className="h-3 w-32 rounded bg-[var(--game-surface-muted)]" />
-                  <span className="h-2.5 w-20 rounded bg-[var(--game-surface-muted)]" />
-                </div>
-              </li>
-            ))}
-          </ul>
-        </Card>
+        <RecentAchievements onSeeMore={onNavigate ? () => onNavigate('badges') : undefined} />
       </div>
     </div>
   );

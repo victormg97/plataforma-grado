@@ -11,8 +11,10 @@ import {
   Trophy,
   Scale,
 } from 'lucide-react';
+import Image from 'next/image';
 import { Card } from '@/components/common/Card';
-import { useGameProfile } from '@/lib/hooks/useComunidad';
+import { useGameProfile, useGameSettings } from '@/lib/hooks/useComunidad';
+import { heroImageUrl } from '../heroImageUrl';
 import type { GameView } from '../views';
 
 /**
@@ -25,6 +27,8 @@ import type { GameView } from '../views';
 export function GameHome({ onNavigate }: { onNavigate: (view: GameView) => void }) {
   const t = useTranslations('comunidadEstrategica');
   const { data: profile } = useGameProfile();
+  const { data: settings } = useGameSettings();
+  const heroUrl = heroImageUrl(settings?.hero_image_path);
 
   const features = [
     { icon: <Target className="size-6" />, title: t('feat_respond_title'), desc: t('feat_respond_desc') },
@@ -58,10 +62,24 @@ export function GameHome({ onNavigate }: { onNavigate: (view: GameView) => void 
             </button>
           </div>
 
-          {/* Decorative illustration stand-in */}
-          <div className="hidden items-center justify-center gap-3 md:flex">
-            <Trophy className="size-16 text-[var(--game-gold)]" />
-            <Scale className="size-14 text-[var(--game-accent)]" />
+          {/* Hero image: configurable from the admin panel (fits the space).
+              Falls back to the decorative trophy + scale when unset. */}
+          <div className="hidden items-center justify-center md:flex">
+            {heroUrl ? (
+              <Image
+                src={heroUrl}
+                alt={t('home_hero_image_alt')}
+                width={480}
+                height={300}
+                className="h-auto max-h-64 w-full object-contain"
+                unoptimized
+              />
+            ) : (
+              <div className="flex items-center justify-center gap-3">
+                <Trophy className="size-16 text-[var(--game-gold)]" />
+                <Scale className="size-14 text-[var(--game-accent)]" />
+              </div>
+            )}
           </div>
         </div>
       </Card>
