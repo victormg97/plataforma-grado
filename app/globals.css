@@ -489,6 +489,27 @@ div[style*="position: fixed"] > [role="toolbar"] {
   display: none;                  /* Chrome/Safari */
 }
 
+/* Barra de scroll fina y discreta (tabs, listas, paneles).
+   Mantiene la pista visual de overflow sin la barra nativa gruesa. */
+.scrollbar-thin {
+  scrollbar-width: thin;                                   /* Firefox */
+  scrollbar-color: var(--color-border) transparent;        /* Firefox: thumb / track */
+}
+.scrollbar-thin::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: var(--color-border);
+  border-radius: 9999px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-text-muted);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

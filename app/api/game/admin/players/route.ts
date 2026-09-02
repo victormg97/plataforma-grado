@@ -27,7 +27,13 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'ERROR', message: error.message }, { status });
   }
 
-  return NextResponse.json({ players: data ?? [] });
+  // list_game_players already returns a JSON object shaped like { players: [...] }.
+  // Be defensive: accept either that object or a bare array.
+  const players = Array.isArray(data)
+    ? data
+    : (data as { players?: unknown } | null)?.players ?? [];
+
+  return NextResponse.json({ players });
 }
 
 // POST: run a moderation action. Body: { action, ...payload }.
