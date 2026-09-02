@@ -2,10 +2,11 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Gamepad2, Flame, Pencil } from 'lucide-react';
+import { Gamepad2, Pencil } from 'lucide-react';
 import { Modal } from '@/components/common/Modal';
 import { NicknameForm } from './NicknameForm';
 import { LivesIndicator } from './LivesIndicator';
+import { StreakIndicator } from './StreakIndicator';
 import type { GameSettingsResponse } from '@/lib/hooks/useComunidad';
 import type { PlayerLives, PlayerLevel } from '@/lib/comunidad/game-config';
 
@@ -33,7 +34,7 @@ export function GameHeader({
   return (
     <header className="rounded-[var(--game-radius)] bg-[var(--game-header-bg)] px-5 py-4 text-[var(--game-on-accent)]">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-start gap-3">
+        <div className="flex select-none items-start gap-3">
           <Gamepad2 className="mt-0.5 size-7 shrink-0 opacity-90" />
           <div>
             <h1 className="text-lg font-bold leading-tight">
@@ -44,30 +45,20 @@ export function GameHeader({
         </div>
 
         <div className="flex items-center gap-5">
-          {/* Streak — real */}
-          <div className="flex items-center gap-2">
-            <Flame className="size-6 text-[var(--game-flame)]" />
-            <div className="leading-tight">
-              <div className="text-[11px] uppercase tracking-wide text-white/70">
-                {t('streak_current')}
-              </div>
-              <div className="text-sm font-bold">
-                {t('header_streak_days', { days: currentStreak })}
-              </div>
-            </div>
-          </div>
+          {/* Streak — real, animated */}
+          <StreakIndicator currentStreak={currentStreak} />
 
           {/* Lives — real, only when the lives system is enabled */}
           {lives?.enabled && <LivesIndicator lives={lives} />}
 
-          {/* Player + level — both real; nickname editable */}
+          {/* Player + level — nickname is selectable; level is not */}
           <div className="flex items-center gap-2">
-            <div className="flex size-9 items-center justify-center rounded-full bg-white/15 text-sm font-semibold">
+            <div className="flex size-9 select-none items-center justify-center rounded-full bg-white/15 text-sm font-semibold">
               {(nickname ?? '?').charAt(0).toUpperCase()}
             </div>
             <div className="leading-tight">
               <div className="flex items-center gap-1.5">
-                <span className="text-sm font-bold">{nickname ?? t('player_anon')}</span>
+                <span className="select-text text-sm font-bold">{nickname ?? t('player_anon')}</span>
                 {nickname && (
                   <button
                     type="button"
@@ -80,7 +71,7 @@ export function GameHeader({
                   </button>
                 )}
               </div>
-              <div className="text-[11px] text-white/70">
+              <div className="select-none text-[11px] text-white/70">
                 {t('level_label')} {level?.level ?? 1}
               </div>
             </div>

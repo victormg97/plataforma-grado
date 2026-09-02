@@ -1,6 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import { m, useReducedMotion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Home, CalendarCheck, Flame, Trophy, Swords, Award, Scale, BookOpen } from 'lucide-react';
 import type { GameView } from './views';
@@ -33,6 +34,7 @@ export function GameNav({
   settings?: GameSettingsResponse;
 }) {
   const t = useTranslations('comunidadEstrategica');
+  const reduceMotion = useReducedMotion();
 
   // Prefer admin-configured section names when available.
   const labelFor = (entry: NavEntry): string => {
@@ -67,14 +69,28 @@ export function GameNav({
             onClick={() => onNavigate(entry.view)}
             aria-current={isActive ? 'page' : undefined}
             className={cn(
-              'inline-flex items-center gap-2 rounded-[var(--game-radius)] px-3 py-2 text-sm font-medium transition-colors',
+              'relative inline-flex items-center gap-2 rounded-[var(--game-radius)] px-3 py-2 text-sm font-medium transition-colors',
               isActive
-                ? 'bg-[var(--game-accent-muted)] text-[var(--game-accent)]'
+                ? 'text-[var(--game-accent)]'
                 : 'text-[var(--game-text-muted)] hover:bg-[var(--game-surface)] hover:text-[var(--game-text)]'
             )}
           >
-            {entry.icon}
-            <span>{labelFor(entry)}</span>
+            {isActive && (
+              <m.span
+                layoutId="game-nav-active"
+                className="absolute inset-0 rounded-[var(--game-radius)] bg-[var(--game-accent-muted)]"
+                transition={
+                  reduceMotion
+                    ? { duration: 0 }
+                    : { type: 'spring', stiffness: 500, damping: 40 }
+                }
+                aria-hidden="true"
+              />
+            )}
+            <span className="relative z-10 inline-flex items-center gap-2">
+              {entry.icon}
+              <span>{labelFor(entry)}</span>
+            </span>
           </button>
         );
       })}

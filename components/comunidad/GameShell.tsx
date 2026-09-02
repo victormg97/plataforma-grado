@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { AnimatePresence, m, useReducedMotion } from 'framer-motion';
 import { useQueryParam } from '@/lib/hooks/useQueryParam';
 import { Modal } from '@/components/common/Modal';
 import { GameNav } from './GameNav';
@@ -173,6 +174,7 @@ function GameShellInner({
 }) {
   const t = useTranslations('comunidadEstrategica');
   const { guardedRun } = useGameNavGuard();
+  const reduceMotion = useReducedMotion();
 
   const navigate = useCallback(
     (view: GameView) => guardedRun(() => doNavigate(view)),
@@ -180,6 +182,16 @@ function GameShellInner({
   );
 
   const isBanned = !!profile?.moderation?.is_banned;
+
+  // Subtle enter/exit for view changes. The data is already warm, so this is
+  // pure polish and adds no load time. Respects prefers-reduced-motion.
+  const variants = reduceMotion
+    ? { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 } }
+    : {
+        initial: { opacity: 0, y: 8 },
+        animate: { opacity: 1, y: 0 },
+        exit: { opacity: 0, y: -8 },
+      };
 
   return (
     <div className="flex flex-col gap-5 text-[var(--game-text)]">
@@ -221,7 +233,18 @@ function GameShellInner({
         ) : isBanned ? (
           <BannedNotice reason={profile?.moderation?.ban_reason ?? null} />
         ) : (
-          renderView(navigate)
+          <AnimatePresence mode="wait" initial={false}>
+            <m.div
+              key={active}
+              variants={variants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={{ duration: 0.18, ease: 'easeOut' }}
+            >
+              {renderView(navigate)}
+            </m.div>
+          </AnimatePresence>
         )}
       </section>
     </div>
