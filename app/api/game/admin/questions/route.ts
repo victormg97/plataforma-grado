@@ -27,5 +27,22 @@ export async function GET(req: NextRequest) {
 
   const { data, error } = await query;
   if (error) return NextResponse.json({ error: 'ERROR_DB', message: error.message }, { status: 500 });
-  return NextResponse.json(data ?? []);
+
+  const list = data ?? [];
+  const subjectIds = [...new Set(list.map((r) => r.subject_id).filter(Boolean))] as string[];
+  const subjectMap = new Map<string, string>();
+  if (subjectIds.length > 0) {
+    const { data: subjects } = await admin
+      .from('qb_subjects')
+      .select('id, name')
+      .in('id', subjectIds);
+    for (const s of subjects ?? []) subjectMap.set(s.id, s.name);
+  }
+
+  const enriched = list.map((r) => ({
+    ...r,
+    subject_name: r.subject_id ? subjectMap.get(r.subject_id) ?? null : null,
+  }));
+
+  return NextResponse.json(enriched);
 }

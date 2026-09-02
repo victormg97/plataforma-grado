@@ -189,10 +189,17 @@ export function useUpdateStreakThresholds() {
 
 // ─── Daily question curation ─────────────────────────────────────────────────
 
+/** A curated daily-question row enriched with the resolved question content. */
+export interface AdminDailyQuestionRow extends GameDailyQuestion {
+  question_content: string | null;
+  question_type: string | null;
+  subject_name: string | null;
+}
+
 export function useAdminDailyQuestions() {
   return useQuery({
     queryKey: ['game-admin-daily-questions'],
-    queryFn: () => jsonFetch<GameDailyQuestion[]>('/api/game/admin/daily-question'),
+    queryFn: () => jsonFetch<AdminDailyQuestionRow[]>('/api/game/admin/daily-question'),
     staleTime: 30_000,
   });
 }
@@ -351,6 +358,7 @@ export interface AdminQuestionOption {
   type: string;
   subject_id: string | null;
   category_id: string | null;
+  subject_name: string | null;
 }
 
 export function useAdminQuestions(q: string, subjectId?: string) {
