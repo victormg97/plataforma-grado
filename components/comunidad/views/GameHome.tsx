@@ -42,23 +42,23 @@ export function GameHome({ onNavigate }: { onNavigate: (view: GameView) => void 
       {/* Hero */}
       <Card padding="lg" className="overflow-hidden border-none bg-[var(--game-surface)] shadow-[var(--game-shadow)]">
         <div className="grid items-center gap-6 md:grid-cols-[1.4fr_1fr]">
-          <div className="flex flex-col gap-3">
-            <span className="text-sm font-medium text-[var(--game-text-muted)]">
+          <div className="flex flex-col gap-4">
+            <span className="text-sm font-semibold uppercase tracking-wide text-[var(--game-text-muted)] sm:text-base">
               {t('home_hero_kicker')}
             </span>
-            <h2 className="text-3xl font-extrabold leading-tight text-[var(--game-accent)]">
+            <h2 className="text-4xl font-extrabold leading-[1.1] text-[var(--game-accent)] sm:text-5xl lg:text-6xl">
               {t('title')}
             </h2>
-            <p className="max-w-md text-sm text-[var(--game-text-muted)]">
+            <p className="max-w-lg text-base leading-relaxed text-[var(--game-text-muted)] sm:text-lg">
               {t('home_hero_desc')}
             </p>
             <button
               type="button"
               onClick={() => onNavigate('daily')}
-              className="mt-1 inline-flex w-fit items-center gap-2 rounded-[var(--game-radius-sm)] bg-[var(--game-accent)] px-6 py-3 text-sm font-semibold text-[var(--game-on-accent)] transition-colors hover:bg-[var(--game-accent-hover)]"
+              className="mt-2 inline-flex w-fit items-center gap-2 rounded-[var(--game-radius-sm)] bg-[var(--game-accent)] px-7 py-3.5 text-base font-semibold text-[var(--game-on-accent)] transition-colors hover:bg-[var(--game-accent-hover)]"
             >
               {t('home_hero_cta')}
-              <ArrowRight className="size-4" />
+              <ArrowRight className="size-5" />
             </button>
           </div>
 
@@ -69,9 +69,9 @@ export function GameHome({ onNavigate }: { onNavigate: (view: GameView) => void 
               <Image
                 src={heroUrl}
                 alt={t('home_hero_image_alt')}
-                width={480}
-                height={300}
-                className="h-auto max-h-64 w-full object-contain"
+                width={520}
+                height={340}
+                className="h-auto max-h-80 w-full object-contain"
                 unoptimized
               />
             ) : (
