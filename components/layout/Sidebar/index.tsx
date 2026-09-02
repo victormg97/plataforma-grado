@@ -90,6 +90,16 @@ export function Sidebar() {
     }
   });
 
+  const { data: gameSettings } = useQuery({
+    queryKey: ['game-settings'],
+    staleTime: 5 * 60_000,
+    queryFn: async () => {
+      const res = await fetch('/api/game/settings');
+      if (!res.ok) throw new Error();
+      return res.json();
+    }
+  });
+
   const getReferralIcon = (iconName?: string) => {
     switch (iconName) {
       case 'star': return <Star className="size-4" />;
@@ -244,6 +254,33 @@ export function Sidebar() {
                 getReferralIcon(referralSettings.icon),
                 label
               );
+            }
+            return null;
+          })()}
+          {(() => {
+            // Comunidad Estratégica gating mirrors the backend rule:
+            // enabled && (all_users || (admin_only && admin)).
+            const showGame =
+              gameSettings &&
+              gameSettings.game_enabled &&
+              (gameSettings.game_visibility === 'all_users' ||
+                (gameSettings.game_visibility === 'admin_only' && isAdmin));
+
+            if (showGame) {
+              const gameHref = '/comunidad';
+              const isActive = pathname === gameHref;
+              const label = gameSettings.display_name || t('comunidad');
+              return navLink(gameHref, isActive, <Trophy className="size-4" />, label);
+            }
+            return null;
+          })()}
+          {(() => {
+            // Admin-only config panel entry (dedicated route), shown when the
+            // game is enabled for the tenant.
+            if (isAdmin && gameSettings?.game_enabled) {
+              const adminHref = '/admin/comunidad';
+              const isActive = pathname.startsWith(adminHref);
+              return navLink(adminHref, isActive, <Award className="size-4" />, t('comunidad_admin'));
             }
             return null;
           })()}

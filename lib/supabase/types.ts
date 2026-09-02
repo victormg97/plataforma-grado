@@ -2322,6 +2322,708 @@ export type Database = {
           },
         ]
       }
+      // ─── Comunidad Estratégica tables ──────────────────────────────────
+      game_settings: {
+        Row: {
+          id: string
+          tenant: string
+          game_enabled: boolean
+          game_visibility: Database["public"]["Enums"]["game_visibility"]
+          display_name: string
+          nickname_change_cooldown_days: number
+          quiz_question_count: number
+          scoring_mode: Database["public"]["Enums"]["game_scoring_mode"]
+          show_real_name: boolean
+          badge_image_max_bytes: number
+          badge_image_recommended_px: number
+          section_name_daily_question: string
+          section_name_streak: string
+          section_name_ranking: string
+          section_name_challenges: string
+          section_name_badges: string
+          section_name_weekly_case: string
+          icon: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          tenant: string
+          game_enabled?: boolean
+          game_visibility?: Database["public"]["Enums"]["game_visibility"]
+          display_name?: string
+          nickname_change_cooldown_days?: number
+          quiz_question_count?: number
+          scoring_mode?: Database["public"]["Enums"]["game_scoring_mode"]
+          show_real_name?: boolean
+          badge_image_max_bytes?: number
+          badge_image_recommended_px?: number
+          section_name_daily_question?: string
+          section_name_streak?: string
+          section_name_ranking?: string
+          section_name_challenges?: string
+          section_name_badges?: string
+          section_name_weekly_case?: string
+          icon?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          tenant?: string
+          game_enabled?: boolean
+          game_visibility?: Database["public"]["Enums"]["game_visibility"]
+          display_name?: string
+          nickname_change_cooldown_days?: number
+          quiz_question_count?: number
+          scoring_mode?: Database["public"]["Enums"]["game_scoring_mode"]
+          show_real_name?: boolean
+          badge_image_max_bytes?: number
+          badge_image_recommended_px?: number
+          section_name_daily_question?: string
+          section_name_streak?: string
+          section_name_ranking?: string
+          section_name_challenges?: string
+          section_name_badges?: string
+          section_name_weekly_case?: string
+          icon?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      game_point_sources: {
+        Row: {
+          id: string
+          tenant: string
+          action_type: Database["public"]["Enums"]["game_action_type"]
+          points_value: number
+          enabled: boolean
+          counts_for_streak: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          tenant: string
+          action_type: Database["public"]["Enums"]["game_action_type"]
+          points_value?: number
+          enabled?: boolean
+          counts_for_streak?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          tenant?: string
+          action_type?: Database["public"]["Enums"]["game_action_type"]
+          points_value?: number
+          enabled?: boolean
+          counts_for_streak?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      game_streak_thresholds: {
+        Row: {
+          id: string
+          tenant: string
+          days: number
+          label: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          tenant: string
+          days: number
+          label?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          tenant?: string
+          days?: number
+          label?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      game_profiles: {
+        Row: {
+          id: string
+          user_id: string
+          tenant: string
+          nickname: string | null
+          nickname_normalized: string | null
+          nickname_updated_at: string | null
+          current_streak: number
+          longest_streak: number
+          last_activity_date: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          tenant: string
+          nickname?: string | null
+          nickname_normalized?: string | null
+          nickname_updated_at?: string | null
+          current_streak?: number
+          longest_streak?: number
+          last_activity_date?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          tenant?: string
+          nickname?: string | null
+          nickname_normalized?: string | null
+          nickname_updated_at?: string | null
+          current_streak?: number
+          longest_streak?: number
+          last_activity_date?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_point_events: {
+        Row: {
+          id: string
+          tenant: string
+          user_id: string
+          action_type: Database["public"]["Enums"]["game_action_type"]
+          points_awarded: number
+          source_ref: string | null
+          subject_id: string | null
+          category_id: string | null
+          score_period_id: string | null
+          occurred_at: string
+          occurred_date: string
+        }
+        Insert: {
+          id?: string
+          tenant: string
+          user_id: string
+          action_type: Database["public"]["Enums"]["game_action_type"]
+          points_awarded?: number
+          source_ref?: string | null
+          subject_id?: string | null
+          category_id?: string | null
+          score_period_id?: string | null
+          occurred_at?: string
+          occurred_date: string
+        }
+        Update: {
+          id?: string
+          tenant?: string
+          user_id?: string
+          action_type?: Database["public"]["Enums"]["game_action_type"]
+          points_awarded?: number
+          source_ref?: string | null
+          subject_id?: string | null
+          category_id?: string | null
+          score_period_id?: string | null
+          occurred_at?: string
+          occurred_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_point_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_point_events_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "qb_subjects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_point_events_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "qb_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_point_events_score_period_id_fkey"
+            columns: ["score_period_id"]
+            isOneToOne: false
+            referencedRelation: "game_score_periods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_daily_questions: {
+        Row: {
+          id: string
+          tenant: string
+          question_date: string
+          question_id: string
+          is_manually_curated: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          tenant: string
+          question_date: string
+          question_id: string
+          is_manually_curated?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          tenant?: string
+          question_date?: string
+          question_id?: string
+          is_manually_curated?: boolean
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_daily_questions_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "qb_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_quiz_subject_settings: {
+        Row: {
+          id: string
+          tenant: string
+          subject_id: string
+          quiz_question_count: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          tenant: string
+          subject_id: string
+          quiz_question_count: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          tenant?: string
+          subject_id?: string
+          quiz_question_count?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_quiz_subject_settings_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "qb_subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_challenges: {
+        Row: {
+          id: string
+          tenant: string
+          title: string
+          description: string | null
+          criteria: Json
+          period_type: Database["public"]["Enums"]["game_challenge_period_type"]
+          starts_at: string | null
+          ends_at: string | null
+          enabled: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          tenant: string
+          title: string
+          description?: string | null
+          criteria: Json
+          period_type: Database["public"]["Enums"]["game_challenge_period_type"]
+          starts_at?: string | null
+          ends_at?: string | null
+          enabled?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          tenant?: string
+          title?: string
+          description?: string | null
+          criteria?: Json
+          period_type?: Database["public"]["Enums"]["game_challenge_period_type"]
+          starts_at?: string | null
+          ends_at?: string | null
+          enabled?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      game_challenge_progress: {
+        Row: {
+          id: string
+          tenant: string
+          user_id: string
+          challenge_id: string
+          progress_count: number
+          completed_at: string | null
+          last_event_id: string | null
+          period_start: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          tenant: string
+          user_id: string
+          challenge_id: string
+          progress_count?: number
+          completed_at?: string | null
+          last_event_id?: string | null
+          period_start?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          tenant?: string
+          user_id?: string
+          challenge_id?: string
+          progress_count?: number
+          completed_at?: string | null
+          last_event_id?: string | null
+          period_start?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_challenge_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_challenge_progress_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "game_challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_badges: {
+        Row: {
+          id: string
+          tenant: string
+          name: string
+          description: string | null
+          image_path: string | null
+          audience: string[]
+          unlock_type: Database["public"]["Enums"]["game_badge_unlock_type"]
+          criteria: Json | null
+          series_key: string | null
+          series_order: number | null
+          hide_criteria: boolean
+          enabled: boolean
+          deleted_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          tenant: string
+          name: string
+          description?: string | null
+          image_path?: string | null
+          audience?: string[]
+          unlock_type: Database["public"]["Enums"]["game_badge_unlock_type"]
+          criteria?: Json | null
+          series_key?: string | null
+          series_order?: number | null
+          hide_criteria?: boolean
+          enabled?: boolean
+          deleted_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          tenant?: string
+          name?: string
+          description?: string | null
+          image_path?: string | null
+          audience?: string[]
+          unlock_type?: Database["public"]["Enums"]["game_badge_unlock_type"]
+          criteria?: Json | null
+          series_key?: string | null
+          series_order?: number | null
+          hide_criteria?: boolean
+          enabled?: boolean
+          deleted_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_badges: {
+        Row: {
+          id: string
+          tenant: string
+          user_id: string
+          badge_id: string
+          granted_at: string
+          granted_by: string | null
+          grant_method: Database["public"]["Enums"]["game_badge_grant_method"]
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          tenant: string
+          user_id: string
+          badge_id: string
+          granted_at?: string
+          granted_by?: string | null
+          grant_method: Database["public"]["Enums"]["game_badge_grant_method"]
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          tenant?: string
+          user_id?: string
+          badge_id?: string
+          granted_at?: string
+          granted_by?: string | null
+          grant_method?: Database["public"]["Enums"]["game_badge_grant_method"]
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_badges_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_badges_badge_id_fkey"
+            columns: ["badge_id"]
+            isOneToOne: false
+            referencedRelation: "game_badges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_score_periods: {
+        Row: {
+          id: string
+          tenant: string
+          started_at: string
+          closed_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          tenant: string
+          started_at: string
+          closed_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          tenant?: string
+          started_at?: string
+          closed_at?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      game_score_reset_log: {
+        Row: {
+          id: string
+          tenant: string
+          executed_by: string
+          executed_at: string
+          reset_scope: Database["public"]["Enums"]["game_score_reset_scope"]
+          closed_period_id: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          tenant: string
+          executed_by: string
+          executed_at?: string
+          reset_scope: Database["public"]["Enums"]["game_score_reset_scope"]
+          closed_period_id?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          tenant?: string
+          executed_by?: string
+          executed_at?: string
+          reset_scope?: Database["public"]["Enums"]["game_score_reset_scope"]
+          closed_period_id?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_score_reset_log_executed_by_fkey"
+            columns: ["executed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_score_reset_log_closed_period_id_fkey"
+            columns: ["closed_period_id"]
+            isOneToOne: false
+            referencedRelation: "game_score_periods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_weekly_cases: {
+        Row: {
+          id: string
+          tenant: string
+          title: string
+          content: string
+          window_start: string
+          window_end: string
+          status: Database["public"]["Enums"]["game_weekly_case_status"]
+          resolution_content: string
+          resolution_published: boolean
+          resolution_visibility: Database["public"]["Enums"]["game_resolution_visibility"]
+          created_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          tenant: string
+          title: string
+          content: string
+          window_start: string
+          window_end: string
+          status?: Database["public"]["Enums"]["game_weekly_case_status"]
+          resolution_content?: string
+          resolution_published?: boolean
+          resolution_visibility?: Database["public"]["Enums"]["game_resolution_visibility"]
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          tenant?: string
+          title?: string
+          content?: string
+          window_start?: string
+          window_end?: string
+          status?: Database["public"]["Enums"]["game_weekly_case_status"]
+          resolution_content?: string
+          resolution_published?: boolean
+          resolution_visibility?: Database["public"]["Enums"]["game_resolution_visibility"]
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_weekly_cases_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_weekly_case_answers: {
+        Row: {
+          id: string
+          tenant: string
+          case_id: string
+          user_id: string
+          answer_content: string
+          submitted_at: string
+          updated_at: string
+          quality_score: number | null
+          graded_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          tenant: string
+          case_id: string
+          user_id: string
+          answer_content: string
+          submitted_at?: string
+          updated_at?: string
+          quality_score?: number | null
+          graded_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          tenant?: string
+          case_id?: string
+          user_id?: string
+          answer_content?: string
+          submitted_at?: string
+          updated_at?: string
+          quality_score?: number | null
+          graded_by?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_weekly_case_answers_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "game_weekly_cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_weekly_case_answers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_weekly_case_answers_graded_by_fkey"
+            columns: ["graded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
 
     Views: {
@@ -2514,6 +3216,121 @@ export type Database = {
         }
         Returns: Json
       }
+      game_is_accessible: {
+        Args: { p_tenant: string }
+        Returns: boolean
+      }
+      upsert_game_nickname: {
+        Args: { p_tenant: string; p_nickname: string }
+        Returns: Json
+      }
+      select_daily_question: {
+        Args: { p_tenant: string }
+        Returns: string
+      }
+      answer_daily_question: {
+        Args: { p_tenant: string; p_answer: Json }
+        Returns: Json
+      }
+      apply_streak: {
+        Args: { p_tenant: string; p_user_id: string; p_today: string }
+        Returns: { o_current: number; o_longest: number }[]
+      }
+      start_quiz: {
+        Args: { p_tenant: string; p_subject_id: string; p_category_id?: string | null }
+        Returns: Json
+      }
+      submit_quiz: {
+        Args: {
+          p_tenant: string
+          p_subject_id: string
+          p_category_id?: string | null
+          p_answers: Json
+        }
+        Returns: Json
+      }
+      get_quiz_subjects: {
+        Args: { p_tenant: string }
+        Returns: Json
+      }
+      get_monthly_ranking: {
+        Args: {
+          p_tenant: string
+          p_month?: string
+          p_limit?: number
+          p_offset?: number
+        }
+        Returns: Json
+      }
+      get_my_ranking_position: {
+        Args: { p_tenant: string; p_month?: string }
+        Returns: Json
+      }
+      evaluate_challenges_for_event: {
+        Args: { p_event_id: string }
+        Returns: Json
+      }
+      get_active_challenges: {
+        Args: { p_tenant: string }
+        Returns: Json
+      }
+      get_user_badges: {
+        Args: { p_tenant: string }
+        Returns: Json
+      }
+      grant_badge_manual: {
+        Args: { p_tenant: string; p_badge_id: string; p_user_id: string }
+        Returns: Json
+      }
+      backfill_badge: {
+        Args: { p_tenant: string; p_badge_id: string }
+        Returns: number
+      }
+      delete_badge: {
+        Args: { p_tenant: string; p_badge_id: string; p_force?: boolean }
+        Returns: Json
+      }
+      get_game_stats: {
+        Args: { p_tenant: string }
+        Returns: Json
+      }
+      reset_game_scores: {
+        Args: {
+          p_tenant: string
+          p_scope: Database["public"]["Enums"]["game_score_reset_scope"]
+          p_confirmation: string
+        }
+        Returns: Json
+      }
+      get_quiz_categories: {
+        Args: { p_tenant: string; p_subject_id: string }
+        Returns: Json
+      }
+      get_current_weekly_case: {
+        Args: { p_tenant: string }
+        Returns: Json
+      }
+      get_weekly_case_detail: {
+        Args: { p_tenant: string; p_case_id: string }
+        Returns: Json
+      }
+      get_weekly_case_history: {
+        Args: { p_tenant: string; p_limit?: number; p_offset?: number }
+        Returns: Json
+      }
+      submit_weekly_case_answer: {
+        Args: { p_tenant: string; p_case_id: string; p_answer_content: string }
+        Returns: Json
+      }
+      publish_weekly_case_resolution: {
+        Args: {
+          p_tenant: string
+          p_case_id: string
+          p_resolution_content: string
+          p_visibility: Database["public"]["Enums"]["game_resolution_visibility"]
+        }
+        Returns: Json
+      }
     }
     Enums: {
       agenda_alcance: "personal" | "alumnos_seleccionados" | "todos_alumnos"
@@ -2552,6 +3369,20 @@ export type Database = {
         | "nueva_actividad"
         | "nueva_simulacion"
       user_rol: "admin" | "profesor" | "alumno" | "lector"
+      game_visibility: "admin_only" | "all_users"
+      game_action_type:
+        | "quiz_completed"
+        | "daily_question_answered"
+        | "interrogacion_completed"
+        | "weekly_case_participated"
+        | "study_hours_logged"
+      game_scoring_mode: "fixed" | "proportional"
+      game_challenge_period_type: "weekly" | "monthly" | "custom"
+      game_badge_unlock_type: "automatic" | "manual"
+      game_badge_grant_method: "automatic" | "manual"
+      game_score_reset_scope: "current-month-ranking-only" | "full-history-archive"
+      game_weekly_case_status: "draft" | "open" | "closed" | "resolved"
+      game_resolution_visibility: "participants_only" | "all_users"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2718,6 +3549,21 @@ export const Constants = {
         "nueva_simulacion",
       ],
       user_rol: ["admin", "profesor", "alumno", "lector"],
+      game_visibility: ["admin_only", "all_users"],
+      game_action_type: [
+        "quiz_completed",
+        "daily_question_answered",
+        "interrogacion_completed",
+        "weekly_case_participated",
+        "study_hours_logged",
+      ],
+      game_scoring_mode: ["fixed", "proportional"],
+      game_challenge_period_type: ["weekly", "monthly", "custom"],
+      game_badge_unlock_type: ["automatic", "manual"],
+      game_badge_grant_method: ["automatic", "manual"],
+      game_score_reset_scope: ["current-month-ranking-only", "full-history-archive"],
+      game_weekly_case_status: ["draft", "open", "closed", "resolved"],
+      game_resolution_visibility: ["participants_only", "all_users"],
     },
   },
 } as const
@@ -2735,6 +3581,32 @@ export type Horario = Tables<'horarios'>;
 export type Prueba = Tables<'pruebas'>;
 export type ProgramaClase = Tables<'programas_clases'>;
 export type EnlaceInvitacion = Tables<'enlaces_invitacion'>;
+
+// ─── Comunidad Estratégica type aliases ──────────────────────────────────────
+export type GameVisibility = Database['public']['Enums']['game_visibility'];
+export type GameActionType = Database['public']['Enums']['game_action_type'];
+export type GameScoringMode = Database['public']['Enums']['game_scoring_mode'];
+export type GameChallengePeriodType = Database['public']['Enums']['game_challenge_period_type'];
+export type GameSettings = Tables<'game_settings'>;
+export type GamePointSource = Tables<'game_point_sources'>;
+export type GameStreakThreshold = Tables<'game_streak_thresholds'>;
+export type GameProfile = Tables<'game_profiles'>;
+export type GamePointEvent = Tables<'game_point_events'>;
+export type GameDailyQuestion = Tables<'game_daily_questions'>;
+export type GameQuizSubjectSettings = Tables<'game_quiz_subject_settings'>;
+export type GameChallenge = Tables<'game_challenges'>;
+export type GameChallengeProgress = Tables<'game_challenge_progress'>;
+export type GameBadgeUnlockType = Database['public']['Enums']['game_badge_unlock_type'];
+export type GameBadgeGrantMethod = Database['public']['Enums']['game_badge_grant_method'];
+export type GameScoreResetScope = Database['public']['Enums']['game_score_reset_scope'];
+export type GameBadge = Tables<'game_badges'>;
+export type UserBadge = Tables<'user_badges'>;
+export type GameScorePeriod = Tables<'game_score_periods'>;
+export type GameScoreResetLog = Tables<'game_score_reset_log'>;
+export type GameWeeklyCaseStatus = Database['public']['Enums']['game_weekly_case_status'];
+export type GameResolutionVisibility = Database['public']['Enums']['game_resolution_visibility'];
+export type GameWeeklyCase = Tables<'game_weekly_cases'>;
+export type GameWeeklyCaseAnswer = Tables<'game_weekly_case_answers'>;
 
 export type EmailPlantilla = Tables<'email_plantillas'>;
 export type EmailEnvio = Tables<'email_envios'>;

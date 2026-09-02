@@ -7,7 +7,7 @@
  *
  * Requisitos: 3.8, 5.9, 12.8, 12.9, 17.8
  */
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { useQueryParam } from '@/lib/hooks/useQueryParam';
 import type { UserRol } from '@/lib/supabase/types';
@@ -52,7 +52,6 @@ export function FormularioAgenda({
   const [dirtyByTab, setDirtyByTab] = useState<Record<TipoEvento, boolean>>({
     clase: false, entrada_personal: false, actividad: false,
   });
-  const [isDirty, setIsDirty] = useState(false);
   // Confirmation dialog state
   const [confirmandoCierre, setConfirmandoCierre] = useState(false);
 
@@ -61,6 +60,9 @@ export function FormularioAgenda({
   const tipoActivo: TipoEvento = isAlumno
     ? 'entrada_personal'
     : (agendaTipo as TipoEvento) || 'clase';
+
+  // Dirty state of the currently active tab (derived, no effect needed).
+  const isDirty = dirtyByTab[tipoActivo] ?? false;
 
   function handleTipoChange(tipo: TipoEvento) {
     if (!isAlumno) {
@@ -79,11 +81,6 @@ export function FormularioAgenda({
     setDirtyByTab(prev => ({ ...prev, actividad: dirty }));
   }, []);
 
-  // Report dirty state of the currently active tab
-  useEffect(() => {
-    setIsDirty(dirtyByTab[tipoActivo] ?? false);
-  }, [dirtyByTab, tipoActivo]);
-
   // Handle close attempt with unsaved data protection
   function handleCloseAttempt() {
     if (isDirty) {
@@ -95,7 +92,7 @@ export function FormularioAgenda({
 
   function handleActualClose() {
     setConfirmandoCierre(false);
-    setIsDirty(false);
+    // isDirty is derived from dirtyByTab; resetting the tabs clears it.
     setDirtyByTab({ clase: false, entrada_personal: false, actividad: false });
     onClose();
   }
