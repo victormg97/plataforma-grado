@@ -510,6 +510,81 @@ div[style*="position: fixed"] > [role="toolbar"] {
   background-color: var(--color-text-muted);
 }
 
+/* ─── Comunidad Estratégica (juego) — theming ──────────────────────────────
+   Las variables --game-* viven aquí (no inline) para poder reaccionar al
+   tema activo de la plataforma (.dark / .graduado) vía next-themes. El
+   wrapper GameThemeScope solo aplica la clase .game-scope. */
+.game-scope {
+  /* Backgrounds */
+  --game-bg: #fbeeec;
+  --game-surface: #ffffff;
+  --game-surface-muted: #f7e9e6;
+  --game-header-bg: #5c0f1b;
+  /* Borders */
+  --game-border: #f0dcd8;
+  /* Text */
+  --game-text: #2b1418;
+  --game-text-muted: #8a6b6b;
+  --game-on-accent: #ffffff;
+  /* Accents */
+  --game-accent: #6e1423;
+  --game-accent-hover: #83182b;
+  --game-accent-muted: #f7dcd8;
+  --game-gold: #b08541;
+  --game-flame: #e0632a;
+  /* Feedback */
+  --game-correct: #1f9d55;
+  --game-incorrect: #c0392b;
+  --game-option-selected-bg: #fbd9dc;
+  /* Shape */
+  --game-radius: 1rem;
+  --game-radius-sm: 0.625rem;
+  --game-shadow: 0 8px 24px -12px rgba(92, 15, 27, 0.25);
+}
+
+/* Dark theme: keep the burgundy + gold identity, tuned for a dark canvas. */
+.dark .game-scope {
+  --game-bg: #171012;
+  --game-surface: #211619;
+  --game-surface-muted: #2b1d21;
+  --game-header-bg: #3f0d16;
+  --game-border: #3a2a2e;
+  --game-text: #f5ece9;
+  --game-text-muted: #b79a9a;
+  --game-on-accent: #ffffff;
+  --game-accent: #a83247;
+  --game-accent-hover: #bd3c53;
+  --game-accent-muted: #3a1c22;
+  --game-gold: #d8b45f;
+  --game-flame: #f2793f;
+  --game-correct: #34d17f;
+  --game-incorrect: #ef6a5c;
+  --game-option-selected-bg: #40222a;
+  --game-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.55);
+}
+
+/* Graduado theme (gold-forward dark): the game leans into its gold identity
+   over the near-black graduado canvas. Not combined with .dark. */
+.graduado .game-scope {
+  --game-bg: #120d00;
+  --game-surface: #1c1500;
+  --game-surface-muted: #251c02;
+  --game-header-bg: #2e1206;
+  --game-border: #3a2c08;
+  --game-text: #f5e6c2;
+  --game-text-muted: #b39c6a;
+  --game-on-accent: #1a1200;
+  --game-accent: #d8b45f;
+  --game-accent-hover: #e6c470;
+  --game-accent-muted: #33280a;
+  --game-gold: #f0d488;
+  --game-flame: #f0a63f;
+  --game-correct: #34d17f;
+  --game-incorrect: #ef6a5c;
+  --game-option-selected-bg: #33280a;
+  --game-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.6);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
