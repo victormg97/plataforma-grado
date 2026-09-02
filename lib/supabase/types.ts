@@ -3397,6 +3397,10 @@ export type Database = {
         Args: { p_tenant: string }
         Returns: Json
       }
+      get_game_bootstrap: {
+        Args: { p_tenant: string }
+        Returns: Json
+      }
       get_recent_achievements: {
         Args: { p_tenant: string; p_limit?: number }
         Returns: Json
