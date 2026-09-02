@@ -1,8 +1,9 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { CheckCircle2, XCircle, BookOpen, Trophy, Flame, Sparkles } from 'lucide-react';
+import { CheckCircle2, XCircle, BookOpen, Flame, Sparkles } from 'lucide-react';
 import { Card } from '@/components/common/Card';
+import { RecentAchievements } from '../RecentAchievements';
 import type { DailyAnswerResult } from '@/lib/comunidad/answer';
 import type { GameView } from '../views';
 
@@ -35,61 +36,57 @@ export function DailyResult({
     );
   }
 
+  const correct = result.is_correct;
+
   return (
     <div className="flex flex-col gap-5">
+      {/* Prominent, centered correct/incorrect banner so the outcome is obvious */}
+      <div
+        className={`flex flex-col items-center gap-2 rounded-[var(--game-radius)] px-6 py-6 text-center ${
+          correct
+            ? 'bg-[var(--game-correct)]/12'
+            : 'bg-[var(--game-incorrect)]/12'
+        }`}
+        role="status"
+        aria-live="polite"
+      >
+        {correct ? (
+          <CheckCircle2 className="size-14 text-[var(--game-correct)]" />
+        ) : (
+          <XCircle className="size-14 text-[var(--game-incorrect)]" />
+        )}
+        <span
+          className={`text-2xl font-extrabold ${
+            correct ? 'text-[var(--game-correct)]' : 'text-[var(--game-incorrect)]'
+          }`}
+        >
+          {correct ? t('result_correct') : t('result_incorrect')}
+        </span>
+      </div>
+
       <div className="grid gap-5 lg:grid-cols-[1.6fr_1fr]">
         {/* Explanation card */}
         <Card padding="lg" className="border-none bg-[var(--game-surface)] shadow-[var(--game-shadow)]">
-          <div className="mb-3 flex items-center gap-2">
-            {result.is_correct ? (
-              <CheckCircle2 className="size-6 text-[var(--game-correct)]" />
-            ) : (
-              <XCircle className="size-6 text-[var(--game-incorrect)]" />
-            )}
-            <span className="text-sm font-semibold text-[var(--game-text)]">
-              {result.is_correct ? t('result_correct') : t('result_incorrect')}
-            </span>
-          </div>
-
           <div className="flex gap-4">
-            <div className="flex size-16 shrink-0 items-center justify-center rounded-full bg-[var(--game-accent)] text-[var(--game-on-accent)]">
-              <BookOpen className="size-8" />
+            <div className="flex size-14 shrink-0 items-center justify-center rounded-full bg-[var(--game-accent)] text-[var(--game-on-accent)]">
+              <BookOpen className="size-7" />
             </div>
             <div className="flex flex-col gap-2">
               <h2 className="text-xl font-bold text-[var(--game-text)]">{t('result_explanation_title')}</h2>
               {result.explanation ? (
                 <div
-                  className="prose prose-sm max-w-none text-[var(--game-text-muted)]"
+                  className="prose prose-sm max-w-none leading-relaxed text-[var(--game-text)] [&_em]:italic [&_p]:mb-2 [&_strong]:font-semibold"
                   dangerouslySetInnerHTML={{ __html: result.explanation }}
                 />
               ) : (
-                <p className="text-sm text-[var(--game-text-muted)]">{t('result_no_explanation')}</p>
+                <p className="text-sm text-[var(--game-text)]">{t('result_no_explanation')}</p>
               )}
             </div>
           </div>
         </Card>
 
-        {/* Achievements column — visual placeholder (later slice) */}
-        <Card padding="lg" className="border-none bg-[var(--game-surface)] shadow-[var(--game-shadow)] opacity-90">
-          <div className="mb-3 flex items-center gap-2">
-            <span className="ml-auto rounded-full bg-[var(--game-accent-muted)] px-2 py-0.5 text-[10px] font-semibold uppercase text-[var(--game-accent)]">
-              {t('coming_soon_tag')}
-            </span>
-          </div>
-          <ul className="flex flex-col gap-4">
-            {[1, 2].map((i) => (
-              <li key={i} className="flex items-center gap-3">
-                <div className="flex size-9 items-center justify-center rounded-full bg-[var(--game-accent)] text-[var(--game-on-accent)]">
-                  <Trophy className="size-4" />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <span className="h-3 w-36 rounded bg-[var(--game-surface-muted)]" />
-                  <span className="h-2.5 w-24 rounded bg-[var(--game-surface-muted)]" />
-                </div>
-              </li>
-            ))}
-          </ul>
-        </Card>
+        {/* Recent achievements — real data */}
+        <RecentAchievements onSeeMore={() => onNavigate('badges')} />
       </div>
 
       {/* Points + streak summary (live) */}
