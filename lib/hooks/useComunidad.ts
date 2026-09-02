@@ -115,6 +115,45 @@ export function useDailyQuestion(enabled = true) {
   });
 }
 
+// ── Review of today's already-answered daily question ──
+
+export interface DailyReviewOptionChoice {
+  text: string;
+  is_correct: boolean;
+}
+
+export interface DailyReviewResult {
+  answered: boolean;
+  is_correct?: boolean;
+  /** What the player submitted: { selected: number[] } or { value: boolean }.
+   * Null for answers recorded before this feature existed. */
+  given_answer?: { selected?: number[]; value?: boolean } | null;
+  question?: {
+    id: string;
+    type: DailyQuestionType;
+    content: string;
+    // choice → array of { text, is_correct }; true_false → { correct_answer }
+    options: DailyReviewOptionChoice[] | { correct_answer: boolean };
+    explanation: string | null;
+  };
+}
+
+async function fetchDailyReview(): Promise<DailyReviewResult> {
+  const res = await fetch('/api/game/daily-review');
+  if (!res.ok) throw new Error('Error cargando la revisión de la pregunta del día');
+  return res.json();
+}
+
+/** Only fetch when we already know the player answered today. */
+export function useDailyReview(enabled = true) {
+  return useQuery({
+    queryKey: ['game-daily-review'],
+    queryFn: fetchDailyReview,
+    staleTime: 60_000,
+    enabled,
+  });
+}
+
 // ─── Mutations ──────────────────────────────────────────────────────────────
 
 export interface NicknameError {
@@ -159,6 +198,7 @@ export function useAnswerDailyQuestion() {
       return Promise.all([
         qc.invalidateQueries({ queryKey: ['game-profile'] }),
         qc.invalidateQueries({ queryKey: ['game-daily-question'] }),
+        qc.invalidateQueries({ queryKey: ['game-daily-review'] }),
         qc.invalidateQueries({ queryKey: ['game-badges'] }),
       ]);
     },

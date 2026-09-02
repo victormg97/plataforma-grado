@@ -2599,6 +2599,8 @@ export type Database = {
           score_period_id: string | null
           occurred_at: string
           occurred_date: string
+          answer: Json | null
+          is_correct: boolean | null
         }
         Insert: {
           id?: string
@@ -2612,6 +2614,8 @@ export type Database = {
           score_period_id?: string | null
           occurred_at?: string
           occurred_date: string
+          answer?: Json | null
+          is_correct?: boolean | null
         }
         Update: {
           id?: string
@@ -2625,6 +2629,8 @@ export type Database = {
           score_period_id?: string | null
           occurred_at?: string
           occurred_date?: string
+          answer?: Json | null
+          is_correct?: boolean | null
         }
         Relationships: [
           {
@@ -3398,6 +3404,10 @@ export type Database = {
         Returns: Json
       }
       get_game_bootstrap: {
+        Args: { p_tenant: string }
+        Returns: Json
+      }
+      get_daily_review: {
         Args: { p_tenant: string }
         Returns: Json
       }

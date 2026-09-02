@@ -7,6 +7,7 @@ import { Card } from '@/components/common/Card';
 import { useDailyQuestion, useAnswerDailyQuestion, useGameProfile } from '@/lib/hooks/useComunidad';
 import { RecentAchievements } from '../RecentAchievements';
 import { LevelCard } from '../LevelCard';
+import { DailyReviewPanel } from '../DailyReviewPanel';
 import type { DailyAnswer, DailyAnswerResult } from '@/lib/comunidad/answer';
 import type { GameView } from '../views';
 
@@ -51,9 +52,12 @@ export function DailyQuestion({
 
   if (data?.already_answered) {
     return (
-      <Card padding="lg" className="border-none bg-[var(--game-surface)] text-center shadow-[var(--game-shadow)]">
-        <p className="text-sm text-[var(--game-text-muted)]">{t('daily_already_answered')}</p>
-      </Card>
+      <div className="flex flex-col gap-5">
+        <Card padding="lg" className="border-none bg-[var(--game-surface)] text-center shadow-[var(--game-shadow)]">
+          <p className="text-sm text-[var(--game-text-muted)]">{t('daily_already_answered')}</p>
+        </Card>
+        <DailyReviewPanel />
+      </div>
     );
   }
 
