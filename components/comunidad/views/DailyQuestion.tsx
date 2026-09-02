@@ -4,9 +4,9 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/common/Card';
-import { Scale } from 'lucide-react';
 import { useDailyQuestion, useAnswerDailyQuestion, useGameProfile } from '@/lib/hooks/useComunidad';
 import { RecentAchievements } from '../RecentAchievements';
+import { LevelCard } from '../LevelCard';
 import type { DailyAnswer, DailyAnswerResult } from '@/lib/comunidad/answer';
 import type { GameView } from '../views';
 
@@ -203,22 +203,7 @@ export function DailyQuestion({
 
       {/* Side column — real level + recent achievements */}
       <div className="flex flex-col gap-4">
-        <Card padding="lg" className="flex items-center gap-4 border-none bg-[var(--game-surface)] shadow-[var(--game-shadow)]">
-          <div className="flex size-14 items-center justify-center rounded-full bg-[var(--game-accent)] text-[var(--game-on-accent)]">
-            <Scale className="size-7" />
-          </div>
-          <div>
-            <div className="text-sm text-[var(--game-text-muted)]">{t('level_label')}</div>
-            <div className="text-xl font-bold text-[var(--game-gold)]">{profile?.level?.level ?? 1}</div>
-            {typeof profile?.level?.next_min === 'number' && (
-              <div className="text-[11px] text-[var(--game-text-muted)]">
-                {t('level_xp_to_next', {
-                  points: Math.max((profile.level.next_min ?? 0) - (profile.level.xp ?? 0), 0),
-                })}
-              </div>
-            )}
-          </div>
-        </Card>
+        <LevelCard level={profile?.level} />
 
         <RecentAchievements onSeeMore={onNavigate ? () => onNavigate('badges') : undefined} />
       </div>
