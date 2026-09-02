@@ -12,7 +12,9 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { Card } from '@/components/common/Card';
+import { Button } from '@/components/common/Button';
 import { useGameStats } from '@/lib/hooks/useComunidadAdmin';
+import { ConfigCallout } from '../ui';
 
 /** Usage stats dashboard (Req. 15). Aggregation only, zeros when empty. */
 export function StatsTab() {
@@ -23,13 +25,7 @@ export function StatsTab() {
     return (
       <Card padding="lg" className="flex flex-col items-center gap-3 text-center" role="alert">
         <p className="text-sm text-[var(--color-error)]">{t('error_loading')}</p>
-        <button
-          type="button"
-          onClick={() => refetch()}
-          className="rounded-[var(--radius-md)] bg-[var(--color-brand-gold)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[var(--color-brand-gold-light)]"
-        >
-          {t('error_retry')}
-        </button>
+        <Button variant="secondary" onClick={() => refetch()}>{t('error_retry')}</Button>
       </Card>
     );
   }
@@ -66,16 +62,23 @@ export function StatsTab() {
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {stat(<Users className="size-5" />, t('stats_dau'), data.active_users.daily)}
-        {stat(<Users className="size-5" />, t('stats_wau'), data.active_users.weekly)}
-        {stat(<Users className="size-5" />, t('stats_mau'), data.active_users.monthly)}
-        {stat(
-          <CalendarCheck className="size-5" />,
-          t('stats_daily_participation'),
-          `${Math.round(data.daily_question.rate * 100)}%`
-        )}
-        {stat(<BookOpen className="size-5" />, t('stats_quizzes'), data.quizzes_completed)}
+      <ConfigCallout title={t('stats_intro_title')}>{t('stats_intro_desc')}</ConfigCallout>
+
+      <div>
+        <h3 className="mb-3 text-sm font-semibold text-[var(--color-text-secondary)]">
+          {t('stats_activity_title')}
+        </h3>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {stat(<Users className="size-5" />, t('stats_dau'), data.active_users.daily)}
+          {stat(<Users className="size-5" />, t('stats_wau'), data.active_users.weekly)}
+          {stat(<Users className="size-5" />, t('stats_mau'), data.active_users.monthly)}
+          {stat(
+            <CalendarCheck className="size-5" />,
+            t('stats_daily_participation'),
+            `${Math.round(data.daily_question.rate * 100)}%`
+          )}
+          {stat(<BookOpen className="size-5" />, t('stats_quizzes'), data.quizzes_completed)}
+        </div>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2">

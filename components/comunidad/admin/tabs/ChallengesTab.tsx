@@ -3,13 +3,14 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Swords } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { ConfirmDeleteModal } from '@/components/common/ConfirmDeleteModal';
 import { useAdminChallenges, useDeleteChallenge } from '@/lib/hooks/useComunidadAdmin';
 import type { GameChallenge } from '@/lib/supabase/types';
 import { ChallengeFormModal } from '../challenges/ChallengeFormModal';
+import { ConfigCallout, ConfigListHeader, ConfigEmptyState } from '../ui';
 
 /** Challenge CRUD tab (Req. 14). */
 export function ChallengesTab() {
@@ -32,20 +33,32 @@ export function ChallengesTab() {
     setDeleting(null);
   };
 
+  const createButton = (
+    <Button icon={<Plus className="size-4" />} onClick={() => { setEditing(null); setModalOpen(true); }}>
+      {t('challenge_create')}
+    </Button>
+  );
+
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex justify-end">
-        <Button icon={<Plus className="size-4" />} onClick={() => { setEditing(null); setModalOpen(true); }}>
-          {t('challenge_create')}
-        </Button>
-      </div>
+    <div className="flex flex-col gap-5">
+      <ConfigCallout title={t('challenges_intro_title')}>{t('challenges_intro_desc')}</ConfigCallout>
+
+      <ConfigListHeader
+        icon={<Swords className="size-4" />}
+        title={t('challenges_list_title')}
+        description={t('challenges_list_desc')}
+        count={(challenges ?? []).length}
+        action={createButton}
+      />
 
       {isLoading ? (
-        <Card padding="lg">{t('admin_loading')}</Card>
+        <Card padding="lg" role="status" aria-live="polite">{t('admin_loading')}</Card>
       ) : (challenges ?? []).length === 0 ? (
-        <Card padding="lg">
-          <p className="py-6 text-center text-sm text-[var(--color-text-muted)]">{t('challenge_empty_admin')}</p>
-        </Card>
+        <ConfigEmptyState
+          icon={<Swords className="size-8" />}
+          message={t('challenge_empty_admin')}
+          action={createButton}
+        />
       ) : (
         <div className="flex flex-col gap-3">
           {(challenges ?? []).map((c) => (

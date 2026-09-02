@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { toast } from 'sonner';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, History } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { AppSelect } from '@/components/common/AppSelect';
@@ -14,6 +14,7 @@ import type { ScoreResetPayload } from '@/lib/comunidad/admin';
 /** Danger zone: non-destructive score reset with exact confirmation (Req. 16/17). */
 export function DangerZoneTab() {
   const t = useTranslations('comunidadEstrategica');
+  const locale = useLocale();
   const tenant = useTenant();
   const reset = useScoreReset();
   const { data: log } = useScoreResetLog();
@@ -36,8 +37,26 @@ export function DangerZoneTab() {
     }
   };
 
+  const scopeHint =
+    scope === 'current-month-ranking-only'
+      ? t('danger_scope_month_hint')
+      : scope === 'full-history-archive'
+        ? t('danger_scope_full_hint')
+        : null;
+
   return (
     <div className="flex flex-col gap-5">
+      {/* Warning callout (error-toned instead of the neutral gold callout) */}
+      <Card padding="lg" className="flex gap-3 border-[var(--color-error)]/40 bg-[var(--color-error)]/5">
+        <AlertTriangle className="mt-0.5 size-5 shrink-0 text-[var(--color-error)]" />
+        <div className="flex flex-col gap-1">
+          <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">
+            {t('danger_intro_title')}
+          </h3>
+          <p className="text-sm text-[var(--color-text-secondary)]">{t('danger_intro_desc')}</p>
+        </div>
+      </Card>
+
       <Card
         padding="lg"
         className="flex flex-col gap-4 border-[var(--color-error)]/40"
@@ -61,6 +80,7 @@ export function DangerZoneTab() {
               { value: 'full-history-archive', label: t('danger_scope_full') },
             ]}
           />
+          {scopeHint && <span className="text-xs text-[var(--color-text-muted)]">{scopeHint}</span>}
         </label>
 
         <label className="flex flex-col gap-1">
@@ -83,9 +103,12 @@ export function DangerZoneTab() {
       </Card>
 
       <Card padding="lg" className="flex flex-col gap-3">
-        <h3 className="text-sm font-semibold text-[var(--color-text-secondary)]">
-          {t('danger_history')}
-        </h3>
+        <div className="flex items-center gap-2">
+          <History className="size-4 text-[var(--color-text-muted)]" />
+          <h3 className="text-sm font-semibold text-[var(--color-text-secondary)]">
+            {t('danger_history')}
+          </h3>
+        </div>
         {(log ?? []).length === 0 ? (
           <p className="text-sm text-[var(--color-text-muted)]">{t('danger_history_empty')}</p>
         ) : (
@@ -93,7 +116,7 @@ export function DangerZoneTab() {
             {(log ?? []).map((entry) => (
               <li key={entry.id} className="flex items-center justify-between py-2">
                 <span className="text-[var(--color-text-primary)]">
-                  {new Date(entry.executed_at).toLocaleString('es-CL')}
+                  {new Date(entry.executed_at).toLocaleString(locale === 'en' ? 'en-US' : 'es-CL')}
                 </span>
                 <span className="text-[var(--color-text-muted)]">
                   {entry.reset_scope === 'full-history-archive'

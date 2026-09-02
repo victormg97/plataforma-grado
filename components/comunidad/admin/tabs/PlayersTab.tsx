@@ -1,15 +1,17 @@
 'use client';
+'use client';
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
-import { Search, Ban, ShieldOff, Shield, Heart, RotateCcw } from 'lucide-react';
+import { Search, Ban, ShieldOff, Shield, Heart, RotateCcw, Users } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { Modal } from '@/components/common/Modal';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { useAdminPlayers, usePlayerAction } from '@/lib/hooks/useComunidadAdmin';
 import type { GamePlayer } from '@/lib/comunidad/game-config';
+import { ConfigCallout, ConfigListHeader, ConfigEmptyState } from '../ui';
 
 /** Players tab: search + moderate players (restrict, ban, lives, reset level). */
 export function PlayersTab() {
@@ -21,7 +23,16 @@ export function PlayersTab() {
   const players = data?.players ?? [];
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-5">
+      <ConfigCallout title={t('players_intro_title')}>{t('players_intro_desc')}</ConfigCallout>
+
+      <ConfigListHeader
+        icon={<Users className="size-4" />}
+        title={t('players_list_title')}
+        description={t('players_list_desc')}
+        count={players.length}
+      />
+
       <label className="relative block">
         <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--color-text-muted)]" />
         <input
@@ -41,9 +52,7 @@ export function PlayersTab() {
       ) : isLoading ? (
         <Card padding="lg" role="status" aria-live="polite">{t('admin_loading')}</Card>
       ) : players.length === 0 ? (
-        <Card padding="lg" className="text-center text-sm text-[var(--color-text-muted)]">
-          {t('players_empty')}
-        </Card>
+        <ConfigEmptyState icon={<Users className="size-8" />} message={t('players_empty')} />
       ) : (
         <div className="flex flex-col gap-3">
           {players.map((p) => (

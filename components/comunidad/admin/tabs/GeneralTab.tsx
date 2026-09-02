@@ -4,7 +4,7 @@ import { useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import Image from 'next/image';
-import { ImageIcon, Trash2 } from 'lucide-react';
+import { ImageIcon, Trash2, Eye, Type, Image as ImageLucide, Trophy, Award } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { AppSelect } from '@/components/common/AppSelect';
@@ -17,6 +17,7 @@ import {
 import { heroImageUrl } from '@/components/comunidad/heroImageUrl';
 import { HERO_IMAGE_ACCEPTED_EXT } from '@/lib/comunidad/game-config';
 import type { GameSettings } from '@/lib/supabase/types';
+import { ConfigCallout, ConfigSection, TextField, NumberField } from '../ui';
 
 /**
  * General config tab. Waits for settings, then mounts the form (keyed by the
@@ -28,7 +29,7 @@ export function GeneralTab() {
   const { data: settings, isLoading } = useGameSettings();
 
   if (isLoading || !settings) {
-    return <Card padding="lg">{t('admin_loading')}</Card>;
+    return <Card padding="lg" role="status" aria-live="polite">{t('admin_loading')}</Card>;
   }
 
   return <GeneralForm key={settings.tenant} settings={settings} />;
@@ -97,89 +98,67 @@ function GeneralForm({ settings }: { settings: GameSettingsResponse }) {
     }
   };
 
-  const field = (label: string, key: keyof FullSettings) => (
-    <label className="flex flex-col gap-1">
-      <span className="text-sm font-medium text-[var(--color-text-primary)]">{label}</span>
-      <input
-        type="text"
-        value={(form[key] as string) ?? ''}
-        onChange={(e) => set(key, e.target.value as never)}
-        className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm focus:border-[var(--color-brand-gold)] focus:outline-none"
-      />
-    </label>
-  );
+  const isAdminOnly = (form.game_visibility ?? 'admin_only') === 'admin_only';
 
   return (
-    <Card padding="lg" className="flex flex-col gap-5">
-      <div className="grid gap-4 sm:grid-cols-2">
-        <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-[var(--color-text-primary)]">
-            {t('admin_visibility')}
-          </span>
-          <AppSelect
-            value={form.game_visibility ?? 'admin_only'}
-            onChange={(v) => set('game_visibility', v as GameSettings['game_visibility'])}
-            options={[
-              { value: 'admin_only', label: t('admin_visibility_admin_only') },
-              { value: 'all_users', label: t('admin_visibility_all_users') },
-            ]}
+    <div className="flex flex-col gap-5">
+      <ConfigCallout title={t('general_intro_title')}>{t('general_intro_desc')}</ConfigCallout>
+
+      {/* Visibility + identity */}
+      <ConfigSection
+        icon={<Eye className="size-4" />}
+        title={t('general_visibility_title')}
+        description={t('general_visibility_desc')}
+      >
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="flex flex-col gap-1">
+            <span className="text-sm font-medium text-[var(--color-text-primary)]">
+              {t('admin_visibility')}
+            </span>
+            <AppSelect
+              value={form.game_visibility ?? 'admin_only'}
+              onChange={(v) => set('game_visibility', v as GameSettings['game_visibility'])}
+              options={[
+                { value: 'admin_only', label: t('admin_visibility_admin_only') },
+                { value: 'all_users', label: t('admin_visibility_all_users') },
+              ]}
+            />
+            <span className="text-xs text-[var(--color-text-muted)]">
+              {isAdminOnly ? t('general_visibility_hint_admin') : t('general_visibility_hint_all')}
+            </span>
+          </label>
+          <TextField
+            label={t('admin_display_name')}
+            value={(form.display_name as string) ?? ''}
+            onChange={(v) => set('display_name', v as never)}
+            hint={t('general_display_name_hint')}
           />
-        </label>
-        {field(t('admin_display_name'), 'display_name')}
-      </div>
-
-      <div>
-        <h3 className="mb-2 text-sm font-semibold text-[var(--color-text-secondary)]">
-          {t('admin_section_names')}
-        </h3>
-        <div className="grid gap-4 sm:grid-cols-2">
-          {field(t('nav_daily'), 'section_name_daily_question')}
-          {field(t('nav_streak'), 'section_name_streak')}
-          {field(t('nav_ranking'), 'section_name_ranking')}
-          {field(t('nav_challenges'), 'section_name_challenges')}
-          {field(t('nav_badges'), 'section_name_badges')}
-          {field(t('nav_weekly_case'), 'section_name_weekly_case')}
         </div>
-      </div>
+      </ConfigSection>
 
-      <div>
-        <h3 className="mb-2 text-sm font-semibold text-[var(--color-text-secondary)]">
-          {t('admin_badge_image_config')}
-        </h3>
+      {/* Section names */}
+      <ConfigSection
+        icon={<Type className="size-4" />}
+        title={t('admin_section_names')}
+        description={t('general_section_names_desc')}
+      >
         <div className="grid gap-4 sm:grid-cols-2">
-          <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-[var(--color-text-primary)]">
-              {t('admin_badge_max_bytes')}
-            </span>
-            <input
-              type="number"
-              min={1}
-              value={form.badge_image_max_bytes ?? 2097152}
-              onChange={(e) => set('badge_image_max_bytes', Number(e.target.value) as never)}
-              className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm focus:border-[var(--color-brand-gold)] focus:outline-none"
-            />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-[var(--color-text-primary)]">
-              {t('admin_badge_recommended_px')}
-            </span>
-            <input
-              type="number"
-              min={1}
-              value={form.badge_image_recommended_px ?? 512}
-              onChange={(e) => set('badge_image_recommended_px', Number(e.target.value) as never)}
-              className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm focus:border-[var(--color-brand-gold)] focus:outline-none"
-            />
-          </label>
+          <TextField label={t('nav_daily')} value={(form.section_name_daily_question as string) ?? ''} onChange={(v) => set('section_name_daily_question', v as never)} />
+          <TextField label={t('nav_streak')} value={(form.section_name_streak as string) ?? ''} onChange={(v) => set('section_name_streak', v as never)} />
+          <TextField label={t('nav_ranking')} value={(form.section_name_ranking as string) ?? ''} onChange={(v) => set('section_name_ranking', v as never)} />
+          <TextField label={t('nav_challenges')} value={(form.section_name_challenges as string) ?? ''} onChange={(v) => set('section_name_challenges', v as never)} />
+          <TextField label={t('nav_badges')} value={(form.section_name_badges as string) ?? ''} onChange={(v) => set('section_name_badges', v as never)} />
+          <TextField label={t('nav_weekly_case')} value={(form.section_name_weekly_case as string) ?? ''} onChange={(v) => set('section_name_weekly_case', v as never)} />
         </div>
-      </div>
+      </ConfigSection>
 
-      <div>
-        <h3 className="mb-2 text-sm font-semibold text-[var(--color-text-secondary)]">
-          {t('hero_image_title')}
-        </h3>
-        <p className="mb-3 text-xs text-[var(--color-text-muted)]">{t('hero_image_hint')}</p>
-        <div className="flex items-center gap-4">
+      {/* Hero image */}
+      <ConfigSection
+        icon={<ImageLucide className="size-4" />}
+        title={t('hero_image_title')}
+        description={t('hero_image_hint')}
+      >
+        <div className="flex flex-wrap items-center gap-4">
           <div className="flex h-24 w-40 items-center justify-center overflow-hidden rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
             {heroUrl ? (
               <Image
@@ -225,31 +204,53 @@ function GeneralForm({ settings }: { settings: GameSettingsResponse }) {
             )}
           </div>
         </div>
-      </div>
+      </ConfigSection>
 
-      <div>
-        <h3 className="mb-2 text-sm font-semibold text-[var(--color-text-secondary)]">
-          {t('achievements_config_title')}
-        </h3>
-        <label className="flex max-w-xs flex-col gap-1">
-          <span className="text-sm font-medium text-[var(--color-text-primary)]">
-            {t('achievements_config_count')}
-          </span>
-          <input
-            type="number"
+      {/* Recent achievements */}
+      <ConfigSection
+        icon={<Trophy className="size-4" />}
+        title={t('achievements_config_title')}
+        description={t('general_achievements_desc')}
+      >
+        <NumberField
+          label={t('achievements_config_count')}
+          value={form.recent_achievements_count ?? 3}
+          onChange={(v) => set('recent_achievements_count', v as never)}
+          min={1}
+          className="max-w-xs"
+        />
+      </ConfigSection>
+
+      {/* Badge image validation */}
+      <ConfigSection
+        icon={<Award className="size-4" />}
+        title={t('admin_badge_image_config')}
+        description={t('general_badge_image_desc')}
+      >
+        <div className="grid gap-4 sm:grid-cols-2">
+          <NumberField
+            label={t('admin_badge_max_bytes')}
+            value={form.badge_image_max_bytes ?? 2097152}
+            onChange={(v) => set('badge_image_max_bytes', v as never)}
             min={1}
-            value={form.recent_achievements_count ?? 3}
-            onChange={(e) => set('recent_achievements_count', Number(e.target.value) as never)}
-            className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm focus:border-[var(--color-brand-gold)] focus:outline-none"
+            hint={t('general_badge_max_bytes_hint')}
           />
-        </label>
-      </div>
+          <NumberField
+            label={t('admin_badge_recommended_px')}
+            value={form.badge_image_recommended_px ?? 512}
+            onChange={(v) => set('badge_image_recommended_px', v as never)}
+            min={1}
+            hint={t('general_badge_px_hint')}
+          />
+        </div>
+      </ConfigSection>
 
+      {/* Sticky-ish save bar */}
       <div className="flex justify-end">
         <Button onClick={onSave} loading={update.isPending}>
           {t('admin_save')}
         </Button>
       </div>
-    </Card>
+    </div>
   );
 }

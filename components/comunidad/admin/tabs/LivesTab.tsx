@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
+import { Heart, Gauge, RefreshCw } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { AppSelect } from '@/components/common/AppSelect';
@@ -10,6 +11,7 @@ import { AppSwitch } from '@/components/common/AppSwitch';
 import { useGameSettings, type GameSettingsResponse } from '@/lib/hooks/useComunidad';
 import { useUpdateGameSettings } from '@/lib/hooks/useComunidadAdmin';
 import type { GameLivesRegenMode } from '@/lib/supabase/types';
+import { ConfigCallout, ConfigSection, NumberField } from '../ui';
 
 /** Lives config tab: enable/disable and tune the lives system per tenant. */
 export function LivesTab() {
@@ -57,43 +59,49 @@ function LivesForm({ settings }: { settings: GameSettingsResponse }) {
     }
   };
 
-  const numberField = (
-    label: string,
-    value: number,
-    onChange: (v: number) => void,
-    min: number,
-    step = 1
-  ) => (
-    <label className="flex flex-col gap-1">
-      <span className="text-sm font-medium text-[var(--color-text-primary)]">{label}</span>
-      <input
-        type="number"
-        min={min}
-        step={step}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 py-2 text-sm focus:border-[var(--color-brand-gold)] focus:outline-none"
-      />
-    </label>
-  );
+  const disabledCls = enabled ? '' : 'pointer-events-none opacity-50';
 
   return (
-    <Card padding="lg" className="flex flex-col gap-5">
-      <p className="text-sm text-[var(--color-text-muted)]">{t('lives_config_hint')}</p>
+    <div className="flex flex-col gap-5">
+      <ConfigCallout title={t('lives_intro_title')}>{t('lives_intro_desc')}</ConfigCallout>
 
-      <AppSwitch checked={enabled} onChange={setEnabled} label={t('lives_config_enabled')} />
+      {/* Master switch */}
+      <ConfigSection
+        icon={<Heart className="size-4" />}
+        title={t('lives_config_enabled')}
+        description={t('lives_config_hint')}
+        actions={<AppSwitch checked={enabled} onChange={setEnabled} label="" />}
+      >
+        <p className="text-xs text-[var(--color-text-muted)]">
+          {enabled ? t('lives_enabled_note') : t('lives_disabled_note')}
+        </p>
+      </ConfigSection>
 
-      <div className={enabled ? '' : 'pointer-events-none opacity-50'}>
+      {/* Amounts */}
+      <ConfigSection
+        icon={<Gauge className="size-4" />}
+        title={t('lives_amounts_title')}
+        description={t('lives_amounts_desc')}
+        className={disabledCls}
+      >
         <div className="grid gap-4 sm:grid-cols-2">
-          {numberField(t('lives_config_max'), max, setMax, 1)}
-          {numberField(t('lives_config_start'), start, setStart, 0)}
+          <NumberField label={t('lives_config_max')} value={max} onChange={setMax} min={1} hint={t('lives_max_hint')} />
+          <NumberField label={t('lives_config_start')} value={start} onChange={setStart} min={0} hint={t('lives_start_hint')} />
         </div>
+        <AppSwitch checked={block} onChange={setBlock} label={t('lives_config_block')} />
+        <p className="text-xs text-[var(--color-text-muted)]">
+          {block ? t('lives_block_note_on') : t('lives_block_note_off')}
+        </p>
+      </ConfigSection>
 
-        <div className="mt-4">
-          <AppSwitch checked={block} onChange={setBlock} label={t('lives_config_block')} />
-        </div>
-
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+      {/* Regeneration */}
+      <ConfigSection
+        icon={<RefreshCw className="size-4" />}
+        title={t('lives_regen_title')}
+        description={t('lives_regen_desc')}
+        className={disabledCls}
+      >
+        <div className="grid gap-4 sm:grid-cols-2">
           <label className="flex flex-col gap-1">
             <span className="text-sm font-medium text-[var(--color-text-primary)]">
               {t('lives_config_mode')}
@@ -106,19 +114,26 @@ function LivesForm({ settings }: { settings: GameSettingsResponse }) {
                 { value: 'full_refill', label: t('lives_mode_full_refill') },
               ]}
             />
+            <span className="text-xs text-[var(--color-text-muted)]">
+              {mode === 'per_life' ? t('lives_mode_per_life_hint') : t('lives_mode_full_refill_hint')}
+            </span>
           </label>
-          {numberField(t('lives_config_regen_hours'), hours, setHours, 0.1, 0.5)}
+          <NumberField
+            label={t('lives_config_regen_hours')}
+            value={hours}
+            onChange={setHours}
+            min={0.1}
+            step={0.5}
+            hint={t('lives_regen_hours_hint')}
+          />
         </div>
-        <p className="mt-2 text-xs text-[var(--color-text-muted)]">
-          {mode === 'per_life' ? t('lives_mode_per_life_hint') : t('lives_mode_full_refill_hint')}
-        </p>
-      </div>
+      </ConfigSection>
 
       <div className="flex justify-end">
         <Button onClick={onSave} loading={update.isPending}>
           {t('admin_save')}
         </Button>
       </div>
-    </Card>
+    </div>
   );
 }

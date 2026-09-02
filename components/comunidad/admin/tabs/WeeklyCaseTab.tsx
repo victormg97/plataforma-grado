@@ -1,9 +1,11 @@
+'use client';
+
 import { useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { es as esLocale, enUS } from 'date-fns/locale';
-import { Plus, Pencil, Trash2, BookCheck } from 'lucide-react';
+import { Plus, Pencil, Trash2, BookCheck, Scale } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { ConfirmDeleteModal } from '@/components/common/ConfirmDeleteModal';
@@ -12,6 +14,7 @@ import type { GameWeeklyCase } from '@/lib/supabase/types';
 import type { WeeklyCaseStatus } from '@/lib/comunidad/weekly-case';
 import { WeeklyCaseFormModal } from '../weekly-case/WeeklyCaseFormModal';
 import { ResolutionModal } from '../weekly-case/ResolutionModal';
+import { ConfigCallout, ConfigListHeader, ConfigEmptyState } from '../ui';
 
 /**
  * Effective status for display/gating. The DB may still hold 'open' for a case
@@ -52,20 +55,32 @@ export function WeeklyCaseTab() {
     setDeleting(null);
   };
 
+  const createButton = (
+    <Button icon={<Plus className="size-4" />} onClick={() => { setEditing(null); setFormOpen(true); }}>
+      {t('weekly_case_create')}
+    </Button>
+  );
+
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex justify-end">
-        <Button icon={<Plus className="size-4" />} onClick={() => { setEditing(null); setFormOpen(true); }}>
-          {t('weekly_case_create')}
-        </Button>
-      </div>
+    <div className="flex flex-col gap-5">
+      <ConfigCallout title={t('weekly_case_intro_title')}>{t('weekly_case_intro_desc')}</ConfigCallout>
+
+      <ConfigListHeader
+        icon={<Scale className="size-4" />}
+        title={t('weekly_case_list_title')}
+        description={t('weekly_case_list_desc')}
+        count={(cases ?? []).length}
+        action={createButton}
+      />
 
       {isLoading ? (
-        <Card padding="lg">{t('admin_loading')}</Card>
+        <Card padding="lg" role="status" aria-live="polite">{t('admin_loading')}</Card>
       ) : (cases ?? []).length === 0 ? (
-        <Card padding="lg">
-          <p className="py-6 text-center text-sm text-[var(--color-text-muted)]">{t('weekly_case_empty_admin')}</p>
-        </Card>
+        <ConfigEmptyState
+          icon={<Scale className="size-8" />}
+          message={t('weekly_case_empty_admin')}
+          action={createButton}
+        />
       ) : (
         <div className="flex flex-col gap-3">
           {(cases ?? []).map((c) => {

@@ -13,6 +13,7 @@ import { badgeImageUrl } from '@/components/comunidad/badges/badgeImageUrl';
 import { BadgeFormModal } from '../badges/BadgeFormModal';
 import { ManualGrantModal } from '../badges/ManualGrantModal';
 import { BadgeDeleteDialog } from '../badges/BadgeDeleteDialog';
+import { ConfigCallout, ConfigListHeader, ConfigEmptyState } from '../ui';
 
 /** Badges admin tab: CRUD + manual grant (Req. 1/2/5/6/8). */
 export function BadgesTab() {
@@ -36,13 +37,25 @@ export function BadgesTab() {
     }
   };
 
+  const visibleBadges = (badges ?? []).filter((b) => !b.deleted_at);
+
+  const createButton = (
+    <Button icon={<Plus className="size-4" />} onClick={() => { setEditing(null); setFormOpen(true); }}>
+      {t('badge_create')}
+    </Button>
+  );
+
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex justify-end">
-        <Button icon={<Plus className="size-4" />} onClick={() => { setEditing(null); setFormOpen(true); }}>
-          {t('badge_create')}
-        </Button>
-      </div>
+    <div className="flex flex-col gap-5">
+      <ConfigCallout title={t('badges_intro_title')}>{t('badges_intro_desc')}</ConfigCallout>
+
+      <ConfigListHeader
+        icon={<Award className="size-4" />}
+        title={t('badges_list_title')}
+        description={t('badges_list_desc')}
+        count={visibleBadges.length}
+        action={createButton}
+      />
 
       {isError ? (
         <Card padding="lg" className="flex flex-col items-center gap-3 text-center" role="alert">
@@ -51,13 +64,15 @@ export function BadgesTab() {
         </Card>
       ) : isLoading ? (
         <Card padding="lg" role="status" aria-live="polite">{t('admin_loading')}</Card>
-      ) : (badges ?? []).filter((b) => !b.deleted_at).length === 0 ? (
-        <Card padding="lg">
-          <p className="py-6 text-center text-sm text-[var(--color-text-muted)]">{t('badge_empty_admin')}</p>
-        </Card>
+      ) : visibleBadges.length === 0 ? (
+        <ConfigEmptyState
+          icon={<Award className="size-8" />}
+          message={t('badge_empty_admin')}
+          action={createButton}
+        />
       ) : (
         <div className="flex flex-col gap-3">
-          {(badges ?? []).filter((b) => !b.deleted_at).map((b) => {
+          {visibleBadges.map((b) => {
             const url = badgeImageUrl(b.image_path);
             return (
               <Card key={b.id} padding="lg" className="flex items-center gap-4">
