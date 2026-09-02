@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { useShallowQueryParam } from '@/lib/hooks/useShallowQueryParam';
 import {
   Settings,
   Star,
@@ -59,7 +60,6 @@ const TAB_KEYS: TabKey[] = ['general', 'points', 'streak', 'levels', 'lives', 'd
 export function AdminPanel() {
   const t = useTranslations('comunidadEstrategica');
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { user } = useUser();
   const { data: settings } = useGameSettings();
 
@@ -69,14 +69,12 @@ export function AdminPanel() {
     }
   }, [user, router]);
 
-  const rawTab = searchParams.get('tab') as TabKey | null;
-  const active: TabKey = rawTab && TAB_KEYS.includes(rawTab) ? rawTab : 'general';
+  // Tab state lives in ?tab= but is updated shallowly (no RSC round-trip), so
+  // switching tabs is instant and doesn't re-run the server-side prefetch.
+  const [rawTab, setRawTab] = useShallowQueryParam('tab');
+  const active: TabKey = rawTab && TAB_KEYS.includes(rawTab as TabKey) ? (rawTab as TabKey) : 'general';
 
-  const setTab = (key: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set('tab', key);
-    router.replace(`?${params.toString()}`);
-  };
+  const setTab = (key: string) => setRawTab(key);
 
   if (!user || user.rol !== 'admin') return null;
 

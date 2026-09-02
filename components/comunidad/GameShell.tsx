@@ -3,7 +3,7 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { AnimatePresence, m, useReducedMotion } from 'framer-motion';
-import { useQueryParam } from '@/lib/hooks/useQueryParam';
+import { useShallowQueryParam } from '@/lib/hooks/useShallowQueryParam';
 import { Modal } from '@/components/common/Modal';
 import { GameNav } from './GameNav';
 import { GameHeader } from './GameHeader';
@@ -32,7 +32,7 @@ import type { DailyAnswerResult } from '@/lib/comunidad/answer';
  */
 export function GameShell() {
   const t = useTranslations('comunidadEstrategica');
-  const [viewParam, setViewParam] = useQueryParam('v');
+  const [viewParam, setViewParam] = useShallowQueryParam('v');
   const { data: settings } = useGameSettings();
   const { data: profile, isLoading: profileLoading } = useGameProfile();
 
