@@ -20,6 +20,7 @@ interface GameBootstrap {
   settings?: unknown;
   profile?: unknown;
   daily_question?: unknown;
+  daily_review?: unknown;
   quiz_subjects?: unknown;
   ranking?: unknown;
   challenges?: unknown;
@@ -50,6 +51,7 @@ export async function prefetchGameData(): Promise<{
   if (bootstrap.settings) queryClient.setQueryData(['game-settings'], bootstrap.settings);
   if (bootstrap.profile) queryClient.setQueryData(['game-profile'], bootstrap.profile);
   if (bootstrap.daily_question) queryClient.setQueryData(['game-daily-question'], bootstrap.daily_question);
+  if (bootstrap.daily_review) queryClient.setQueryData(['game-daily-review'], bootstrap.daily_review);
   if (bootstrap.quiz_subjects) queryClient.setQueryData(['game-quiz-subjects'], bootstrap.quiz_subjects);
   if (bootstrap.challenges) queryClient.setQueryData(['game-challenges'], bootstrap.challenges);
   if (bootstrap.badges) queryClient.setQueryData(['game-badges'], bootstrap.badges);
