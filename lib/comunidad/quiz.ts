@@ -17,7 +17,7 @@ import { z } from 'zod';
 
 export const quizChoiceAnswerSchema = z.object({
   question_id: z.string().uuid(),
-  selected: z.array(z.number().int().min(0)).min(1, 'SELECT_ONE'),
+  selected: z.array(z.number().int().min(0)),
 });
 
 export const quizTrueFalseAnswerSchema = z.object({
@@ -25,7 +25,25 @@ export const quizTrueFalseAnswerSchema = z.object({
   value: z.boolean(),
 });
 
-export const quizAnswerSchema = z.union([quizChoiceAnswerSchema, quizTrueFalseAnswerSchema]);
+// matching: matches[i] = the ORIGINAL key of the right assigned to left i,
+// or -1 when left i was left unassigned (graded as wrong server-side).
+export const quizMatchingAnswerSchema = z.object({
+  question_id: z.string().uuid(),
+  matches: z.array(z.number().int()),
+});
+
+// fill_blank: blanks[i] = the text typed for blank i.
+export const quizFillBlankAnswerSchema = z.object({
+  question_id: z.string().uuid(),
+  blanks: z.array(z.string()),
+});
+
+export const quizAnswerSchema = z.union([
+  quizChoiceAnswerSchema,
+  quizTrueFalseAnswerSchema,
+  quizMatchingAnswerSchema,
+  quizFillBlankAnswerSchema,
+]);
 
 export const quizSubmitSchema = z.object({
   subject_id: z.string().uuid(),
@@ -44,9 +62,20 @@ export type QuizStartPayload = z.infer<typeof quizStartSchema>;
 
 // ─── Quiz question / result shapes (from start_quiz / submit_quiz) ─────────────
 
-export type QuizQuestionType = 'single_choice' | 'multiple_choice' | 'true_false';
+export type QuizQuestionType =
+  | 'single_choice'
+  | 'multiple_choice'
+  | 'true_false'
+  | 'matching'
+  | 'fill_blank';
 
 export interface QuizQuestionOption {
+  text: string;
+}
+
+/** A shuffled right-column item for matching; `key` is its original index. */
+export interface QuizMatchRight {
+  key: number;
   text: string;
 }
 
@@ -54,8 +83,14 @@ export interface QuizQuestion {
   id: string;
   type: QuizQuestionType;
   content: string;
-  /** Array for choice types; empty object for true_false. Correctness omitted. */
+  /** Array for choice types; empty array otherwise. Correctness omitted. */
   options: QuizQuestionOption[] | Record<string, never>;
+  /** matching: left column in order. */
+  pairs_left?: string[] | null;
+  /** matching: right column shuffled, each with its original key. */
+  pairs_right?: QuizMatchRight[] | null;
+  /** fill_blank: number of blanks to fill. */
+  blank_count?: number | null;
 }
 
 export interface QuizStartResult {
