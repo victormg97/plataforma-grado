@@ -5,6 +5,7 @@ import { RichTextEditor } from '@/components/common/RichTextEditor';
 import { RichDescription } from '@/components/common/RichDescription';
 import { useSubmitWeeklyCaseAnswer } from '@/lib/hooks/useComunidad';
 import type { WeeklyCaseMyAnswer } from '@/lib/comunidad/weekly-case';
+import { CaseGradeFeedback } from './CaseGradeFeedback';
 
 /**
  * Answer editor for an open weekly case. State is initialized directly from
@@ -35,11 +36,14 @@ export function AnswerEditor({
       );
     }
     return (
-      <div className="flex flex-col gap-2">
-        <h4 className="text-sm font-semibold text-[var(--game-text)]">
-          {t('weekly_case_my_answer')}
-        </h4>
-        <RichDescription html={myAnswer.answer_content} className="text-[var(--game-text)]" />
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-2">
+          <h4 className="text-sm font-semibold text-[var(--game-text)]">
+            {t('weekly_case_my_answer')}
+          </h4>
+          <RichDescription html={myAnswer.answer_content} className="text-[var(--game-text)]" />
+        </div>
+        <CaseGradeFeedback myAnswer={myAnswer} />
       </div>
     );
   }
@@ -63,6 +67,7 @@ export function AnswerEditor({
 
   return (
     <div className="flex flex-col gap-3">
+      {myAnswer?.graded && <CaseGradeFeedback myAnswer={myAnswer} />}
       <h4 className="text-sm font-semibold text-[var(--game-text)]">
         {myAnswer ? t('weekly_case_edit_answer') : t('weekly_case_write_answer')}
       </h4>

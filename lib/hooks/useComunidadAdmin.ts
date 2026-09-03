@@ -372,6 +372,76 @@ export function useAdminQuestions(q: string, subjectId?: string) {
   });
 }
 
+// ── Paginated question picker (daily-question curation) ──
+
+export interface PickerQuestion {
+  id: string;
+  content: string;
+  type: string;
+  difficulty: string | null;
+  subject_id: string | null;
+  subject_name: string | null;
+  category_id: string | null;
+  category_name: string | null;
+}
+
+export interface QuestionPickerResult {
+  data: PickerQuestion[];
+  page: number;
+  total: number;
+  page_size: number;
+  total_pages: number;
+}
+
+export interface QuestionPickerFilters {
+  q?: string;
+  subjectId?: string | null;
+  categoryId?: string | null;
+  type?: string | null;
+  page?: number;
+  pageSize?: number;
+}
+
+export function useQuestionPicker(filters: QuestionPickerFilters) {
+  const { q = '', subjectId = null, categoryId = null, type = null, page = 1, pageSize = 10 } = filters;
+  const params = new URLSearchParams();
+  if (q) params.set('q', q);
+  if (subjectId) params.set('subject_id', subjectId);
+  if (categoryId) params.set('category_id', categoryId);
+  if (type) params.set('type', type);
+  params.set('page', String(page));
+  params.set('page_size', String(pageSize));
+  return useQuery({
+    queryKey: ['game-admin-question-picker', q, subjectId ?? '', categoryId ?? '', type ?? '', page, pageSize],
+    queryFn: () => jsonFetch<QuestionPickerResult>(`/api/game/admin/question-picker?${params.toString()}`),
+    staleTime: 30_000,
+    placeholderData: (prev) => prev, // keep previous page visible while paginating
+  });
+}
+
+// ── Question-bank filter options (subjects + categories) ──
+
+export interface QbFilterOption {
+  id: string;
+  name: string;
+}
+
+export function useQbSubjects() {
+  return useQuery({
+    queryKey: ['qb-subjects-filter'],
+    queryFn: () => jsonFetch<QbFilterOption[]>('/api/question-bank/subjects'),
+    staleTime: 5 * 60_000,
+  });
+}
+
+export function useQbCategories() {
+  return useQuery({
+    queryKey: ['qb-categories-filter'],
+    queryFn: () => jsonFetch<QbFilterOption[]>('/api/question-bank/categories'),
+    staleTime: 5 * 60_000,
+  });
+}
+
 // ─── Weekly cases (Slice 4) ──────────────────────────────────────────────────
 
 function invalidateWeeklyCases(qc: ReturnType<typeof useQueryClient>) {
@@ -524,6 +594,98 @@ export function usePlayerAction() {
     onSuccess: () =>
       Promise.all([
         qc.invalidateQueries({ queryKey: ['game-admin-players'] }),
+        qc.invalidateQueries({ queryKey: ['game-ranking'] }),
+      ]),
+  });
+}
+
+// ─── Weekly-case answer review & grading ──────────────────────────────────────
+
+export interface CaseAnswerRow {
+  case_id: string;
+  user_id: string;
+  case_title: string;
+  answer_content: string;
+  submitted_at: string;
+  updated_at: string;
+  quality_score: number | null;
+  points_awarded: number | null;
+  feedback: string | null;
+  graded_at: string | null;
+  graded: boolean;
+  nickname: string | null;
+  nombre: string | null;
+  apellido: string | null;
+  email: string | null;
+}
+
+export interface CaseAnswersResult {
+  data: CaseAnswerRow[];
+  page: number;
+  page_size: number;
+  total: number;
+  total_pages: number;
+}
+
+export interface CaseAnswersFilters {
+  caseId?: string | null;
+  userId?: string | null;
+  status?: 'pending' | 'graded' | null;
+  page?: number;
+  pageSize?: number;
+}
+
+export function useCaseAnswers(filters: CaseAnswersFilters) {
+  const { caseId = null, userId = null, status = null, page = 1, pageSize = 10 } = filters;
+  const params = new URLSearchParams();
+  if (caseId) params.set('case_id', caseId);
+  if (userId) params.set('user_id', userId);
+  if (status) params.set('status', status);
+  params.set('page', String(page));
+  params.set('page_size', String(pageSize));
+  return useQuery({
+    queryKey: ['game-admin-case-answers', caseId ?? '', userId ?? '', status ?? '', page, pageSize],
+    queryFn: () => jsonFetch<CaseAnswersResult>(`/api/game/admin/case-answers?${params.toString()}`),
+    staleTime: 15_000,
+    placeholderData: (prev) => prev,
+  });
+}
+
+export interface CasePendingCounts {
+  total: number;
+  by_case: Record<string, number>;
+  by_user: Record<string, number>;
+}
+
+export function useCasePendingCounts() {
+  return useQuery({
+    queryKey: ['game-admin-case-pending-counts'],
+    queryFn: () => jsonFetch<CasePendingCounts>('/api/game/admin/case-answers/counts'),
+    staleTime: 30_000,
+  });
+}
+
+export interface GradeCasePayload {
+  case_id: string;
+  user_id: string;
+  quality_score?: number | null;
+  points?: number;
+  feedback?: string | null;
+}
+
+export function useGradeCaseAnswer() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: GradeCasePayload) =>
+      jsonFetch<{ ok: boolean }>('/api/game/admin/case-answers/grade', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      }),
+    onSuccess: () =>
+      Promise.all([
+        qc.invalidateQueries({ queryKey: ['game-admin-case-answers'] }),
+        qc.invalidateQueries({ queryKey: ['game-admin-case-pending-counts'] }),
         qc.invalidateQueries({ queryKey: ['game-ranking'] }),
       ]),
   });

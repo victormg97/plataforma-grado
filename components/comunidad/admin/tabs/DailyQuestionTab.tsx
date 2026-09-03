@@ -2,19 +2,13 @@
 
 import { useMemo, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
 import { es as esLocale, enUS } from 'date-fns/locale';
-import { CalendarDays, Check, Search, Sparkles, Info } from 'lucide-react';
+import { CalendarDays, Search, Sparkles, Info, Check } from 'lucide-react';
 import { Card } from '@/components/common/Card';
-import { Button } from '@/components/common/Button';
 import { RichDescription } from '@/components/common/RichDescription';
-import {
-  useAdminDailyQuestions,
-  useCurateDailyQuestion,
-  useAdminQuestions,
-} from '@/lib/hooks/useComunidadAdmin';
-import { useDebounce } from '@/lib/hooks/useDebounce';
+import { useAdminDailyQuestions } from '@/lib/hooks/useComunidadAdmin';
+import { DailyQuestionPicker } from '../DailyQuestionPicker';
 
 /**
  * Daily question curation (Req. 13).
@@ -31,12 +25,8 @@ export function DailyQuestionTab() {
   const today = new Date().toISOString().slice(0, 10);
 
   const { data: curated } = useAdminDailyQuestions();
-  const curate = useCurateDailyQuestion();
 
   const [date, setDate] = useState(today);
-  const [search, setSearch] = useState('');
-  const debouncedSearch = useDebounce(search, 300);
-  const { data: questions, isLoading: loadingQuestions } = useAdminQuestions(debouncedSearch);
 
   // What's already assigned to the currently selected date?
   const assignedForDate = useMemo(
@@ -49,15 +39,6 @@ export function DailyQuestionTab() {
       return format(parseISO(iso), 'PPP', { locale: dateLocale });
     } catch {
       return iso;
-    }
-  };
-
-  const onCurate = async (questionId: string) => {
-    try {
-      await curate.mutateAsync({ question_date: date, question_id: questionId });
-      toast.success(t('daily_assign_success'));
-    } catch {
-      toast.error(t('admin_error'));
     }
   };
 
@@ -152,61 +133,12 @@ export function DailyQuestionTab() {
           {t('daily_step2_hint', { date: formatDate(date) })}
         </p>
 
-        <label className="relative block">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--color-text-muted)]" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder={t('daily_curate_search_placeholder')}
-            className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] py-2 pl-10 pr-3 text-sm focus:border-[var(--color-brand-gold)] focus:outline-none"
-          />
-        </label>
-
-        <div className="flex max-h-[28rem] flex-col gap-3 overflow-y-auto">
-          {loadingQuestions ? (
-            <p className="py-6 text-center text-sm text-[var(--color-text-muted)]">
-              {t('admin_loading')}
-            </p>
-          ) : (questions ?? []).length === 0 ? (
-            <p className="py-6 text-center text-sm text-[var(--color-text-muted)]">
-              {t('daily_curate_no_questions')}
-            </p>
-          ) : (
-            (questions ?? []).map((q) => {
-              const isAssigned = assignedForDate?.question_id === q.id;
-              return (
-                <div
-                  key={q.id}
-                  className="flex flex-col gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] p-4 sm:flex-row sm:items-start sm:justify-between"
-                >
-                  <div className="min-w-0 flex-1">
-                    {q.subject_name && (
-                      <span className="mb-1.5 inline-flex items-center rounded-full bg-[var(--color-bg-secondary)] px-2 py-0.5 text-xs font-medium text-[var(--color-text-secondary)]">
-                        {q.subject_name}
-                      </span>
-                    )}
-                    <RichDescription
-                      html={q.content}
-                      className="text-[var(--color-text-primary)]"
-                    />
-                  </div>
-                  <Button
-                    size="sm"
-                    variant={isAssigned ? 'ghost' : 'secondary'}
-                    icon={isAssigned ? <Check className="size-4" /> : undefined}
-                    disabled={isAssigned}
-                    onClick={() => onCurate(q.id)}
-                    loading={curate.isPending}
-                    className="shrink-0"
-                  >
-                    {isAssigned ? t('daily_assigned_short') : t('daily_curate_assign')}
-                  </Button>
-                </div>
-              );
-            })
-          )}
-        </div>
+        <DailyQuestionPicker
+          date={date}
+          onDateChange={setDate}
+          assignedQuestionId={assignedForDate?.question_id ?? null}
+          today={today}
+        />
       </Card>
 
       {/* History */}

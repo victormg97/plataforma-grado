@@ -1,15 +1,16 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { es as esLocale, enUS } from 'date-fns/locale';
-import { Plus, Pencil, Trash2, BookCheck, Scale } from 'lucide-react';
+import { Plus, Pencil, Trash2, BookCheck, Scale, ClipboardList } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { ConfirmDeleteModal } from '@/components/common/ConfirmDeleteModal';
-import { useAdminWeeklyCases, useDeleteWeeklyCase } from '@/lib/hooks/useComunidadAdmin';
+import { useAdminWeeklyCases, useDeleteWeeklyCase, useCasePendingCounts } from '@/lib/hooks/useComunidadAdmin';
 import type { GameWeeklyCase } from '@/lib/supabase/types';
 import type { WeeklyCaseStatus } from '@/lib/comunidad/weekly-case';
 import { WeeklyCaseFormModal } from '../weekly-case/WeeklyCaseFormModal';
@@ -35,7 +36,11 @@ export function WeeklyCaseTab() {
   const locale = useLocale();
   const dfLocale = locale === 'en' ? enUS : esLocale;
   const { data: cases, isLoading } = useAdminWeeklyCases();
+  const { data: pending } = useCasePendingCounts();
   const del = useDeleteWeeklyCase();
+
+  const pendingTotal = pending?.total ?? 0;
+  const pendingByCase = pending?.by_case ?? {};
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<GameWeeklyCase | null>(null);
@@ -61,6 +66,24 @@ export function WeeklyCaseTab() {
     </Button>
   );
 
+  const headerActions = (
+    <div className="flex flex-wrap items-center gap-2">
+      <Link
+        href="/admin/comunidad/casos"
+        className="relative inline-flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-brand-gold)] px-4 py-2 text-sm font-medium text-[var(--color-brand-gold)] transition-colors hover:bg-[var(--color-brand-gold-muted)]"
+      >
+        <ClipboardList className="size-4" />
+        {t('review_cases_cta')}
+        {pendingTotal > 0 && (
+          <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-[var(--color-error)] px-1.5 text-xs font-bold text-white">
+            {pendingTotal}
+          </span>
+        )}
+      </Link>
+      {createButton}
+    </div>
+  );
+
   return (
     <div className="flex flex-col gap-5">
       <ConfigCallout title={t('weekly_case_intro_title')}>{t('weekly_case_intro_desc')}</ConfigCallout>
@@ -70,7 +93,7 @@ export function WeeklyCaseTab() {
         title={t('weekly_case_list_title')}
         description={t('weekly_case_list_desc')}
         count={(cases ?? []).length}
-        action={createButton}
+        action={headerActions}
       />
 
       {isLoading ? (
@@ -102,6 +125,19 @@ export function WeeklyCaseTab() {
                   </p>
                 </div>
 
+                <Link
+                  href={`/admin/comunidad/casos?case=${c.id}`}
+                  className="relative rounded-[var(--radius-sm)] p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-brand-gold-muted)] hover:text-[var(--color-brand-gold)]"
+                  aria-label={t('review_cases_case_cta')}
+                  title={t('review_cases_case_cta')}
+                >
+                  <ClipboardList className="size-4" />
+                  {(pendingByCase[c.id] ?? 0) > 0 && (
+                    <span className="absolute -right-1 -top-1 inline-flex min-w-4 items-center justify-center rounded-full bg-[var(--color-error)] px-1 text-[10px] font-bold leading-4 text-white">
+                      {pendingByCase[c.id]}
+                    </span>
+                  )}
+                </Link>
                 {(eff === 'closed' || eff === 'resolved') && (
                   <button
                     onClick={() => setResolving(c)}

@@ -3068,6 +3068,9 @@ export type Database = {
           quality_score: number | null
           graded_by: string | null
           created_at: string
+          feedback: string | null
+          graded_at: string | null
+          points_awarded: number | null
         }
         Insert: {
           id?: string
@@ -3080,6 +3083,9 @@ export type Database = {
           quality_score?: number | null
           graded_by?: string | null
           created_at?: string
+          feedback?: string | null
+          graded_at?: string | null
+          points_awarded?: number | null
         }
         Update: {
           id?: string
@@ -3092,6 +3098,9 @@ export type Database = {
           quality_score?: number | null
           graded_by?: string | null
           created_at?: string
+          feedback?: string | null
+          graded_at?: string | null
+          points_awarded?: number | null
         }
         Relationships: [
           {
@@ -3408,6 +3417,32 @@ export type Database = {
         Returns: Json
       }
       get_daily_review: {
+        Args: { p_tenant: string }
+        Returns: Json
+      }
+      grade_weekly_case_answer: {
+        Args: {
+          p_tenant: string
+          p_case_id: string
+          p_user_id: string
+          p_quality_score?: number | null
+          p_points?: number
+          p_feedback?: string | null
+        }
+        Returns: Json
+      }
+      list_weekly_case_answers: {
+        Args: {
+          p_tenant: string
+          p_case_id?: string | null
+          p_user_id?: string | null
+          p_status?: string | null
+          p_page?: number
+          p_page_size?: number
+        }
+        Returns: Json
+      }
+      get_weekly_case_pending_counts: {
         Args: { p_tenant: string }
         Returns: Json
       }

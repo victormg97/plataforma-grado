@@ -4,7 +4,8 @@ import { useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import Image from 'next/image';
-import { ImageIcon, Trash2, Eye, Type, Image as ImageLucide, Trophy, Award } from 'lucide-react';
+import Link from 'next/link';
+import { ImageIcon, Trash2, Eye, Type, Image as ImageLucide, Trophy, Award, Database, ArrowRight } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { AppSelect } from '@/components/common/AppSelect';
@@ -103,6 +104,21 @@ function GeneralForm({ settings }: { settings: GameSettingsResponse }) {
   return (
     <div className="flex flex-col gap-5">
       <ConfigCallout title={t('general_intro_title')}>{t('general_intro_desc')}</ConfigCallout>
+
+      {/* Shortcut to the question bank (source of the game's questions) */}
+      <ConfigSection
+        icon={<Database className="size-4" />}
+        title={t('general_qbank_title')}
+        description={t('general_qbank_desc')}
+      >
+        <Link
+          href="/pagina/banco-preguntas"
+          className="inline-flex w-fit items-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-brand-gold)] px-4 py-2 text-sm font-medium text-[var(--color-brand-gold)] transition-colors hover:bg-[var(--color-brand-gold-muted)]"
+        >
+          {t('general_qbank_cta')}
+          <ArrowRight className="size-4" />
+        </Link>
+      </ConfigSection>
 
       {/* Visibility + identity */}
       <ConfigSection

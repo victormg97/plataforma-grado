@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft } from 'lucide-react';
 import { PageHeader } from '@/components/common/PageHeader';
+import { BackButton } from '@/components/common/BackButton';
 import { useUser } from '@/lib/hooks/useUser';
 import { useQueryParam } from '@/lib/hooks/useQueryParam';
 import { getRolRedirectPath } from '@/lib/auth/helpers';
@@ -131,13 +131,7 @@ export default function BancoPreguntasPage() {
 
   return (
     <div>
-      <button
-        onClick={() => router.push('/pagina')}
-        className="mb-3 inline-flex items-center gap-1.5 text-sm text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text-primary)]"
-      >
-        <ArrowLeft className="size-4" />
-        Volver
-      </button>
+      <BackButton fallback="/pagina" className="mb-3" />
 
       <PageHeader
         title={t('titulo')}

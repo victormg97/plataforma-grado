@@ -63,6 +63,12 @@ export interface WeeklyCaseMyAnswer {
   answer_content: string;
   submitted_at: string;
   updated_at: string;
+  /** Grading (set by an admin after review). */
+  graded?: boolean;
+  graded_at?: string | null;
+  quality_score?: number | null;
+  points_awarded?: number | null;
+  feedback?: string | null;
 }
 
 export interface WeeklyCaseResolution {

@@ -4,12 +4,14 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
-import { Search, Ban, ShieldOff, Shield, Heart, RotateCcw, Users } from 'lucide-react';
+import Link from 'next/link';
+import { Search, Ban, ShieldOff, Shield, Heart, RotateCcw, Users, ClipboardList } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { Modal } from '@/components/common/Modal';
+import { ConfirmModal } from '@/components/common/ConfirmModal';
 import { useDebounce } from '@/lib/hooks/useDebounce';
-import { useAdminPlayers, usePlayerAction } from '@/lib/hooks/useComunidadAdmin';
+import { useAdminPlayers, usePlayerAction, useCasePendingCounts } from '@/lib/hooks/useComunidadAdmin';
 import type { GamePlayer } from '@/lib/comunidad/game-config';
 import { ConfigCallout, ConfigListHeader, ConfigEmptyState } from '../ui';
 
@@ -21,6 +23,8 @@ export function PlayersTab() {
   const { data, isLoading, isError, refetch } = useAdminPlayers(q);
 
   const players = data?.players ?? [];
+  const { data: pending } = useCasePendingCounts();
+  const pendingByUser = pending?.by_user ?? {};
 
   return (
     <div className="flex flex-col gap-5">
@@ -56,7 +60,7 @@ export function PlayersTab() {
       ) : (
         <div className="flex flex-col gap-3">
           {players.map((p) => (
-            <PlayerRow key={p.user_id} player={p} />
+            <PlayerRow key={p.user_id} player={p} pendingCases={pendingByUser[p.user_id] ?? 0} />
           ))}
         </div>
       )}
@@ -76,13 +80,16 @@ function StatusBadge({ tone, children }: { tone: 'danger' | 'warning'; children:
   );
 }
 
-function PlayerRow({ player }: { player: GamePlayer }) {
+type ConfirmKind = 'restrict' | 'unrestrict' | 'reset_level' | null;
+
+function PlayerRow({ player, pendingCases }: { player: GamePlayer; pendingCases: number }) {
   const t = useTranslations('comunidadEstrategica');
   const action = usePlayerAction();
   const [banOpen, setBanOpen] = useState(false);
   const [banReason, setBanReason] = useState('');
   const [livesOpen, setLivesOpen] = useState(false);
   const [livesValue, setLivesValue] = useState(player.current_lives ?? 0);
+  const [confirm, setConfirm] = useState<ConfirmKind>(null);
 
   const displayName =
     player.nickname ||
@@ -133,8 +140,7 @@ function PlayerRow({ player }: { player: GamePlayer }) {
             size="sm"
             variant="secondary"
             icon={<ShieldOff className="size-4" />}
-            loading={action.isPending}
-            onClick={() => run(() => action.mutateAsync({ action: 'unrestrict', user_id: player.user_id }))}
+            onClick={() => setConfirm('unrestrict')}
           >
             {t('players_action_unrestrict')}
           </Button>
@@ -143,8 +149,7 @@ function PlayerRow({ player }: { player: GamePlayer }) {
             size="sm"
             variant="secondary"
             icon={<Shield className="size-4" />}
-            loading={action.isPending}
-            onClick={() => run(() => action.mutateAsync({ action: 'restrict', user_id: player.user_id }))}
+            onClick={() => setConfirm('restrict')}
           >
             {t('players_action_restrict')}
           </Button>
@@ -190,11 +195,23 @@ function PlayerRow({ player }: { player: GamePlayer }) {
           size="sm"
           variant="ghost"
           icon={<RotateCcw className="size-4" />}
-          loading={action.isPending}
-          onClick={() => run(() => action.mutateAsync({ action: 'reset_level', user_id: player.user_id }))}
+          onClick={() => setConfirm('reset_level')}
         >
           {t('players_action_reset_level')}
         </Button>
+
+        <Link
+          href={`/admin/comunidad/casos?user=${player.user_id}`}
+          className="relative inline-flex h-9 items-center gap-2 rounded-[var(--radius-md)] px-3 text-sm font-medium text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)]"
+        >
+          <span className="size-4"><ClipboardList className="size-4" /></span>
+          {t('players_action_review_cases')}
+          {pendingCases > 0 && (
+            <span className="inline-flex min-w-4 items-center justify-center rounded-full bg-[var(--color-error)] px-1 text-[10px] font-bold leading-4 text-white">
+              {pendingCases}
+            </span>
+          )}
+        </Link>
       </div>
 
       <Modal
@@ -283,6 +300,34 @@ function PlayerRow({ player }: { player: GamePlayer }) {
           />
         </label>
       </Modal>
+
+      <ConfirmModal
+        open={confirm !== null}
+        onClose={() => setConfirm(null)}
+        loading={action.isPending}
+        isDanger={confirm === 'reset_level'}
+        title={
+          confirm === 'reset_level'
+            ? t('players_confirm_reset_title')
+            : confirm === 'restrict'
+              ? t('players_confirm_restrict_title')
+              : t('players_confirm_unrestrict_title')
+        }
+        description={
+          confirm === 'reset_level'
+            ? t('players_confirm_reset_desc')
+            : confirm === 'restrict'
+              ? t('players_confirm_restrict_desc')
+              : t('players_confirm_unrestrict_desc')
+        }
+        confirmText={t('admin_confirm')}
+        cancelText={t('admin_cancel')}
+        onConfirm={() => {
+          const kind = confirm;
+          if (!kind) return;
+          run(() => action.mutateAsync({ action: kind, user_id: player.user_id }), () => setConfirm(null));
+        }}
+      />
     </Card>
   );
 }
