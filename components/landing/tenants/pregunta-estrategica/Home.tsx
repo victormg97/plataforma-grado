@@ -25,7 +25,7 @@ export default async function Home(props: LandingProps) {
   return (
     <Shell {...props}>
       <OrganizationJsonLd />
-      <Hero imageSrc={heroImage} ctaHref={props.ctaHref} />
+      <Hero imageSrc={heroImage} ctaHref={props.ctaHref} isLoggedIn={props.isLoggedIn} />
       <Features />
       <Programas lectorImageSrc={lectorImage} />
       <Tutorias imageSrc={tutoriasImage} />

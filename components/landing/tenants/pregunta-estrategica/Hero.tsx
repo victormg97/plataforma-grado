@@ -56,34 +56,76 @@ interface HeroProps {
   imageSrc: string | null;
   /** Ruta del CTA principal: /login (no logeado) o dashboard (logeado) */
   ctaHref: string;
+  /** Si el usuario tiene sesión activa */
+  isLoggedIn: boolean;
+}
+
+/**
+ * Hace smooth-scroll a una sección de la home sin recargar la página y
+ * actualiza la URL a la ruta limpia (ej. "/contacto"), replicando el
+ * comportamiento de los enlaces del header. Si la sección no está presente
+ * (otra página), deja que el navegador siga el href normal.
+ */
+function scrollToSection(
+  e: React.MouseEvent<HTMLAnchorElement>,
+  sectionId: string,
+  href: string,
+) {
+  const el = document.getElementById(sectionId);
+  if (!el) return; // sección no está aquí → navegación normal
+  e.preventDefault();
+  window.history.pushState(null, '', href);
+  requestAnimationFrame(() => {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
 }
 
 // CTA above-the-fold. `onDark` cambia los colores para la variante móvil
 // (texto sobre imagen con velo oscuro).
+//
+// - Primario: si hay sesión → va a la plataforma (ctaHref); si no → smooth-scroll
+//   a la sección de contacto (#contacto).
+// - Secundario: siempre smooth-scroll a la sección de planes (#planes).
 function HeroCTA({
   ctaHref,
+  isLoggedIn,
   onDark = false,
   t,
 }: {
   ctaHref: string;
+  isLoggedIn: boolean;
   onDark?: boolean;
   t: ReturnType<typeof useTranslations>;
 }) {
+  const primaryClass =
+    'inline-flex items-center justify-center rounded-[var(--radius-md)] bg-[var(--color-brand-gold)] px-7 py-3 text-base font-semibold text-white shadow-[var(--shadow-md)] transition-transform hover:scale-[1.03] hover:opacity-95';
+  const secondaryClass = `inline-flex items-center justify-center rounded-[var(--radius-md)] border px-7 py-3 text-base font-semibold transition-colors ${
+    onDark
+      ? 'border-white/70 text-white hover:bg-white/10'
+      : 'border-[var(--color-brand-gold)] text-[var(--color-brand-gold)] hover:bg-[var(--color-brand-gold-muted)]'
+  }`;
+
   return (
     <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-      <Link
-        href={ctaHref}
-        className="inline-flex items-center justify-center rounded-[var(--radius-md)] bg-[var(--color-brand-gold)] px-7 py-3 text-base font-semibold text-white shadow-[var(--shadow-md)] transition-transform hover:scale-[1.03] hover:opacity-95"
-      >
-        {t('ctaPrimario')}
-      </Link>
+      {isLoggedIn ? (
+        // Con sesión → entra directo a la plataforma.
+        <Link href={ctaHref} className={primaryClass}>
+          {t('ctaPrimario')}
+        </Link>
+      ) : (
+        // Sin sesión → lleva a la sección de contacto (misma página).
+        <a
+          href="/contacto"
+          onClick={(e) => scrollToSection(e, 'contacto', '/contacto')}
+          className={primaryClass}
+        >
+          {t('ctaPrimario')}
+        </a>
+      )}
       <a
         href="/planes"
-        className={`inline-flex items-center justify-center rounded-[var(--radius-md)] border px-7 py-3 text-base font-semibold transition-colors ${
-          onDark
-            ? 'border-white/70 text-white hover:bg-white/10'
-            : 'border-[var(--color-brand-gold)] text-[var(--color-brand-gold)] hover:bg-[var(--color-brand-gold-muted)]'
-        }`}
+        onClick={(e) => scrollToSection(e, 'planes', '/planes')}
+        className={secondaryClass}
       >
         {t('ctaSecundario')}
       </a>
@@ -91,7 +133,7 @@ function HeroCTA({
   );
 }
 
-export function Hero({ imageSrc, ctaHref }: HeroProps) {
+export function Hero({ imageSrc, ctaHref, isLoggedIn }: HeroProps) {
   const t = useTranslations('landing-pregunta-estrategica.hero');
   const hasImage = imageSrc !== null;
 
@@ -127,7 +169,7 @@ export function Hero({ imageSrc, ctaHref }: HeroProps) {
               {t('subtituloDestacado')}
             </strong>
           </p>
-          <HeroCTA ctaHref={ctaHref} onDark t={t} />
+          <HeroCTA ctaHref={ctaHref} isLoggedIn={isLoggedIn} onDark t={t} />
         </m.div>
       </div>
 
@@ -149,7 +191,7 @@ export function Hero({ imageSrc, ctaHref }: HeroProps) {
               {t('subtituloDestacado')}
             </strong>
           </p>
-          <HeroCTA ctaHref={ctaHref} t={t} />
+          <HeroCTA ctaHref={ctaHref} isLoggedIn={isLoggedIn} t={t} />
         </m.div>
 
         {/* Imagen */}
