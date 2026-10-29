@@ -68,6 +68,22 @@ const metadataSchema = z.object({
   favicon: relativePathSchema.optional(),
 });
 
+// Configuración de SEO y dominios del tenant.
+// - `siteUrl`: URL canónica pública del landing (www). Ej: https://www.preguntaestrategica.cl
+//   Se usa como `metadataBase`, canonical, base del sitemap y JSON-LD.
+//   Puede sobreescribirse en runtime con la env NEXT_PUBLIC_SITE_URL.
+// - `appHost`: hostname del subdominio de la plataforma (app.). Ej: app.preguntaestrategica.cl
+//   El middleware lo usa para separar landing (www) de plataforma (app.).
+//   Puede sobreescribirse con la env NEXT_PUBLIC_APP_HOST.
+// - `keywords`: palabras clave para <meta keywords> (opcional, bajo peso SEO pero inofensivo).
+// - `ogImageAlt`: texto alternativo de la imagen social.
+const seoSchema = z.object({
+  siteUrl: z.url('siteUrl debe ser una URL válida (https://...)').optional(),
+  appHost: z.string().optional(),
+  keywords: z.array(z.string()).optional().default([]),
+  ogImageAlt: z.string().optional(),
+});
+
 // Opciones de autenticación del tenant. `googleHabilitado` indica si el tenant
 // configuró el proveedor de Google OAuth en su proyecto Supabase; si es false
 // (default), el botón "Registrarse con Google" no se muestra.
@@ -118,6 +134,7 @@ export const tenantConfigSchema = z.object({
   theme: themeSchema,
   fonts: fontsSchema.optional().default({ display: 'Playfair Display', body: 'DM Sans' }),
   metadata: metadataSchema.optional().default({}),
+  seo: seoSchema.optional().default({ keywords: [] }),
   auth: authSchema.optional().default({ googleHabilitado: false }),
   landingPage: landingPageSchema.optional().default({ habilitado: false, usuarioLogeadoVeLanding: false }),
 });

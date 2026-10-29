@@ -55,6 +55,14 @@ export function tenantHasSection(section: LandingSection): boolean {
 }
 
 /**
+ * Devuelve las secciones con URL propia del tenant activo (para sitemap, etc.).
+ * Vacío si el tenant no tiene landing.
+ */
+export function getTenantLandingSections(): LandingSection[] {
+  return landingRegistry[tenantConfig.id]?.sections ?? [];
+}
+
+/**
  * Renderiza la página principal del landing del tenant activo. Devuelve null
  * si el tenant no tiene landing (la ruta debe manejar el fallback).
  */

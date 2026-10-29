@@ -1,9 +1,20 @@
+import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { HydrationBoundary } from '@tanstack/react-query';
 import { tenantConfig } from '@/config';
+import { buildPageMetadata } from '@/config/seo';
 import { TenantLandingHome, tenantHasLanding } from '@/components/landing';
 import { getLandingContext } from '@/components/landing/context';
 import { prefetchLandingData } from '@/lib/prefetch/landing';
+
+export function generateMetadata(): Metadata {
+  // El landing es la home pública → canonical en "/".
+  return buildPageMetadata({
+    title: tenantConfig.descripcion,
+    description: tenantConfig.descripcion,
+    path: '/',
+  });
+}
 
 /**
  * Landing page principal del tenant activo (ruta "/landing").

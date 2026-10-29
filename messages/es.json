@@ -3,6 +3,11 @@
     "nombre": "{tenantName}",
     "slogan": "Preparación para el Examen de Grado"
   },
+  "notFound": {
+    "titulo": "Página no encontrada",
+    "descripcion": "La página que buscas no existe o fue movida.",
+    "volver": "Volver al inicio"
+  },
   "common": {
     "guardar": "Guardar",
     "cancelar": "Cancelar",

@@ -16,7 +16,13 @@
     "titulo3": "FOR YOUR DEGREE",
     "subtitulo": "Close, demanding and strategic support so you can face your degree exam with ",
     "subtituloDestacado": "security and confidence.",
-    "imagenAlt": "Degree exam preparation"
+    "imagenAlt": "Degree exam preparation",
+    "ctaPrimario": "Start your preparation",
+    "ctaSecundario": "See plans"
+  },
+  "ctaMovil": {
+    "texto": "Ready for your degree exam?",
+    "boton": "Start now"
   },
   "features": {
     "metodologia": "Own methodology",

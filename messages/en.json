@@ -3,6 +3,11 @@
     "nombre": "{tenantName}",
     "slogan": "Bar Exam Preparation"
   },
+  "notFound": {
+    "titulo": "Page not found",
+    "descripcion": "The page you are looking for doesn't exist or was moved.",
+    "volver": "Back to home"
+  },
   "common": {
     "guardar": "Save",
     "cancelar": "Cancel",

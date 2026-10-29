@@ -1,4 +1,5 @@
 import { resolveAsset } from '../../shared/resolveAsset';
+import { OrganizationJsonLd } from '../../shared/JsonLd';
 import { Shell } from './Shell';
 import { Hero } from './Hero';
 import { Features } from './Features';
@@ -23,7 +24,8 @@ export default async function Home(props: LandingProps) {
 
   return (
     <Shell {...props}>
-      <Hero imageSrc={heroImage} />
+      <OrganizationJsonLd />
+      <Hero imageSrc={heroImage} ctaHref={props.ctaHref} />
       <Features />
       <Programas lectorImageSrc={lectorImage} />
       <Tutorias imageSrc={tutoriasImage} />

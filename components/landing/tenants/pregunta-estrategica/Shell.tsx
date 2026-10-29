@@ -2,6 +2,7 @@ import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
 import { LandingNavbar } from '../../shared/LandingNavbar';
 import { LandingFooter } from '../../shared/LandingFooter';
+import { StickyMobileCTA } from '../../shared/StickyMobileCTA';
 import { LogoHorizontal } from './LogoHorizontal';
 import type { LandingProps } from '../../types';
 
@@ -39,6 +40,11 @@ export async function Shell({ locale, ctaHref, isLoggedIn, children }: ShellProp
       />
       <main>{children}</main>
       <LandingFooter derechos={t('footer.derechos')} />
+      <StickyMobileCTA
+        ctaHref={ctaHref}
+        texto={t('ctaMovil.texto')}
+        boton={t('ctaMovil.boton')}
+      />
     </>
   );
 }

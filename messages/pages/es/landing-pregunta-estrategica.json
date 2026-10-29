@@ -16,7 +16,13 @@
     "titulo3": "PARA TU GRADO",
     "subtitulo": "Acompañamiento cercano, exigente y estratégico para que enfrentes tu examen de grado con ",
     "subtituloDestacado": "seguridad y confianza.",
-    "imagenAlt": "Preparación para el examen de grado"
+    "imagenAlt": "Preparación para el examen de grado",
+    "ctaPrimario": "Comienza tu preparación",
+    "ctaSecundario": "Ver planes"
+  },
+  "ctaMovil": {
+    "texto": "¿List@ para tu examen de grado?",
+    "boton": "Comienza ahora"
   },
   "features": {
     "metodologia": "Metodología propia",

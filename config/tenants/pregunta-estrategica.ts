@@ -51,6 +51,25 @@ const config: TenantConfigInput = {
   },
   metadata: {
     favicon: '/tenants/pregunta-estrategica/favicon.ico',
+    // Imagen para compartir en redes (Open Graph / Twitter). Idealmente 1200x630px.
+    // Mientras no exista una dedicada, se usa el logo. Sube una a
+    // /public/tenants/pregunta-estrategica/og.png y actualiza esta ruta.
+    ogImage: '/tenants/pregunta-estrategica/logo-light.png',
+  },
+  seo: {
+    // URL canónica pública del landing (www). Sobreescribible con NEXT_PUBLIC_SITE_URL.
+    siteUrl: 'https://www.preguntaestrategica.cl',
+    // Subdominio de la plataforma. Sobreescribible con NEXT_PUBLIC_APP_HOST.
+    appHost: 'app.preguntaestrategica.cl',
+    keywords: [
+      'examen de grado',
+      'preparación examen de grado',
+      'interrogaciones derecho',
+      'grado de derecho',
+      'tutorías derecho',
+      'Pregunta Estratégica',
+    ],
+    ogImageAlt: 'Pregunta Estratégica — Preparación para el Examen de Grado',
   },
   landingPage: {
     habilitado: true,

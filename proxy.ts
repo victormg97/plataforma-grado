@@ -3,8 +3,90 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { checkApiRateLimit, getIp, tooManyRequestsResponse } from '@/lib/utils/rateLimit';
 import { tenantConfig } from '@/config';
 
+// ── Separación de dominios (Opción 1: un deploy, dos hosts) ──────────────────
+// El landing público vive en `www.<dominio>` y la plataforma (todo lo que
+// requiere sesión) en `app.<dominio>`, ambos apuntando al MISMO deploy. Aquí
+// redirigimos por hostname ANTES de la lógica de auth para que cada URL viva en
+// su subdominio correcto. Se desactiva en localhost / previews / si no hay
+// NEXT_PUBLIC_APP_HOST (todo convive en un host como antes).
+
+// Rutas que pertenecen a la plataforma (deben vivir en app.).
+const PLATFORM_PREFIXES = [
+  '/login',
+  '/setup',
+  '/registro',
+  '/admin',
+  '/profesor',
+  '/alumno',
+  '/lector',
+  '/perfil',
+  '/comunidad',
+  '/recursos',
+  '/enlaces-invitacion',
+  '/pagina',
+];
+
+// Rutas que pertenecen al landing público (deben vivir en www).
+const LANDING_PREFIXES = [
+  '/landing',
+  '/programas',
+  '/tutorias',
+  '/planes',
+  '/sobre-nosotras',
+  '/contacto',
+  '/acerca-de',
+];
+
+function matchesPrefix(pathname: string, prefixes: string[]): boolean {
+  return prefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+}
+
+/**
+ * Devuelve una redirección al subdominio correcto si aplica, o null para dejar
+ * que el request continúe en el host actual.
+ */
+function resolveHostRedirect(request: NextRequest): NextResponse | null {
+  const appHost = process.env.NEXT_PUBLIC_APP_HOST?.toLowerCase();
+  if (!appHost) return null;
+
+  const host = request.headers.get('host')?.toLowerCase() ?? '';
+  if (
+    host.startsWith('localhost') ||
+    host.startsWith('127.0.0.1') ||
+    host.endsWith('.vercel.app')
+  ) {
+    return null;
+  }
+
+  const { pathname, search } = request.nextUrl;
+  const wwwHost = appHost.replace(/^app\./, 'www.');
+
+  if (host === appHost) {
+    // En app.: la raíz y las rutas de landing se mandan a www.
+    if (pathname === '/') {
+      return NextResponse.redirect(`https://${wwwHost}/`, 308);
+    }
+    if (matchesPrefix(pathname, LANDING_PREFIXES)) {
+      return NextResponse.redirect(`https://${wwwHost}${pathname}${search}`, 308);
+    }
+    return null;
+  }
+
+  // En www (u otro host): las rutas de plataforma se mandan a app.
+  if (matchesPrefix(pathname, PLATFORM_PREFIXES)) {
+    return NextResponse.redirect(`https://${appHost}${pathname}${search}`, 308);
+  }
+
+  return null;
+}
+
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
+
+  // Separación de dominios primero: si la URL no corresponde a este host,
+  // redirige al subdominio correcto antes de tocar auth/rate-limit.
+  const hostRedirect = resolveHostRedirect(request);
+  if (hostRedirect) return hostRedirect;
 
   // ── Rate limit: /api/* (except /api/auth/login which has its own stricter limiter) ──
   if (pathname.startsWith('/api/') && pathname !== '/api/auth/login') {

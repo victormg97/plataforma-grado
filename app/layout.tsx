@@ -8,6 +8,7 @@ import { QueryProvider } from "@/lib/queryClient";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
 import { tenantConfig } from "@/config";
+import { buildRootMetadata } from "@/config/seo";
 import { TenantProvider } from "@/config/client";
 import { getTenantFonts } from "@/config/fonts";
 import "./globals.css";
@@ -143,23 +144,10 @@ function getTenantThemeCSS(): string {
   return css;
 }
 
-export const metadata: Metadata = {
-  title: `${tenantConfig.nombre} — ${tenantConfig.descripcion}`,
-  description: tenantConfig.descripcion,
-  icons: (() => {
-    // Per-tenant favicon. Driven entirely from metadata (no app/favicon.ico
-    // convention file) so each deploy shows its own icon. We register the same
-    // source for `icon`, `shortcut` and `apple` because mobile browsers
-    // (Chrome/Edge/Safari on Android & iOS) prefer the apple-touch / shortcut
-    // icons over the standard <link rel="icon">.
-    const favicon = tenantConfig.metadata?.favicon || '/tenants/cta-graduados/favicon.ico';
-    return {
-      icon: favicon,
-      shortcut: favicon,
-      apple: favicon,
-    };
-  })(),
-};
+// Metadata raíz del tenant activo: metadataBase, title template, openGraph,
+// twitter, canonical, keywords, robots y favicon por tenant. La lógica vive en
+// config/seo.ts para reutilizarse desde las páginas del landing.
+export const metadata: Metadata = buildRootMetadata();
 
 export default async function RootLayout({
   children,

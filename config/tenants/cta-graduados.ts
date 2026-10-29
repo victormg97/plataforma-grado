@@ -26,6 +26,18 @@ const config: TenantConfigInput = {
   },
   metadata: {
     favicon: '/tenants/cta-graduados/favicon.ico',
+    ogImage: '/tenants/cta-graduados/logo-light.png',
+  },
+  seo: {
+    siteUrl: 'https://www.ctagraduados.cl',
+    appHost: 'app.ctagraduados.cl',
+    keywords: [
+      'examen de grado',
+      'preparación examen de grado',
+      'grado de derecho',
+      'CTA Graduados',
+    ],
+    ogImageAlt: 'CTA Graduados — Preparación para el Examen de Grado',
   },
 };
 

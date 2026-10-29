@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { m } from 'framer-motion';
 import { AppLogo } from '@/components/common/AppLogo';
@@ -53,9 +54,44 @@ function LineaDecorativa({ onDark = false }: { onDark?: boolean }) {
 interface HeroProps {
   /** Ruta pública de la imagen del hero, ya resuelta en el servidor. null = sin imagen */
   imageSrc: string | null;
+  /** Ruta del CTA principal: /login (no logeado) o dashboard (logeado) */
+  ctaHref: string;
 }
 
-export function Hero({ imageSrc }: HeroProps) {
+// CTA above-the-fold. `onDark` cambia los colores para la variante móvil
+// (texto sobre imagen con velo oscuro).
+function HeroCTA({
+  ctaHref,
+  onDark = false,
+  t,
+}: {
+  ctaHref: string;
+  onDark?: boolean;
+  t: ReturnType<typeof useTranslations>;
+}) {
+  return (
+    <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+      <Link
+        href={ctaHref}
+        className="inline-flex items-center justify-center rounded-[var(--radius-md)] bg-[var(--color-brand-gold)] px-7 py-3 text-base font-semibold text-white shadow-[var(--shadow-md)] transition-transform hover:scale-[1.03] hover:opacity-95"
+      >
+        {t('ctaPrimario')}
+      </Link>
+      <a
+        href="/planes"
+        className={`inline-flex items-center justify-center rounded-[var(--radius-md)] border px-7 py-3 text-base font-semibold transition-colors ${
+          onDark
+            ? 'border-white/70 text-white hover:bg-white/10'
+            : 'border-[var(--color-brand-gold)] text-[var(--color-brand-gold)] hover:bg-[var(--color-brand-gold-muted)]'
+        }`}
+      >
+        {t('ctaSecundario')}
+      </a>
+    </div>
+  );
+}
+
+export function Hero({ imageSrc, ctaHref }: HeroProps) {
   const t = useTranslations('landing-pregunta-estrategica.hero');
   const hasImage = imageSrc !== null;
 
@@ -91,6 +127,7 @@ export function Hero({ imageSrc }: HeroProps) {
               {t('subtituloDestacado')}
             </strong>
           </p>
+          <HeroCTA ctaHref={ctaHref} onDark t={t} />
         </m.div>
       </div>
 
@@ -112,6 +149,7 @@ export function Hero({ imageSrc }: HeroProps) {
               {t('subtituloDestacado')}
             </strong>
           </p>
+          <HeroCTA ctaHref={ctaHref} t={t} />
         </m.div>
 
         {/* Imagen */}
