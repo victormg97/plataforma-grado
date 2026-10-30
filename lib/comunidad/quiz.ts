@@ -164,12 +164,20 @@ export interface RankingEntry {
   /** Real name when show_real_name is on; otherwise null. */
   display_name: string | null;
   nickname: string | null;
+  /** Player level (compute_user_level). */
+  level?: number;
 }
 
 export interface MyRankingPosition {
   has_position: boolean;
   position?: number;
   points?: number;
+  /** Points of the player right above (null when 1st). Migration 150. */
+  ahead_points?: number | null;
+  /** Points of 3rd place (null when fewer than 3 players). */
+  podium_points?: number | null;
+  /** Points of 1st place. */
+  leader_points?: number | null;
 }
 
 export interface MonthlyRankingResult {
