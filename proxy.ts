@@ -49,6 +49,15 @@ function resolveHostRedirect(request: NextRequest): NextResponse | null {
   const appHost = process.env.NEXT_PUBLIC_APP_HOST?.toLowerCase();
   if (!appHost) return null;
 
+  // No redirigir peticiones RSC (navegación/prefetch interno de Next.js). Estas
+  // viajan como fetch con la cabecera `RSC: 1`; un redirect cross-origin (app. →
+  // www.) las hace fallar por CORS ("Redirect is not allowed for a preflight
+  // request"). La redirección de host sólo tiene sentido para navegaciones de
+  // documento completo, no para los data-fetches internos del App Router.
+  if (request.headers.get('rsc') === '1' || request.nextUrl.searchParams.has('_rsc')) {
+    return null;
+  }
+
   const host = request.headers.get('host')?.toLowerCase() ?? '';
   if (
     host.startsWith('localhost') ||

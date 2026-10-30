@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import type { UserRol } from '@/lib/supabase/types';
 import { createClient } from '@/lib/supabase/client';
+import { getRolRedirectPath } from '@/lib/auth/helpers';
 
 interface NavItem {
   key: string;
@@ -197,7 +198,9 @@ export function Sidebar() {
       >
         {/* Header */}
         <div className="relative flex h-16 items-center justify-center border-b border-[var(--color-border)] px-4">
-          <Link href="/">
+          {/* El logo lleva al dashboard del rol (no a "/", que es el landing y
+              vive en otro host). Evita un redirect cross-origin app.→www. */}
+          <Link href={user ? getRolRedirectPath(user.rol) : '/'}>
             <AppLogo variant="sidebar" />
           </Link>
           <button
