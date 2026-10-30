@@ -561,6 +561,8 @@ div[style*="position: fixed"] > [role="toolbar"] {
   --game-incorrect: #ef6a5c;
   --game-option-selected-bg: #40222a;
   --game-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.55);
+  --game-case-paper: #241c1e;
+  --game-case-paper-line: rgba(255, 255, 255, 0.04);
 }
 
 /* Graduado theme (gold-forward dark): the game leans into its gold identity
@@ -583,6 +585,8 @@ div[style*="position: fixed"] > [role="toolbar"] {
   --game-incorrect: #ef6a5c;
   --game-option-selected-bg: #33280a;
   --game-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.6);
+  --game-case-paper: #221a04;
+  --game-case-paper-line: rgba(255, 255, 255, 0.04);
 }
 
 /* Quiz subject/category tones (admin "Cuestionarios" config). Global, so the
@@ -625,6 +629,15 @@ div[style*="position: fixed"] > [role="toolbar"] {
   --game-cold-3: #1f252c;
   --game-ash-1: #6d5a5e;
   --game-ash-2: #4a3a3e;
+  /* Weekly case "case file": navy folder, paper sheet and rubber stamps */
+  --game-case-navy: #1f3a5f;
+  --game-case-navy-deep: #0f2038;
+  --game-case-paper: #fffaf0;
+  --game-case-paper-line: rgba(31, 58, 95, 0.08);
+  --game-case-margin: rgba(192, 57, 43, 0.35);
+  --game-stamp-open: #1f9d55;
+  --game-stamp-closed: #7c6f72;
+  --game-stamp-resolved: #b08541;
   /* Ranking podium (1st gold, 2nd silver, 3rd bronze) */
   --game-rank-gold: #e0a92e;
   --game-rank-gold-light: #ffe8a3;

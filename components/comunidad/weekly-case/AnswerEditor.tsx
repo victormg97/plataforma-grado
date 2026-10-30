@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
-import { History } from 'lucide-react';
+import { CheckCircle2, History, PenLine, Send } from 'lucide-react';
 import { useUserStore } from '@/stores/useUserStore';
 import {
   playerKey,
@@ -114,9 +114,18 @@ export function AnswerEditor({
   return (
     <div className="flex flex-col gap-3">
       {myAnswer?.graded && <CaseGradeFeedback myAnswer={myAnswer} />}
-      <h4 className="text-sm font-semibold text-[var(--game-text)]">
-        {myAnswer ? t('weekly_case_edit_answer') : t('weekly_case_write_answer')}
-      </h4>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h4 className="inline-flex items-center gap-2 text-sm font-bold text-[var(--game-text)]">
+          <PenLine className="size-4 text-[var(--game-accent)]" />
+          {myAnswer ? t('weekly_case_edit_answer') : t('weekly_case_write_answer')}
+        </h4>
+        {myAnswer && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-[var(--game-correct)]/12 px-2.5 py-1 text-[11px] font-bold text-[var(--game-correct)]">
+            <CheckCircle2 className="size-3.5" />
+            {t('weekly_case_answer_sent')}
+          </span>
+        )}
+      </div>
       {draftRestored && (
         <div
           className="flex flex-wrap items-center gap-2 rounded-[var(--game-radius-sm)] border border-[var(--game-accent)]/30 bg-[var(--game-accent-muted)] px-3 py-2 text-xs text-[var(--game-text)]"
@@ -142,8 +151,9 @@ export function AnswerEditor({
         type="button"
         onClick={onSave}
         disabled={submit.isPending}
-        className="w-fit rounded-[var(--game-radius-sm)] bg-[var(--game-accent)] px-5 py-2.5 text-sm font-semibold text-[var(--game-on-accent)] transition-colors hover:bg-[var(--game-accent-hover)] disabled:opacity-50"
+        className="inline-flex w-fit items-center gap-2 rounded-[var(--game-radius-sm)] bg-[linear-gradient(135deg,var(--game-case-navy),var(--game-case-navy-deep))] px-5 py-2.5 text-sm font-bold text-white shadow-[0_10px_22px_-14px_var(--game-case-navy)] transition-all hover:brightness-125 disabled:opacity-50"
       >
+        <Send className="size-4" />
         {submit.isPending
           ? t('weekly_case_saving')
           : myAnswer

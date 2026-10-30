@@ -2,34 +2,36 @@
 
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { m, useReducedMotion } from 'framer-motion';
+import { ArrowRight, CalendarX2, Check, HeartCrack, Quote } from 'lucide-react';
 import { GameRichText } from '../GameRichText';
 import { cn } from '@/lib/utils';
-import { Card } from '@/components/common/Card';
-import { useDailyQuestion, useAnswerDailyQuestion, useGameProfile } from '@/lib/hooks/useComunidad';
+import { useDailyQuestion, useAnswerDailyQuestion, useDailyReview, useGameProfile } from '@/lib/hooks/useComunidad';
 import { RecentAchievements } from '../RecentAchievements';
 import { LevelCard } from '../LevelCard';
 import { DailyReviewPanel } from '../DailyReviewPanel';
 import { ChoiceModeBadge } from '../quiz/ChoiceModeBadge';
-import { Check } from 'lucide-react';
+import { DailyHero } from '../daily/DailyHero';
 import type { DailyAnswer, DailyAnswerResult } from '@/lib/comunidad/answer';
+import type { GameView } from '../views';
 import { useUserStore } from '@/stores/useUserStore';
 import { playerKey, readPlayerItem, removePlayerItem, writePlayerItem } from '@/lib/comunidad/player-storage';
 
 // Types the Pregunta del Día can render and grade.
 const SUPPORTED_TYPES = new Set(['single_choice', 'multiple_choice', 'true_false']);
 
+const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
+
 interface DailyDraft {
   questionId: string;
   selected: number[];
   tfValue: boolean | null;
 }
-import type { GameView } from '../views';
-
-const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
 
 /**
- * Daily Question screen, styled after mockup 2. The right column shows the
- * player's real level and recent achievements.
+ * Pregunta del Día: a calendar-style hero (date, streak hook, countdown to the
+ * next question), the question on a "card of the day" with big tappable
+ * options, and the player's level + recent achievements on the side.
  */
 export function DailyQuestion({
   onAnswered,
@@ -39,8 +41,10 @@ export function DailyQuestion({
   onNavigate?: (view: GameView) => void;
 }) {
   const t = useTranslations('comunidadEstrategica');
+  const reduceMotion = useReducedMotion();
   const { data, isLoading } = useDailyQuestion();
   const { data: profile } = useGameProfile();
+  const { data: review } = useDailyReview(!!data?.already_answered);
   const mutation = useAnswerDailyQuestion();
 
   const userId = useUserStore((s) => s.user?.id ?? null);
@@ -70,8 +74,9 @@ export function DailyQuestion({
 
   if (isLoading) {
     return (
-      <div className="flex justify-center py-16">
-        <div className="size-8 animate-spin rounded-full border-4 border-[var(--game-accent)] border-t-transparent" />
+      <div className="flex flex-col gap-5" role="status" aria-label={t('loading')}>
+        <div className="h-36 animate-pulse rounded-[var(--game-radius)] bg-[var(--game-surface)] shadow-[var(--game-shadow)]" />
+        <div className="h-72 animate-pulse rounded-[var(--game-radius)] bg-[var(--game-surface)] shadow-[var(--game-shadow)]" />
       </div>
     );
   }
@@ -82,18 +87,18 @@ export function DailyQuestion({
   // mistake): show the empty state instead of a broken true/false form.
   if (!question || !SUPPORTED_TYPES.has(question.type)) {
     return (
-      <Card padding="lg" className="border-none bg-[var(--game-surface)] text-center shadow-[var(--game-shadow)]">
-        <p className="text-sm text-[var(--game-text-muted)]">{t('daily_empty')}</p>
-      </Card>
+      <div className="flex flex-col gap-5">
+        <DailyHero />
+        <EmptyCard icon={<CalendarX2 className="size-8" />} text={t('daily_empty')} />
+      </div>
     );
   }
 
   if (data?.already_answered) {
     return (
       <div className="flex flex-col gap-5">
-        <Card padding="lg" className="border-none bg-[var(--game-surface)] text-center shadow-[var(--game-shadow)]">
-          <p className="text-sm text-[var(--game-text-muted)]">{t('daily_already_answered')}</p>
-        </Card>
+        <DailyHero answered correct={review?.answered ? !!review.is_correct : null} />
+        <p className="text-center text-sm font-medium text-[var(--game-text-muted)]">{t('daily_already_answered')}</p>
         <DailyReviewPanel />
       </div>
     );
@@ -102,9 +107,10 @@ export function DailyQuestion({
   // No lives left (and the tenant blocks play when empty): show a notice.
   if (profile?.lives?.enabled && profile.lives.block_when_empty && (profile.lives.current ?? 0) <= 0) {
     return (
-      <Card padding="lg" className="border-none bg-[var(--game-surface)] text-center shadow-[var(--game-shadow)]">
-        <p className="text-sm text-[var(--game-text-muted)]">{t('lives_none_message')}</p>
-      </Card>
+      <div className="flex flex-col gap-5">
+        <DailyHero />
+        <EmptyCard icon={<HeartCrack className="size-8" />} text={t('lives_none_message')} />
+      </div>
     );
   }
 
@@ -132,130 +138,118 @@ export function DailyQuestion({
     });
   };
 
+  const choiceItems = isChoice
+    ? options.map((opt, idx) => ({
+        key: String(idx),
+        label: opt.text,
+        marker: LETTERS[idx] ?? String(idx + 1),
+        active: selected.includes(idx),
+        onClick: () => toggleChoice(idx),
+      }))
+    : [
+        { key: 'true', label: t('daily_true'), marker: 'V', active: tfValue === true, onClick: () => setTfValue(true) },
+        { key: 'false', label: t('daily_false'), marker: 'F', active: tfValue === false, onClick: () => setTfValue(false) },
+      ];
+
   return (
-    <div className="grid gap-5 lg:grid-cols-[1.6fr_1fr]">
-      {/* Main question card */}
-      <Card padding="lg" className="flex flex-col gap-4 border-none bg-[var(--game-surface)] shadow-[var(--game-shadow)]">
-        {/* Subject pill — placeholder tag until subjects are wired (later slice) */}
-        <span className="w-fit rounded-[var(--game-radius-sm)] bg-[var(--game-accent)] px-4 py-1.5 text-sm font-semibold text-[var(--game-on-accent)]">
-          {t('daily_subject_placeholder')}
-        </span>
+    <div className="flex flex-col gap-5">
+      <DailyHero />
 
-        <GameRichText html={question.content} variant="question" />
+      <div className="grid items-start gap-5 lg:grid-cols-[1.6fr_1fr]">
+        {/* Card of the day */}
+        <m.section
+          initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, ease: 'easeOut' }}
+          className="relative isolate flex flex-col gap-5 overflow-hidden rounded-[var(--game-radius)] border-t-4 border-[var(--game-gold)] bg-[var(--game-surface)] p-5 shadow-[var(--game-shadow)] sm:p-6"
+        >
+          <Quote
+            aria-hidden
+            className="absolute -right-2 -top-2 -z-10 size-28 rotate-180 text-[var(--game-accent-muted)]"
+          />
+          <GameRichText html={question.content} variant="question" />
 
-        {isChoice && <ChoiceModeBadge multiple={isMulti} selectedCount={selected.length} />}
+          {isChoice && <ChoiceModeBadge multiple={isMulti} selectedCount={selected.length} />}
 
-        {isChoice ? (
           <div
-            className="flex flex-col gap-3"
+            className={cn('grid gap-3', !isChoice && 'sm:grid-cols-2')}
             role={isMulti ? 'group' : 'radiogroup'}
             aria-label={t('daily_options_label')}
           >
-            {options.map((opt, idx) => {
-              const active = selected.includes(idx);
-              return (
-                <button
-                  key={idx}
-                  type="button"
-                  role={isMulti ? 'checkbox' : 'radio'}
-                  aria-checked={active}
-                  onClick={() => toggleChoice(idx)}
+            {choiceItems.map((o, i) => (
+              <m.button
+                key={o.key}
+                type="button"
+                role={isMulti ? 'checkbox' : 'radio'}
+                aria-checked={o.active}
+                onClick={o.onClick}
+                initial={reduceMotion ? false : { opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: reduceMotion ? 0 : 0.08 + i * 0.05 }}
+                whileTap={reduceMotion ? undefined : { scale: 0.98 }}
+                className={cn(
+                  'group flex items-center gap-3 rounded-[var(--game-radius-sm)] border-2 px-4 py-3.5 text-left text-sm font-medium transition-all',
+                  o.active
+                    ? 'border-[var(--game-accent)] bg-[var(--game-option-selected-bg)] text-[var(--game-text)] shadow-[0_8px_18px_-12px_var(--game-accent)]'
+                    : 'border-transparent bg-[var(--game-surface-muted)] text-[var(--game-text)] hover:-translate-y-0.5 hover:border-[var(--game-accent)]/30'
+                )}
+              >
+                <span
                   className={cn(
-                    'flex items-center gap-3 rounded-[var(--game-radius-sm)] border px-4 py-3 text-left text-sm transition-colors',
-                    active
-                      ? 'border-[var(--game-accent)] bg-[var(--game-option-selected-bg)] text-[var(--game-text)]'
-                      : 'border-transparent bg-[var(--game-surface-muted)] text-[var(--game-text)] hover:bg-[var(--game-accent-muted)]'
+                    'flex size-9 shrink-0 items-center justify-center text-sm font-black transition-colors',
+                    isMulti ? 'rounded-md border-2' : 'rounded-full',
+                    isMulti && (o.active ? 'border-[var(--game-accent)]' : 'border-[var(--game-accent)]/40'),
+                    o.active
+                      ? 'bg-[var(--game-accent)] text-[var(--game-on-accent)]'
+                      : 'bg-[var(--game-accent-muted)] text-[var(--game-accent)]'
                   )}
                 >
-                  <span
-                    className={cn(
-                      'flex size-8 shrink-0 items-center justify-center text-sm font-bold transition-colors',
-                      // Multiple choice: checkbox-like square; single: round.
-                      isMulti
-                        ? cn('rounded-md border-2', active ? 'border-[var(--game-accent)]' : 'border-[var(--game-accent)]/40')
-                        : 'rounded-full',
-                      active
-                        ? 'bg-[var(--game-accent)] text-[var(--game-on-accent)]'
-                        : 'bg-[var(--game-accent-muted)] text-[var(--game-accent)]'
-                    )}
-                  >
-                    {isMulti && active ? <Check className="size-4" /> : (LETTERS[idx] ?? idx + 1)}
-                  </span>
-                  <span>{opt.text}</span>
-                </button>
-              );
-            })}
+                  {isMulti && o.active ? <Check className="size-4" /> : o.marker}
+                </span>
+                <span className="flex-1">{o.label}</span>
+              </m.button>
+            ))}
           </div>
-        ) : (
-          <div
-            className="flex flex-col gap-3"
-            role="radiogroup"
-            aria-label={t('daily_options_label')}
+
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={!canSubmit || mutation.isPending}
+            className="group inline-flex w-full items-center justify-center gap-2 rounded-[var(--game-radius-sm)] bg-[linear-gradient(135deg,var(--game-accent),var(--game-header-bg))] py-3.5 text-base font-bold text-white shadow-[0_12px_24px_-14px_var(--game-accent)] transition-all hover:brightness-110 disabled:pointer-events-none disabled:opacity-45"
           >
-            {[
-              { label: t('daily_true'), value: true, letter: 'A' },
-              { label: t('daily_false'), value: false, letter: 'B' },
-            ].map((o) => {
-              const active = tfValue === o.value;
-              return (
-                <button
-                  key={String(o.value)}
-                  type="button"
-                  role="radio"
-                  aria-checked={active}
-                  onClick={() => setTfValue(o.value)}
-                  className={cn(
-                    'flex items-center gap-3 rounded-[var(--game-radius-sm)] border px-4 py-3 text-left text-sm transition-colors',
-                    active
-                      ? 'border-[var(--game-accent)] bg-[var(--game-option-selected-bg)] text-[var(--game-text)]'
-                      : 'border-transparent bg-[var(--game-surface-muted)] text-[var(--game-text)] hover:bg-[var(--game-accent-muted)]'
-                  )}
-                >
-                  <span
-                    className={cn(
-                      'flex size-8 shrink-0 items-center justify-center rounded-full text-sm font-bold',
-                      active
-                        ? 'bg-[var(--game-accent)] text-[var(--game-on-accent)]'
-                        : 'bg-[var(--game-accent-muted)] text-[var(--game-accent)]'
-                    )}
-                  >
-                    {o.letter}
-                  </span>
-                  <span>{o.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        )}
+            {mutation.isPending ? t('daily_submitting') : t('daily_submit')}
+            {!mutation.isPending && <ArrowRight className="size-5 transition-transform group-hover:translate-x-1" />}
+          </button>
 
+          {mutation.isError && (
+            <p className="text-sm text-[var(--game-incorrect)]" role="alert">
+              {(() => {
+                const code = (mutation.error as { message?: string })?.message;
+                if (code === 'NO_LIVES') return t('lives_none_message');
+                if (code === 'PLAYER_BANNED') return t('banned_short');
+                return t('daily_submit_error');
+              })()}
+            </p>
+          )}
+        </m.section>
 
-        <button
-          type="button"
-          onClick={handleSubmit}
-          disabled={!canSubmit || mutation.isPending}
-          className="mt-1 w-full rounded-[var(--game-radius-sm)] bg-[var(--game-accent)] py-3 text-sm font-semibold text-[var(--game-on-accent)] transition-colors hover:bg-[var(--game-accent-hover)] disabled:pointer-events-none disabled:opacity-50"
-        >
-          {mutation.isPending ? t('daily_submitting') : t('daily_submit')}
-        </button>
-
-        {mutation.isError && (
-          <p className="text-sm text-[var(--game-incorrect)]" role="alert">
-            {(() => {
-              const code = (mutation.error as { message?: string })?.message;
-              if (code === 'NO_LIVES') return t('lives_none_message');
-              if (code === 'PLAYER_BANNED') return t('banned_short');
-              return t('daily_submit_error');
-            })()}
-          </p>
-        )}
-      </Card>
-
-      {/* Side column — real level + recent achievements */}
-      <div className="flex flex-col gap-4">
-        <LevelCard level={profile?.level} />
-
-        <RecentAchievements onSeeMore={onNavigate ? () => onNavigate('badges') : undefined} />
+        {/* Side column — real level + recent achievements */}
+        <div className="flex flex-col gap-4">
+          <LevelCard level={profile?.level} />
+          <RecentAchievements onSeeMore={onNavigate ? () => onNavigate('badges') : undefined} />
+        </div>
       </div>
+    </div>
+  );
+}
+
+function EmptyCard({ icon, text }: { icon: React.ReactNode; text: string }) {
+  return (
+    <div className="flex flex-col items-center gap-3 rounded-[var(--game-radius)] border-2 border-dashed border-[var(--game-border)] bg-[var(--game-surface)] px-6 py-12 text-center">
+      <span className="game-anim-float flex size-16 items-center justify-center rounded-full bg-[var(--game-accent-muted)] text-[var(--game-accent)]">
+        {icon}
+      </span>
+      <p className="max-w-sm text-sm text-[var(--game-text-muted)]">{text}</p>
     </div>
   );
 }
