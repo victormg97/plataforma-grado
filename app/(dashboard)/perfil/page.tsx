@@ -16,6 +16,8 @@ import {
   ArrowLeft, Save, Loader2, ClipboardCheck, Settings2, Mail,
 } from 'lucide-react';
 import { CalendarColorPicker } from '@/components/common/CalendarColorPicker';
+import { DangerConfirmModal } from '@/components/common/DangerConfirmModal';
+import { Download, Trash2, ShieldAlert } from 'lucide-react';
 import type { Profile, AlumnoExtra } from '@/lib/supabase/types';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -90,7 +92,7 @@ function SaveBar({ saving, label, disabled }: { saving: boolean; label: string; 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function PerfilPage() {
-  const { user, setUser } = useUserStore();
+  const { user, setUser, clearUser } = useUserStore();
   const queryClient = useQueryClient();
   const t = useTranslations('perfil');
   const tc = useTranslations('common');
@@ -142,6 +144,11 @@ export default function PerfilPage() {
   const [savingConfig, setSavingConfig] = useState(false);
   const [savingPass, setSavingPass] = useState(false);
   const [initialized, setInitialized] = useState(false);
+
+  // Zona de datos (exportar / eliminar cuenta)
+  const [exporting, setExporting] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
 
   useEffect(() => {
     if (perfilData && !initialized) {
@@ -337,6 +344,46 @@ export default function PerfilPage() {
       toast.error(t('error_password'));
     } finally {
       setSavingPass(false);
+    }
+  }
+
+  // ── Exportar mis datos (portabilidad) ──────────────────────────────────────
+  async function handleExportData() {
+    setExporting(true);
+    try {
+      const res = await fetch('/api/perfil/export');
+      if (!res.ok) throw new Error('export failed');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `mis-datos-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error(t('exportar_error'));
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  // ── Eliminar mi cuenta (supresión) ──────────────────────────────────────────
+  async function handleDeleteAccount() {
+    setDeletingAccount(true);
+    try {
+      const res = await fetch('/api/perfil/cuenta', { method: 'DELETE' });
+      if (!res.ok) throw new Error('delete failed');
+      // Cuenta eliminada: limpiar estado local y mandar al login.
+      toast.success(t('eliminar_exito'));
+      clearUser();
+      queryClient.clear();
+      router.replace('/login');
+    } catch {
+      toast.error(t('eliminar_error'));
+      setDeletingAccount(false);
+      setDeleteModalOpen(false);
     }
   }
 
@@ -745,8 +792,61 @@ export default function PerfilPage() {
             />
           </form>
 
+          {/* ── Zona de datos: exportar + eliminar cuenta ─────────────────── */}
+          <div className="space-y-6 pt-8 border-t border-[var(--color-border)]">
+            <SectionTitle icon={ShieldAlert} title={t('zona_datos')} />
+
+            {/* Exportar mis datos (portabilidad) */}
+            <Field label={t('exportar_titulo')} hint={t('exportar_desc')} inline>
+              <button
+                type="button"
+                onClick={handleExportData}
+                disabled={exporting}
+                className="inline-flex items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-bg)] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] disabled:opacity-50 transition-colors"
+              >
+                {exporting ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}
+                {t('exportar_boton')}
+              </button>
+            </Field>
+
+            {/* Eliminar mi cuenta (supresión) — recuadro de peligro */}
+            <div className="rounded-[var(--radius-md)] border border-[var(--color-error)]/30 bg-[color-mix(in_srgb,var(--color-error)_6%,transparent)] p-4 sm:p-5">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-[var(--color-text-primary)]">
+                    {t('eliminar_titulo')}
+                  </p>
+                  <p className="mt-0.5 text-xs text-[var(--color-text-muted)]">
+                    {t('eliminar_desc')}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setDeleteModalOpen(true)}
+                  className="inline-flex shrink-0 items-center justify-center gap-2 rounded-[var(--radius-sm)] border border-[var(--color-error)] px-4 py-2 text-sm font-medium text-[var(--color-error)] hover:bg-[var(--color-error)] hover:text-white transition-colors"
+                >
+                  <Trash2 className="size-4" />
+                  {t('eliminar_boton')}
+                </button>
+              </div>
+            </div>
+          </div>
+
         </div>
       )}
+
+      <DangerConfirmModal
+        open={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={handleDeleteAccount}
+        title={t('eliminar_modal_titulo')}
+        description={t('eliminar_modal_desc')}
+        confirmationWord={t('eliminar_palabra')}
+        inputLabel={t('eliminar_modal_input_label', { palabra: t('eliminar_palabra') })}
+        confirmText={t('eliminar_modal_confirmar')}
+        cancelText={tc('cancelar')}
+        loading={deletingAccount}
+      />
     </div>
   );
 }
