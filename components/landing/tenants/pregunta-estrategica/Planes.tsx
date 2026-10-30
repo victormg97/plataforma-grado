@@ -1,8 +1,9 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { Check } from 'lucide-react';
+import { Check, ArrowRight } from 'lucide-react';
 import { Reveal } from '../../shared/Reveal';
+import { SectionLink } from '../../shared/SectionLink';
 import { usePlanesConfig } from '@/lib/hooks/usePlanesConfig';
 import { tenantConfig } from '@/config';
 
@@ -15,6 +16,7 @@ import { tenantConfig } from '@/config';
  */
 export function Planes() {
   const t = useTranslations('landing-pregunta-estrategica.planes');
+  const tEnlaces = useTranslations('landing-pregunta-estrategica.enlaces');
   const { config } = usePlanesConfig(tenantConfig.id);
 
   const incluyen = t.raw('incluyen') as string[];
@@ -233,6 +235,18 @@ export function Planes() {
             </Reveal>
           </div>
         </div>
+
+        {/* ── Enlace interno contextual → contacto ── */}
+        <Reveal className="mt-14 text-center">
+          <SectionLink
+            sectionId="contacto"
+            href="/contacto"
+            className="inline-flex items-center gap-1.5 text-base font-semibold text-[var(--color-brand-gold)] underline-offset-4 hover:underline"
+          >
+            {tEnlaces('contactanos')}
+            <ArrowRight className="size-4" />
+          </SectionLink>
+        </Reveal>
       </div>
     </section>
   );

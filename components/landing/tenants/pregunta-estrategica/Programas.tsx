@@ -1,8 +1,9 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { BookOpen, Mic, FileText, Briefcase, MousePointerClick, Lightbulb, FolderOpen } from 'lucide-react';
+import { BookOpen, Mic, FileText, Briefcase, MousePointerClick, Lightbulb, FolderOpen, ArrowRight } from 'lucide-react';
 import { Reveal } from '../../shared/Reveal';
+import { SectionLink } from '../../shared/SectionLink';
 
 interface ProgramasProps {
   /** Ruta pública de la imagen del programa lector, resuelta en el servidor. null = sin imagen */
@@ -17,6 +18,7 @@ interface ProgramasProps {
  */
 export function Programas({ lectorImageSrc }: ProgramasProps) {
   const t = useTranslations('landing-pregunta-estrategica.programas');
+  const tEnlaces = useTranslations('landing-pregunta-estrategica.enlaces');
   const hasLectorImage = lectorImageSrc !== null;
 
   const programas = [
@@ -216,6 +218,17 @@ export function Programas({ lectorImageSrc }: ProgramasProps) {
                         className="size-10 text-[var(--color-text-muted)]"
                         strokeWidth={1.5}
                       />
+                    </div>
+                    {/* Enlace interno contextual → sección de planes */}
+                    <div className="mt-5 flex justify-center">
+                      <SectionLink
+                        sectionId="planes"
+                        href="/planes"
+                        className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--color-brand-gold)] underline-offset-4 hover:underline"
+                      >
+                        {tEnlaces('verLectorPrecio')}
+                        <ArrowRight className="size-4" />
+                      </SectionLink>
                     </div>
                   </div>
                 </Reveal>

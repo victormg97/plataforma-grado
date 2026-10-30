@@ -43,17 +43,34 @@ export function getOgImageUrl(): string | null {
 }
 
 /**
+ * Mapea un código de locale (es, en, ...) al formato de Open Graph (es_CL,
+ * en_US). El idioma se sirve en la MISMA URL (lo decide una cookie), así que no
+ * hay URLs alternas por idioma y no aplica `hreflang`; lo correcto es declarar
+ * el locale activo en og:locale y el `lang` del <html>.
+ */
+function toOgLocale(locale?: string): string {
+  switch (locale) {
+    case 'en':
+      return 'en_US';
+    case 'es':
+    default:
+      return 'es_CL';
+  }
+}
+
+/**
  * Metadata base compartida por toda la app. Setea metadataBase, título con
  * plantilla, openGraph y twitter cards a partir de la config del tenant.
  * Las páginas pueden extender/override esto con su propio `generateMetadata`.
  */
-export function buildRootMetadata(): Metadata {
+export function buildRootMetadata(locale?: string): Metadata {
   const siteUrl = getSiteUrl();
   const ogImage = getOgImageUrl();
   const title = `${tenantConfig.nombre} — ${tenantConfig.descripcion}`;
   const description = tenantConfig.descripcion;
   const keywords = tenantConfig.seo?.keywords ?? [];
   const ogImageAlt = tenantConfig.seo?.ogImageAlt ?? tenantConfig.nombre;
+  const ogLocale = toOgLocale(locale);
 
   const favicon =
     tenantConfig.metadata?.favicon || '/tenants/cta-graduados/favicon.ico';
@@ -81,7 +98,7 @@ export function buildRootMetadata(): Metadata {
       title,
       description,
       url: siteUrl,
-      locale: 'es_CL',
+      locale: ogLocale,
       images: ogImage
         ? [{ url: ogImage, width: 1200, height: 630, alt: ogImageAlt }]
         : undefined,
@@ -107,6 +124,7 @@ export function buildPageMetadata(opts: {
   title: string;
   description?: string;
   path?: string;
+  locale?: string;
 }): Metadata {
   const description = opts.description ?? tenantConfig.descripcion;
   const canonical = opts.path ?? '/';
@@ -123,7 +141,7 @@ export function buildPageMetadata(opts: {
       title: `${opts.title} — ${tenantConfig.nombre}`,
       description,
       url: absoluteUrl(canonical),
-      locale: 'es_CL',
+      locale: toOgLocale(opts.locale),
       images: ogImage
         ? [{ url: ogImage, width: 1200, height: 630, alt: ogImageAlt }]
         : undefined,

@@ -24,6 +24,12 @@
     "texto": "¿List@ para tu examen de grado?",
     "boton": "Comienza ahora"
   },
+  "enlaces": {
+    "verPlanes": "Ver planes y precios",
+    "verProgramas": "Conoce nuestros programas",
+    "contactanos": "¿Tienes dudas? Contáctanos",
+    "verLectorPrecio": "Ver el precio del Programa Lector"
+  },
   "features": {
     "metodologia": "Metodología propia",
     "interrogaciones": "Interrogaciones con retroalimentación",

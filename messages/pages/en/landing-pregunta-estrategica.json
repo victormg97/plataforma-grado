@@ -24,6 +24,12 @@
     "texto": "Ready for your degree exam?",
     "boton": "Start now"
   },
+  "enlaces": {
+    "verPlanes": "See plans and pricing",
+    "verProgramas": "Discover our programs",
+    "contactanos": "Have questions? Contact us",
+    "verLectorPrecio": "See the Reader Program price"
+  },
   "features": {
     "metodologia": "Own methodology",
     "interrogaciones": "Interrogations with feedback",

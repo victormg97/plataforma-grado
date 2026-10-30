@@ -9,10 +9,10 @@ const config: TenantConfigInput = {
   emailFrom: 'no-reply@contacto.preguntaestrategica.cl',
   terminoPrueba: { singular: 'Interrogación', plural: 'Interrogaciones' },
   quienesSomosLabel: 'Sobre Nosotras',
-  logoLight: '/tenants/pregunta-estrategica/logo-light.png',
-  logoDark: '/tenants/pregunta-estrategica/logo-dark.png',
-  sidebarLight: '/tenants/pregunta-estrategica/sidebar-light.png',
-  sidebarDark: '/tenants/pregunta-estrategica/sidebar-dark.png',
+  logoLight: '/tenants/pregunta-estrategica/logo-light.webp',
+  logoDark: '/tenants/pregunta-estrategica/logo-dark.webp',
+  sidebarLight: '/tenants/pregunta-estrategica/sidebar-light.webp',
+  sidebarDark: '/tenants/pregunta-estrategica/sidebar-dark.webp',
   propietarios: [
     {
       nombre: 'Estefanía Montalbán Pino',
@@ -54,7 +54,7 @@ const config: TenantConfigInput = {
     // Imagen para compartir en redes (Open Graph / Twitter). Idealmente 1200x630px.
     // Mientras no exista una dedicada, se usa el logo. Sube una a
     // /public/tenants/pregunta-estrategica/og.png y actualiza esta ruta.
-    ogImage: '/tenants/pregunta-estrategica/logo-light.png',
+    ogImage: '/tenants/pregunta-estrategica/logo-light.webp',
   },
   seo: {
     // URL canónica pública del landing (www). Sobreescribible con NEXT_PUBLIC_SITE_URL.

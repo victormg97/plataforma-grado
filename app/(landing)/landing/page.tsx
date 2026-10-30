@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
+import { getLocale } from 'next-intl/server';
 import { HydrationBoundary } from '@tanstack/react-query';
 import { tenantConfig } from '@/config';
 import { buildPageMetadata } from '@/config/seo';
@@ -7,12 +8,14 @@ import { TenantLandingHome, tenantHasLanding } from '@/components/landing';
 import { getLandingContext } from '@/components/landing/context';
 import { prefetchLandingData } from '@/lib/prefetch/landing';
 
-export function generateMetadata(): Metadata {
+export async function generateMetadata(): Promise<Metadata> {
   // El landing es la home pública → canonical en "/".
+  const locale = await getLocale();
   return buildPageMetadata({
     title: tenantConfig.descripcion,
     description: tenantConfig.descripcion,
     path: '/',
+    locale,
   });
 }
 

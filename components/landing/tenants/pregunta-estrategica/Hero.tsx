@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { m } from 'framer-motion';
 import { AppLogo } from '@/components/common/AppLogo';
+import { SectionLink } from '../../shared/SectionLink';
 
 const easeOut = [0.22, 1, 0.36, 1] as const;
 
@@ -60,26 +61,6 @@ interface HeroProps {
   isLoggedIn: boolean;
 }
 
-/**
- * Hace smooth-scroll a una sección de la home sin recargar la página y
- * actualiza la URL a la ruta limpia (ej. "/contacto"), replicando el
- * comportamiento de los enlaces del header. Si la sección no está presente
- * (otra página), deja que el navegador siga el href normal.
- */
-function scrollToSection(
-  e: React.MouseEvent<HTMLAnchorElement>,
-  sectionId: string,
-  href: string,
-) {
-  const el = document.getElementById(sectionId);
-  if (!el) return; // sección no está aquí → navegación normal
-  e.preventDefault();
-  window.history.pushState(null, '', href);
-  requestAnimationFrame(() => {
-    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  });
-}
-
 // CTA above-the-fold. `onDark` cambia los colores para la variante móvil
 // (texto sobre imagen con velo oscuro).
 //
@@ -114,21 +95,13 @@ function HeroCTA({
         </Link>
       ) : (
         // Sin sesión → lleva a la sección de contacto (misma página).
-        <a
-          href="/contacto"
-          onClick={(e) => scrollToSection(e, 'contacto', '/contacto')}
-          className={primaryClass}
-        >
+        <SectionLink sectionId="contacto" href="/contacto" className={primaryClass}>
           {t('ctaPrimario')}
-        </a>
+        </SectionLink>
       )}
-      <a
-        href="/planes"
-        onClick={(e) => scrollToSection(e, 'planes', '/planes')}
-        className={secondaryClass}
-      >
+      <SectionLink sectionId="planes" href="/planes" className={secondaryClass}>
         {t('ctaSecundario')}
-      </a>
+      </SectionLink>
     </div>
   );
 }
@@ -143,14 +116,20 @@ export function Hero({ imageSrc, ctaHref, isLoggedIn }: HeroProps) {
           MÓVIL / TABLET (< lg): imagen de fondo (CSS) con velo + texto encima
           ════════════════════════════════════════════════════════════════════ */}
       <div className="relative lg:hidden">
-        {/* Fondo: imagen vía CSS (no dispara warning de sizes) o color de marca */}
-        <div
-          className="absolute inset-0 z-0 bg-cover bg-center"
-          style={{
-            backgroundColor: 'var(--color-brand-gold)',
-            backgroundImage: hasImage ? `url("${imageSrc}")` : undefined,
-          }}
-        >
+        {/* Fondo: imagen optimizada por next/image (webp/avif, priority para el
+            LCP móvil) o color de marca si no hay imagen. object-cover replica
+            el comportamiento del antiguo background-size: cover. */}
+        <div className="absolute inset-0 z-0" style={{ backgroundColor: 'var(--color-brand-gold)' }}>
+          {hasImage && (
+            <Image
+              src={imageSrc}
+              alt={t('imagenAlt')}
+              fill
+              sizes="100vw"
+              className="object-cover object-center"
+              priority
+            />
+          )}
           {/* Velo para legibilidad del texto */}
           <div className="absolute inset-0 bg-gradient-to-br from-black/75 via-black/60 to-black/45" />
         </div>

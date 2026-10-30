@@ -146,8 +146,13 @@ function getTenantThemeCSS(): string {
 
 // Metadata raíz del tenant activo: metadataBase, title template, openGraph,
 // twitter, canonical, keywords, robots y favicon por tenant. La lógica vive en
-// config/seo.ts para reutilizarse desde las páginas del landing.
-export const metadata: Metadata = buildRootMetadata();
+// config/seo.ts para reutilizarse desde las páginas del landing. Se resuelve el
+// locale activo para fijar correctamente og:locale (el idioma se sirve en la
+// misma URL vía cookie; por eso no hay hreflang, sólo el locale activo).
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  return buildRootMetadata(locale);
+}
 
 export default async function RootLayout({
   children,

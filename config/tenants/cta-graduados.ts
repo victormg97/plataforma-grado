@@ -6,8 +6,8 @@ const config: TenantConfigInput = {
   descripcion: 'Preparación para el Examen de Grado',
   emailDomain: 'ctagraduados.cl',
   terminoPrueba: { singular: 'Prueba', plural: 'Pruebas' },
-  logoLight: '/tenants/cta-graduados/logo-light.png',
-  logoDark: '/tenants/cta-graduados/logo-dark.png',
+  logoLight: '/tenants/cta-graduados/logo-light.webp',
+  logoDark: '/tenants/cta-graduados/logo-dark.webp',
   propietarios: [
     {
       nombre: 'Carlos Toro Araya',
@@ -26,7 +26,7 @@ const config: TenantConfigInput = {
   },
   metadata: {
     favicon: '/tenants/cta-graduados/favicon.ico',
-    ogImage: '/tenants/cta-graduados/logo-light.png',
+    ogImage: '/tenants/cta-graduados/logo-light.webp',
   },
   seo: {
     siteUrl: 'https://www.ctagraduados.cl',
