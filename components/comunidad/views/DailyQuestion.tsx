@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/common/Card';
@@ -9,6 +9,17 @@ import { RecentAchievements } from '../RecentAchievements';
 import { LevelCard } from '../LevelCard';
 import { DailyReviewPanel } from '../DailyReviewPanel';
 import type { DailyAnswer, DailyAnswerResult } from '@/lib/comunidad/answer';
+import { useUserStore } from '@/stores/useUserStore';
+import { playerKey, readPlayerItem, removePlayerItem, writePlayerItem } from '@/lib/comunidad/player-storage';
+
+// Types the Pregunta del Día can render and grade.
+const SUPPORTED_TYPES = new Set(['single_choice', 'multiple_choice', 'true_false']);
+
+interface DailyDraft {
+  questionId: string;
+  selected: number[];
+  tfValue: boolean | null;
+}
 import type { GameView } from '../views';
 
 const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
@@ -29,8 +40,30 @@ export function DailyQuestion({
   const { data: profile } = useGameProfile();
   const mutation = useAnswerDailyQuestion();
 
+  const userId = useUserStore((s) => s.user?.id ?? null);
+  const draftKey = userId ? playerKey(userId, 'daily-draft') : null;
+  const questionId = data?.question?.id ?? null;
+
   const [selected, setSelected] = useState<number[]>([]);
   const [tfValue, setTfValue] = useState<boolean | null>(null);
+
+  // Restore the selection made before a reload (same question only).
+  useEffect(() => {
+    if (!draftKey || !questionId) return;
+    const draft = readPlayerItem<DailyDraft>(draftKey, { kind: 'session' });
+    if (!draft || draft.questionId !== questionId) return;
+    /* eslint-disable react-hooks/set-state-in-effect -- one-time restore from storage */
+    setSelected(draft.selected ?? []);
+    setTfValue(draft.tfValue ?? null);
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, [draftKey, questionId]);
+
+  // Keep the draft in sync with the selection.
+  useEffect(() => {
+    if (!draftKey || !questionId) return;
+    if (selected.length === 0 && tfValue === null) return;
+    writePlayerItem<DailyDraft>(draftKey, { questionId, selected, tfValue }, 'session');
+  }, [draftKey, questionId, selected, tfValue]);
 
   if (isLoading) {
     return (
@@ -42,7 +75,9 @@ export function DailyQuestion({
 
   const question = data?.question ?? null;
 
-  if (!question) {
+  // No question, or a type this screen can't grade (e.g. matching curated by
+  // mistake): show the empty state instead of a broken true/false form.
+  if (!question || !SUPPORTED_TYPES.has(question.type)) {
     return (
       <Card padding="lg" className="border-none bg-[var(--game-surface)] text-center shadow-[var(--game-shadow)]">
         <p className="text-sm text-[var(--game-text-muted)]">{t('daily_empty')}</p>
@@ -86,7 +121,12 @@ export function DailyQuestion({
 
   const handleSubmit = () => {
     const payload: DailyAnswer = isChoice ? { selected } : { value: tfValue as boolean };
-    mutation.mutate(payload, { onSuccess: (result) => onAnswered(result) });
+    mutation.mutate(payload, {
+      onSuccess: (result) => {
+        if (draftKey) removePlayerItem(draftKey, 'session');
+        onAnswered(result);
+      },
+    });
   };
 
   return (

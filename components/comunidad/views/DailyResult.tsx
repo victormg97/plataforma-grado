@@ -4,22 +4,48 @@ import { useTranslations } from 'next-intl';
 import { CheckCircle2, XCircle, BookOpen, Flame, Sparkles } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { RecentAchievements } from '../RecentAchievements';
+import { useDailyReview, useGameProfile } from '@/lib/hooks/useComunidad';
 import type { DailyAnswerResult } from '@/lib/comunidad/answer';
 import type { GameView } from '../views';
 
 /**
- * Result of the Pregunta del Día, styled after mockup 3. Correct/incorrect
- * feedback, explanation card and points/streak are live (Slice 1). The right
- * "Logros" column is a VISUAL PLACEHOLDER for later slices (no logic).
+ * Result of the Pregunta del Día, styled after mockup 3: correct/incorrect
+ * banner, explanation, points, streak and recent achievements. Survives a
+ * page reload by rebuilding the result from today's daily review.
  */
 export function DailyResult({
-  result,
+  result: resultProp,
   onNavigate,
 }: {
   result: DailyAnswerResult | null;
   onNavigate: (view: GameView) => void;
 }) {
+  const liveResult = resultProp;
   const t = useTranslations('comunidadEstrategica');
+  // The profile is the source of truth for the streak (the RPC echoes the
+  // stored value, which can be stale when the daily source doesn't count).
+  const { data: profile } = useGameProfile();
+  // After a reload the in-memory result is gone: rebuild it from today's
+  // review (already in the cache from the bootstrap, no extra request).
+  const { data: review, isLoading: reviewLoading } = useDailyReview(!liveResult);
+
+  const result: Pick<DailyAnswerResult, 'is_correct' | 'explanation' | 'points_awarded'> | null =
+    liveResult ??
+    (review?.answered
+      ? {
+          is_correct: !!review.is_correct,
+          explanation: review.question?.explanation ?? null,
+          points_awarded: review.points_awarded ?? 0,
+        }
+      : null);
+
+  if (!result && reviewLoading) {
+    return (
+      <div className="flex justify-center py-16" role="status" aria-label={t('loading')}>
+        <div className="size-8 animate-spin rounded-full border-4 border-[var(--game-accent)] border-t-transparent" />
+      </div>
+    );
+  }
 
   if (!result) {
     return (
@@ -101,7 +127,7 @@ export function DailyResult({
         <Card padding="md" className="flex items-center gap-3 border-none bg-[var(--game-surface)] shadow-[var(--game-shadow)]">
           <Flame className="size-5 text-[var(--game-flame)]" />
           <div>
-            <div className="text-lg font-bold text-[var(--game-text)]">{result.current_streak}</div>
+            <div className="text-lg font-bold text-[var(--game-text)]">{profile?.current_streak ?? liveResult?.current_streak ?? 0}</div>
             <div className="text-xs text-[var(--game-text-muted)]">{t('streak_current')}</div>
           </div>
         </Card>

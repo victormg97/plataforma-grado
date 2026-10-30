@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { requireGamePlayer } from '@/lib/comunidad/player-guard';
 import { tenantConfig } from '@/config';
 
 // GET: single-round-trip bootstrap for the player game. Returns everything the
@@ -7,12 +7,9 @@ import { tenantConfig } from '@/config';
 // subjects, ranking, challenges, badges, weekly case) via one orchestrator RPC.
 // Used both by the server-side prefetch and as a client fallback.
 export async function GET() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: 'NO_AUTORIZADO' }, { status: 401 });
-  }
+  const guard = await requireGamePlayer();
+  if ('response' in guard) return guard.response;
+  const { supabase } = guard;
 
   const { data, error } = await supabase.rpc('get_game_bootstrap', {
     p_tenant: tenantConfig.id,

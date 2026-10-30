@@ -96,11 +96,25 @@ export interface RecentAchievement {
   granted_at: string;
 }
 
+/**
+ * Streak state computed server-side (America/Santiago calendar days):
+ *  - none:    the player never had a streak.
+ *  - active:  played today; the streak is safe.
+ *  - at_risk: played yesterday but not today; lost if they skip today.
+ *  - broken:  lost due to inactivity (current_streak is 0, previous_streak
+ *             holds the lost value).
+ */
+export type StreakStatus = 'none' | 'active' | 'at_risk' | 'broken';
+
 /** Result of get_game_profile. */
 export interface GameProfileResult {
   nickname: string | null;
+  /** Effective streak: 0 once a day was skipped. */
   current_streak: number;
   longest_streak: number;
+  /** Length of the last streak that was lost. */
+  previous_streak: number;
+  streak_status: StreakStatus;
   last_activity_date: string | null;
   nickname_updated_at: string | null;
   lives: PlayerLives;

@@ -1,44 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 import { tenantConfig } from '@/config';
 import { quizSubmitSchema, type QuizSubmitResult } from '@/lib/comunidad/quiz';
+import { requireGamePlayer, rpcErrorResponse } from '@/lib/comunidad/player-guard';
 
-// POST: submit quiz answers. The RPC re-evaluates correctness, scores per the
-// configured scoring_mode, records the quiz_completed event with subject/
-// category refs, updates the streak (if the source counts) and evaluates
-// challenges — all atomically.
+// POST: submit quiz answers. game_submit_quiz runs submit_quiz (re-evaluates
+// correctness, scores, records the event, streak, challenges, badges) and
+// returns the per-question review plus the refreshed game state, all in one
+// transaction / one round-trip.
 export async function POST(req: NextRequest) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: 'NO_AUTORIZADO' }, { status: 401 });
-  }
+  const guard = await requireGamePlayer();
+  if ('response' in guard) return guard.response;
 
   const body = await req.json().catch(() => ({}));
   const parsed = quizSubmitSchema.safeParse(body);
-
   if (!parsed.success) {
     return NextResponse.json({ error: 'INVALID_ANSWERS' }, { status: 400 });
   }
 
-  const { data, error } = await supabase.rpc('submit_quiz', {
+  const { data, error } = await guard.supabase.rpc('game_submit_quiz', {
     p_tenant: tenantConfig.id,
     p_subject_id: parsed.data.subject_id,
     p_category_id: parsed.data.category_id ?? null,
     p_answers: parsed.data.answers,
+    p_attempt_id: parsed.data.attempt_id ?? null,
   });
-
-  if (error) {
-    const status = error.code === '42501' ? 403 : 500;
-    return NextResponse.json({ error: 'ERROR', message: error.message }, { status });
-  }
+  if (error) return rpcErrorResponse(error);
 
   const result = data as unknown as QuizSubmitResult;
-
   if (!result.ok) {
-    const status = result.error_code === 'NO_QUESTIONS' ? 400 : 400;
-    return NextResponse.json({ error: result.error_code ?? 'ERROR' }, { status });
+    return NextResponse.json({ error: result.error_code ?? 'ERROR' }, { status: 400 });
   }
 
   return NextResponse.json(result);

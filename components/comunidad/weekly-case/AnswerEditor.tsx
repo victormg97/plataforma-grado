@@ -1,11 +1,28 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
+import { History } from 'lucide-react';
+import { useUserStore } from '@/stores/useUserStore';
+import {
+  playerKey,
+  readPlayerItem,
+  removePlayerItem,
+  writePlayerItem,
+} from '@/lib/comunidad/player-storage';
 import { RichTextEditor } from '@/components/common/RichTextEditor';
 import { RichDescription } from '@/components/common/RichDescription';
 import { useSubmitWeeklyCaseAnswer } from '@/lib/hooks/useComunidad';
 import type { WeeklyCaseMyAnswer } from '@/lib/comunidad/weekly-case';
 import { CaseGradeFeedback } from './CaseGradeFeedback';
+
+const DRAFT_DEBOUNCE_MS = 500;
+// Weekly windows last about a week; drafts older than that are irrelevant.
+const DRAFT_MAX_AGE_MS = 14 * 24 * 60 * 60 * 1000;
+
+/** True for editor HTML without visible text (e.g. "<p></p>"). */
+function isBlankHtml(html: string): boolean {
+  return html.replace(/<[^>]*>/g, '').replace(/&nbsp;|\u00a0/g, '').trim() === '';
+}
 
 /**
  * Answer editor for an open weekly case. State is initialized directly from
@@ -23,8 +40,35 @@ export function AnswerEditor({
 }) {
   const t = useTranslations('comunidadEstrategica');
   const submit = useSubmitWeeklyCaseAnswer();
+  const userId = useUserStore((s) => s.user?.id ?? null);
+  const draftKey = userId ? playerKey(userId, `case-draft:${caseId}`) : null;
+  const saved = myAnswer?.answer_content ?? '';
 
-  const [content, setContent] = useState(myAnswer?.answer_content ?? '');
+  // An unsent draft (written before a reload / tab close) wins over the saved
+  // answer. Read once on mount; the parent remounts this per case.
+  const [initialDraft] = useState<string | null>(() => {
+    if (!draftKey || !isOpen) return null;
+    const draft = readPlayerItem<string>(draftKey, { maxAgeMs: DRAFT_MAX_AGE_MS });
+    return draft !== null && draft !== saved && !isBlankHtml(draft) ? draft : null;
+  });
+  const [content, setContent] = useState(initialDraft ?? saved);
+  const [draftRestored, setDraftRestored] = useState(initialDraft !== null);
+
+  // Persist the draft (debounced) while it differs from what's saved.
+  useEffect(() => {
+    if (!draftKey || !isOpen) return;
+    const id = window.setTimeout(() => {
+      if (content === saved || isBlankHtml(content)) removePlayerItem(draftKey);
+      else writePlayerItem(draftKey, content);
+    }, DRAFT_DEBOUNCE_MS);
+    return () => window.clearTimeout(id);
+  }, [content, saved, draftKey, isOpen]);
+
+  const discardDraft = () => {
+    if (draftKey) removePlayerItem(draftKey);
+    setContent(saved);
+    setDraftRestored(false);
+  };
 
   // Closed/resolved case: show the recorded answer read-only (Req. 5.2).
   if (!isOpen) {
@@ -51,6 +95,8 @@ export function AnswerEditor({
   const onSave = async () => {
     try {
       const res = await submit.mutateAsync({ case_id: caseId, answer_content: content });
+      if (draftKey) removePlayerItem(draftKey);
+      setDraftRestored(false);
       if (res.is_new && (res.points_awarded ?? 0) > 0) {
         toast.success(t('weekly_case_answer_points', { points: res.points_awarded ?? 0 }));
       } else {
@@ -71,6 +117,22 @@ export function AnswerEditor({
       <h4 className="text-sm font-semibold text-[var(--game-text)]">
         {myAnswer ? t('weekly_case_edit_answer') : t('weekly_case_write_answer')}
       </h4>
+      {draftRestored && (
+        <div
+          className="flex flex-wrap items-center gap-2 rounded-[var(--game-radius-sm)] border border-[var(--game-accent)]/30 bg-[var(--game-accent-muted)] px-3 py-2 text-xs text-[var(--game-text)]"
+          role="status"
+        >
+          <History className="size-3.5 shrink-0 text-[var(--game-accent)]" />
+          <span className="flex-1">{t('weekly_case_draft_restored')}</span>
+          <button
+            type="button"
+            onClick={discardDraft}
+            className="font-semibold text-[var(--game-accent)] hover:underline"
+          >
+            {t('weekly_case_draft_discard')}
+          </button>
+        </div>
+      )}
       <RichTextEditor
         content={content}
         onChange={setContent}

@@ -1,82 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { createClient } from '@/lib/supabase/server';
 import { tenantConfig } from '@/config';
 import { requireGameAdmin } from '@/lib/comunidad/admin-guard';
 import { dailyCurateSchema } from '@/lib/comunidad/admin';
 
-// GET: recent curated/assigned daily questions (?from=&to= optional).
-// Enriches each row with the question content, type and subject name so the
-// admin sees what actually ran on each date (not just the date).
+const DAILY_SUPPORTED_TYPES: string[] = ['single_choice', 'multiple_choice', 'true_false'];
+
+// GET: recent curated/assigned daily questions (?from=&to= optional),
+// enriched with the question content, type and subject name. One RPC with
+// joins (before: three sequential queries + merging here).
 export async function GET(req: NextRequest) {
   const guard = await requireGameAdmin();
   if ('response' in guard) return guard.response;
 
   const { searchParams } = new URL(req.url);
-  const from = searchParams.get('from');
-  const to = searchParams.get('to');
+  const isDate = (v: string | null) => (v && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null);
 
-  const admin = createAdminClient();
-  let query = admin
-    .from('game_daily_questions')
-    .select('id, question_date, question_id, is_manually_curated')
-    .eq('tenant', tenantConfig.id)
-    .order('question_date', { ascending: false });
-
-  if (from) query = query.gte('question_date', from);
-  if (to) query = query.lte('question_date', to);
-
-  const { data: rows, error } = await query.limit(60);
-  if (error) return NextResponse.json({ error: 'ERROR_DB', message: error.message }, { status: 500 });
-
-  const list = rows ?? [];
-  const questionIds = [...new Set(list.map((r) => r.question_id).filter(Boolean))] as string[];
-
-  // Resolve question content + subject name in bulk.
-  const questionMap = new Map<
-    string,
-    { content: string; type: string; subject_name: string | null }
-  >();
-
-  if (questionIds.length > 0) {
-    const { data: questions } = await admin
-      .from('qb_questions')
-      .select('id, content, type, subject_id')
-      .eq('tenant', tenantConfig.id)
-      .in('id', questionIds);
-
-    const subjectIds = [
-      ...new Set((questions ?? []).map((q) => q.subject_id).filter(Boolean)),
-    ] as string[];
-
-    const subjectMap = new Map<string, string>();
-    if (subjectIds.length > 0) {
-      const { data: subjects } = await admin
-        .from('qb_subjects')
-        .select('id, name')
-        .in('id', subjectIds);
-      for (const s of subjects ?? []) subjectMap.set(s.id, s.name);
-    }
-
-    for (const q of questions ?? []) {
-      questionMap.set(q.id, {
-        content: q.content,
-        type: q.type,
-        subject_name: q.subject_id ? subjectMap.get(q.subject_id) ?? null : null,
-      });
-    }
-  }
-
-  const enriched = list.map((r) => {
-    const q = r.question_id ? questionMap.get(r.question_id) : undefined;
-    return {
-      ...r,
-      question_content: q?.content ?? null,
-      question_type: q?.type ?? null,
-      subject_name: q?.subject_name ?? null,
-    };
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc('admin_list_daily_questions', {
+    p_tenant: tenantConfig.id,
+    p_from: isDate(searchParams.get('from')),
+    p_to: isDate(searchParams.get('to')),
   });
 
-  return NextResponse.json(enriched);
+  if (error) return NextResponse.json({ error: 'ERROR_DB', message: error.message }, { status: 500 });
+  return NextResponse.json(data ?? []);
 }
 
 // PUT: manually curate the question for a given date (Req. 13).
@@ -96,13 +45,19 @@ export async function PUT(req: NextRequest) {
   // The question must belong to the tenant and be active.
   const { data: q } = await admin
     .from('qb_questions')
-    .select('id')
+    .select('id, type')
     .eq('id', parsed.data.question_id)
     .eq('tenant', tenantConfig.id)
     .eq('status', 'active')
     .maybeSingle();
 
   if (!q) return NextResponse.json({ error: 'QUESTION_NOT_FOUND' }, { status: 400 });
+
+  // The Pregunta del Día only supports choice and true/false questions
+  // (answer_daily_question can't grade matching / fill_blank / open_ended).
+  if (!DAILY_SUPPORTED_TYPES.includes(q.type)) {
+    return NextResponse.json({ error: 'UNSUPPORTED_TYPE' }, { status: 400 });
+  }
 
   const { data, error } = await admin
     .from('game_daily_questions')

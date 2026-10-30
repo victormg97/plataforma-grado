@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { GameState } from './game-state';
 
 /**
  * Shared contracts for the Slice 2 quiz flow. Mirrors the answer payload of
@@ -48,6 +49,8 @@ export const quizAnswerSchema = z.union([
 export const quizSubmitSchema = z.object({
   subject_id: z.string().uuid(),
   category_id: z.string().uuid().nullable().optional(),
+  /** From start_quiz; makes re-submitting the same attempt idempotent. */
+  attempt_id: z.string().uuid().nullable().optional(),
   answers: z.array(quizAnswerSchema).min(1, 'NO_ANSWERS'),
 });
 
@@ -96,6 +99,8 @@ export interface QuizQuestion {
 export interface QuizStartResult {
   ok: boolean;
   error_code?: string;
+  /** Unique id of this attempt; send it back on submit. */
+  attempt_id?: string;
   subject_id?: string;
   category_id?: string | null;
   question_count?: number;
@@ -107,6 +112,31 @@ export interface CompletedChallenge {
   title: string;
 }
 
+/** Solution revealed after submitting, per question type. */
+export type QuizSolution =
+  | { text: string; is_correct: boolean }[] // single / multiple choice
+  | { correct_answer: boolean } // true_false
+  | { pairs: { left: string; right: string }[] } // matching (original order)
+  | { blanks: string[][] } // fill_blank: accepted answers per blank
+  | null;
+
+/** Per-question review returned by submit_quiz (in the order answered). */
+export interface QuizQuestionReview {
+  question_id: string;
+  type: QuizQuestionType;
+  content: string;
+  is_correct: boolean;
+  /** The payload the player sent for this question. */
+  answer: {
+    selected?: number[];
+    value?: boolean;
+    matches?: number[];
+    blanks?: string[];
+  };
+  solution: QuizSolution;
+  explanation: string | null;
+}
+
 export interface QuizSubmitResult {
   ok: boolean;
   error_code?: string;
@@ -115,6 +145,14 @@ export interface QuizSubmitResult {
   points_awarded: number;
   scoring_mode: 'fixed' | 'proportional';
   completed_challenges: CompletedChallenge[];
+  /** True when this attempt had already been submitted (replayed result,
+   * no new points / lives / challenges). */
+  already_submitted?: boolean;
+  attempt_id?: string;
+  /** Absent on results produced before migration 145. */
+  details?: QuizQuestionReview[];
+  /** Refreshed game sections (seeded into the query cache by the client). */
+  state?: GameState;
 }
 
 // ─── Ranking shapes (from get_monthly_ranking + get_my_ranking_position) ───────

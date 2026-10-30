@@ -21,6 +21,7 @@ import { ChallengesView } from './views/ChallengesView';
 import { BadgeShowcaseView } from './views/BadgeShowcaseView';
 import { WeeklyCaseView } from './views/WeeklyCaseView';
 import { useGameProfile, useGameSettings } from '@/lib/hooks/useComunidad';
+import { useGameFocusRefresh } from './useGameFocusRefresh';
 import type { DailyAnswerResult } from '@/lib/comunidad/answer';
 
 /**
@@ -183,6 +184,9 @@ function GameShellInner({
 
   const isBanned = !!profile?.moderation?.is_banned;
 
+  // One request re-syncs the game on tab return / day change.
+  useGameFocusRefresh(active === 'ranking');
+
   // Subtle enter/exit for view changes. The data is already warm, so this is
   // pure polish and adds no load time. Respects prefers-reduced-motion.
   const variants = reduceMotion
@@ -195,13 +199,7 @@ function GameShellInner({
 
   return (
     <div className="flex flex-col gap-5 text-[var(--game-text)]">
-      <GameHeader
-        settings={settings}
-        nickname={profile?.nickname ?? null}
-        currentStreak={profile?.current_streak ?? 0}
-        lives={profile?.lives}
-        level={profile?.level}
-      />
+      <GameHeader settings={settings} profile={profile} />
 
       {/* Restricted players can keep playing, but their nickname is hidden
           from others until they change it. */}

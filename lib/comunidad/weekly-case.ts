@@ -108,6 +108,8 @@ export interface WeeklyCaseHistoryResult {
 /** Result of submit_weekly_case_answer. */
 export interface SubmitWeeklyCaseAnswerResult {
   ok: boolean;
+  /** Refreshed game sections (seeded into the query cache by the client). */
+  state?: import('./game-state').GameState;
   is_new?: boolean;
   points_awarded?: number;
   completed_challenges?: { challenge_id: string; title: string }[];

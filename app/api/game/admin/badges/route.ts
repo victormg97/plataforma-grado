@@ -6,41 +6,23 @@ import { requireGameAdmin } from '@/lib/comunidad/admin-guard';
 import { badgeSchema, type AdminBadge } from '@/lib/comunidad/badge';
 
 // GET: list all badges of the tenant with a grant count (for delete warnings).
+// One RPC; counts are aggregated in SQL (before: every user_badges row was
+// downloaded and counted here).
 export async function GET(_req: NextRequest) {
   const guard = await requireGameAdmin();
   if ('response' in guard) return guard.response;
 
-  const admin = createAdminClient();
-
-  const { data: badges, error } = await admin
-    .from('game_badges')
-    .select('*')
-    .eq('tenant', tenantConfig.id)
-    .order('series_key', { ascending: true, nullsFirst: false })
-    .order('series_order', { ascending: true, nullsFirst: false })
-    .order('name', { ascending: true });
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc('admin_list_game_badges', {
+    p_tenant: tenantConfig.id,
+  });
 
   if (error) {
-    return NextResponse.json({ error: 'ERROR_DB', message: error.message }, { status: 500 });
+    const status = error.code === '42501' ? 403 : 500;
+    return NextResponse.json({ error: 'ERROR_DB', message: error.message }, { status });
   }
 
-  // Grant counts per badge.
-  const { data: counts } = await admin
-    .from('user_badges')
-    .select('badge_id')
-    .eq('tenant', tenantConfig.id);
-
-  const countMap = new Map<string, number>();
-  for (const row of counts ?? []) {
-    countMap.set(row.badge_id, (countMap.get(row.badge_id) ?? 0) + 1);
-  }
-
-  const result: AdminBadge[] = (badges ?? []).map((b) => ({
-    ...(b as unknown as AdminBadge),
-    grant_count: countMap.get(b.id) ?? 0,
-  }));
-
-  return NextResponse.json(result);
+  return NextResponse.json((data ?? []) as unknown as AdminBadge[]);
 }
 
 // POST: create a badge. Automatic badges trigger a retroactive backfill.

@@ -9,13 +9,15 @@ import { CaseReviewInbox } from '@/components/comunidad/admin/CaseReviewInbox';
  */
 export default async function CasosRevisionPage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
+  // Local JWT verification (no extra Auth round-trip on top of the proxy's).
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const userId = claimsData?.claims?.sub;
+  if (!userId) redirect('/login');
 
   const { data: profile } = await supabase
     .from('profiles')
     .select('rol')
-    .eq('id', user.id)
+    .eq('id', userId)
     .single();
 
   if (profile?.rol !== 'admin') redirect('/');

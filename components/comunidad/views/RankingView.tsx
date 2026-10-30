@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
+import { useShallowQueryParam } from '@/lib/hooks/useShallowQueryParam';
 import { useTranslations } from 'next-intl';
 import { Trophy } from 'lucide-react';
 import { Card } from '@/components/common/Card';
@@ -20,7 +21,9 @@ import type { RankingEntry } from '@/lib/comunidad/quiz';
 export function RankingView() {
   const t = useTranslations('comunidadEstrategica');
   const currentUserId = useUserStore((s) => s.user?.id);
-  const [month, setMonth] = useState<string | null>(null);
+  // Selected month lives in the URL (?mes=YYYY-MM) so a reload keeps it.
+  const [monthParam, setMonth] = useShallowQueryParam('mes');
+  const month = monthParam && /^\d{4}-\d{2}$/.test(monthParam) ? monthParam : null;
 
   const {
     data,

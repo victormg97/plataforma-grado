@@ -111,7 +111,13 @@ export function DailyQuestionPicker({
       setConfirmQ(null);
     } catch (e) {
       const code = (e as { message?: string })?.message;
-      toast.error(code === 'QUESTION_NOT_FOUND' ? t('picker_error_not_found') : t('admin_error'));
+      toast.error(
+        code === 'QUESTION_NOT_FOUND'
+          ? t('picker_error_not_found')
+          : code === 'UNSUPPORTED_TYPE'
+            ? t('picker_error_unsupported_type')
+            : t('admin_error')
+      );
     }
   };
 

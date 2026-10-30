@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { GameState } from './game-state';
 
 /**
  * Shared answer payload contract for the Pregunta del Día.
@@ -37,4 +38,6 @@ export interface DailyAnswerResult {
   current_streak: number;
   longest_streak: number;
   error_code?: string;
+  /** Refreshed game sections (seeded into the query cache by the client). */
+  state?: GameState;
 }

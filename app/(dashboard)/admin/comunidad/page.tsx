@@ -16,18 +16,13 @@ import { prefetchComunidadAdmin } from '@/lib/comunidad/admin-prefetch';
  */
 export default async function AdminComunidadPage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
+  // Local JWT verification (no extra Auth round-trip). The admin role is
+  // enforced by the bootstrap RPC itself, so no separate profile query.
+  const { data: claimsData } = await supabase.auth.getClaims();
+  if (!claimsData?.claims?.sub) redirect('/login');
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('rol')
-    .eq('id', user.id)
-    .single();
-
-  if (profile?.rol !== 'admin') redirect('/');
-
-  const dehydratedState = await prefetchComunidadAdmin();
+  const { dehydratedState, forbidden } = await prefetchComunidadAdmin();
+  if (forbidden) redirect('/');
 
   return (
     <HydrationBoundary state={dehydratedState}>

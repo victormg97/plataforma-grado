@@ -1,46 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 import { tenantConfig } from '@/config';
-import type { MonthlyRankingResult, MyRankingPosition } from '@/lib/comunidad/quiz';
+import { requireGamePlayer, rpcErrorResponse } from '@/lib/comunidad/player-guard';
 
-// GET: monthly ranking (paginated) combined with the caller's own position.
-// Query params: ?month=YYYY-MM (optional), ?limit, ?offset.
+// GET: monthly ranking page + the caller's own position, in ONE RPC
+// (get_ranking_page). Query params: ?month=YYYY-MM (optional), ?limit, ?offset.
 export async function GET(req: NextRequest) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: 'NO_AUTORIZADO' }, { status: 401 });
-  }
+  const guard = await requireGamePlayer();
+  if ('response' in guard) return guard.response;
 
   const { searchParams } = new URL(req.url);
   const monthParam = searchParams.get('month'); // 'YYYY-MM' or null
   const limit = Math.min(Math.max(Number(searchParams.get('limit')) || 20, 1), 100);
   const offset = Math.max(Number(searchParams.get('offset')) || 0, 0);
 
-  // Convert 'YYYY-MM' to a DATE (first of month) the RPC accepts; null = current.
-  const pMonth = monthParam ? `${monthParam}-01` : undefined;
+  // 'YYYY-MM' → first day of month; anything else = current month.
+  const pMonth = monthParam && /^\d{4}-\d{2}$/.test(monthParam) ? `${monthParam}-01` : undefined;
 
-  const [rankingRes, positionRes] = await Promise.all([
-    supabase.rpc('get_monthly_ranking', {
-      p_tenant: tenantConfig.id,
-      p_month: pMonth,
-      p_limit: limit,
-      p_offset: offset,
-    }),
-    supabase.rpc('get_my_ranking_position', {
-      p_tenant: tenantConfig.id,
-      p_month: pMonth,
-    }),
-  ]);
+  const { data, error } = await guard.supabase.rpc('get_ranking_page', {
+    p_tenant: tenantConfig.id,
+    p_month: pMonth,
+    p_limit: limit,
+    p_offset: offset,
+  });
+  if (error) return rpcErrorResponse(error);
 
-  if (rankingRes.error) {
-    const status = rankingRes.error.code === '42501' ? 403 : 500;
-    return NextResponse.json({ error: 'ERROR', message: rankingRes.error.message }, { status });
-  }
-
-  const ranking = rankingRes.data as unknown as MonthlyRankingResult;
-  const myPosition = (positionRes.data as unknown as MyRankingPosition) ?? { has_position: false };
-
-  return NextResponse.json({ ...ranking, my_position: myPosition });
+  return NextResponse.json(data);
 }

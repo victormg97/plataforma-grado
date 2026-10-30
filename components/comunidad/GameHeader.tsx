@@ -7,8 +7,8 @@ import { Modal } from '@/components/common/Modal';
 import { NicknameForm } from './NicknameForm';
 import { LivesIndicator } from './LivesIndicator';
 import { StreakIndicator } from './StreakIndicator';
-import type { GameSettingsResponse } from '@/lib/hooks/useComunidad';
-import type { PlayerLives, PlayerLevel } from '@/lib/comunidad/game-config';
+import { useUserStore } from '@/stores/useUserStore';
+import type { GameProfileResponse, GameSettingsResponse } from '@/lib/hooks/useComunidad';
 
 /**
  * Dark burgundy header bar used across the mini-app (mockup 2).
@@ -17,22 +17,23 @@ import type { PlayerLives, PlayerLevel } from '@/lib/comunidad/game-config';
  */
 export function GameHeader({
   settings,
-  nickname,
-  currentStreak,
-  lives,
-  level,
+  profile,
 }: {
   settings?: GameSettingsResponse;
-  nickname: string | null;
-  currentStreak: number;
-  lives?: PlayerLives;
-  level?: PlayerLevel;
+  profile?: GameProfileResponse;
 }) {
   const t = useTranslations('comunidadEstrategica');
   const [editOpen, setEditOpen] = useState(false);
 
+  const userId = useUserStore((s) => s.user?.id ?? null);
+  const nickname = profile?.nickname ?? null;
+  const lives = profile?.lives;
+  const level = profile?.level;
+
   return (
-    <header className="rounded-[var(--game-radius)] bg-[var(--game-header-bg)] px-5 py-4 text-[var(--game-on-accent)]">
+    // The header background is always a dark burgundy (every theme), so its
+    // text is always white. (--game-on-accent is dark in the graduado theme.)
+    <header className="rounded-[var(--game-radius)] bg-[var(--game-header-bg)] px-5 py-4 text-white">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex select-none items-start gap-3">
           <Gamepad2 className="mt-0.5 size-7 shrink-0 opacity-90" />
@@ -44,12 +45,25 @@ export function GameHeader({
           </div>
         </div>
 
-        <div className="flex items-center gap-5">
-          {/* Streak — real, animated */}
-          <StreakIndicator currentStreak={currentStreak} />
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+          {/* Streak — real, animated, with details popover */}
+          <StreakIndicator
+            currentStreak={profile?.current_streak ?? 0}
+            longestStreak={profile?.longest_streak ?? 0}
+            previousStreak={profile?.previous_streak ?? 0}
+            status={profile?.streak_status ?? 'none'}
+            lastActivityDate={profile?.last_activity_date ?? null}
+            userId={userId}
+          />
 
           {/* Lives — real, only when the lives system is enabled */}
-          {lives?.enabled && <LivesIndicator lives={lives} />}
+          {lives?.enabled && (
+            <LivesIndicator
+              lives={lives}
+              regenMode={settings?.lives_regen_mode}
+              regenHours={settings?.lives_regen_hours}
+            />
+          )}
 
           {/* Player + level — nickname is selectable; level is not */}
           <div className="flex items-center gap-2">

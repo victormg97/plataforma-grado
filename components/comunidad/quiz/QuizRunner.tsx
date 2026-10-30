@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { AnimatePresence, m, useReducedMotion } from 'framer-motion';
 import { ArrowRight, ArrowLeft, Check } from 'lucide-react';
@@ -18,24 +18,52 @@ const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
  * onFinish with the typed payload. Correctness is evaluated server-side on
  * submit; nothing here reveals the solution.
  */
+/** Everything the player has done in the attempt (persisted across reloads). */
+export interface QuizProgress {
+  index: number;
+  choices: Record<string, number[]>;
+  tfValues: Record<string, boolean>;
+  matches: Record<string, Record<number, number>>;
+  blanks: Record<string, string[]>;
+}
+
 export function QuizRunner({
   questions,
   submitting,
   onFinish,
+  initialProgress,
+  onProgress,
 }: {
   questions: QuizQuestion[];
   submitting: boolean;
   onFinish: (answers: QuizAnswer[]) => void;
+  /** Restores a saved attempt (e.g. after a page reload). */
+  initialProgress?: QuizProgress | null;
+  /** Called on every change so the parent can persist the attempt. */
+  onProgress?: (progress: QuizProgress) => void;
 }) {
   const t = useTranslations('comunidadEstrategica');
   const reduceMotion = useReducedMotion();
-  const [index, setIndex] = useState(0);
+  const [index, setIndex] = useState(() =>
+    Math.min(Math.max(initialProgress?.index ?? 0, 0), Math.max(questions.length - 1, 0))
+  );
 
   // Per-type answer state, keyed by question id.
-  const [choices, setChoices] = useState<Record<string, number[]>>({});
-  const [tfValues, setTfValues] = useState<Record<string, boolean>>({});
-  const [matches, setMatches] = useState<Record<string, Record<number, number>>>({});
-  const [blanks, setBlanks] = useState<Record<string, string[]>>({});
+  const [choices, setChoices] = useState<Record<string, number[]>>(initialProgress?.choices ?? {});
+  const [tfValues, setTfValues] = useState<Record<string, boolean>>(initialProgress?.tfValues ?? {});
+  const [matches, setMatches] = useState<Record<string, Record<number, number>>>(
+    initialProgress?.matches ?? {}
+  );
+  const [blanks, setBlanks] = useState<Record<string, string[]>>(initialProgress?.blanks ?? {});
+
+  // Report progress upward (parent persists it).
+  const onProgressRef = useRef(onProgress);
+  useEffect(() => {
+    onProgressRef.current = onProgress;
+  }, [onProgress]);
+  useEffect(() => {
+    onProgressRef.current?.({ index, choices, tfValues, matches, blanks });
+  }, [index, choices, tfValues, matches, blanks]);
 
   const q = questions[index];
   const isLast = index === questions.length - 1;
@@ -179,8 +207,31 @@ export function QuizRunner({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between text-sm text-[var(--game-text-muted)]">
-        <span>{t('quiz_progress', { current: index + 1, total: questions.length })}</span>
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between text-sm text-[var(--game-text-muted)]">
+          <span>{t('quiz_progress', { current: index + 1, total: questions.length })}</span>
+          <span className="text-xs">{t('quiz_saved_hint')}</span>
+        </div>
+        {/* Answered progress; each segment jumps to its question. */}
+        <div className="flex gap-1" role="group" aria-label={t('quiz_progress_label')}>
+          {questions.map((question, i) => (
+            <button
+              key={question.id}
+              type="button"
+              onClick={() => setIndex(i)}
+              aria-label={t('quiz_progress', { current: i + 1, total: questions.length })}
+              aria-current={i === index ? 'step' : undefined}
+              className={cn(
+                'h-1.5 flex-1 rounded-full transition-colors',
+                i === index
+                  ? 'bg-[var(--game-accent)]'
+                  : hasAnswer(question)
+                    ? 'bg-[var(--game-accent)]/45'
+                    : 'bg-[var(--game-border)]'
+              )}
+            />
+          ))}
+        </div>
       </div>
 
       <AnimatePresence mode="wait" initial={false}>

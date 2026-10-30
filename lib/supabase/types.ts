@@ -2525,6 +2525,7 @@ export type Database = {
           nickname_updated_at: string | null
           current_streak: number
           longest_streak: number
+          previous_streak: number
           last_activity_date: string | null
           current_lives: number | null
           lives_updated_at: string | null
@@ -2548,6 +2549,7 @@ export type Database = {
           nickname_updated_at?: string | null
           current_streak?: number
           longest_streak?: number
+          previous_streak?: number
           last_activity_date?: string | null
           current_lives?: number | null
           lives_updated_at?: string | null
@@ -2571,6 +2573,7 @@ export type Database = {
           nickname_updated_at?: string | null
           current_streak?: number
           longest_streak?: number
+          previous_streak?: number
           last_activity_date?: string | null
           current_lives?: number | null
           lives_updated_at?: string | null
@@ -3357,6 +3360,7 @@ export type Database = {
           p_subject_id: string
           p_category_id?: string | null
           p_answers: Json
+          p_attempt_id?: string | null
         }
         Returns: Json
       }
@@ -3424,6 +3428,52 @@ export type Database = {
       get_game_bootstrap: {
         Args: { p_tenant: string }
         Returns: Json
+      }
+      get_game_state: {
+        Args: { p_tenant: string; p_parts?: string[] | null }
+        Returns: Json
+      }
+      get_daily_question_state: {
+        Args: { p_tenant: string }
+        Returns: Json
+      }
+      get_ranking_page: {
+        Args: { p_tenant: string; p_month?: string; p_limit?: number; p_offset?: number }
+        Returns: Json
+      }
+      game_answer_daily: {
+        Args: { p_tenant: string; p_answer: Json }
+        Returns: Json
+      }
+      game_submit_quiz: {
+        Args: {
+          p_tenant: string
+          p_subject_id: string
+          p_category_id: string | null
+          p_answers: Json
+          p_attempt_id?: string | null
+        }
+        Returns: Json
+      }
+      admin_list_game_badges: {
+        Args: { p_tenant: string }
+        Returns: Json
+      }
+      admin_list_daily_questions: {
+        Args: { p_tenant: string; p_from?: string | null; p_to?: string | null }
+        Returns: Json
+      }
+      get_game_admin_bootstrap: {
+        Args: { p_tenant: string }
+        Returns: Json
+      }
+      game_submit_weekly_case: {
+        Args: { p_tenant: string; p_case_id: string; p_answer_content: string }
+        Returns: Json
+      }
+      game_effective_streak: {
+        Args: { p_current: number; p_last: string | null; p_today: string }
+        Returns: number
       }
       get_daily_review: {
         Args: { p_tenant: string }

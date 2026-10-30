@@ -585,6 +585,54 @@ div[style*="position: fixed"] > [role="toolbar"] {
   --game-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.6);
 }
 
+/* Header HUD (streak flame + lives heart). Shared by every theme: the header
+   background is always a dark burgundy, so these tones work on all of them. */
+.game-scope {
+  --game-heart: #ef5350;
+  --game-heart-dark: #b71c1c;
+  --game-heart-glow: rgba(239, 83, 80, 0.55);
+  --game-heart-empty: #8d7b7e;
+  --game-flame-core: #ffd166;
+  --game-flame-glow: rgba(255, 140, 50, 0.55);
+  --game-smoke: rgba(220, 214, 216, 0.75);
+  --game-ember: #ff9f43;
+  --game-hud-crack: #3a0a12;
+  --game-popover-bg: #2a0a10;
+}
+
+/* Idle "alive" flame: a cheap transform-only flicker (GPU friendly). */
+@keyframes game-flame-flicker {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  25% { transform: scale(1.04, 0.97) rotate(-2deg); }
+  50% { transform: scale(0.98, 1.05) rotate(1.5deg); }
+  75% { transform: scale(1.03, 0.98) rotate(-1deg); }
+}
+
+@keyframes game-glow-pulse {
+  0%, 100% { opacity: 0.45; transform: scale(0.9); }
+  50% { opacity: 0.85; transform: scale(1.1); }
+}
+
+/* Heartbeat: "lub-dub" with a rest. The low-lives variant beats faster. */
+@keyframes game-heartbeat {
+  0%, 40%, 100% { transform: scale(1); }
+  10% { transform: scale(1.12); }
+  20% { transform: scale(0.98); }
+  30% { transform: scale(1.08); }
+}
+
+.game-anim-flicker { animation: game-flame-flicker 1.6s ease-in-out infinite; transform-origin: 50% 90%; }
+.game-anim-glow { animation: game-glow-pulse 2.4s ease-in-out infinite; }
+.game-anim-heartbeat { animation: game-heartbeat 2.2s ease-in-out infinite; }
+.game-anim-heartbeat-fast { animation: game-heartbeat 0.9s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .game-anim-flicker,
+  .game-anim-glow,
+  .game-anim-heartbeat,
+  .game-anim-heartbeat-fast { animation: none; }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

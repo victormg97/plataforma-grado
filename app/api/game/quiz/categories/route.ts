@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { requireGamePlayer } from '@/lib/comunidad/player-guard';
 import { tenantConfig } from '@/config';
 
 // GET: categories of a subject (?subject=) that have at least one active
 // question, with the active question count. Access enforced by the RPC.
 export async function GET(req: NextRequest) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: 'NO_AUTORIZADO' }, { status: 401 });
-  }
+  const guard = await requireGamePlayer();
+  if ('response' in guard) return guard.response;
+  const { supabase } = guard;
 
   const { searchParams } = new URL(req.url);
   const subjectId = searchParams.get('subject');

@@ -18,8 +18,11 @@ import type { UserRol } from '@/lib/supabase/types';
  */
 export default async function ComunidadPage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
+  // getClaims verifies the JWT locally (asymmetric keys): no extra Auth
+  // round-trip on top of the one the proxy already made.
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const userId = claimsData?.claims?.sub;
+  if (!userId) redirect('/login');
 
   const { dehydratedState, accessible } = await prefetchGameData();
 
@@ -28,7 +31,7 @@ export default async function ComunidadPage() {
     const { data: profile } = await supabase
       .from('profiles')
       .select('rol')
-      .eq('id', user.id)
+      .eq('id', userId)
       .single();
     redirect(getRolRedirectPath((profile?.rol as UserRol) ?? 'alumno'));
   }

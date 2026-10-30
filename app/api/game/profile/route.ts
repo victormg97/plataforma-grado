@@ -1,17 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { requireGamePlayer } from '@/lib/comunidad/player-guard';
 import { tenantConfig } from '@/config';
 import { nicknamePayloadSchema } from '@/lib/comunidad/nickname';
 
 // GET: the caller's own game profile (nickname + streak). Returns null-ish
 // defaults when the player has not been onboarded yet.
 export async function GET(_req: NextRequest) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: 'NO_AUTORIZADO' }, { status: 401 });
-  }
+  const guard = await requireGamePlayer();
+  if ('response' in guard) return guard.response;
+  const { supabase } = guard;
 
   // Extended profile (nickname + streak + lives + level + recent achievements
   // + moderation) via the SECURITY DEFINER RPC, which also gates on
@@ -31,12 +28,9 @@ export async function GET(_req: NextRequest) {
 // PUT: set / change the nickname through the SECURITY DEFINER RPC, which
 // enforces validation, uniqueness and the change cooldown.
 export async function PUT(req: NextRequest) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: 'NO_AUTORIZADO' }, { status: 401 });
-  }
+  const guard = await requireGamePlayer();
+  if ('response' in guard) return guard.response;
+  const { supabase } = guard;
 
   const body = await req.json().catch(() => ({}));
   const parsed = nicknamePayloadSchema.safeParse(body);
