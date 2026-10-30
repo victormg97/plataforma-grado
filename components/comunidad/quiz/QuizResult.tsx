@@ -55,15 +55,19 @@ export function QuizResult({
               transition={{ duration: reduceMotion ? 0 : 1, ease: 'easeOut', delay: 0.15 }}
             />
           </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-2xl font-extrabold text-[var(--game-text)]">
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-2xl font-extrabold tabular-nums text-[var(--game-text)]">
               {result.aciertos}/{result.total_presented}
-            </span>
-            <span className="text-[11px] font-medium text-[var(--game-text-muted)]">
-              {t('quiz_result_percent', { percent })}
             </span>
           </div>
         </div>
+        {/* Percentage below the ring (inside it, longer labels hit the stroke). */}
+        <span
+          className="-mt-1 rounded-full px-3 py-0.5 text-xs font-semibold"
+          style={{ color: ringColor, backgroundColor: `color-mix(in srgb, ${ringColor} 12%, transparent)` }}
+        >
+          {t('quiz_result_percent', { percent })}
+        </span>
 
         <h2 className="text-2xl font-bold text-[var(--game-accent)]">{message}</h2>
         <p className="text-sm text-[var(--game-text-muted)]">

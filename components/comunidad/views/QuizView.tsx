@@ -2,7 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { History, X } from 'lucide-react';
+import { AnimatePresence, m, useReducedMotion } from 'framer-motion';
+import { History, LogOut, X } from 'lucide-react';
+import { QuizItemIcon, quizToneStyle } from '../quiz/QuizItemIcon';
+import { Modal } from '@/components/common/Modal';
 import { useGameProfile, useStartQuiz, useSubmitQuiz } from '@/lib/hooks/useComunidad';
 import { useUserStore } from '@/stores/useUserStore';
 import { Card } from '@/components/common/Card';
@@ -69,6 +72,8 @@ export function QuizView() {
   const [initialProgress, setInitialProgress] = useState<QuizProgress | null>(null);
   const [result, setResult] = useState<QuizSubmitResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [exitOpen, setExitOpen] = useState(false);
+  const reduceMotion = useReducedMotion();
   const progressRef = useRef<QuizProgress | null>(null);
 
   const { data: profile } = useGameProfile();
@@ -212,43 +217,114 @@ export function QuizView() {
     );
   }
 
+  // Smooth step changes (pick → category → run → result) instead of a jump.
+  const stepMotion = reduceMotion
+    ? { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 } }
+    : {
+        initial: { opacity: 0, x: 12 },
+        animate: { opacity: 1, x: 0 },
+        exit: { opacity: 0, x: -12 },
+      };
+
   return (
     <div className="flex flex-col gap-4">
-      {stage === 'pick' && <QuizSubjectPicker onPick={handlePickSubject} />}
-      {stage === 'category' && subject && (
-        <QuizCategoryPicker subject={subject} onPick={handlePickCategory} onBack={resetToPick} />
-      )}
-
-      {stage === 'run' && resumed && (
-        <div
-          className="flex items-center gap-3 rounded-[var(--game-radius-sm)] border border-[var(--game-accent)]/30 bg-[var(--game-accent-muted)] px-4 py-3 text-sm text-[var(--game-text)]"
-          role="status"
+      <AnimatePresence mode="wait" initial={false}>
+        <m.div
+          key={stage}
+          {...stepMotion}
+          transition={{ duration: 0.18, ease: 'easeOut' }}
+          className="flex flex-col gap-4"
         >
-          <History className="size-4 shrink-0 text-[var(--game-accent)]" />
-          <span className="flex-1">
-            {subject ? t('quiz_resumed_subject', { subject: subject.name }) : t('quiz_resumed')}
-          </span>
-          <button
-            type="button"
-            onClick={resetToPick}
-            className="inline-flex items-center gap-1 rounded-[var(--game-radius-sm)] px-2 py-1 text-xs font-semibold text-[var(--game-accent)] transition-colors hover:bg-[var(--game-surface)]"
-          >
-            <X className="size-3.5" />
-            {t('quiz_discard')}
-          </button>
-        </div>
-      )}
+          {stage === 'pick' && <QuizSubjectPicker onPick={handlePickSubject} />}
+          {stage === 'category' && subject && (
+            <QuizCategoryPicker subject={subject} onPick={handlePickCategory} onBack={resetToPick} />
+          )}
 
-      {stage === 'run' && (
-        <QuizRunner
-          questions={questions}
-          submitting={submitQuiz.isPending}
-          onFinish={handleFinish}
-          initialProgress={initialProgress}
-          onProgress={handleProgress}
-        />
-      )}
-      {stage === 'result' && result && <QuizResult result={result} onRestart={resetToPick} />}
+          {stage === 'run' && (
+            <>
+              {/* Toolbar: subject + exit (discarding the attempt). */}
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                {subject && (
+                  <span
+                    style={quizToneStyle(subject.color_key)}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-[var(--tone-soft)] px-3 py-1 text-xs font-semibold text-[var(--tone)]"
+                  >
+                    <QuizItemIcon
+                      iconKey={subject.icon_key}
+                      imagePath={subject.icon_image_path}
+                      fallback="book-open"
+                      className="size-3.5"
+                    />
+                    {subject.name}
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setExitOpen(true)}
+                  className="ml-auto inline-flex h-9 items-center gap-1.5 rounded-full border border-[var(--game-border)] bg-[var(--game-surface)] px-3.5 text-sm font-semibold text-[var(--game-text-muted)] transition-colors hover:border-[var(--game-incorrect)] hover:text-[var(--game-incorrect)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--game-incorrect)]"
+                >
+                  <LogOut className="size-4" />
+                  {t('quiz_exit')}
+                </button>
+              </div>
+
+              {resumed && (
+                <div
+                  className="flex items-center gap-3 rounded-[var(--game-radius-sm)] border border-[var(--game-accent)]/30 bg-[var(--game-accent-muted)] px-4 py-3 text-sm text-[var(--game-text)]"
+                  role="status"
+                >
+                  <History className="size-4 shrink-0 text-[var(--game-accent)]" />
+                  <span className="flex-1">
+                    {subject ? t('quiz_resumed_subject', { subject: subject.name }) : t('quiz_resumed')}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setResumed(false)}
+                    aria-label={t('streak_lost_dismiss')}
+                    className="rounded-full p-1 text-[var(--game-accent)] transition-colors hover:bg-[var(--game-surface)]"
+                  >
+                    <X className="size-3.5" />
+                  </button>
+                </div>
+              )}
+
+              <QuizRunner
+                questions={questions}
+                submitting={submitQuiz.isPending}
+                onFinish={handleFinish}
+                initialProgress={initialProgress}
+                onProgress={handleProgress}
+              />
+            </>
+          )}
+          {stage === 'result' && result && <QuizResult result={result} onRestart={resetToPick} />}
+        </m.div>
+      </AnimatePresence>
+
+      <Modal open={exitOpen} onClose={() => setExitOpen(false)} title={t('quiz_exit_title')}>
+        <div className="flex flex-col gap-4">
+          <p className="text-sm text-[var(--color-text-secondary)]">{t('quiz_exit_desc')}</p>
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setExitOpen(false)}
+              className="rounded-[var(--radius-md)] px-4 py-2 text-sm font-medium text-[var(--color-text-secondary)] transition-colors hover:text-[var(--color-text-primary)]"
+            >
+              {t('quiz_exit_stay')}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setExitOpen(false);
+                resetToPick();
+              }}
+              className="rounded-[var(--radius-md)] bg-[var(--color-error)] px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+            >
+              {t('quiz_exit_confirm')}
+            </button>
+          </div>
+        </div>
+      </Modal>
 
       {error && (
         <p className="text-sm text-[var(--game-incorrect)]" role="alert">

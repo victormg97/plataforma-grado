@@ -2715,7 +2715,13 @@ export type Database = {
           id: string
           tenant: string
           subject_id: string
-          quiz_question_count: number
+          quiz_question_count: number | null
+          icon_key: string | null
+          icon_image_path: string | null
+          color_key: string | null
+          description: string | null
+          is_hidden: boolean
+          sort_order: number | null
           created_at: string
           updated_at: string
         }
@@ -2723,7 +2729,13 @@ export type Database = {
           id?: string
           tenant: string
           subject_id: string
-          quiz_question_count: number
+          quiz_question_count?: number | null
+          icon_key?: string | null
+          icon_image_path?: string | null
+          color_key?: string | null
+          description?: string | null
+          is_hidden?: boolean
+          sort_order?: number | null
           created_at?: string
           updated_at?: string
         }
@@ -2731,7 +2743,13 @@ export type Database = {
           id?: string
           tenant?: string
           subject_id?: string
-          quiz_question_count?: number
+          quiz_question_count?: number | null
+          icon_key?: string | null
+          icon_image_path?: string | null
+          color_key?: string | null
+          description?: string | null
+          is_hidden?: boolean
+          sort_order?: number | null
           created_at?: string
           updated_at?: string
         }
@@ -2741,6 +2759,66 @@ export type Database = {
             columns: ["subject_id"]
             isOneToOne: false
             referencedRelation: "qb_subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_quiz_category_settings: {
+        Row: {
+          id: string
+          tenant: string
+          subject_id: string
+          category_id: string
+          icon_key: string | null
+          icon_image_path: string | null
+          color_key: string | null
+          description: string | null
+          is_hidden: boolean
+          sort_order: number | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          tenant: string
+          subject_id: string
+          category_id: string
+          icon_key?: string | null
+          icon_image_path?: string | null
+          color_key?: string | null
+          description?: string | null
+          is_hidden?: boolean
+          sort_order?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          tenant?: string
+          subject_id?: string
+          category_id?: string
+          icon_key?: string | null
+          icon_image_path?: string | null
+          color_key?: string | null
+          description?: string | null
+          is_hidden?: boolean
+          sort_order?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_quiz_category_settings_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "qb_subjects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_quiz_category_settings_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "qb_categories"
             referencedColumns: ["id"]
           },
         ]
@@ -3467,6 +3545,18 @@ export type Database = {
         Args: { p_tenant: string }
         Returns: Json
       }
+      admin_get_quiz_config: {
+        Args: { p_tenant: string }
+        Returns: Json
+      }
+      admin_save_quiz_item: {
+        Args: { p_tenant: string; p_subject_id: string; p_category_id: string | null; p_patch: Json }
+        Returns: Json
+      }
+      admin_reorder_quiz_items: {
+        Args: { p_tenant: string; p_subject_id: string | null; p_ids: string[] }
+        Returns: Json
+      }
       game_submit_weekly_case: {
         Args: { p_tenant: string; p_case_id: string; p_answer_content: string }
         Returns: Json
@@ -3827,6 +3917,7 @@ export type GameProfile = Tables<'game_profiles'>;
 export type GamePointEvent = Tables<'game_point_events'>;
 export type GameDailyQuestion = Tables<'game_daily_questions'>;
 export type GameQuizSubjectSettings = Tables<'game_quiz_subject_settings'>;
+export type GameQuizCategorySettings = Tables<'game_quiz_category_settings'>;
 export type GameChallenge = Tables<'game_challenges'>;
 export type GameChallengeProgress = Tables<'game_challenge_progress'>;
 export type GameBadgeUnlockType = Database['public']['Enums']['game_badge_unlock_type'];

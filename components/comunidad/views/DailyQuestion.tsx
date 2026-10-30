@@ -2,12 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { GameRichText } from '../GameRichText';
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/common/Card';
 import { useDailyQuestion, useAnswerDailyQuestion, useGameProfile } from '@/lib/hooks/useComunidad';
 import { RecentAchievements } from '../RecentAchievements';
 import { LevelCard } from '../LevelCard';
 import { DailyReviewPanel } from '../DailyReviewPanel';
+import { ChoiceModeBadge } from '../quiz/ChoiceModeBadge';
+import { Check } from 'lucide-react';
 import type { DailyAnswer, DailyAnswerResult } from '@/lib/comunidad/answer';
 import { useUserStore } from '@/stores/useUserStore';
 import { playerKey, readPlayerItem, removePlayerItem, writePlayerItem } from '@/lib/comunidad/player-storage';
@@ -138,10 +141,9 @@ export function DailyQuestion({
           {t('daily_subject_placeholder')}
         </span>
 
-        <div
-          className="prose prose-sm max-w-none font-medium text-[var(--game-text)]"
-          dangerouslySetInnerHTML={{ __html: question.content }}
-        />
+        <GameRichText html={question.content} variant="question" />
+
+        {isChoice && <ChoiceModeBadge multiple={isMulti} selectedCount={selected.length} />}
 
         {isChoice ? (
           <div
@@ -167,13 +169,17 @@ export function DailyQuestion({
                 >
                   <span
                     className={cn(
-                      'flex size-8 shrink-0 items-center justify-center rounded-full text-sm font-bold',
+                      'flex size-8 shrink-0 items-center justify-center text-sm font-bold transition-colors',
+                      // Multiple choice: checkbox-like square; single: round.
+                      isMulti
+                        ? cn('rounded-md border-2', active ? 'border-[var(--game-accent)]' : 'border-[var(--game-accent)]/40')
+                        : 'rounded-full',
                       active
                         ? 'bg-[var(--game-accent)] text-[var(--game-on-accent)]'
                         : 'bg-[var(--game-accent-muted)] text-[var(--game-accent)]'
                     )}
                   >
-                    {LETTERS[idx] ?? idx + 1}
+                    {isMulti && active ? <Check className="size-4" /> : (LETTERS[idx] ?? idx + 1)}
                   </span>
                   <span>{opt.text}</span>
                 </button>
@@ -222,7 +228,6 @@ export function DailyQuestion({
           </div>
         )}
 
-        {isMulti && <p className="text-xs text-[var(--game-text-muted)]">{t('daily_multi_hint')}</p>}
 
         <button
           type="button"

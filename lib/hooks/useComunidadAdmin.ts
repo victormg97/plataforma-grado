@@ -22,6 +22,11 @@ import type {
 } from '@/lib/supabase/types';
 import type { WeeklyCasePayload, WeeklyCaseResolutionPayload } from '@/lib/comunidad/weekly-case';
 import type {
+  AdminQuizSubjectConfig,
+  QuizItemSavePayload,
+  QuizReorderPayload,
+} from '@/lib/comunidad/quiz-display';
+import type {
   LevelThresholdsPayload,
   GamePlayer,
   BanPlayerPayload,
@@ -289,6 +294,93 @@ export function useUpdateQuizSubject() {
       }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['game-admin-quiz-subjects'] }),
   });
+}
+
+// ─── Quiz display config (Cuestionarios tab) ─────────────────────────────────
+
+const QUIZ_CONFIG_KEY = ['game-admin-quiz-config'] as const;
+
+export function useAdminQuizConfig() {
+  return useQuery({
+    queryKey: QUIZ_CONFIG_KEY,
+    queryFn: () => jsonFetch<AdminQuizSubjectConfig[]>('/api/game/admin/quiz-config'),
+    staleTime: 60_000,
+  });
+}
+
+/** Saves and seeds the refreshed config from the response (no refetch). */
+export function useSaveQuizItem() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: QuizItemSavePayload) =>
+      jsonFetch<AdminQuizSubjectConfig[]>('/api/game/admin/quiz-config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      }),
+    onSuccess: (config) => {
+      qc.setQueryData(QUIZ_CONFIG_KEY, config);
+      // Players' pickers read the same data.
+      void qc.invalidateQueries({ queryKey: ['game-quiz-subjects'] });
+      void qc.invalidateQueries({ queryKey: ['game-quiz-categories'] });
+      void qc.invalidateQueries({ queryKey: ['game-admin-quiz-subjects'] });
+    },
+  });
+}
+
+/** Reorders optimistically; rolls back on error. */
+export function useReorderQuizItems() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: QuizReorderPayload) =>
+      jsonFetch<AdminQuizSubjectConfig[]>('/api/game/admin/quiz-config', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      }),
+    onMutate: async (payload) => {
+      await qc.cancelQueries({ queryKey: QUIZ_CONFIG_KEY });
+      const prev = qc.getQueryData<AdminQuizSubjectConfig[]>(QUIZ_CONFIG_KEY);
+      if (prev) {
+        const order = new Map(payload.ids.map((id, i) => [id, i]));
+        const byOrder = <T extends { id: string }>(list: T[]) =>
+          [...list].sort((a, b) => (order.get(a.id) ?? 1e9) - (order.get(b.id) ?? 1e9));
+        qc.setQueryData<AdminQuizSubjectConfig[]>(
+          QUIZ_CONFIG_KEY,
+          payload.subject_id
+            ? prev.map((s) => (s.id === payload.subject_id ? { ...s, categories: byOrder(s.categories) } : s))
+            : byOrder(prev)
+        );
+      }
+      return { prev };
+    },
+    onError: (_e, _p, ctx) => {
+      if (ctx?.prev) qc.setQueryData(QUIZ_CONFIG_KEY, ctx.prev);
+    },
+    onSuccess: (config) => {
+      qc.setQueryData(QUIZ_CONFIG_KEY, config);
+      void qc.invalidateQueries({ queryKey: ['game-quiz-subjects'] });
+      void qc.invalidateQueries({ queryKey: ['game-quiz-categories'] });
+    },
+  });
+}
+
+export function useUploadQuizIcon() {
+  return useMutation({
+    mutationFn: async (file: File) => {
+      const form = new FormData();
+      form.append('file', file);
+      return jsonFetch<{ image_path: string; public_url: string }>('/api/game/admin/quiz-config/icon', {
+        method: 'POST',
+        body: form,
+      });
+    },
+  });
+}
+
+/** Discards an uploaded-but-unsaved icon (editor cancelled). Fire and forget. */
+export function discardQuizIcon(path: string) {
+  void fetch(`/api/game/admin/quiz-config/icon?path=${encodeURIComponent(path)}`, { method: 'DELETE' });
 }
 
 // ─── Stats ─────────────────────────────────────────────────────────────────

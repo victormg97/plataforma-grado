@@ -1,6 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import { GameRichText } from './GameRichText';
 import { cn } from '@/lib/utils';
 import { CheckCircle2, XCircle, Check, X } from 'lucide-react';
 import { Card } from '@/components/common/Card';
@@ -68,10 +69,7 @@ function ReviewBody({ data }: { data: DailyReviewResult }) {
           {t('result_explanation_title')}
         </h3>
         {q.explanation ? (
-          <div
-            className="prose prose-sm max-w-none leading-relaxed text-[var(--game-text)] [&_em]:italic [&_li]:mb-1 [&_p]:mb-2 [&_strong]:font-semibold [&_ul]:list-disc [&_ul]:pl-5"
-            dangerouslySetInnerHTML={{ __html: q.explanation }}
-          />
+          <GameRichText html={q.explanation} variant="body" />
         ) : (
           <p className="text-sm text-[var(--game-text)]">{t('result_no_explanation')}</p>
         )}
@@ -94,10 +92,7 @@ export function DailyAnswerReviewCard({ data }: { data: DailyReviewResult }) {
       <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--game-text-muted)]">
         {t('review_question_title')}
       </h3>
-      <div
-        className="prose prose-sm max-w-none font-medium text-[var(--game-text)]"
-        dangerouslySetInnerHTML={{ __html: q.content }}
-      />
+      <GameRichText html={q.content} variant="question" />
       {q.type === 'true_false' ? <TrueFalseReview data={data} /> : <ChoiceReview data={data} />}
     </Card>
   );

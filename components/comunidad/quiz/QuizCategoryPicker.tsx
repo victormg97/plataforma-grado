@@ -1,16 +1,16 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { Layers, ArrowRight, ArrowLeft } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { useQuizCategories } from '@/lib/hooks/useComunidad';
+import { QuizStepHeader } from './QuizStepHeader';
+import { AllCategoriesTile, CategoryTile } from './QuizTiles';
 import type { QuizCategory, QuizSubject } from '@/lib/comunidad/quiz';
 
 /**
- * Optional category step within a subject. Lists only categories with active
- * questions (from DB, per tenant). Offers an "all categories" option that
- * starts the quiz across the whole subject. If the subject has no categorized
- * active questions, the parent skips straight to the quiz.
+ * Category step within a subject: a featured "all categories" tile in the
+ * subject's color, then one tile per visible category (admin order, icon and
+ * color; categories without a color follow the subject's).
  */
 export function QuizCategoryPicker({
   subject,
@@ -28,27 +28,17 @@ export function QuizCategoryPicker({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={onBack}
-          className="inline-flex items-center gap-1 rounded-[var(--game-radius-sm)] px-2 py-1 text-sm text-[var(--game-text-muted)] transition-colors hover:text-[var(--game-text)]"
-        >
-          <ArrowLeft className="size-4" />
-          {t('quiz_back_to_subjects')}
-        </button>
-      </div>
-
-      <div>
-        <h2 className="text-xl font-semibold text-[var(--game-text)]">{t('quiz_category_title')}</h2>
-        <p className="text-sm text-[var(--game-text-muted)]">
-          {t('quiz_category_subtitle', { subject: subject.name })}
-        </p>
-      </div>
+      <QuizStepHeader
+        step={2}
+        title={t('quiz_category_title')}
+        subtitle={t('quiz_category_subtitle', { subject: subject.name })}
+        onBack={onBack}
+      />
 
       {isLoading ? (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" role="status" aria-live="polite">
           <span className="sr-only">{t('loading')}</span>
+          <div className="col-span-full h-28 animate-pulse rounded-[var(--game-radius)] bg-[var(--game-surface)] shadow-[var(--game-shadow)]" />
           {[1, 2, 3].map((i) => (
             <div
               key={i}
@@ -65,40 +55,33 @@ export function QuizCategoryPicker({
         </Card>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {/* All categories option — starts the quiz across the whole subject. */}
-          <button
-            type="button"
+          <AllCategoriesTile
+            subject={{
+              name: subject.name,
+              iconKey: subject.icon_key,
+              imagePath: subject.icon_image_path,
+              colorKey: subject.color_key,
+            }}
+            questionCount={subject.effective_question_count}
             onClick={() => onPick(null)}
-            className="group flex items-center gap-3 rounded-[var(--game-radius)] bg-[var(--game-surface)] p-4 text-left shadow-[var(--game-shadow)] transition-colors hover:bg-[var(--game-accent-muted)]"
-          >
-            <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[var(--game-accent)] text-[var(--game-on-accent)]">
-              <Layers className="size-5" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="truncate font-medium text-[var(--game-text)]">{t('quiz_category_all')}</div>
-              <div className="text-xs text-[var(--game-text-muted)]">{t('quiz_category_all_hint')}</div>
-            </div>
-            <ArrowRight className="size-4 shrink-0 text-[var(--game-accent)] opacity-0 transition-opacity group-hover:opacity-100" />
-          </button>
+          />
 
-          {categories.map((c) => (
-            <button
+          {categories.map((c, i) => (
+            <CategoryTile
               key={c.id}
-              type="button"
+              index={i}
+              item={{
+                name: c.name,
+                description: c.description,
+                iconKey: c.icon_key,
+                imagePath: c.icon_image_path,
+                colorKey: c.color_key,
+              }}
+              fallbackColorKey={subject.color_key}
+              questionCount={c.active_question_count}
+              playedCount={c.played_count ?? 0}
               onClick={() => onPick(c)}
-              className="group flex items-center gap-3 rounded-[var(--game-radius)] bg-[var(--game-surface)] p-4 text-left shadow-[var(--game-shadow)] transition-colors hover:bg-[var(--game-accent-muted)]"
-            >
-              <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[var(--game-accent-muted)] text-[var(--game-accent)]">
-                <Layers className="size-5" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="truncate font-medium text-[var(--game-text)]">{c.name}</div>
-                <div className="text-xs text-[var(--game-text-muted)]">
-                  {t('quiz_subject_count', { count: c.active_question_count })}
-                </div>
-              </div>
-              <ArrowRight className="size-4 shrink-0 text-[var(--game-accent)] opacity-0 transition-opacity group-hover:opacity-100" />
-            </button>
+            />
           ))}
         </div>
       )}

@@ -199,16 +199,27 @@ export interface ActiveChallengesResult {
 
 // ─── Quiz subjects (from /quiz/subjects) ───────────────────────────────────────
 
-export interface QuizSubject {
+/** Admin-configured presentation (migration 148). All optional/nullable. */
+export interface QuizItemDisplay {
+  icon_key?: string | null;
+  icon_image_path?: string | null;
+  color_key?: string | null;
+  description?: string | null;
+  /** Quizzes the player completed in this subject/category. */
+  played_count?: number;
+}
+
+export interface QuizSubject extends QuizItemDisplay {
   id: string;
   name: string;
   active_question_count: number;
   effective_question_count: number;
+  category_count?: number;
 }
 
 // ─── Quiz categories (from /quiz/categories) ───────────────────────────────────
 
-export interface QuizCategory {
+export interface QuizCategory extends QuizItemDisplay {
   id: string;
   name: string;
   active_question_count: number;

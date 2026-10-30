@@ -42,12 +42,14 @@ export async function PUT(req: NextRequest) {
 
   const body = await req.json().catch(() => ({}));
 
-  // Clearing an override: { subject_id, quiz_question_count: null }.
+  // Clearing an override: { subject_id, quiz_question_count: null }. The row
+  // also holds the subject's display config (icon, color...), so only the
+  // count is cleared instead of deleting the row.
   if (body?.quiz_question_count === null && typeof body?.subject_id === 'string') {
     const admin = createAdminClient();
     const { error } = await admin
       .from('game_quiz_subject_settings')
-      .delete()
+      .update({ quiz_question_count: null })
       .eq('tenant', tenantConfig.id)
       .eq('subject_id', body.subject_id);
     if (error) return NextResponse.json({ error: 'ERROR_DB', message: error.message }, { status: 500 });

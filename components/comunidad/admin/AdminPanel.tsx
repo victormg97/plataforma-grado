@@ -17,6 +17,7 @@ import {
   TrendingUp,
   Heart,
   Users,
+  BookOpen,
 } from 'lucide-react';
 import { PageHeader } from '@/components/common/PageHeader';
 import { BackButton } from '@/components/common/BackButton';
@@ -36,6 +37,7 @@ import { DangerZoneTab } from './tabs/DangerZoneTab';
 import { LevelsTab } from './tabs/LevelsTab';
 import { LivesTab } from './tabs/LivesTab';
 import { PlayersTab } from './tabs/PlayersTab';
+import { QuizzesTab } from './tabs/QuizzesTab';
 
 type TabKey =
   | 'general'
@@ -44,6 +46,7 @@ type TabKey =
   | 'levels'
   | 'lives'
   | 'daily'
+  | 'quizzes'
   | 'challenges'
   | 'badges'
   | 'weekly-case'
@@ -51,7 +54,7 @@ type TabKey =
   | 'stats'
   | 'danger';
 
-const TAB_KEYS: TabKey[] = ['general', 'points', 'streak', 'levels', 'lives', 'daily', 'challenges', 'badges', 'weekly-case', 'players', 'stats', 'danger'];
+const TAB_KEYS: TabKey[] = ['general', 'points', 'streak', 'levels', 'lives', 'daily', 'quizzes', 'challenges', 'badges', 'weekly-case', 'players', 'stats', 'danger'];
 
 /**
  * Comunidad Estratégica admin panel (Req. 9). Tab navigation persisted in ?tab=.
@@ -85,6 +88,7 @@ export function AdminPanel() {
     { key: 'levels', label: t('admin_tab_levels'), icon: <TrendingUp className="size-4" /> },
     { key: 'lives', label: t('admin_tab_lives'), icon: <Heart className="size-4" /> },
     { key: 'daily', label: t('admin_tab_daily'), icon: <CalendarCheck className="size-4" /> },
+    { key: 'quizzes', label: t('admin_tab_quizzes'), icon: <BookOpen className="size-4" /> },
     { key: 'challenges', label: t('admin_tab_challenges'), icon: <Swords className="size-4" /> },
     { key: 'badges', label: t('admin_tab_badges'), icon: <Award className="size-4" /> },
     { key: 'weekly-case', label: t('admin_tab_weekly_case'), icon: <Scale className="size-4" /> },
@@ -119,6 +123,7 @@ export function AdminPanel() {
         {active === 'levels' && <LevelsTab />}
         {active === 'lives' && <LivesTab />}
         {active === 'daily' && <DailyQuestionTab />}
+        {active === 'quizzes' && <QuizzesTab />}
         {active === 'challenges' && <ChallengesTab />}
         {active === 'badges' && <BadgesTab />}
         {active === 'weekly-case' && <WeeklyCaseTab />}

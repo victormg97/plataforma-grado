@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { GameRichText } from '../GameRichText';
 import { AnimatePresence, m, useReducedMotion } from 'framer-motion';
 import { ArrowRight, ArrowLeft, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -9,6 +10,7 @@ import { Card } from '@/components/common/Card';
 import type { QuizAnswer, QuizQuestion, QuizQuestionOption } from '@/lib/comunidad/quiz';
 import { QuizMatching } from './QuizMatching';
 import { QuizFillBlank } from './QuizFillBlank';
+import { ChoiceModeBadge } from './ChoiceModeBadge';
 
 const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 
@@ -186,7 +188,7 @@ export function QuizRunner({
         role={multiple ? 'group' : 'radiogroup'}
         aria-label={t('quiz_options_label')}
       >
-        {multiple && <p className="text-xs text-[var(--game-text-muted)]">{t('daily_multi_hint')}</p>}
+        <ChoiceModeBadge multiple={multiple} selectedCount={(choices[q.id] ?? []).length} />
         {options.map((opt, optIndex) => {
           const selected = (choices[q.id] ?? []).includes(optIndex);
           return (
@@ -194,6 +196,7 @@ export function QuizRunner({
               key={optIndex}
               selected={selected}
               role={multiple ? 'checkbox' : 'radio'}
+              square={multiple}
               letter={LETTERS[optIndex] ?? String(optIndex + 1)}
               onClick={() => toggleChoice(q.id, optIndex, multiple)}
             >
@@ -243,10 +246,7 @@ export function QuizRunner({
           transition={{ duration: 0.18, ease: 'easeOut' }}
         >
           <Card padding="lg" className="flex flex-col gap-4 border-none bg-[var(--game-surface)] shadow-[var(--game-shadow)]">
-            <div
-              className="prose prose-sm max-w-none font-medium text-[var(--game-text)]"
-              dangerouslySetInnerHTML={{ __html: q.content }}
-            />
+            <GameRichText html={q.content} variant="question" />
             {renderBody()}
           </Card>
         </m.div>
@@ -300,12 +300,15 @@ function OptionButton({
   selected,
   letter,
   role,
+  square = false,
   onClick,
   children,
 }: {
   selected: boolean;
   letter: string;
   role: 'radio' | 'checkbox';
+  /** Checkbox-like square marker for multiple-choice questions. */
+  square?: boolean;
   onClick: () => void;
   children: React.ReactNode;
 }) {
@@ -326,7 +329,9 @@ function OptionButton({
     >
       <span
         className={cn(
-          'flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors',
+          'flex size-7 shrink-0 items-center justify-center text-xs font-bold transition-colors',
+          square ? 'rounded-md border-2' : 'rounded-full',
+          square && (selected ? 'border-[var(--game-accent)]' : 'border-[var(--game-accent)]/40'),
           selected
             ? 'bg-[var(--game-accent)] text-[var(--game-on-accent)]'
             : 'bg-[var(--game-accent-muted)] text-[var(--game-accent)]'

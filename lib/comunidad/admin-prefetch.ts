@@ -31,6 +31,7 @@ const SECTIONS: Record<string, readonly unknown[]> = {
   badges: ['game-admin-badges'],
   daily_questions: ['game-admin-daily-questions'],
   stats: ['game-admin-stats'],
+  quiz_config: ['game-admin-quiz-config'],
 };
 
 export async function prefetchComunidadAdmin(): Promise<{

@@ -585,6 +585,23 @@ div[style*="position: fixed"] > [role="toolbar"] {
   --game-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.6);
 }
 
+/* Quiz subject/category tones (admin "Cuestionarios" config). Global, so the
+   admin preview (outside .game-scope) and the game share them. tone = main,
+   deep = gradient end, soft = tinted background. */
+:root {
+  --quiz-tone-burgundy: #8f1d30; --quiz-tone-burgundy-deep: #4f0d19; --quiz-tone-burgundy-soft: rgba(143, 29, 48, 0.12);
+  --quiz-tone-crimson: #c0392b;  --quiz-tone-crimson-deep: #7b1d14;  --quiz-tone-crimson-soft: rgba(192, 57, 43, 0.12);
+  --quiz-tone-rose: #d6336c;     --quiz-tone-rose-deep: #8a1745;     --quiz-tone-rose-soft: rgba(214, 51, 108, 0.12);
+  --quiz-tone-amber: #e8820c;    --quiz-tone-amber-deep: #9a4f03;    --quiz-tone-amber-soft: rgba(232, 130, 12, 0.14);
+  --quiz-tone-gold: #c2952e;     --quiz-tone-gold-deep: #7a5a12;     --quiz-tone-gold-soft: rgba(194, 149, 46, 0.15);
+  --quiz-tone-emerald: #1f9d55;  --quiz-tone-emerald-deep: #0f5a30;  --quiz-tone-emerald-soft: rgba(31, 157, 85, 0.13);
+  --quiz-tone-teal: #138a8a;     --quiz-tone-teal-deep: #0a4f52;     --quiz-tone-teal-soft: rgba(19, 138, 138, 0.13);
+  --quiz-tone-sky: #1f78c8;      --quiz-tone-sky-deep: #0f4377;      --quiz-tone-sky-soft: rgba(31, 120, 200, 0.13);
+  --quiz-tone-indigo: #4f46e5;   --quiz-tone-indigo-deep: #2b248f;   --quiz-tone-indigo-soft: rgba(79, 70, 229, 0.13);
+  --quiz-tone-violet: #8b3fd1;   --quiz-tone-violet-deep: #4f1d82;   --quiz-tone-violet-soft: rgba(139, 63, 209, 0.13);
+  --quiz-tone-slate: #52606d;    --quiz-tone-slate-deep: #283039;    --quiz-tone-slate-soft: rgba(82, 96, 109, 0.14);
+}
+
 /* Header HUD (streak flame + lives heart). Shared by every theme: the header
    background is always a dark burgundy, so these tones work on all of them. */
 .game-scope {
@@ -614,6 +631,52 @@ div[style*="position: fixed"] > [role="toolbar"] {
   --game-rank-ribbon-a: #8f1d30;
   --game-rank-ribbon-b: #6e1423;
 }
+
+/* ── Question-bank rich text inside the game (GameRichText) ──────────────
+   Pasted content (Word / Google Docs) carries inline backgrounds, colors,
+   fonts and sizes. !important beats those inline styles so every question
+   uses the game typography in every theme. Emphasis is kept: bold, italic,
+   underline/strikethrough, lists and links. */
+.game-rich {
+  color: var(--game-text);
+  overflow-wrap: anywhere;
+}
+.game-rich * {
+  background: transparent !important;
+  color: inherit !important;
+  font-family: inherit !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  letter-spacing: inherit !important;
+  text-shadow: none !important;
+}
+/* Docs wraps plain text in font-weight:400 spans and bold in 700. Normal
+   spans follow the container weight; bold ones stay a step bolder. */
+.game-rich [style*="font-weight: 400"],
+.game-rich [style*="font-weight:400"],
+.game-rich [style*="font-weight: normal"],
+.game-rich [style*="font-weight:normal"] {
+  font-weight: inherit !important;
+}
+.game-rich :is(b, strong),
+.game-rich [style*="font-weight: 700"],
+.game-rich [style*="font-weight:700"],
+.game-rich [style*="font-weight: bold"],
+.game-rich [style*="font-weight:bold"] {
+  font-weight: 800 !important;
+}
+.game-rich :is(i, em) { font-style: italic; }
+.game-rich u,
+.game-rich [style*="underline"] { text-underline-offset: 3px; }
+.game-rich :is(p, div, h1, h2, h3, h4, h5, h6) { margin: 0 0 0.5em; font-weight: inherit; }
+.game-rich :is(p, div, h1, h2, h3, h4, h5, h6):last-child { margin-bottom: 0; }
+.game-rich ul { list-style: disc; padding-left: 1.25rem; margin: 0 0 0.5em; }
+.game-rich ol { list-style: decimal; padding-left: 1.25rem; margin: 0 0 0.5em; }
+.game-rich li { margin-bottom: 0.25em; }
+.game-rich a { color: var(--game-accent) !important; text-decoration: underline; }
+.game-rich img { max-width: 100%; height: auto; border-radius: var(--game-radius-sm); }
+.game-rich-question { font-size: 1.125rem; font-weight: 600; line-height: 1.5; }
+.game-rich-body { font-size: 0.875rem; font-weight: 400; line-height: 1.65; }
 
 /* 1st-place medal: gentle swing on its ribbon, a shine sweep and sparkles. */
 @keyframes game-medal-swing {

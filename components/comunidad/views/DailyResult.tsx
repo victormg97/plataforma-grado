@@ -1,6 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import { GameRichText } from '../GameRichText';
 import { CheckCircle2, XCircle, BookOpen, Flame, Sparkles } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { RecentAchievements } from '../RecentAchievements';
@@ -108,10 +109,7 @@ export function DailyResult({
             <div className="flex flex-col gap-2">
               <h2 className="text-xl font-bold text-[var(--game-text)]">{t('result_explanation_title')}</h2>
               {result.explanation ? (
-                <div
-                  className="prose prose-sm max-w-none leading-relaxed text-[var(--game-text)] [&_em]:italic [&_p]:mb-2 [&_strong]:font-semibold"
-                  dangerouslySetInnerHTML={{ __html: result.explanation }}
-                />
+                <GameRichText html={result.explanation} variant="body" />
               ) : (
                 <p className="text-sm text-[var(--game-text)]">{t('result_no_explanation')}</p>
               )}

@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { GameRichText } from '../GameRichText';
 import { AnimatePresence, m, useReducedMotion } from 'framer-motion';
 import { Check, CheckCircle2, ChevronDown, X, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -149,20 +150,14 @@ function ReviewItem({
             transition={{ duration: 0.2, ease: 'easeOut' }}
           >
             <div className="flex flex-col gap-4 border-t border-[var(--game-border)] px-4 py-4">
-              <div
-                className="prose prose-sm max-w-none font-medium text-[var(--game-text)]"
-                dangerouslySetInnerHTML={{ __html: review.content }}
-              />
+              <GameRichText html={review.content} variant="question" />
               <AnswerReview review={review} />
               <div className="flex flex-col gap-1.5 rounded-[var(--game-radius-sm)] bg-[var(--game-surface-muted)] px-3 py-3">
                 <span className="text-xs font-semibold uppercase tracking-wide text-[var(--game-text-muted)]">
                   {t('result_explanation_title')}
                 </span>
                 {review.explanation ? (
-                  <div
-                    className="prose prose-sm max-w-none leading-relaxed text-[var(--game-text)] [&_li]:mb-1 [&_p]:mb-2 [&_ul]:list-disc [&_ul]:pl-5"
-                    dangerouslySetInnerHTML={{ __html: review.explanation }}
-                  />
+                  <GameRichText html={review.explanation} variant="body" />
                 ) : (
                   <p className="text-sm text-[var(--game-text)]">{t('result_no_explanation')}</p>
                 )}
