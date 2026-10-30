@@ -87,7 +87,10 @@ export interface QuizDisplaySettings {
 export interface AdminQuizCategoryConfig {
   id: string;
   name: string;
+  /** Playable (active, not open-ended) questions of this category in the subject. */
   question_count: number;
+  /** Every question of this category in the subject (any status/type). */
+  total_question_count?: number;
   settings: QuizDisplaySettings;
 }
 
@@ -95,6 +98,30 @@ export interface AdminQuizSubjectConfig {
   id: string;
   name: string;
   question_count: number;
+  total_question_count?: number;
   settings: QuizDisplaySettings & { quiz_question_count: number | null };
   categories: AdminQuizCategoryConfig[];
 }
+
+// ─── Catalog management (create / rename / delete subjects & categories) ─────
+
+const catalogName = z.string().trim().min(1, 'NAME_REQUIRED').max(120, 'NAME_TOO_LONG');
+
+export const quizCatalogSchema = z.discriminatedUnion('action', [
+  z.object({ action: z.literal('create_subject'), name: catalogName }),
+  z.object({ action: z.literal('rename_subject'), subject_id: z.string().uuid(), name: catalogName }),
+  z.object({ action: z.literal('delete_subject'), subject_id: z.string().uuid() }),
+  z.object({
+    action: z.literal('add_category'),
+    subject_id: z.string().uuid(),
+    category_id: z.string().uuid().optional(),
+    name: catalogName.optional(),
+  }),
+  z.object({ action: z.literal('rename_category'), category_id: z.string().uuid(), name: catalogName }),
+  z.object({
+    action: z.literal('remove_category'),
+    subject_id: z.string().uuid(),
+    category_id: z.string().uuid(),
+  }),
+]);
+export type QuizCatalogPayload = z.infer<typeof quizCatalogSchema>;

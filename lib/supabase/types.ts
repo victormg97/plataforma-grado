@@ -3549,6 +3549,14 @@ export type Database = {
         Args: { p_tenant: string }
         Returns: Json
       }
+      admin_manage_quiz_catalog: {
+        Args: { p_tenant: string; p_action: string; p_args: Json }
+        Returns: Json
+      }
+      get_all_quiz_categories: {
+        Args: { p_tenant: string }
+        Returns: Json
+      }
       admin_save_quiz_item: {
         Args: { p_tenant: string; p_subject_id: string; p_category_id: string | null; p_patch: Json }
         Returns: Json

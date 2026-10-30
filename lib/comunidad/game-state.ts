@@ -11,6 +11,7 @@ export const GAME_STATE_PARTS = [
   'daily_question',
   'daily_review',
   'quiz_subjects',
+  'quiz_categories',
   'ranking',
   'challenges',
   'badges',
@@ -21,7 +22,7 @@ export type GameStatePart = (typeof GAME_STATE_PARTS)[number];
 
 export type GameState = Partial<Record<GameStatePart, unknown>>;
 
-const QUERY_KEYS: Record<Exclude<GameStatePart, 'ranking'>, readonly unknown[]> = {
+const QUERY_KEYS: Record<Exclude<GameStatePart, 'ranking' | 'quiz_categories'>, readonly unknown[]> = {
   settings: ['game-settings'],
   profile: ['game-profile'],
   daily_question: ['game-daily-question'],
@@ -48,6 +49,12 @@ export function seedGameState(qc: QueryClient, state: GameState | null | undefin
     if (part === 'ranking') {
       // useInfiniteQuery shape; month = null = current month (first page).
       qc.setQueryData(['game-ranking', null], { pages: [value], pageParams: [0] });
+    } else if (part === 'quiz_categories') {
+      // { [subjectId]: { categories } } → one cache entry per subject, so
+      // opening any subject's categories is instant (no request).
+      for (const [subjectId, categories] of Object.entries(value as Record<string, unknown>)) {
+        qc.setQueryData(['game-quiz-categories', subjectId], categories);
+      }
     } else {
       qc.setQueryData(QUERY_KEYS[part], value);
     }

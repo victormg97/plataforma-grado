@@ -284,6 +284,8 @@ export function useQuizCategories(subjectId: string | null) {
     queryKey: ['game-quiz-categories', subjectId],
     queryFn: () => fetchQuizCategories(subjectId as string),
     staleTime: 5 * 60_000,
+    // Seeded for every subject by the bootstrap / quiz submit (quiz_categories).
+    refetchOnWindowFocus: false,
     enabled: !!subjectId,
   });
 }

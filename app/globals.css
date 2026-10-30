@@ -615,6 +615,16 @@ div[style*="position: fixed"] > [role="toolbar"] {
   --game-ember: #ff9f43;
   --game-hud-crack: #3a0a12;
   --game-popover-bg: #2a0a10;
+  /* Streak screen fire / cold palettes */
+  --game-fire-hot: #f2793f;
+  --game-fire-deep: #c0392b;
+  --game-fire-amber: #e8a33a;
+  --game-fire-amber-deep: #c0662b;
+  --game-cold-1: #5b6b7a;
+  --game-cold-2: #3a4450;
+  --game-cold-3: #1f252c;
+  --game-ash-1: #6d5a5e;
+  --game-ash-2: #4a3a3e;
   /* Ranking podium (1st gold, 2nd silver, 3rd bronze) */
   --game-rank-gold: #e0a92e;
   --game-rank-gold-light: #ffe8a3;
@@ -710,6 +720,21 @@ div[style*="position: fixed"] > [role="toolbar"] {
   75% { transform: scale(1.03, 0.98) rotate(-1deg); }
 }
 
+/* Embers rising from the streak hero flame. */
+@keyframes game-ember-rise {
+  0% { transform: translate(0, 0) scale(1); opacity: 0; }
+  15% { opacity: 1; }
+  100% { transform: translate(var(--ember-x, 6px), -90px) scale(0.3); opacity: 0; }
+}
+.game-anim-ember { animation: game-ember-rise 2.8s ease-out infinite; }
+
+/* Slow float for decorative shapes. */
+@keyframes game-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.game-anim-float { animation: game-float 3.6s ease-in-out infinite; }
+
 @keyframes game-glow-pulse {
   0%, 100% { opacity: 0.45; transform: scale(0.9); }
   50% { opacity: 0.85; transform: scale(1.1); }
@@ -732,7 +757,10 @@ div[style*="position: fixed"] > [role="toolbar"] {
   .game-anim-flicker,
   .game-anim-glow,
   .game-anim-heartbeat,
-  .game-anim-heartbeat-fast { animation: none; }
+  .game-anim-heartbeat-fast,
+  .game-anim-ember,
+  .game-anim-float { animation: none; }
+  .game-anim-ember { opacity: 0; }
 }
 
 @layer base {

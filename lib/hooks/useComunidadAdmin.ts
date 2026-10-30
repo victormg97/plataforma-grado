@@ -23,6 +23,7 @@ import type {
 import type { WeeklyCasePayload, WeeklyCaseResolutionPayload } from '@/lib/comunidad/weekly-case';
 import type {
   AdminQuizSubjectConfig,
+  QuizCatalogPayload,
   QuizItemSavePayload,
   QuizReorderPayload,
 } from '@/lib/comunidad/quiz-display';
@@ -359,6 +360,28 @@ export function useReorderQuizItems() {
     },
     onSuccess: (config) => {
       qc.setQueryData(QUIZ_CONFIG_KEY, config);
+      void qc.invalidateQueries({ queryKey: ['game-quiz-subjects'] });
+      void qc.invalidateQueries({ queryKey: ['game-quiz-categories'] });
+    },
+  });
+}
+
+/** Create / rename / delete subjects and categories. Seeds the new config. */
+export function useManageQuizCatalog() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: QuizCatalogPayload) =>
+      jsonFetch<{ id: string | null; config: AdminQuizSubjectConfig[] }>('/api/game/admin/quiz-config/catalog', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      }),
+    onSuccess: ({ config }) => {
+      qc.setQueryData(QUIZ_CONFIG_KEY, config);
+      // Names/lists also feed the bank filters, badge form and the game.
+      void qc.invalidateQueries({ queryKey: ['qb-subjects-filter'] });
+      void qc.invalidateQueries({ queryKey: ['qb-categories-filter'] });
+      void qc.invalidateQueries({ queryKey: ['game-admin-quiz-subjects'] });
       void qc.invalidateQueries({ queryKey: ['game-quiz-subjects'] });
       void qc.invalidateQueries({ queryKey: ['game-quiz-categories'] });
     },

@@ -188,6 +188,9 @@ export interface ActiveChallenge {
   title: string;
   description: string | null;
   period_type: 'weekly' | 'monthly' | 'custom';
+  /** Current period bounds (ISO), for the "time left" chip. */
+  period_start?: string;
+  period_end?: string;
   target_count: number;
   progress_count: number;
   completed: boolean;

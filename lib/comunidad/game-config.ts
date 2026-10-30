@@ -117,6 +117,8 @@ export interface GameProfileResult {
   /** Length of the last streak that was lost. */
   previous_streak: number;
   streak_status: StreakStatus;
+  /** Tenant streak milestones in days, ascending (e.g. [3, 7, 15, 30]). */
+  streak_milestones?: number[];
   last_activity_date: string | null;
   nickname_updated_at: string | null;
   lives: PlayerLives;
