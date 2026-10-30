@@ -1,8 +1,8 @@
 # Política de Privacidad de la Plataforma
 
-**Última actualización:** 29 de mayo de 2026
+**Última actualización:** 28 de septiembre de 2026
 
-Esta Política de Privacidad describe cómo se recopilan, utilizan y protegen los datos personales de los usuarios que acceden a las plataformas desarrolladas y operadas bajo la infraestructura de **{{APP_NAME}}**.
+Esta Política de Privacidad describe cómo se recopilan, utilizan y protegen los datos personales de los usuarios que acceden a las plataformas desarrolladas y operadas bajo la infraestructura de **{{APP_NAME}}**, conforme a la **Ley N° 21.719** sobre protección de datos personales de Chile.
 
 ---
 
@@ -58,11 +58,13 @@ Sus datos son utilizados exclusivamente para:
 
 ## 4. Base Legal
 
-El tratamiento de sus datos se basa en:
+El tratamiento de sus datos se basa en alguna de las bases de licitud que reconoce la Ley N° 21.719:
 
 - **Ejecución del contrato de servicio:** necesario para proveer la plataforma.
-- **Consentimiento:** para el tratamiento de datos opcionales.
+- **Consentimiento:** para el tratamiento de datos opcionales. Su consentimiento se solicita de forma previa, libre e inequívoca mediante un acto afirmativo (por ejemplo, aceptar estos documentos al registrarse), y queda registrado como evidencia (fecha y versión aceptada).
 - **Interés legítimo:** para la seguridad e integridad del sistema.
+
+Usted puede retirar su consentimiento en cualquier momento, sin que ello afecte la licitud del tratamiento realizado con anterioridad.
 
 ---
 
@@ -82,14 +84,16 @@ Sus datos se conservarán mientras su cuenta esté activa o mientras sea necesar
 
 ## 7. Sus Derechos
 
-De acuerdo con la legislación chilena vigente (Ley N° 19.628 sobre Protección de la Vida Privada), usted tiene derecho a:
+De acuerdo con la Ley N° 21.719 sobre protección de datos personales, usted tiene los siguientes derechos sobre sus datos:
 
 - **Acceso:** conocer qué datos tenemos sobre usted.
-- **Rectificación:** corregir datos inexactos o incompletos.
-- **Cancelación:** solicitar la eliminación de sus datos.
-- **Oposición:** oponerse al tratamiento de sus datos.
+- **Rectificación:** corregir datos inexactos, desactualizados o incompletos.
+- **Supresión (cancelación):** solicitar la eliminación de sus datos.
+- **Oposición:** oponerse al tratamiento de sus datos en los casos que la ley permite.
+- **Portabilidad:** solicitar una copia de sus datos en un formato estructurado y de uso común, o su transferencia a otro responsable cuando sea técnicamente posible.
+- **Bloqueo:** solicitar la suspensión temporal del tratamiento mientras se resuelve una solicitud.
 
-Para ejercer estos derechos, escríbanos a **{{OWNER_EMAIL}}**.
+Para ejercer estos derechos, escríbanos a **{{OWNER_EMAIL}}**. Responderemos su solicitud dentro de los plazos legales. Si considera que sus derechos no han sido debidamente atendidos, puede reclamar ante la **Agencia de Protección de Datos Personales**.
 
 ---
 
@@ -101,14 +105,16 @@ La plataforma utiliza cookies de sesión estrictamente necesarias para el funcio
 
 ## 9. Servicios de Terceros
 
-La plataforma utiliza servicios externos de terceros para su operación, incluyendo:
+La plataforma utiliza servicios externos de terceros (encargados de tratamiento) para su operación, incluyendo:
 
-| Categoría | Finalidad |
-|---|---|
-| Proveedor de base de datos en la nube | Almacenamiento de datos y autenticación de usuarios |
-| Proveedor de alojamiento web | Hosting y distribución de la aplicación |
+| Proveedor | Finalidad | Ubicación de datos |
+|---|---|---|
+| Supabase | Base de datos y autenticación de usuarios | Infraestructura en la nube |
+| Vercel | Hosting, distribución y métricas de rendimiento (sin cookies de seguimiento) | Infraestructura en la nube |
+| Resend | Envío de correos transaccionales (notificaciones del servicio) | Infraestructura en la nube |
+| Upstash | Control de tasa de solicitudes (seguridad) | Infraestructura en la nube |
 
-Estos proveedores cumplen con estándares de seguridad de la industria y procesan datos únicamente según nuestras instrucciones. Puede solicitar información sobre los proveedores específicos escribiendo a **{{OWNER_EMAIL}}**.
+Estos proveedores actúan como encargados de tratamiento, cumplen con estándares de seguridad de la industria y procesan datos únicamente según nuestras instrucciones. La contratación de estos encargados no nos exime de nuestras responsabilidades como responsable del tratamiento. Puede solicitar información adicional escribiendo a **{{OWNER_EMAIL}}**.
 
 ---
 

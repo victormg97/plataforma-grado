@@ -67,7 +67,7 @@ export default function SetupPasswordPage({ params }: { params: Promise<{ code: 
       const res = await fetch('/api/auth/setup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: resolvedParams.code, password })
+        body: JSON.stringify({ code: resolvedParams.code, password, acceptedTerms })
       });
 
       const data = await res.json();

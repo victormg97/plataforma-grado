@@ -1221,11 +1221,14 @@ export type Database = {
           id: string
           idioma: string | null
           nombre: string
+          privacidad_version: string | null
           puede_crear_alumno: boolean | null
           recordatorio_cooldown_minutos: number
           rol: Database["public"]["Enums"]["user_rol"]
           telefono: string | null
           tema: string | null
+          terminos_aceptados_at: string | null
+          terminos_version: string | null
           ui_preferences: Json
           updated_at: string
         }
@@ -1243,11 +1246,14 @@ export type Database = {
           id: string
           idioma?: string | null
           nombre: string
+          privacidad_version?: string | null
           puede_crear_alumno?: boolean | null
           recordatorio_cooldown_minutos?: number
           rol?: Database["public"]["Enums"]["user_rol"]
           telefono?: string | null
           tema?: string | null
+          terminos_aceptados_at?: string | null
+          terminos_version?: string | null
           ui_preferences?: Json
           updated_at?: string
         }
@@ -1265,11 +1271,14 @@ export type Database = {
           id?: string
           idioma?: string | null
           nombre?: string
+          privacidad_version?: string | null
           puede_crear_alumno?: boolean | null
           recordatorio_cooldown_minutos?: number
           rol?: Database["public"]["Enums"]["user_rol"]
           telefono?: string | null
           tema?: string | null
+          terminos_aceptados_at?: string | null
+          terminos_version?: string | null
           ui_preferences?: Json
           updated_at?: string
         }

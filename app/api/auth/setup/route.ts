@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient as createBrowserClient } from '@supabase/supabase-js';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { TERMINOS_VERSION, PRIVACIDAD_VERSION } from '@/lib/config/legal';
 
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get('code');
@@ -26,10 +28,16 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { code, password } = await request.json();
+    const { code, password, acceptedTerms } = await request.json();
 
     if (!code || !password) {
       return NextResponse.json({ error: 'Código y contraseña son requeridos' }, { status: 400 });
+    }
+
+    // Evidencia de consentimiento (Ley 21.719): el setup sólo completa la
+    // cuenta si el usuario aceptó los Términos en el formulario.
+    if (acceptedTerms !== true) {
+      return NextResponse.json({ error: 'Debes aceptar los Términos y Condiciones' }, { status: 400 });
     }
 
     // Usamos el cliente anónimo (no el de servidor SSR) para no dañar las cookies si admin lo hace
@@ -86,6 +94,20 @@ export async function POST(request: NextRequest) {
       .from('invitations')
       .update({ used: true })
       .eq('id', invitation.id);
+
+    // Registrar evidencia de consentimiento en el perfil (CUÁNDO + QUÉ versión).
+    // Usa el service role porque el perfil pertenece al usuario de la invitación.
+    if (invitation.user_id) {
+      const admin = createAdminClient();
+      await admin
+        .from('profiles')
+        .update({
+          terminos_aceptados_at: new Date().toISOString(),
+          terminos_version: TERMINOS_VERSION,
+          privacidad_version: PRIVACIDAD_VERSION,
+        })
+        .eq('id', invitation.user_id);
+    }
 
     // Cerrar sesión
     await anonClient.auth.signOut();

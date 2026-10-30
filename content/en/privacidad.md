@@ -1,8 +1,8 @@
 # Platform Privacy Policy
 
-**Last updated:** May 29, 2026
+**Last updated:** September 28, 2026
 
-This Privacy Policy describes how personal data is collected, used, and protected for users accessing platforms developed and operated under the **{{APP_NAME}}** infrastructure.
+This Privacy Policy describes how personal data is collected, used, and protected for users accessing platforms developed and operated under the **{{APP_NAME}}** infrastructure, in accordance with **Law No. 21,719** on the protection of personal data in Chile.
 
 ---
 
@@ -58,11 +58,13 @@ Your data is used exclusively to:
 
 ## 4. Legal Basis
 
-The processing of your data is based on:
+The processing of your data is based on one of the lawful bases recognized by Law No. 21,719:
 
 - **Performance of the service contract:** necessary to provide the platform.
-- **Consent:** for the processing of optional data.
+- **Consent:** for the processing of optional data. Your consent is requested in advance, freely, and unambiguously through an affirmative act (for example, accepting these documents upon registration), and is recorded as evidence (date and accepted version).
 - **Legitimate interest:** for system security and integrity.
+
+You may withdraw your consent at any time, without affecting the lawfulness of processing carried out beforehand.
 
 ---
 
@@ -82,14 +84,16 @@ Your data will be retained for as long as your account is active or as necessary
 
 ## 7. Your Rights
 
-In accordance with applicable Chilean legislation (Law No. 19,628 on Protection of Private Life), you have the right to:
+In accordance with Law No. 21,719 on the protection of personal data, you have the following rights over your data:
 
 - **Access:** know what data we hold about you.
-- **Rectification:** correct inaccurate or incomplete data.
-- **Deletion:** request the deletion of your data.
-- **Objection:** object to the processing of your data.
+- **Rectification:** correct inaccurate, outdated, or incomplete data.
+- **Erasure (deletion):** request the deletion of your data.
+- **Objection:** object to the processing of your data where the law allows.
+- **Portability:** request a copy of your data in a structured, commonly used format, or its transfer to another controller when technically feasible.
+- **Blocking:** request the temporary suspension of processing while a request is resolved.
 
-To exercise these rights, write to us at **{{OWNER_EMAIL}}**.
+To exercise these rights, write to us at **{{OWNER_EMAIL}}**. We will respond to your request within the legal timeframes. If you believe your rights have not been properly addressed, you may file a complaint with the **Personal Data Protection Agency**.
 
 ---
 
@@ -101,14 +105,16 @@ The platform uses strictly necessary session cookies for service operation (auth
 
 ## 9. Third-Party Services
 
-The platform uses external third-party services for its operation, including:
+The platform uses external third-party services (data processors) for its operation, including:
 
-| Category | Purpose |
-|---|---|
-| Cloud database provider | Data storage and user authentication |
-| Web hosting provider | Application hosting and distribution |
+| Provider | Purpose | Data location |
+|---|---|---|
+| Supabase | Database and user authentication | Cloud infrastructure |
+| Vercel | Hosting, distribution, and performance metrics (no tracking cookies) | Cloud infrastructure |
+| Resend | Transactional email delivery (service notifications) | Cloud infrastructure |
+| Upstash | Request rate limiting (security) | Cloud infrastructure |
 
-These providers comply with industry security standards and process data solely according to our instructions. You may request information about specific providers by writing to **{{OWNER_EMAIL}}**.
+These providers act as data processors, comply with industry security standards, and process data solely according to our instructions. Engaging these processors does not relieve us of our responsibilities as data controller. You may request additional information by writing to **{{OWNER_EMAIL}}**.
 
 ---
 

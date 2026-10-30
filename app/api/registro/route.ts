@@ -11,6 +11,7 @@ import {
 } from '@/lib/validations/registro';
 import { validarTelefono } from '@/lib/validations/contacto';
 import { validarAño } from '@/lib/validations/año';
+import { TERMINOS_VERSION, PRIVACIDAD_VERSION } from '@/lib/config/legal';
 
 /**
  * POST público: registro manual mediante un enlace de invitación.
@@ -79,7 +80,14 @@ export async function POST(request: NextRequest) {
 
   // ── 4. Completar perfil y datos extra ──
   // Asegurar el rol correcto (el trigger puede no reconocer 'lector' en versiones anteriores).
-  const profileUpdates: Record<string, string> = { rol: tipo };
+  const profileUpdates: Record<string, string> = {
+    rol: tipo,
+    // Evidencia de consentimiento (Ley 21.719): registroEsValido ya exigió
+    // aceptaTyC === true, así que aquí sellamos CUÁNDO y QUÉ versión aceptó.
+    terminos_aceptados_at: new Date().toISOString(),
+    terminos_version: TERMINOS_VERSION,
+    privacidad_version: PRIVACIDAD_VERSION,
+  };
   if (form.apellido_materno?.trim()) profileUpdates.apellido_materno = form.apellido_materno.trim();
   if (form.telefono?.trim()) {
     const tel = validarTelefono(form.telefono);
