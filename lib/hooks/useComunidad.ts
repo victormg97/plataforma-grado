@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback } from 'react';
-import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery, keepPreviousData } from '@tanstack/react-query';
 import type { GameSettings } from '@/lib/supabase/types';
 import type { DailyAnswer, DailyAnswerResult } from '@/lib/comunidad/answer';
 import type {
@@ -359,6 +359,9 @@ export function useMonthlyRanking(month: string | null = null, enabled = true) {
       const nextOffset = lastPage.offset + lastPage.limit;
       return nextOffset < lastPage.total_entries ? nextOffset : undefined;
     },
+    // Switching months keeps the previous month on screen (dimmed) until the
+    // new one arrives, so the month picker never loses its list.
+    placeholderData: keepPreviousData,
     staleTime: 60_000,
     refetchOnWindowFocus: false,
     enabled,

@@ -1879,6 +1879,8 @@
     "ranking_loading_more": "Cargando...",
     "ranking_month_current": "Mes actual",
     "ranking_month_label": "Seleccionar mes",
+    "ranking_month_prev": "Mes anterior",
+    "ranking_month_next": "Mes siguiente",
     "ranking_hero_kicker": "Competencia del mes",
     "ranking_hero_subtitle": "Suma puntos con la pregunta del día, los cuestionarios y el caso semanal para subir al podio.",
     "ranking_participants": "{count, plural, =0 {Sin participantes} =1 {1 participante} other {# participantes}}",

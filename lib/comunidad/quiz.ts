@@ -187,6 +187,8 @@ export interface MonthlyRankingResult {
   offset: number;
   entries: RankingEntry[];
   my_position?: MyRankingPosition;
+  /** 'YYYY-MM' months with ranking data, newest first (first page only). Migration 151. */
+  available_months?: string[];
 }
 
 // ─── Challenge shapes (from get_active_challenges) ─────────────────────────────

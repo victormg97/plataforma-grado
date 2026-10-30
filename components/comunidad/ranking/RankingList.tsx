@@ -31,8 +31,21 @@ export function RankingList({
   );
 }
 
-/** Loading placeholder: podium silhouettes and a few rows. */
-export function RankingSkeleton() {
+/** Loading placeholder: podium silhouettes (and a few rows unless podiumOnly). */
+export function RankingSkeleton({ podiumOnly = false }: { podiumOnly?: boolean }) {
+  if (podiumOnly) {
+    return (
+      <div className="grid grid-cols-3 items-end gap-2 sm:gap-4">
+        {['h-24', 'h-32', 'h-[4.5rem]'].map((h, i) => (
+          <div key={i} className="flex flex-col items-center gap-2">
+            <span className="size-14 animate-pulse rounded-full bg-[var(--game-surface-muted)]" />
+            <span className="h-3 w-16 animate-pulse rounded bg-[var(--game-surface-muted)]" />
+            <span className={`w-full animate-pulse rounded-t-[var(--game-radius)] bg-[var(--game-surface-muted)] ${h}`} />
+          </div>
+        ))}
+      </div>
+    );
+  }
   return (
     <div className="flex flex-col gap-5">
       <div className="grid grid-cols-3 items-end gap-2 sm:gap-4">

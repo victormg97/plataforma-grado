@@ -1875,6 +1875,8 @@
     "ranking_loading_more": "Loading...",
     "ranking_month_current": "Current month",
     "ranking_month_label": "Select month",
+    "ranking_month_prev": "Previous month",
+    "ranking_month_next": "Next month",
     "ranking_hero_kicker": "Monthly competition",
     "ranking_hero_subtitle": "Earn points with the daily question, quizzes and the weekly case to reach the podium.",
     "ranking_participants": "{count, plural, =0 {No players} =1 {1 player} other {# players}}",
