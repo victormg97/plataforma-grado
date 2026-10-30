@@ -1703,6 +1703,8 @@
     "quiz_result_challenges_title": "Desafíos completados",
     "quiz_result_again": "Hacer otro cuestionario",
     "ranking_anonymous": "Jugador",
+    "ranking_you": "Tú",
+    "ranking_leader": "Líder",
     "ranking_points": "{points} pts",
     "ranking_my_position": "Vas en el puesto {position} con {points} puntos",
     "ranking_no_position": "Aún no tienes posición este mes. ¡Responde para aparecer!",

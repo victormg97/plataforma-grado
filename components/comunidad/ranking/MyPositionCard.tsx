@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import { TrendingUp } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import type { MyRankingPosition } from '@/lib/comunidad/quiz';
+import { RankMedal } from './RankMedal';
 
 /**
  * Shows the caller's own position in the full monthly ranking, even when they
@@ -20,9 +21,14 @@ export function MyPositionCard({ position }: { position?: MyRankingPosition }) {
       padding="md"
       className="flex items-center gap-3 border-none bg-[var(--game-accent-muted)] shadow-[var(--game-shadow)]"
     >
-      <div className="flex size-10 items-center justify-center rounded-full bg-[var(--game-accent)] text-[var(--game-on-accent)]">
-        <TrendingUp className="size-5" />
-      </div>
+      {/* On the podium: show your medal; otherwise the trend icon. */}
+      {hasPosition && (position?.position ?? 99) <= 3 ? (
+        <RankMedal position={position?.position ?? 1} size={40} />
+      ) : (
+        <div className="flex size-10 items-center justify-center rounded-full bg-[var(--game-accent)] text-[var(--game-on-accent)]">
+          <TrendingUp className="size-5" />
+        </div>
+      )}
       <div className="text-sm">
         {hasPosition ? (
           <span className="font-medium text-[var(--game-text)]">

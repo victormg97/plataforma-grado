@@ -46,10 +46,11 @@ export function RankingList({
 
   return (
     <ul className="flex flex-col gap-2">
-      {entries.map((entry) => (
+      {entries.map((entry, index) => (
         <RankingRow
           key={entry.user_id}
           entry={entry}
+          index={index}
           highlight={entry.user_id === currentUserId}
         />
       ))}

@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import { CheckCircle2, XCircle, BookOpen, Flame, Sparkles } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { RecentAchievements } from '../RecentAchievements';
+import { DailyAnswerReviewCard } from '../DailyReviewPanel';
 import { useDailyReview, useGameProfile } from '@/lib/hooks/useComunidad';
 import type { DailyAnswerResult } from '@/lib/comunidad/answer';
 import type { GameView } from '../views';
@@ -27,7 +28,9 @@ export function DailyResult({
   const { data: profile } = useGameProfile();
   // After a reload the in-memory result is gone: rebuild it from today's
   // review (already in the cache from the bootstrap, no extra request).
-  const { data: review, isLoading: reviewLoading } = useDailyReview(!liveResult);
+  // The review also powers the "correct answer" card (seeded by the answer
+  // response, so it's already in cache: no extra request).
+  const { data: review, isLoading: reviewLoading } = useDailyReview();
 
   const result: Pick<DailyAnswerResult, 'is_correct' | 'explanation' | 'points_awarded'> | null =
     liveResult ??
@@ -90,7 +93,12 @@ export function DailyResult({
         </span>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-[1.6fr_1fr]">
+      <div className="grid items-start gap-5 lg:grid-cols-[1.6fr_1fr]">
+        <div className="flex flex-col gap-5">
+        {/* The question with the player's pick and the correct answer, right
+            away (the review comes seeded in the answer response). */}
+        {review?.answered && review.question && <DailyAnswerReviewCard data={review} />}
+
         {/* Explanation card */}
         <Card padding="lg" className="border-none bg-[var(--game-surface)] shadow-[var(--game-shadow)]">
           <div className="flex gap-4">
@@ -110,6 +118,7 @@ export function DailyResult({
             </div>
           </div>
         </Card>
+        </div>
 
         {/* Recent achievements — real data */}
         <RecentAchievements onSeeMore={() => onNavigate('badges')} />

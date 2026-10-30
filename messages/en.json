@@ -1699,6 +1699,8 @@
     "quiz_result_challenges_title": "Challenges completed",
     "quiz_result_again": "Take another quiz",
     "ranking_anonymous": "Player",
+    "ranking_you": "You",
+    "ranking_leader": "Leader",
     "ranking_points": "{points} pts",
     "ranking_my_position": "You're in position {position} with {points} points",
     "ranking_no_position": "You don't have a position this month yet. Answer to appear!",

@@ -80,6 +80,8 @@ export interface PlayerLives {
   max: number;
   next_regen: string | null;
   block_when_empty: boolean;
+  /** True when some enabled point source costs a life on a wrong answer. */
+  costs_on_mistake?: boolean;
 }
 
 export interface PlayerModeration {

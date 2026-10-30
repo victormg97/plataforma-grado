@@ -598,6 +598,45 @@ div[style*="position: fixed"] > [role="toolbar"] {
   --game-ember: #ff9f43;
   --game-hud-crack: #3a0a12;
   --game-popover-bg: #2a0a10;
+  /* Ranking podium (1st gold, 2nd silver, 3rd bronze) */
+  --game-rank-gold: #e0a92e;
+  --game-rank-gold-light: #ffe8a3;
+  --game-rank-gold-dark: #9a6a08;
+  --game-rank-gold-bg: rgba(224, 169, 46, 0.16);
+  --game-rank-silver: #a3adb8;
+  --game-rank-silver-light: #eef2f6;
+  --game-rank-silver-dark: #5d6873;
+  --game-rank-silver-bg: rgba(163, 173, 184, 0.18);
+  --game-rank-bronze: #c47a3c;
+  --game-rank-bronze-light: #f3c79f;
+  --game-rank-bronze-dark: #864a1b;
+  --game-rank-bronze-bg: rgba(196, 122, 60, 0.15);
+  --game-rank-ribbon-a: #8f1d30;
+  --game-rank-ribbon-b: #6e1423;
+}
+
+/* 1st-place medal: gentle swing on its ribbon, a shine sweep and sparkles. */
+@keyframes game-medal-swing {
+  0%, 100% { transform: rotate(-7deg); }
+  50% { transform: rotate(7deg); }
+}
+@keyframes game-medal-shine {
+  0%, 55% { transform: translateX(-26px) rotate(25deg); }
+  80%, 100% { transform: translateX(26px) rotate(25deg); }
+}
+@keyframes game-sparkle {
+  0%, 100% { opacity: 0; transform: scale(0.3) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1) rotate(45deg); }
+}
+.game-anim-medal-swing { animation: game-medal-swing 2.6s ease-in-out infinite; transform-origin: 50% 0%; }
+.game-anim-medal-shine { animation: game-medal-shine 3.2s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.game-anim-sparkle { animation: game-sparkle 1.8s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .game-anim-medal-swing,
+  .game-anim-medal-shine,
+  .game-anim-sparkle { animation: none; }
+  .game-anim-sparkle { opacity: 0.8; }
 }
 
 /* Idle "alive" flame: a cheap transform-only flicker (GPU friendly). */

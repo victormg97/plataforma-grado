@@ -177,7 +177,9 @@ export function LivesIndicator({
         </div>
 
         {regenText && <p className="text-[11px] leading-snug text-white/60">{regenText}</p>}
-        <p className="text-[11px] leading-snug text-white/60">{t('lives_tip_cost')}</p>
+        {lives.costs_on_mistake && (
+          <p className="text-[11px] leading-snug text-white/60">{t('lives_tip_cost')}</p>
+        )}
       </div>
     </HudPopover>
   );

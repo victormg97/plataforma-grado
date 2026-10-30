@@ -60,21 +60,7 @@ function ReviewBody({ data }: { data: DailyReviewResult }) {
       </div>
 
       {/* Question */}
-      <Card padding="lg" className="flex flex-col gap-4 border-none bg-[var(--game-surface)] shadow-[var(--game-shadow)]">
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--game-text-muted)]">
-          {t('review_question_title')}
-        </h3>
-        <div
-          className="prose prose-sm max-w-none font-medium text-[var(--game-text)]"
-          dangerouslySetInnerHTML={{ __html: q.content }}
-        />
-
-        {q.type === 'true_false' ? (
-          <TrueFalseReview data={data} />
-        ) : (
-          <ChoiceReview data={data} />
-        )}
-      </Card>
+      <DailyAnswerReviewCard data={data} />
 
       {/* Explanation */}
       <Card padding="lg" className="flex flex-col gap-2 border-none bg-[var(--game-surface)] shadow-[var(--game-shadow)]">
@@ -91,6 +77,29 @@ function ReviewBody({ data }: { data: DailyReviewResult }) {
         )}
       </Card>
     </div>
+  );
+}
+
+/**
+ * Card with today's question, the player's pick and the correct option(s).
+ * Reused by the result screen so the solution shows right after answering.
+ */
+export function DailyAnswerReviewCard({ data }: { data: DailyReviewResult }) {
+  const t = useTranslations('comunidadEstrategica');
+  const q = data.question;
+  if (!q) return null;
+
+  return (
+    <Card padding="lg" className="flex flex-col gap-4 border-none bg-[var(--game-surface)] shadow-[var(--game-shadow)]">
+      <h3 className="text-sm font-semibold uppercase tracking-wide text-[var(--game-text-muted)]">
+        {t('review_question_title')}
+      </h3>
+      <div
+        className="prose prose-sm max-w-none font-medium text-[var(--game-text)]"
+        dangerouslySetInnerHTML={{ __html: q.content }}
+      />
+      {q.type === 'true_false' ? <TrueFalseReview data={data} /> : <ChoiceReview data={data} />}
+    </Card>
   );
 }
 

@@ -382,12 +382,14 @@ export function StreakIndicator({
 
 function StatTile({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
-    <div className="rounded-[var(--game-radius-sm)] bg-white/[0.07] px-2.5 py-2">
-      <div className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-white/60">
-        {icon}
-        {label}
+    // Column layout with the value pinned to the bottom, so values line up
+    // across tiles even when one label wraps to two lines.
+    <div className="flex h-full flex-col justify-between gap-1 rounded-[var(--game-radius-sm)] bg-white/[0.07] px-2.5 py-2">
+      <div className="flex items-start gap-1 text-[10px] uppercase leading-tight tracking-wide text-white/60">
+        <span className="mt-px shrink-0">{icon}</span>
+        <span>{label}</span>
       </div>
-      <div className="mt-0.5 text-sm font-bold">{value}</div>
+      <div className="text-sm font-bold">{value}</div>
     </div>
   );
 }
