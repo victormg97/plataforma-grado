@@ -124,23 +124,20 @@ export function GameNav({
       className="sticky top-2 z-30 rounded-[calc(var(--game-radius)+4px)] border border-[var(--game-border)] bg-[var(--game-surface)]/85 p-1.5 shadow-[var(--game-shadow)] backdrop-blur-md"
     >
       <div className="relative">
-        {/* Scroll affordances (only when overflowing) */}
-        {edges.left && (
-          <>
-            <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 z-20 w-10 rounded-l-[var(--game-radius)] bg-[linear-gradient(90deg,var(--game-surface),transparent)]" />
-            <ScrollArrow side="left" label={t('nav_scroll_left')} onClick={() => scrollBy(-1)} />
-          </>
-        )}
-        {edges.right && (
-          <>
-            <span aria-hidden className="pointer-events-none absolute inset-y-0 right-0 z-20 w-10 rounded-r-[var(--game-radius)] bg-[linear-gradient(270deg,var(--game-surface),transparent)]" />
-            <ScrollArrow side="right" label={t('nav_scroll_right')} onClick={() => scrollBy(1)} />
-          </>
-        )}
+        {/* Scroll arrows (only when overflowing, sm+) */}
+        {edges.left && <ScrollArrow side="left" label={t('nav_scroll_left')} onClick={() => scrollBy(-1)} />}
+        {edges.right && <ScrollArrow side="right" label={t('nav_scroll_right')} onClick={() => scrollBy(1)} />}
 
+        {/*
+          Edge fades are a mask on the scroller itself (not an overlay), so a
+          partially hidden active pill fades out cleanly instead of showing its
+          colored edge through a white veil. overscroll-x-none stops the touch
+          rubber-band that dragged the pill past the rounded corners.
+        */}
         <div
           ref={scrollRef}
-          className="flex snap-x snap-mandatory gap-1 overflow-x-auto [scrollbar-width:none] lg:snap-none [&::-webkit-scrollbar]:hidden"
+          style={edgeMask(edges)}
+          className="flex snap-x snap-mandatory gap-1 overflow-x-auto overscroll-x-none rounded-[var(--game-radius)] [scrollbar-width:none] [-webkit-overflow-scrolling:touch] lg:snap-none lg:gap-1.5 [&::-webkit-scrollbar]:hidden"
         >
           {ENTRIES.map((entry) => {
             const isActive = current === entry.view;
@@ -166,7 +163,9 @@ export function GameNav({
                   // Mobile: icon over label. sm+: icon beside label.
                   'min-w-[4.5rem] flex-col justify-center gap-1 px-2.5 py-2 text-[11px]',
                   'sm:min-w-0 sm:flex-row sm:gap-2 sm:px-3.5 sm:py-2.5 sm:text-sm',
-                  'lg:flex-1 lg:justify-center lg:px-2',
+                  // lg: grow to fill the row but never shrink below the label
+                  // (flex-1 let items shrink and truncated the labels).
+                  'lg:grow lg:basis-auto lg:justify-center lg:px-2.5',
                   isActive ? 'text-white' : 'text-[var(--game-text-muted)] hover:text-[var(--game-text)]'
                 )}
               >
@@ -209,7 +208,9 @@ export function GameNav({
                     />
                   )}
                 </span>
-                <span className="relative z-10 max-w-[6.5rem] truncate sm:max-w-none">{labelFor(entry)}</span>
+                <span className="relative z-10 max-w-[6.5rem] truncate sm:max-w-none sm:overflow-visible sm:whitespace-nowrap">
+                  {labelFor(entry)}
+                </span>
                 {dot && <span className="sr-only">{t(dot === 'urgent' ? 'nav_urgent' : 'nav_pending')}</span>}
               </button>
             );
@@ -218,6 +219,16 @@ export function GameNav({
       </div>
     </nav>
   );
+}
+
+/** Fade mask for the edges that have hidden content. */
+function edgeMask(edges: { left: boolean; right: boolean }): CSSProperties | undefined {
+  if (!edges.left && !edges.right) return undefined;
+  const fade = '2.5rem';
+  const left = edges.left ? `transparent 0, #000 ${fade}` : '#000 0';
+  const right = edges.right ? `#000 calc(100% - ${fade}), transparent 100%` : '#000 100%';
+  const mask = `linear-gradient(90deg, ${left}, ${right})`;
+  return { maskImage: mask, WebkitMaskImage: mask };
 }
 
 function ScrollArrow({ side, label, onClick }: { side: 'left' | 'right'; label: string; onClick: () => void }) {
