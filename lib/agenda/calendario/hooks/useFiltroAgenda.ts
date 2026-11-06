@@ -3,32 +3,69 @@
 /**
  * Slice `calendario` — hook del Filtro_Agenda (Requisito 12.3).
  *
- * Lee y escribe el query param `agenda` usando `useQueryParam`, parseando
- * con `parsearFiltro` y serializando con `serializarFiltro`.
+ * Lee el filtro de los query params (`agenda`, `prof`, `alu`) y lo escribe con
+ * `history.replaceState`. A diferencia de `router.replace`, no dispara una
+ * navegación del App Router (sin viaje al servidor), así que cada clic en el
+ * filtro se refleja al instante. Next.js sincroniza `useSearchParams` con
+ * `replaceState`, por lo que todos los componentes que usan este hook se
+ * actualizan a la vez.
  */
 
-import { useCallback } from 'react';
-import { useQueryParam } from '@/lib/hooks/useQueryParam';
-import { parsearFiltro, serializarFiltro, type FiltroAgenda } from '../filtro';
+import { useCallback, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
+import {
+  PARAM_ALUMNOS,
+  PARAM_PROFESORES,
+  PARAM_TIPOS,
+  parsearFiltro,
+  serializarFiltroCompleto,
+  type FiltroAgenda,
+} from '../filtro';
+
+type ActualizacionFiltro = FiltroAgenda | ((previo: FiltroAgenda) => FiltroAgenda);
 
 /**
- * Hook que gestiona el estado del Filtro_Agenda a través del query param `agenda`.
+ * Hook que gestiona el estado del Filtro_Agenda a través de la URL.
  *
  * @returns Una tupla `[filtro, setFiltro]` donde:
- *   - `filtro` es el estado actual (los tres tipos o un subconjunto activo).
- *   - `setFiltro` persiste el nuevo filtro en la URL.
+ *   - `filtro` es el estado actual. Su identidad es estable mientras la URL no cambie.
+ *   - `setFiltro` acepta el nuevo filtro o una función `(previo) => nuevo`. La forma
+ *     funcional parte siempre de la URL vigente, por lo que dos clics seguidos no
+ *     se pisan.
  */
-export function useFiltroAgenda(): [FiltroAgenda, (filtro: FiltroAgenda) => void] {
-  const [valor, setValor] = useQueryParam('agenda');
+export function useFiltroAgenda(): [FiltroAgenda, (actualizacion: ActualizacionFiltro) => void] {
+  const searchParams = useSearchParams();
+  const tipos = searchParams.get(PARAM_TIPOS);
+  const profesores = searchParams.get(PARAM_PROFESORES);
+  const alumnos = searchParams.get(PARAM_ALUMNOS);
 
-  const filtro = parsearFiltro(valor);
-
-  const setFiltro = useCallback(
-    (nuevoFiltro: FiltroAgenda) => {
-      setValor(serializarFiltro(nuevoFiltro));
-    },
-    [setValor],
+  const filtro = useMemo(
+    () => parsearFiltro(tipos, profesores, alumnos),
+    [tipos, profesores, alumnos],
   );
+
+  const setFiltro = useCallback((actualizacion: ActualizacionFiltro) => {
+    const params = new URLSearchParams(window.location.search);
+    const previo = parsearFiltro(
+      params.get(PARAM_TIPOS),
+      params.get(PARAM_PROFESORES),
+      params.get(PARAM_ALUMNOS),
+    );
+    const nuevo = typeof actualizacion === 'function' ? actualizacion(previo) : actualizacion;
+    const serializado = serializarFiltroCompleto(nuevo);
+
+    const escribir = (clave: string, valor: string | null) => {
+      if (valor === null) params.delete(clave);
+      else params.set(clave, valor);
+    };
+    escribir(PARAM_TIPOS, serializado.agenda);
+    escribir(PARAM_PROFESORES, serializado.prof);
+    escribir(PARAM_ALUMNOS, serializado.alu);
+
+    const qs = params.toString();
+    const url = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
+    window.history.replaceState(window.history.state, '', url);
+  }, []);
 
   return [filtro, setFiltro];
 }

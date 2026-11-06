@@ -17,8 +17,19 @@ export type { EventoFullCalendarAgenda } from './mapeoEventos';
 export { aFilaExportacion } from './mapeoExport';
 
 // ─── Filtro de agenda ───────────────────────────────────────────────────────
-export { parsearFiltro, serializarFiltro, FILTRO_POR_DEFECTO } from './filtro';
-export type { FiltroAgenda } from './filtro';
+export {
+  parsearFiltro,
+  serializarFiltro,
+  serializarFiltroCompleto,
+  FILTRO_POR_DEFECTO,
+  contarFiltrosActivos,
+  alternarId,
+  alternarTipo,
+  claseVisible,
+  bloqueoVisible,
+  eventoAgendaVisible,
+} from './filtro';
+export type { FiltroAgenda, ClaveTipoFiltro, EventoAgendaFiltrable } from './filtro';
 
 // ─── Leyenda ────────────────────────────────────────────────────────────────
 export { construirLeyenda } from './leyenda';

@@ -25,7 +25,6 @@ import { resolveCssVar, getContrastTextColor } from '@/lib/utils/cssTokens';
 import { CalendarioStyles } from '@/components/calendario/CalendarioStyles';
 import { EventDetailModal } from '@/components/calendario/EventDetailModal';
 import { CalendarEventPopover, useCalendarPopover, type PopoverEventData } from '@/components/calendario/CalendarEventPopover';
-import { CalendarPersonFilter, ALL_PEOPLE } from '@/components/calendario/CalendarPersonFilter';
 import { CalendarioToolbarTooltips } from '@/components/calendario/CalendarioToolbarTooltips';
 import { Modal } from '@/components/common/Modal';
 import { useBloqueos, type BloqueHorario } from '@/lib/hooks/useBloqueos';
@@ -38,8 +37,15 @@ import type { EstadoAsistencia } from '@/lib/supabase/types';
 // ─── Agenda imports ─────────────────────────────────────────────────────────
 import { useEventosAgenda } from '@/lib/agenda/nucleo';
 import type { RangoVisible, EventoAgendaProyectado } from '@/lib/agenda/nucleo';
-import { useFiltroAgenda, aEventoFullCalendar, aFilaExportacion } from '@/lib/agenda/calendario';
-import { FiltroAgenda } from '@/components/agenda/calendario/FiltroAgenda';
+import {
+  useFiltroAgenda,
+  aEventoFullCalendar,
+  aFilaExportacion,
+  claseVisible,
+  bloqueoVisible,
+  eventoAgendaVisible,
+} from '@/lib/agenda/calendario';
+import { FiltroAgenda, type PersonaFiltro } from '@/components/agenda/calendario/FiltroAgenda';
 import { LeyendaAgenda } from '@/components/agenda/calendario/LeyendaAgenda';
 import { DetalleEventoAgenda } from '@/components/agenda/calendario/DetalleEventoAgenda';
 import { FormularioAgenda } from '@/components/agenda/FormularioAgenda';
@@ -99,7 +105,6 @@ export function CalendarioAdmin() {
   const [defaultBloqueo, setDefaultBloqueo] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [currentView, setCurrentView] = useState('dayGridMonth');
-  const [selectedPersonId, setSelectedPersonId] = useState<string>(ALL_PEOPLE);
   const [selectedAgendaEvento, setSelectedAgendaEvento] = useState<EventoAgendaProyectado | null>(null);
   const [agendaDetailOpen, setAgendaDetailOpen] = useState(false);
   const [agendaFormOpen, setAgendaFormOpen] = useState(false);
@@ -127,7 +132,7 @@ export function CalendarioAdmin() {
     rango: rangoVisible,
   });
 
-  const { data: adminProfesores = [] } = useQuery<{ id: string; nombre: string; apellido: string; apellido_materno?: string | null; rol?: string }[]>({
+  const { data: adminProfesores = [] } = useQuery<{ id: string; nombre: string; apellido: string; apellido_materno?: string | null; rol?: string; avatar_url?: string | null }[]>({
     queryKey: ['admin-profesores'],
     queryFn: async () => {
       const r = await fetch('/api/admin/profesores');
@@ -139,22 +144,51 @@ export function CalendarioAdmin() {
   // Bloqueos de todos los profesores (admin ve todos)
   const { bloqueos, refetch: refetchBloqueos } = useBloqueos();
 
-  // Filtrado por persona seleccionada (Todos por defecto). Los mapas de color
-  // se calculan sobre el set completo para que cada profesor conserve su color.
+  // Alumnos para el selector del filtro (comparte caché con /admin/alumnos).
+  const { data: adminAlumnos = [] } = useQuery<
+    { id: string; nombre: string; apellido: string; apellido_materno?: string | null; email?: string | null; avatar_url?: string | null }[]
+  >({
+    queryKey: ['admin-alumnos'],
+    queryFn: async () => {
+      const res = await fetch('/api/admin/alumnos');
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
+    },
+    staleTime: 60_000,
+  });
+
+  const personasProfesores = useMemo<PersonaFiltro[]>(
+    () => adminProfesores.map((p) => ({ ...p, detalle: null })),
+    [adminProfesores],
+  );
+  const personasAlumnos = useMemo<PersonaFiltro[]>(
+    () => adminAlumnos.map((a) => ({ ...a, detalle: a.email ?? null })),
+    [adminAlumnos],
+  );
+
+  // Filtrado por clases, profesores y alumnos seleccionados (vacío = todos). Los
+  // mapas de color se calculan sobre el set completo para que cada profesor
+  // conserve su color.
   const filteredHorarios = useMemo(
     () =>
-      selectedPersonId === ALL_PEOPLE
-        ? horarios
-        : horarios.filter((h) => h.profesor_id === selectedPersonId),
-    [horarios, selectedPersonId]
+      horarios.filter((h) =>
+        claseVisible(filtroAgenda, { profesorId: h.profesor_id, alumnoId: h.alumno_id }),
+      ),
+    [horarios, filtroAgenda]
   );
 
   const filteredBloqueos = useMemo(
-    () =>
-      selectedPersonId === ALL_PEOPLE
-        ? bloqueos
-        : bloqueos.filter((b) => b.profesor_id === selectedPersonId),
-    [bloqueos, selectedPersonId]
+    () => bloqueos.filter((b) => bloqueoVisible(filtroAgenda, b.profesor_id)),
+    [bloqueos, filtroAgenda]
+  );
+
+  // Con exactamente un profesor/admin filtrado, los formularios de creación lo preseleccionan.
+  const profesorFiltradoId = filtroAgenda.profesores.length === 1 ? filtroAgenda.profesores[0] : '';
+
+  // Eventos de agenda (entradas personales y actividades) que pasan el filtro.
+  const eventosAgendaVisibles = useMemo(
+    () => eventosAgenda.filter((ev) => eventoAgendaVisible(filtroAgenda, ev)),
+    [eventosAgenda, filtroAgenda],
   );
 
   useEffect(() => {
@@ -225,28 +259,22 @@ export function CalendarioAdmin() {
 
   // Normalised events for PDF export
   const adminExportEvents = useMemo<CalendarioExportEvent[]>(() => {
-    const claseEvents: CalendarioExportEvent[] = filtroAgenda.clases
-      ? filteredHorarios.map((h) => ({
-          id: h.id,
-          title: h.titulo,
-          start: new Date(`${h.fecha}T${h.hora_inicio}`),
-          end: new Date(`${h.fecha}T${h.hora_fin}`),
-          color: profesorHexMap[h.profesor_id] ?? '#C9993F',
-          subtitle: h.alumno ? `${h.alumno.nombre} ${h.alumno.apellido}` : undefined,
-          status: h.asistencia?.[0]?.estado,
-        }))
-      : [];
+    const claseEvents: CalendarioExportEvent[] = filteredHorarios.map((h) => ({
+      id: h.id,
+      title: h.titulo,
+      start: new Date(`${h.fecha}T${h.hora_inicio}`),
+      end: new Date(`${h.fecha}T${h.hora_fin}`),
+      color: profesorHexMap[h.profesor_id] ?? '#C9993F',
+      subtitle: h.alumno ? `${h.alumno.nombre} ${h.alumno.apellido}` : undefined,
+      status: h.asistencia?.[0]?.estado,
+    }));
 
-    const agendaExportados: CalendarioExportEvent[] = eventosAgenda
-      .filter((ev) => {
-        if (ev.tipo === 'entrada_personal' && !filtroAgenda.entradasPersonales) return false;
-        if (ev.tipo === 'actividad' && !filtroAgenda.actividades) return false;
-        return true;
-      })
-      .map((ev) => aFilaExportacion(ev, (v) => resolveCssVar(v, '#888888')));
+    const agendaExportados: CalendarioExportEvent[] = eventosAgendaVisibles.map((ev) =>
+      aFilaExportacion(ev, (v) => resolveCssVar(v, '#888888')),
+    );
 
     return [...claseEvents, ...agendaExportados];
-  }, [filteredHorarios, profesorHexMap, eventosAgenda, filtroAgenda]);
+  }, [filteredHorarios, profesorHexMap, eventosAgendaVisibles]);
 
   // Legend
   const legend = useMemo(() => {
@@ -286,25 +314,15 @@ export function CalendarioAdmin() {
 
   // ─── Agenda: eventos mapeados a FullCalendar ────────────────────────────
   const agendaFcEvents = useMemo(
-    () => eventosAgenda.map(aEventoFullCalendar),
-    [eventosAgenda],
+    () => eventosAgendaVisibles.map(aEventoFullCalendar),
+    [eventosAgendaVisibles],
   );
 
-  // ─── Eventos combinados con filtro aplicado ─────────────────────────────
-  const combinedEvents = useMemo(() => {
-    const result: EventInput[] = [];
-    if (filtroAgenda.clases) {
-      result.push(...events);
-    }
-    // Agenda events: filter by type
-    for (const ev of agendaFcEvents) {
-      const tipo = ev.extendedProps.tipo;
-      if (tipo === 'entrada_personal' && !filtroAgenda.entradasPersonales) continue;
-      if (tipo === 'actividad' && !filtroAgenda.actividades) continue;
-      result.push(ev);
-    }
-    return result;
-  }, [events, agendaFcEvents, filtroAgenda]);
+  // ─── Eventos combinados (las clases y la agenda ya vienen filtradas) ────
+  const combinedEvents = useMemo<EventInput[]>(
+    () => [...events, ...agendaFcEvents],
+    [events, agendaFcEvents],
+  );
 
   const pruebaHorarioIds = useMemo(
     () => new Set(filteredHorarios.filter((h) => (h.pruebas?.length ?? 0) > 0).map((h) => h.id)),
@@ -422,36 +440,26 @@ export function CalendarioAdmin() {
 
   return (
     <>
-      {/* Legend row + person filter */}
-      <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-        <div className="order-2 flex flex-wrap gap-3 sm:order-1">
-          {legend.map((l) => (
-            <div key={l.nombre} className="flex items-center gap-1.5">
-              <span className="size-3 rounded-full" style={{ backgroundColor: l.color }} />
-              <span className="text-xs text-[var(--color-text-muted)]">{l.nombre}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* Person filter: full width on mobile, compact on desktop */}
-        <div className="order-1 flex items-center gap-2 sm:order-2 sm:ml-auto">
-          <span className="hidden whitespace-nowrap text-xs text-[var(--color-text-muted)] sm:inline">
-            {t('filtro_calendario_label')}
-          </span>
-          <CalendarPersonFilter
-            people={adminProfesores}
-            value={selectedPersonId}
-            onChange={setSelectedPersonId}
-            currentUserId={user?.id}
-            className="w-full sm:w-56"
-          />
-        </div>
-      </div>
-
-      {/* Agenda filter + leyenda */}
+      {/* Filtro (tipos, profesores/admins y alumnos) + leyendas */}
       <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <FiltroAgenda />
-        <LeyendaAgenda eventos={eventosAgenda} />
+        <FiltroAgenda
+          profesores={personasProfesores}
+          alumnos={personasAlumnos}
+          usuarioActualId={user?.id}
+        />
+        <div className="flex flex-col gap-3 sm:items-end">
+          {legend.length > 0 && (
+            <div className="flex flex-wrap gap-3 sm:justify-end">
+              {legend.map((l) => (
+                <div key={l.nombre} className="flex items-center gap-1.5">
+                  <span className="size-3 rounded-full" style={{ backgroundColor: l.color }} />
+                  <span className="text-xs text-[var(--color-text-muted)]">{l.nombre}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          <LeyendaAgenda eventos={eventosAgendaVisibles} />
+        </div>
       </div>
 
       {/* Download button: desktop injects into FC toolbar, mobile shows popup on view-button tap */}
@@ -639,7 +647,7 @@ export function CalendarioAdmin() {
       <HorarioForm
         open={formOpen}
         onClose={() => { setFormOpen(false); setEditingHorario(null); setDefaultDate(undefined); setDefaultTime(undefined); setDefaultEndTime(undefined); setDefaultBloqueo(false); }}
-        profesorId={editingHorario?.profesor_id || (selectedPersonId !== ALL_PEOPLE ? selectedPersonId : '')}
+        profesorId={editingHorario?.profesor_id || profesorFiltradoId}
         horario={editingHorario as never}
         defaultDate={defaultDate}
         defaultTime={defaultTime}
@@ -736,7 +744,7 @@ export function CalendarioAdmin() {
         open={agendaFormOpen}
         onClose={() => setAgendaFormOpen(false)}
         rol="admin"
-        profesorId={selectedPersonId !== ALL_PEOPLE ? selectedPersonId : ''}
+        profesorId={profesorFiltradoId}
         defaultDate={agendaFormDate}
         defaultTime={agendaFormTime}
         defaultEndTime={agendaFormEndTime}
