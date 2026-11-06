@@ -64,7 +64,10 @@ export function useFiltroAgenda(): [FiltroAgenda, (actualizacion: ActualizacionF
 
     const qs = params.toString();
     const url = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
-    window.history.replaceState(window.history.state, '', url);
+    // Se pasa `null` a propósito: si se reenvía `window.history.state` (que ya trae
+    // las claves internas `__NA`), Next.js lo toma como un cambio propio y NO
+    // sincroniza `useSearchParams`. Con `null` copia su estado y actualiza el router.
+    window.history.replaceState(null, '', url);
   }, []);
 
   return [filtro, setFiltro];
