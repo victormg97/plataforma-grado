@@ -1,0 +1,1 @@
+export { CedulariosModule } from './CedulariosModule';

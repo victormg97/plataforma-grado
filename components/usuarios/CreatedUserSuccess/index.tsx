@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import { useTranslations } from 'next-intl';
 import { Check, Copy } from 'lucide-react';
 import { toast } from 'sonner';
@@ -19,6 +19,10 @@ interface CreatedUserSuccessProps {
   titleKey?: string;
 }
 
+const subscribeNoop = () => () => {};
+const getOrigin = () => window.location.origin;
+const getServerOrigin = () => '';
+
 export function CreatedUserSuccess({
   email,
   password,
@@ -28,6 +32,7 @@ export function CreatedUserSuccess({
   const t = useTranslations('crear_usuario.alumno');
   const tc = useTranslations('common');
   const [copiedLink, setCopiedLink] = useState(false);
+  const origin = useSyncExternalStore(subscribeNoop, getOrigin, getServerOrigin);
 
   const handleCopyLink = () => {
     if (setupCode) {
@@ -66,7 +71,7 @@ export function CreatedUserSuccess({
               <div className="mt-2 flex items-center gap-2">
                 <Input
                   readOnly
-                  value={`${typeof window !== 'undefined' ? window.location.origin : ''}/setup/${setupCode}`}
+                  value={`${origin}/setup/${setupCode}`}
                   className="bg-[var(--color-bg-secondary)] flex-1 border-[var(--color-brand-gold)]/30"
                 />
                 <Button onClick={handleCopyLink} variant="secondary" className="border-[var(--color-brand-gold)]/30 hover:bg-[var(--color-brand-gold-muted)]">

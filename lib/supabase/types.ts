@@ -3216,12 +3216,467 @@ export type Database = {
           },
         ]
       }
+      universidades: {
+        Row: {
+          activo: boolean
+          codigo: string
+          created_at: string
+          created_by: string | null
+          id: string
+          logo_url: string | null
+          nombre: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          activo?: boolean
+          codigo: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          logo_url?: string | null
+          nombre: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          activo?: boolean
+          codigo?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          logo_url?: string | null
+          nombre?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "universidades_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "universidades_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cedularios: {
+        Row: {
+          activo: boolean
+          created_at: string
+          created_by: string | null
+          descripcion: string | null
+          id: string
+          nombre: string
+          normativa: Json | null
+          rubrica: Json | null
+          universidad_id: string
+          updated_at: string
+          updated_by: string | null
+          version: string | null
+        }
+        Insert: {
+          activo?: boolean
+          created_at?: string
+          created_by?: string | null
+          descripcion?: string | null
+          id?: string
+          nombre: string
+          normativa?: Json | null
+          rubrica?: Json | null
+          universidad_id: string
+          updated_at?: string
+          updated_by?: string | null
+          version?: string | null
+        }
+        Update: {
+          activo?: boolean
+          created_at?: string
+          created_by?: string | null
+          descripcion?: string | null
+          id?: string
+          nombre?: string
+          normativa?: Json | null
+          rubrica?: Json | null
+          universidad_id?: string
+          updated_at?: string
+          updated_by?: string | null
+          version?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cedularios_universidad_id_fkey"
+            columns: ["universidad_id"]
+            isOneToOne: false
+            referencedRelation: "universidades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cedularios_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cedularios_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cedulario_enlaces: {
+        Row: {
+          cedulario_id: string
+          created_at: string
+          descripcion: string | null
+          id: string
+          orden: number
+          titulo: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          cedulario_id: string
+          created_at?: string
+          descripcion?: string | null
+          id?: string
+          orden?: number
+          titulo: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          cedulario_id?: string
+          created_at?: string
+          descripcion?: string | null
+          id?: string
+          orden?: number
+          titulo?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cedulario_enlaces_cedulario_id_fkey"
+            columns: ["cedulario_id"]
+            isOneToOne: false
+            referencedRelation: "cedularios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      materias: {
+        Row: {
+          activo: boolean
+          cedulario_id: string
+          codigo: string
+          created_at: string
+          descripcion: string | null
+          id: string
+          nivel: number
+          nombre: string
+          orden: number
+          parent_id: string | null
+          temario: Json | null
+          temario_texto: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          activo?: boolean
+          cedulario_id: string
+          codigo: string
+          created_at?: string
+          descripcion?: string | null
+          id?: string
+          nivel?: number
+          nombre: string
+          orden?: number
+          parent_id?: string | null
+          temario?: Json | null
+          temario_texto?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          activo?: boolean
+          cedulario_id?: string
+          codigo?: string
+          created_at?: string
+          descripcion?: string | null
+          id?: string
+          nivel?: number
+          nombre?: string
+          orden?: number
+          parent_id?: string | null
+          temario?: Json | null
+          temario_texto?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "materias_cedulario_id_fkey"
+            columns: ["cedulario_id"]
+            isOneToOne: false
+            referencedRelation: "cedularios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "materias_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "materias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "materias_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      materia_enlaces: {
+        Row: {
+          cedulario_id: string
+          created_at: string
+          descripcion: string | null
+          id: string
+          materia_id: string
+          orden: number
+          titulo: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          cedulario_id: string
+          created_at?: string
+          descripcion?: string | null
+          id?: string
+          materia_id: string
+          orden?: number
+          titulo: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          cedulario_id?: string
+          created_at?: string
+          descripcion?: string | null
+          id?: string
+          materia_id?: string
+          orden?: number
+          titulo?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "materia_enlaces_materia_id_fkey"
+            columns: ["materia_id"]
+            isOneToOne: false
+            referencedRelation: "materias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cedulario_profesores: {
+        Row: {
+          cedulario_id: string
+          created_at: string
+          granted_by: string | null
+          id: string
+          profesor_id: string
+        }
+        Insert: {
+          cedulario_id: string
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          profesor_id: string
+        }
+        Update: {
+          cedulario_id?: string
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          profesor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cedulario_profesores_cedulario_id_fkey"
+            columns: ["cedulario_id"]
+            isOneToOne: false
+            referencedRelation: "cedularios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cedulario_profesores_profesor_id_fkey"
+            columns: ["profesor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cedulario_profesores_granted_by_fkey"
+            columns: ["granted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      historial_cambios: {
+        Row: {
+          campo: string
+          cedulario_id: string | null
+          created_at: string
+          id: string
+          metadata: Json | null
+          registro_etiqueta: string | null
+          registro_id: string
+          tabla: string
+          usuario_id: string | null
+          valor_anterior: Json | null
+          valor_nuevo: Json | null
+        }
+        Insert: {
+          campo: string
+          cedulario_id?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          registro_etiqueta?: string | null
+          registro_id: string
+          tabla: string
+          usuario_id?: string | null
+          valor_anterior?: Json | null
+          valor_nuevo?: Json | null
+        }
+        Update: {
+          campo?: string
+          cedulario_id?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          registro_etiqueta?: string | null
+          registro_id?: string
+          tabla?: string
+          usuario_id?: string | null
+          valor_anterior?: Json | null
+          valor_nuevo?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "historial_cambios_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
 
     Views: {
       [_ in never]: never
     }
+
     Functions: {
+      mover_materia: {
+        Args: {
+          p_id: string
+          p_nuevo_parent: string | null
+          p_despues_de: string | null
+        }
+        Returns: undefined
+      }
+      desactivar_materia: { Args: { p_id: string }; Returns: string[] }
+      restaurar_materias: { Args: { p_ids: string[] }; Returns: undefined }
+      reordenar_enlaces_cedulario: {
+        Args: { p_cedulario_id: string; p_ids: string[] }
+        Returns: undefined
+      }
+      reordenar_enlaces_materia: {
+        Args: { p_materia_id: string; p_ids: string[] }
+        Returns: undefined
+      }
+      buscar_materias: {
+        Args: { p_cedulario_id: string; p_q: string }
+        Returns: { id: string }[]
+      }
+      get_historial_cedulario: {
+        Args: {
+          p_cedulario_id: string
+          p_tabla?: string | null
+          p_usuario?: string | null
+          p_desde?: string | null
+          p_hasta?: string | null
+          p_limit?: number | null
+          p_cursor_created_at?: string | null
+          p_cursor_id?: string | null
+        }
+        Returns: {
+          id: string
+          cedulario_id: string | null
+          tabla: string
+          registro_id: string
+          registro_etiqueta: string | null
+          campo: string
+          valor_anterior: Json | null
+          valor_nuevo: Json | null
+          usuario_id: string | null
+          metadata: Json | null
+          created_at: string
+          usuario_nombre: string | null
+        }[]
+      }
+      listar_colaboradores: {
+        Args: { p_cedulario_id: string }
+        Returns: {
+          id: string
+          nombre: string
+          apellido: string
+          granted_by: string | null
+          created_at: string
+        }[]
+      }
+      listar_profesores_cedularios: {
+        Args: never
+        Returns: {
+          id: string
+          nombre: string
+          apellido: string
+        }[]
+      }
+      obtener_creador_cedulario: {
+        Args: { p_cedulario_id: string }
+        Returns: {
+          id: string
+          nombre: string
+          apellido: string
+        }[]
+      }
+      desactivar_cedulario: { Args: { p_id: string }; Returns: boolean }
+      desactivar_universidad: { Args: { p_id: string }; Returns: boolean }
+      cedulario_es_creador: { Args: { p_id: string }; Returns: boolean }
+      cedulario_es_colaborador: { Args: { p_id: string }; Returns: boolean }
+      cedulario_puede_editar: { Args: { p_id: string }; Returns: boolean }
+      cedulario_puede_gestionar: { Args: { p_id: string }; Returns: boolean }
+      materia_puede_editar: { Args: { p_id: string }; Returns: boolean }
+      cedulario_tiene_asignaciones: { Args: { p_id: string }; Returns: boolean }
       admin_pagar_mes_columna: {
         Args: {
           p_anio: number

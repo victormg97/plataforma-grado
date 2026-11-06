@@ -141,6 +141,10 @@
   --color-partial: #e8a020;
   --color-partial-muted: rgba(232, 160, 32, 0.12);
 
+  /* Resaltado de coincidencias de búsqueda (cedularios: árbol de materias, Req 14.9) */
+  --color-highlight: #FFE45C;
+  --color-highlight-foreground: #1a1a1a;
+
   /* Professor calendar palette (admin calendar, color-per-professor) */
   --color-profe-1: #C9993F;
   --color-profe-2: #3b82f6;
@@ -241,6 +245,8 @@
   --color-border-strong: #3A3A3A;
   --color-partial: #f0a830;
   --color-partial-muted: rgba(240, 168, 48, 0.15);
+  --color-highlight: #8A7410;
+  --color-highlight-foreground: #FFF6CC;
 
   /* Professor palette — slightly brighter for dark backgrounds */
   --color-profe-1: #D4A94F;
@@ -309,6 +315,8 @@
   --color-border-strong: #5a4a10;
   --color-partial: #f0a830;
   --color-partial-muted: rgba(240, 168, 48, 0.2);
+  --color-highlight: #7A6212;
+  --color-highlight-foreground: #FFF1B8;
 
   /* Professor palette — warm-tinted for graduado theme */
   --color-profe-1: #E8C97A;
