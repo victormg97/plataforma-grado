@@ -5,6 +5,16 @@ import { getRolRedirectPath } from '@/lib/auth/helpers';
 import type { LandingProps } from './types';
 
 /**
+ * Si el landing vive en www. y la plataforma en app. (NEXT_PUBLIC_APP_HOST),
+ * devuelve una URL absoluta al host de la plataforma. Asi el <Link> no hace
+ * prefetch RSC cross-origin (que fallaba por CORS). Sin APP_HOST, ruta relativa.
+ */
+function platformHref(path: string): string {
+  const appHost = process.env.NEXT_PUBLIC_APP_HOST;
+  return appHost ? `https://${appHost}${path}` : path;
+}
+
+/**
  * Resuelve el contexto común que todas las páginas del landing necesitan:
  * locale activo, ruta del CTA (dashboard si hay sesión, /login si no) y si el
  * usuario está logeado. Se ejecuta en el servidor.
@@ -17,7 +27,7 @@ export async function getLandingContext(): Promise<LandingProps> {
 
   // Fast path: most landing visitors are anonymous — skip profile lookup
   if (!user) {
-    return { locale, ctaHref: '/login', isLoggedIn: false };
+    return { locale, ctaHref: platformHref('/login'), isLoggedIn: false };
   }
 
   const { data: profile } = await supabase
@@ -30,7 +40,7 @@ export async function getLandingContext(): Promise<LandingProps> {
 
   return {
     locale,
-    ctaHref: dashboardPath ?? '/login',
+    ctaHref: platformHref(dashboardPath ?? '/login'),
     isLoggedIn: dashboardPath !== null,
   };
 }
