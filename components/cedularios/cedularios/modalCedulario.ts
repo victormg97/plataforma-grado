@@ -7,6 +7,8 @@
  */
 
 export const MODAL_NUEVO_CEDULARIO = 'nuevo-cedulario';
+/** Opens the import-from-file dialog (ImportarCedularioDialog). */
+export const MODAL_IMPORTAR_CEDULARIO = 'importar-cedulario';
 
 const PREFIJO_EDITAR = 'editar-cedulario:';
 

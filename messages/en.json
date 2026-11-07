@@ -1775,7 +1775,7 @@
     "streak_lost_dismiss": "Dismiss",
     "streak_details_label": "Show streak details",
     "lives_tip_title": "Your lives",
-    "lives_tip_count": "{current} of {max}",
+    "lives_tip_count": "{current} of {maximo}",
     "lives_tip_cost": "A wrong answer may cost you a life.",
     "lives_tip_regen_per_life": "You recover 1 life every {hours} h.",
     "lives_tip_regen_full": "All lives refill every {hours} h.",
@@ -1787,9 +1787,9 @@
     "onboarding_submit": "Start playing",
     "nickname_label": "Nickname",
     "nickname_placeholder": "Your nickname",
-    "nickname_hint": "Between {min} and {max} characters: letters, numbers, hyphens and underscores.",
+    "nickname_hint": "Between {min} and {maximo} characters: letters, numbers, hyphens and underscores.",
     "nickname_submit": "Save nickname",
-    "nickname_error_format": "The nickname must be {min} to {max} valid characters.",
+    "nickname_error_format": "The nickname must be {min} to {maximo} valid characters.",
     "nickname_error_taken": "That nickname is already taken. Choose a different one.",
     "nickname_error_cooldown": "You can change your nickname in {days} day(s).",
     "daily_title": "Daily Question",
@@ -2656,7 +2656,7 @@
       "inactiva": "Inactive",
       "solo_lectura": "Read-only",
       "sin_valor": "No value",
-      "caracteres": "{actual} of {max} characters",
+      "caracteres": "{actual} of {maximo} characters",
       "abre_nueva_pestana": "Opens in a new tab"
     },
     "universidades": {
@@ -2704,6 +2704,7 @@
       "titulo": "Syllabi",
       "titulo_universidad": "Syllabi of {universidad}",
       "nuevo": "New syllabus",
+      "importar": "Import from file",
       "editar": "Edit syllabus",
       "eliminar": "Delete syllabus",
       "abrir": "Open syllabus",
@@ -3085,6 +3086,108 @@
         "cancelar": "Keep editing"
       }
     },
+
+    "importacion": {
+      "titulo": "Import cedulario from file",
+      "descripcion": "Upload a PDF, Markdown or text file. Review and fix the tree before saving it.",
+      "pasos": {
+        "aria": "Import steps",
+        "subir": "File",
+        "revisar": "Review",
+        "confirmar": "Confirm"
+      },
+      "subir": {
+        "titulo": "Drag a file here or click to choose one",
+        "leyendo": "Reading file...",
+        "ayuda": "Formats: PDF with text, Markdown (.md) or text (.txt). Maximum 25 MB.",
+        "privacidad": "The file is read in your browser. Only the final tree you confirm is sent to the server."
+      },
+      "errores": {
+        "formato_no_soportado": "Unsupported format. Use a .pdf, .md or .txt file.",
+        "archivo_muy_grande": "The file exceeds 25 MB.",
+        "archivo_vacio": "The file is empty.",
+        "pdf_invalido": "The PDF could not be opened. It may be damaged or password protected.",
+        "pdf_sin_texto": "This PDF has no selectable text (it looks scanned). OCR is not supported: convert the PDF to Markdown with another tool and upload it again.",
+        "lectura_fallida": "The file could not be read. Try again."
+      },
+      "revisar": {
+        "archivo": "File: {nombre}",
+        "deshacer": "Undo",
+        "rehacer": "Redo",
+        "panel_aria": "Summary, warnings and original text"
+      },
+      "arbol": {
+        "aria": "Structure of the cedulario to import",
+        "atajos": "Arrow keys to move, Enter to edit the name, Alt+arrows to move or change level, Insert to add an item (Alt+Insert as child) and Delete to remove.",
+        "vacio": "There are no items to import.",
+        "agregar_primero": "Add item",
+        "sin_nombre": "(no name)",
+        "fila_aria": "{codigo} {nombre}, level {nivel}",
+        "expandir": "Expand",
+        "contraer": "Collapse",
+        "editar_nombre": "Edit name",
+        "editar_nombre_aria": "Name of item {codigo}",
+        "acciones_aria": "Item actions",
+        "subir": "Move up",
+        "bajar": "Move down",
+        "sangrar": "Increase level",
+        "desindentar": "Decrease level",
+        "fusionar": "Merge with previous item",
+        "agregar_hermano": "Add item after",
+        "agregar_hijo": "Add child item",
+        "eliminar": "Delete item and its children"
+      },
+      "advertencias": {
+        "ninguna": "No warnings.",
+        "resumen": "{errores, plural, one {# error} other {# errors}} and {avisos, plural, one {# warning} other {# warnings}}",
+        "error": "Error",
+        "aviso": "Warning",
+        "linea": "File line {linea}",
+        "ir_aria": "Go to item {codigo}",
+        "tipos": {
+          "sin_estructura": "No structure was detected. Check the text or add items by hand.",
+          "profundidad_excedida": "Exceeds the {maximo} allowed levels. Reduce its level.",
+          "nombre_vacio": "The name is empty.",
+          "nombre_muy_largo": "The name exceeds {maximo} characters.",
+          "codigo_muy_largo": "The generated code exceeds {maximo} characters.",
+          "codigo_duplicado": "Duplicate code among siblings ({codigo}).",
+          "demasiados_nodos": "There are {total} items and the maximum is {maximo}. Split the file.",
+          "salto_numeracion": "Numbering gap before {etiqueta}.",
+          "linea_sin_etiqueta": "Line without numbering was joined to the previous item.",
+          "nombre_relleno": "The item had no text and uses its numbering as name.",
+          "nombre_largo": "Very long name ({largo} characters). Are two items joined?"
+        }
+      },
+      "resumen": {
+        "total": "{count, plural, one {# item} other {# items}} in total",
+        "por_nivel_aria": "Items per level",
+        "nivel": "Level {nivel}: {count}"
+      },
+      "texto": {
+        "titulo": "Original text",
+        "ayuda": "Fix the text and parse it again if the structure came out badly. Your tree edits are replaced, but you can undo.",
+        "aria": "Original text of the file",
+        "advertencia_reemplaza": "Re-parsing replaces the current tree.",
+        "reanalizar": "Re-parse"
+      },
+      "metadatos": {
+        "destino": "Target",
+        "destino_nuevo": "Create a new cedulario",
+        "destino_ayuda": "You can also fill an existing cedulario that is empty and has no assigned students.",
+        "destino_usa_existente": "It will be imported into \"{nombre}\", which keeps its name and version.",
+        "universidad_no_detectada": "The university was not detected in the file. Choose it manually."
+      },
+      "confirmar": {
+        "resumen": "To be imported",
+        "aviso": "The import is all or nothing: if something fails nothing is created. You can keep editing the structure afterwards."
+      },
+      "acciones": {
+        "otro_archivo": "Choose another file",
+        "continuar": "Continue",
+        "importar": "Import {count, plural, one {# item} other {# items}}",
+        "importando": "Importing..."
+      }
+    },
     "toasts": {
       "deshacer": "Undo",
       "universidad_creada": "University created",
@@ -3092,6 +3195,7 @@
       "universidad_eliminada": "University deleted",
       "logo_guardado": "Logo saved",
       "cedulario_creado": "Syllabus created",
+      "cedulario_importado": "Cedulario imported",
       "cedulario_editado": "Syllabus updated",
       "cedulario_eliminado": "Syllabus deleted",
       "contenido_guardado": "Content saved",
@@ -3109,7 +3213,7 @@
       "historial_actualizado": "History refreshed"
     },
     "errores": {
-      "nivel_maximo": "A subject cannot exceed 5 levels.",
+      "nivel_maximo": "A subject cannot exceed 10 levels.",
       "ciclo": "You cannot move a subject inside itself or its descendants.",
       "padre_invalido": "The parent subject is not active or belongs to another syllabus.",
       "universidad_con_cedularios": "The university cannot be deleted because it still has active syllabi.",
@@ -3152,6 +3256,7 @@
       "materia_invalida": "The subject does not belong to this syllabus or is deactivated",
       "fecha_futura": "The date cannot be later than today",
       "cedulario_no_disponible": "This syllabus is not available",
+      "cedulario_no_vacio": "This syllabus already has subjects or assigned students. You can only import into an empty syllabus.",
       "cedulario_con_asignaciones_conteo": "{count, plural, one {This syllabus has # student assigned and cannot be deleted.} other {This syllabus has # students assigned and cannot be deleted.}}",
       "cedulario_invalido": "The selected syllabus is not valid.",
       "alumnos_requeridos": "Select at least one student.",
@@ -3375,7 +3480,7 @@
           "aria": "Subject note",
           "guardar": "Save note",
           "guardando": "Saving...",
-          "contador": "{actual} of {max} characters",
+          "contador": "{actual} of {maximo} characters",
           "vacia": "No note"
         },
         "comentarios": {
@@ -3392,7 +3497,7 @@
           "eliminar": "Delete comment",
           "editado": "edited",
           "autor_fecha": "{autor} · {fecha}",
-          "contador": "{actual} of {max} characters",
+          "contador": "{actual} of {maximo} characters",
           "confirmar_eliminar_titulo": "Delete comment",
           "confirmar_eliminar_descripcion": "The comment will be permanently deleted.",
           "confirmar_eliminar": "Delete comment"
@@ -3411,7 +3516,7 @@
           "cancelar_edicion": "Cancel editing",
           "eliminar": "Delete review",
           "sin_nota": "No note",
-          "contador": "{actual} of {max} characters",
+          "contador": "{actual} of {maximo} characters",
           "confirmar_eliminar_titulo": "Delete review",
           "confirmar_eliminar_descripcion": "The review from {fecha} will be permanently deleted.",
           "confirmar_eliminar": "Delete review"
@@ -3463,7 +3568,7 @@
           "sin_alumnos_a_cargo": "You have no students in your charge to assign.",
           "ya_asignado": "already assigned",
           "seleccionados": "{count, plural, =0 {No students selected} one {# student selected} other {# students selected}}",
-          "limite": "You can assign up to {max} students at a time.",
+          "limite": "You can assign up to {maximo} students at a time.",
           "cargar_mas": "Load more students",
           "alumno_fijo": "Student"
         },

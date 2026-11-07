@@ -19,7 +19,7 @@ import { Input } from '@/components/ui/input';
 import { buscarMateriasTemario } from '@/app/actions/cedularios/materias';
 import { SEARCH_MAX_LENGTH, buscarEnArbol } from '@/lib/cedularios/busqueda';
 import { CEDULARIOS_I18N_NAMESPACE } from '@/lib/cedularios/errors';
-import { aplanarVisibles, conteoPorNivel, descendientes, type FilaVisible, type MateriaNodo } from '@/lib/cedularios/tree';
+import { aplanarVisibles, conteoPorNivel, descendientes, MAX_NIVEL, type FilaVisible, type MateriaNodo } from '@/lib/cedularios/tree';
 import type { MateriaEstructura } from '@/lib/queries/cedularios/materias';
 import { codigoDeError } from '../hooks/cedulariosQuery';
 import { useCedulariosAction } from '../hooks/useCedulariosAction';
@@ -40,7 +40,9 @@ export const UMBRAL_VIRTUALIZACION = 100;
 /** Rows mounted above and below the viewport when virtualized (Requirement 16.1). */
 export const OVERSCAN_FILAS = 20;
 
-const NIVELES = [1, 2, 3, 4, 5] as const;
+const NIVELES: readonly number[] = Array.from({ length: MAX_NIVEL }, (_, i) => i + 1);
+/** Levels always shown in the counters; deeper ones appear only when they have materias. */
+const NIVELES_BASE = 5;
 const SIN_MATERIAS: MateriaEstructura[] = [];
 const SIN_IDS: ReadonlySet<string> = new Set<string>();
 
@@ -572,7 +574,7 @@ function MateriaTreeContenido({
           aria-label={t('estructura.conteo_titulo')}
           className="flex flex-wrap gap-2 text-xs text-[var(--color-text-secondary)]"
         >
-          {NIVELES.map((nivel) => (
+          {NIVELES.filter((nivel) => nivel <= NIVELES_BASE || conteo[nivel] > 0).map((nivel) => (
             <li
               key={nivel}
               className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-2.5 py-1"

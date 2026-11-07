@@ -28,6 +28,8 @@ export const CEDULARIO_ERROR_CODES = [
   'materia_invalida',
   'fecha_futura',
   'cedulario_no_disponible',
+  // Import (migration 155)
+  'cedulario_no_vacio',
   // Unique violations
   'codigo_universidad_duplicado',
   'codigo_duplicado_nivel',
@@ -96,6 +98,8 @@ const CODIGO_POR_SQLSTATE: Readonly<Record<string, CedularioErrorCode>> = {
   CD014: 'materia_invalida',
   CD015: 'fecha_futura',
   CD016: 'cedulario_no_disponible',
+  // Import (migration 155)
+  CD017: 'cedulario_no_vacio',
   '23514': 'validacion',
   '42501': 'sin_permisos',
   // PostgREST: missing, invalid or expired JWT.

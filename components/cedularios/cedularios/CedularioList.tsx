@@ -3,13 +3,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { format, isValid } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { ArrowLeft, ArrowRight, FileText, Pencil, Plus, Search, Trash2, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, FileText, FileUp, Pencil, Plus, Search, Trash2, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { AppSelect } from '@/components/common/AppSelect';
 import { Button } from '@/components/common/Button';
 import { Card } from '@/components/common/Card';
 import { SEARCH_MAX_LENGTH, filtrarCedularios, type CedularioListItem } from '@/lib/cedularios/busqueda';
 import { cn } from '@/lib/utils';
+import { ImportarCedularioDialog } from '../importacion/ImportarCedularioDialog';
 import { useCedulariosUrl } from '../hooks/CedulariosUrlContext';
 import { codigoDeError } from '../hooks/cedulariosQuery';
 import { useCedularios } from '../hooks/useCedularios';
@@ -19,6 +20,7 @@ import { useUniversidades } from '../hooks/useUniversidades';
 import { CedularioForm } from './CedularioForm';
 import { useEliminarCedularioFlujo } from './DeleteCedularioDialog';
 import {
+  MODAL_IMPORTAR_CEDULARIO,
   MODAL_NUEVO_CEDULARIO,
   idDeModalEditarCedulario,
   modalEditarCedulario,
@@ -253,13 +255,14 @@ export function CedularioList() {
 
   // Form driven by ced_modal. A shared URL can carry a modal the user may not open: close it.
   const abrirNuevo = modal === MODAL_NUEVO_CEDULARIO;
+  const abrirImportar = modal === MODAL_IMPORTAR_CEDULARIO;
   const idEditando = idDeModalEditarCedulario(modal);
   const editando = idEditando !== null ? (visibles.find((c) => c.id === idEditando) ?? null) : null;
   const usuarioListo = usuario.rol !== null;
   const modalInvalido =
     usuarioListo &&
     cedularios !== undefined &&
-    ((abrirNuevo && !usuario.isStaff) ||
+    (((abrirNuevo || abrirImportar) && !usuario.isStaff) ||
       (idEditando !== null && (editando === null || !puedeGestionarCedularioDe(usuario, editando.createdBy))));
 
   useEffect(() => {
@@ -332,14 +335,25 @@ export function CedularioList() {
           </h3>
         </div>
         {usuario.isStaff && (
-          <Button
-            type="button"
-            size="sm"
-            icon={<Plus className="size-4" aria-hidden="true" />}
-            onClick={() => setModal(MODAL_NUEVO_CEDULARIO)}
-          >
-            {t('cedularios.nuevo')}
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              icon={<FileUp className="size-4" aria-hidden="true" />}
+              onClick={() => setModal(MODAL_IMPORTAR_CEDULARIO)}
+            >
+              {t('cedularios.importar')}
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              icon={<Plus className="size-4" aria-hidden="true" />}
+              onClick={() => setModal(MODAL_NUEVO_CEDULARIO)}
+            >
+              {t('cedularios.nuevo')}
+            </Button>
+          </div>
         )}
       </div>
 
@@ -437,6 +451,17 @@ export function CedularioList() {
         />
       )}
 
+      {abrirImportar && !modalInvalido && (
+        <ImportarCedularioDialog
+          universidadIdInicial={universidadId}
+          onClose={() => setModal(null)}
+          onImported={(id) => {
+            setModal(null);
+            setQ('');
+            setCedularioId(id);
+          }}
+        />
+      )}
       {dialogo}
     </section>
   );

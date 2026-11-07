@@ -1779,7 +1779,7 @@
     "streak_lost_dismiss": "Cerrar aviso",
     "streak_details_label": "Ver detalles de la racha",
     "lives_tip_title": "Tus vidas",
-    "lives_tip_count": "{current} de {max}",
+    "lives_tip_count": "{current} de {maximo}",
     "lives_tip_cost": "Fallar una respuesta puede costarte una vida.",
     "lives_tip_regen_per_life": "Recuperas 1 vida cada {hours} h.",
     "lives_tip_regen_full": "Se recargan todas cada {hours} h.",
@@ -1791,9 +1791,9 @@
     "onboarding_submit": "Empezar a jugar",
     "nickname_label": "Mote",
     "nickname_placeholder": "Tu mote",
-    "nickname_hint": "Entre {min} y {max} caracteres: letras, números, guiones y guiones bajos.",
+    "nickname_hint": "Entre {min} y {maximo} caracteres: letras, números, guiones y guiones bajos.",
     "nickname_submit": "Guardar mote",
-    "nickname_error_format": "El mote debe tener entre {min} y {max} caracteres válidos.",
+    "nickname_error_format": "El mote debe tener entre {min} y {maximo} caracteres válidos.",
     "nickname_error_taken": "Ese mote ya está en uso. Elige uno distinto.",
     "nickname_error_cooldown": "Podrás cambiar tu mote en {days} día(s).",
     "daily_title": "Pregunta del Día",
@@ -2660,7 +2660,7 @@
       "inactiva": "Inactiva",
       "solo_lectura": "Solo lectura",
       "sin_valor": "Sin valor",
-      "caracteres": "{actual} de {max} caracteres",
+      "caracteres": "{actual} de {maximo} caracteres",
       "abre_nueva_pestana": "Se abre en una pestaña nueva"
     },
     "universidades": {
@@ -2708,6 +2708,7 @@
       "titulo": "Cedularios",
       "titulo_universidad": "Cedularios de {universidad}",
       "nuevo": "Nuevo cedulario",
+      "importar": "Importar desde archivo",
       "editar": "Editar cedulario",
       "eliminar": "Eliminar cedulario",
       "abrir": "Abrir cedulario",
@@ -3089,6 +3090,108 @@
         "cancelar": "Seguir editando"
       }
     },
+
+    "importacion": {
+      "titulo": "Importar cedulario desde archivo",
+      "descripcion": "Sube un PDF, Markdown o texto. Revisa y corrige el árbol antes de guardarlo.",
+      "pasos": {
+        "aria": "Pasos de la importación",
+        "subir": "Archivo",
+        "revisar": "Revisar",
+        "confirmar": "Confirmar"
+      },
+      "subir": {
+        "titulo": "Arrastra un archivo aquí o haz clic para elegirlo",
+        "leyendo": "Leyendo archivo...",
+        "ayuda": "Formatos: PDF con texto, Markdown (.md) o texto (.txt). Máximo 25 MB.",
+        "privacidad": "El archivo se lee en tu navegador. Solo el árbol final que confirmes se envía al servidor."
+      },
+      "errores": {
+        "formato_no_soportado": "Formato no soportado. Usa un archivo .pdf, .md o .txt.",
+        "archivo_muy_grande": "El archivo supera los 25 MB.",
+        "archivo_vacio": "El archivo está vacío.",
+        "pdf_invalido": "No se pudo abrir el PDF. Puede estar dañado o protegido con contraseña.",
+        "pdf_sin_texto": "Este PDF no tiene texto seleccionable (parece escaneado). OCR no soportado: convierte el PDF a Markdown con otra herramienta y súbelo de nuevo.",
+        "lectura_fallida": "No se pudo leer el archivo. Inténtalo de nuevo."
+      },
+      "revisar": {
+        "archivo": "Archivo: {nombre}",
+        "deshacer": "Deshacer",
+        "rehacer": "Rehacer",
+        "panel_aria": "Resumen, advertencias y texto original"
+      },
+      "arbol": {
+        "aria": "Estructura del cedulario a importar",
+        "atajos": "Flechas para moverte, Enter para editar el nombre, Alt+flechas para mover o cambiar de nivel, Insert para agregar un ítem (Alt+Insert como hijo) y Supr para eliminar.",
+        "vacio": "No hay ítems para importar.",
+        "agregar_primero": "Agregar ítem",
+        "sin_nombre": "(sin nombre)",
+        "fila_aria": "{codigo} {nombre}, nivel {nivel}",
+        "expandir": "Expandir",
+        "contraer": "Contraer",
+        "editar_nombre": "Editar nombre",
+        "editar_nombre_aria": "Nombre del ítem {codigo}",
+        "acciones_aria": "Acciones del ítem",
+        "subir": "Mover arriba",
+        "bajar": "Mover abajo",
+        "sangrar": "Aumentar nivel",
+        "desindentar": "Reducir nivel",
+        "fusionar": "Unir con el ítem anterior",
+        "agregar_hermano": "Agregar ítem después",
+        "agregar_hijo": "Agregar ítem hijo",
+        "eliminar": "Eliminar ítem y sus hijos"
+      },
+      "advertencias": {
+        "ninguna": "Sin advertencias.",
+        "resumen": "{errores, plural, one {# error} other {# errores}} y {avisos, plural, one {# aviso} other {# avisos}}",
+        "error": "Error",
+        "aviso": "Aviso",
+        "linea": "Línea {linea} del archivo",
+        "ir_aria": "Ir al ítem {codigo}",
+        "tipos": {
+          "sin_estructura": "No se detectó ninguna estructura. Revisa el texto o agrega ítems a mano.",
+          "profundidad_excedida": "Supera los {maximo} niveles permitidos. Reduce su nivel.",
+          "nombre_vacio": "El nombre está vacío.",
+          "nombre_muy_largo": "El nombre supera los {maximo} caracteres.",
+          "codigo_muy_largo": "El código generado supera los {maximo} caracteres.",
+          "codigo_duplicado": "Código duplicado entre hermanos ({codigo}).",
+          "demasiados_nodos": "Hay {total} ítems y el máximo es {maximo}. Divide el archivo.",
+          "salto_numeracion": "Salto en la numeración antes de «{etiqueta}».",
+          "linea_sin_etiqueta": "Línea sin numeración unida al ítem anterior.",
+          "nombre_relleno": "El ítem no tenía texto y usa su numeración como nombre.",
+          "nombre_largo": "Nombre muy largo ({largo} caracteres). ¿Son dos ítems unidos?"
+        }
+      },
+      "resumen": {
+        "total": "{count, plural, one {# ítem} other {# ítems}} en total",
+        "por_nivel_aria": "Ítems por nivel",
+        "nivel": "Nivel {nivel}: {count}"
+      },
+      "texto": {
+        "titulo": "Texto original",
+        "ayuda": "Corrige el texto y vuelve a analizarlo si la estructura salió muy mal. Se reemplazan tus ediciones del árbol, pero puedes deshacer.",
+        "aria": "Texto original del archivo",
+        "advertencia_reemplaza": "Reanalizar reemplaza el árbol actual.",
+        "reanalizar": "Reanalizar"
+      },
+      "metadatos": {
+        "destino": "Destino",
+        "destino_nuevo": "Crear un cedulario nuevo",
+        "destino_ayuda": "También puedes llenar un cedulario existente que esté vacío y sin alumnos asignados.",
+        "destino_usa_existente": "Se importará dentro de \"{nombre}\", que conserva su nombre y versión.",
+        "universidad_no_detectada": "No se detectó la universidad en el archivo. Elígela manualmente."
+      },
+      "confirmar": {
+        "resumen": "Se importará",
+        "aviso": "La importación es todo o nada: si algo falla no se crea nada. Después podrás seguir editando la estructura."
+      },
+      "acciones": {
+        "otro_archivo": "Elegir otro archivo",
+        "continuar": "Continuar",
+        "importar": "Importar {count, plural, one {# ítem} other {# ítems}}",
+        "importando": "Importando..."
+      }
+    },
     "toasts": {
       "deshacer": "Deshacer",
       "universidad_creada": "Universidad creada",
@@ -3096,6 +3199,7 @@
       "universidad_eliminada": "Universidad eliminada",
       "logo_guardado": "Logo guardado",
       "cedulario_creado": "Cedulario creado",
+      "cedulario_importado": "Cedulario importado",
       "cedulario_editado": "Cedulario actualizado",
       "cedulario_eliminado": "Cedulario eliminado",
       "contenido_guardado": "Contenido guardado",
@@ -3113,7 +3217,7 @@
       "historial_actualizado": "Historial actualizado"
     },
     "errores": {
-      "nivel_maximo": "Una materia no puede superar 5 niveles.",
+      "nivel_maximo": "Una materia no puede superar 10 niveles.",
       "ciclo": "No puedes mover una materia dentro de sí misma o de sus descendientes.",
       "padre_invalido": "La materia padre no está activa o pertenece a otro cedulario.",
       "universidad_con_cedularios": "No se puede eliminar la universidad porque todavía tiene cedularios activos.",
@@ -3156,6 +3260,7 @@
       "materia_invalida": "La materia no pertenece a este cedulario o está desactivada",
       "fecha_futura": "La fecha no puede ser posterior a hoy",
       "cedulario_no_disponible": "Este cedulario no está disponible",
+      "cedulario_no_vacio": "Este cedulario ya tiene materias o alumnos asignados. Solo se puede importar en un cedulario vacío.",
       "cedulario_con_asignaciones_conteo": "{count, plural, one {Este cedulario tiene # alumno asignado y no se puede eliminar.} other {Este cedulario tiene # alumnos asignados y no se puede eliminar.}}",
       "cedulario_invalido": "El cedulario seleccionado no es válido.",
       "alumnos_requeridos": "Selecciona al menos un alumno.",
@@ -3379,7 +3484,7 @@
           "aria": "Nota de la materia",
           "guardar": "Guardar nota",
           "guardando": "Guardando...",
-          "contador": "{actual} de {max} caracteres",
+          "contador": "{actual} de {maximo} caracteres",
           "vacia": "Sin nota"
         },
         "comentarios": {
@@ -3396,7 +3501,7 @@
           "eliminar": "Eliminar comentario",
           "editado": "editado",
           "autor_fecha": "{autor} · {fecha}",
-          "contador": "{actual} de {max} caracteres",
+          "contador": "{actual} de {maximo} caracteres",
           "confirmar_eliminar_titulo": "Eliminar comentario",
           "confirmar_eliminar_descripcion": "El comentario se eliminará de forma permanente.",
           "confirmar_eliminar": "Eliminar comentario"
@@ -3415,7 +3520,7 @@
           "cancelar_edicion": "Cancelar edición",
           "eliminar": "Eliminar repaso",
           "sin_nota": "Sin nota",
-          "contador": "{actual} de {max} caracteres",
+          "contador": "{actual} de {maximo} caracteres",
           "confirmar_eliminar_titulo": "Eliminar repaso",
           "confirmar_eliminar_descripcion": "El repaso del {fecha} se eliminará de forma permanente.",
           "confirmar_eliminar": "Eliminar repaso"
@@ -3467,7 +3572,7 @@
           "sin_alumnos_a_cargo": "No tienes alumnos a tu cargo para asignar.",
           "ya_asignado": "ya asignado",
           "seleccionados": "{count, plural, =0 {Ningún alumno seleccionado} one {# alumno seleccionado} other {# alumnos seleccionados}}",
-          "limite": "Puedes asignar hasta {max} alumnos a la vez.",
+          "limite": "Puedes asignar hasta {maximo} alumnos a la vez.",
           "cargar_mas": "Cargar más alumnos",
           "alumno_fijo": "Alumno"
         },

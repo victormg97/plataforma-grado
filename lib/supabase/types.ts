@@ -3920,6 +3920,17 @@ export type Database = {
         }
         Returns: undefined
       }
+      importar_cedulario: {
+        Args: {
+          p_universidad_id: string
+          p_nombre: string
+          p_version: string | null
+          p_descripcion: string | null
+          p_materias: Json
+          p_cedulario_id?: string | null
+        }
+        Returns: string
+      }
       desactivar_materia: { Args: { p_id: string }; Returns: string[] }
       restaurar_materias: { Args: { p_ids: string[] }; Returns: undefined }
       reordenar_enlaces_cedulario: {

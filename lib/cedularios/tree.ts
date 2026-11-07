@@ -17,7 +17,7 @@
 import { codigoDisponible } from './codigo';
 import { ORDEN_PASO, ordenEntre, rebalancear } from './orden';
 
-export const MAX_NIVEL = 5;
+export const MAX_NIVEL = 10;
 
 export interface MateriaNodo {
   id: string;
@@ -361,12 +361,13 @@ export function restaurarMaterias(flat: MateriaNodo[], ids: string[]): Resultado
 // Derived views
 // ---------------------------------------------------------------------------
 
-/** Count of active materias per nivel 1 to 5 (0 when a nivel is empty). */
-export function conteoPorNivel(flat: MateriaNodo[]): Record<1 | 2 | 3 | 4 | 5, number> {
-  const conteo: Record<1 | 2 | 3 | 4 | 5, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+/** Count of active materias per nivel 1 to MAX_NIVEL (0 when a nivel is empty). */
+export function conteoPorNivel(flat: MateriaNodo[]): Record<number, number> {
+  const conteo: Record<number, number> = {};
+  for (let nivel = 1; nivel <= MAX_NIVEL; nivel += 1) conteo[nivel] = 0;
   for (const n of flat) {
     if (!n.activo) continue;
-    if (n.nivel >= 1 && n.nivel <= MAX_NIVEL) conteo[n.nivel as 1 | 2 | 3 | 4 | 5] += 1;
+    if (n.nivel >= 1 && n.nivel <= MAX_NIVEL) conteo[n.nivel] += 1;
   }
   return conteo;
 }
