@@ -30,8 +30,33 @@ function quitarComentarios(texto: string): string {
   return salida;
 }
 
+/**
+ * Markers that a cleaned line may start with when the source line began with a bullet. The tree
+ * builder uses them for items that have no label of their own (`● Foo`, `- Foo`); when a label
+ * follows the bullet (`- a. Foo`) the marker is simply ignored.
+ */
+export const MARCA_VIÑETA_CIRCULO = '\u2022';
+export const MARCA_VIÑETA_GUION = '\u2013';
+
+/** Removes the bullet marker `limpiarLinea` may have left at the start of a line. */
+export function quitarMarcaViñeta(texto: string): string {
+  return texto[0] === MARCA_VIÑETA_CIRCULO || texto[0] === MARCA_VIÑETA_GUION ? texto.slice(2) : texto;
+}
+
+const GLIFO_INICIAL = /^\s*[\uE000-\uF8FF\u2022\u25CF\u25AA\u25A0\u00B7\u2023\u2043]/;
+const GUION_INICIAL = /^\s*(?:<[^>]*>\s*)*[-*+\u2013\u2014]\s+/;
+
 /** Cleans a single physical line (no comment handling). Returns '' when nothing is left. */
 export function limpiarLinea(linea: string): string {
+  const resto = limpiarCuerpo(linea);
+  if (resto === '') return '';
+  // Only a bullet that carried text counts; a lone glyph or dash is page decoration.
+  if (GLIFO_INICIAL.test(linea)) return `${MARCA_VIÑETA_CIRCULO} ${resto}`;
+  if (GUION_INICIAL.test(linea) && !/^\s*\*\*/.test(linea)) return `${MARCA_VIÑETA_GUION} ${resto}`;
+  return resto;
+}
+
+function limpiarCuerpo(linea: string): string {
   let t = linea.replace(/\t/g, ' ');
   t = t.replace(/<br\s*\/?>/gi, ' ').replace(/<\/?[a-zA-Z][^>]*>/g, '');
   t = t.replace(GLIFOS_VIÑETA, ' ');

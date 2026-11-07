@@ -20,8 +20,20 @@ export type FamiliaEtiqueta =
   | 'romano-mayus'
   | 'numero-punto'
   | 'numero-parentesis'
+  /** `3.1)`, `2.1.`: second number of a two-part decimal label. */
+  | 'numero-decimal'
   | 'letra'
-  | 'romano-min';
+  /** `A.`, `B)`: uppercase letters. */
+  | 'letra-mayus'
+  | 'romano-min'
+  /** Unlabeled bullets: glyph bullets (●, •) and dash bullets (-, –). */
+  | 'vineta-circulo'
+  | 'vineta-guion';
+
+/** Families of unlabeled bullets. */
+export function esVineta(familia: FamiliaEtiqueta): boolean {
+  return familia === 'vineta-circulo' || familia === 'vineta-guion';
+}
 
 export interface CandidatoEtiqueta {
   familia: FamiliaEtiqueta;
@@ -36,6 +48,11 @@ export interface EtiquetaDetectada {
   /** The label as written (`ii.`, `§ I.`). */
   texto: string;
   candidatos: CandidatoEtiqueta[];
+  /**
+   * Weak label (a roman numeral without a dot: `II ACTOS PROCESALES`). The tree builder only
+   * accepts it when it continues a sequence already open, never to start one.
+   */
+  debil?: boolean;
 }
 
 const VALORES_ROMANOS: Readonly<Record<string, number>> = {
@@ -68,11 +85,16 @@ export function parsearRomano(texto: string): number | null {
 //  1: §-section roman      2: uppercase roman with ".-"   3: uppercase roman with "."
 //  4,5: number + . or )    6: (a)                         7,8: single letter + . or )
 //  9,10: 2+ roman letters + . or )
+//  11,12,13: two-part decimal `3.1)` / `2.1.`   14,15: one uppercase letter + . or )
+// (alternatives are appended at the end so the group numbers above never change)
 const PATRON_ETIQUETA =
-  /(?<!\S)(?:§\s*([IVXLCDM]+)(?:\.-?)?|([IVXLCDM]+)\.-|([IVXLCDM]+)\.|(\d{1,2})([.)])-?|\(([a-z])\)|([a-z])([.)])|([ivxlcdm]{2,})([.)]))(?=\s|$)/g;
+  /(?<!\S)(?:§\s*([IVXLCDM]+)(?:\.-?)?|([IVXLCDM]+)\.-|([IVXLCDM]+)\.|(\d{1,2})([.)])-?|\(([a-z])\)|([a-z])([.)])|([ivxlcdm]{2,})([.)])|(\d{1,2})\.(\d{1,2})([.)])|([A-Z])([.)]))(?=\s|$)/g;
 
 /** Bare number at the start of a line followed by an uppercase word: `1 El proceso`. */
 const NUMERO_SIN_PUNTO = /^(\d{1,2})\s+(?=[A-ZÁÉÍÓÚÑ¿¡])/;
+
+/** Roman numeral without a dot before an uppercase word: `II ACTOS PROCESALES`. */
+const ROMANO_SIN_PUNTO = /^([IVXLCDM]{1,6})\s+(?=[A-ZÁÉÍÓÚÑ]{2})/;
 
 /** `23 DE DICIEMBRE DE 2025`: a date in the header, not item number 23. */
 const FECHA_AL_INICIO = /^\d{1,2}\s+de\s+(?:enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|noviembre|diciembre)\b/i;
@@ -88,10 +110,20 @@ function candidatosDe(m: RegExpExecArray): CandidatoEtiqueta[] {
     if (valor !== null) candidatos.push({ familia, valor });
   };
 
+  const decimalSegundo = m[12];
+  const letraMayuscula = m[14];
+
   if (seccion !== undefined) agregarRomano('seccion', seccion);
   else if (mayusGuion !== undefined) agregarRomano('romano-mayus', mayusGuion);
-  else if (mayus !== undefined) agregarRomano('romano-mayus', mayus);
-  else if (numero !== undefined) {
+  else if (mayus !== undefined) {
+    agregarRomano('romano-mayus', mayus);
+    // `C.` is the roman numeral 100 or the third uppercase letter: the tree builder decides.
+    if (mayus.length === 1) candidatos.push({ familia: 'letra-mayus', valor: mayus.charCodeAt(0) - 64 });
+  } else if (decimalSegundo !== undefined) {
+    candidatos.push({ familia: 'numero-decimal', valor: parseInt(decimalSegundo, 10) });
+  } else if (letraMayuscula !== undefined) {
+    candidatos.push({ familia: 'letra-mayus', valor: letraMayuscula.charCodeAt(0) - 64 });
+  } else if (numero !== undefined) {
     candidatos.push({
       familia: delimitador === ')' ? 'numero-parentesis' : 'numero-punto',
       valor: parseInt(numero, 10),
@@ -142,6 +174,19 @@ export function etiquetaAlInicio(linea: string): EtiquetaDetectada | null {
       texto: sinPunto[1],
       candidatos: [{ familia: 'numero-punto', valor: parseInt(sinPunto[1], 10) }],
     };
+  }
+  const romanoSinPunto = ROMANO_SIN_PUNTO.exec(linea);
+  if (romanoSinPunto !== null) {
+    const valor = parsearRomano(romanoSinPunto[1]);
+    if (valor !== null) {
+      return {
+        inicio: 0,
+        fin: romanoSinPunto[0].length,
+        texto: romanoSinPunto[1],
+        candidatos: [{ familia: 'romano-mayus', valor }],
+        debil: true,
+      };
+    }
   }
   return null;
 }

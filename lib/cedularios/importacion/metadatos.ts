@@ -6,7 +6,7 @@
  * that cleaning removes.
  */
 
-import { limpiarLinea } from './limpieza';
+import { limpiarLinea, quitarMarcaViñeta } from './limpieza';
 import type { LineaLimpia, MetadatosDetectados, UniversidadRef } from './tipos';
 
 const PALABRAS_MENORES = new Set([
@@ -39,11 +39,24 @@ function aTitulo(texto: string): string {
     .join(' ');
 }
 
+/** True when the text stops on a connector ("CEDULARIO DE"): the title goes on in the next line. */
+function terminaEnConector(texto: string): boolean {
+  const ultima = texto.trim().split(/\s+/).pop() ?? '';
+  return PALABRAS_MENORES.has(ultima.toLowerCase());
+}
+
 function detectarNombre(prefacio: readonly LineaLimpia[]): string | null {
-  const candidata = prefacio.find((l) => TITULO.test(l.texto) && !/universidad/i.test(l.texto));
-  const linea = candidata ?? prefacio.find((l) => !/universidad/i.test(l.texto)) ?? null;
-  if (linea === null) return null;
-  const nombre = aTitulo(linea.texto);
+  const noUniversidad = (l: LineaLimpia) => !/universidad/i.test(l.texto);
+  const indice = prefacio.findIndex((l) => TITULO.test(l.texto) && noUniversidad(l));
+  const inicio = indice >= 0 ? indice : prefacio.findIndex(noUniversidad);
+  if (inicio < 0) return null;
+  // A title split over two or three lines ("CEDULARIO DE" / "DERECHO PROCESAL").
+  let texto = prefacio[inicio].texto;
+  for (let i = inicio + 1; i < prefacio.length && i <= inicio + 2 && terminaEnConector(texto); i += 1) {
+    if (!noUniversidad(prefacio[i])) break;
+    texto = `${texto} ${prefacio[i].texto}`;
+  }
+  const nombre = aTitulo(texto);
   return nombre === '' ? null : nombre;
 }
 
@@ -75,7 +88,7 @@ export function detectarMetadatos(
   const cabecera = textoCrudo.slice(0, 4000);
   const cabeceraPlana = cabecera
     .split('\n')
-    .map((l) => limpiarLinea(l))
+    .map((l) => quitarMarcaViñeta(limpiarLinea(l)))
     .join('\n');
   // Letterhead text inside comments / <br> chains: compare against the de-tagged raw head.
   const plano = cabecera.replace(/<!--|-->/g, ' ').replace(/<br\s*\/?>/gi, '\n').replace(/<\/?[a-zA-Z][^>]*>/g, ' ');

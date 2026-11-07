@@ -219,12 +219,12 @@ describe('label disambiguation', () => {
 });
 
 describe('limpieza', () => {
-  it('removes comments, tags, bullets, bare page numbers and keeps original line numbers', () => {
+  it('removes comments, tags, bare page numbers and keeps original line numbers; bullets leave a marker', () => {
     const lineas = limpiarTexto('<!-- x\ny -->\n# **<u>Título</u>**\n\n- a. Uno<br>\n12\nPágina 3 de 10\n  \u2022 b. Dos');
     expect(lineas).toEqual([
       { texto: 'Título', numero: 3 },
-      { texto: 'a. Uno', numero: 5 },
-      { texto: 'b. Dos', numero: 8 },
+      { texto: '\u2013 a. Uno', numero: 5 },
+      { texto: '\u2022 b. Dos', numero: 8 },
     ]);
   });
 });

@@ -222,7 +222,12 @@ export function ImportarCedularioDialog({ universidadIdInicial, onClose, onImpor
                   onOperar={importacion.operar}
                 />
               </div>
-              <aside className="flex min-w-0 flex-col gap-4 md:border-l md:border-[var(--color-border)] md:pl-4" aria-label={t('revisar.panel_aria')}>
+              {/* Sticky on desktop: the total and the findings stay in view while the tree scrolls.
+                  `self-start` is required, a grid item that stretches cannot stick. */}
+              <aside
+                className="flex min-w-0 flex-col gap-4 md:sticky md:top-0 md:max-h-[calc(92dvh-14rem)] md:self-start md:overflow-y-auto md:border-l md:border-[var(--color-border)] md:pl-4"
+                aria-label={t('revisar.panel_aria')}
+              >
                 <ResumenImportacion planas={planas} />
                 <PanelAdvertencias advertencias={advertencias} planas={planas} onIr={(key) => arbolRef.current?.irA(key)} />
                 <TextoCrudoPanel texto={estado.texto} onReparsear={importacion.reparsear} />
