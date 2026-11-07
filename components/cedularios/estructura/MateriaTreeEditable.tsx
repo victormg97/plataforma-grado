@@ -302,6 +302,9 @@ export function MateriaTreeEditable({ renderContenido, accionesExtra, ref, ...pr
     ref,
     () => ({
       expandir: (id) => arbolRef.current?.expandir(id),
+      expandirTodo: (id) => arbolRef.current?.expandirTodo(id),
+      contraerTodo: (id) => arbolRef.current?.contraerTodo(id),
+      subarbolExpandido: (id) => arbolRef.current?.subarbolExpandido(id) ?? false,
       scrollAMateria: (id) => arbolRef.current?.scrollAMateria(id),
     }),
     [],

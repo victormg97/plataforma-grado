@@ -2,7 +2,7 @@
 
 import { useCallback, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { useTranslations } from 'next-intl';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { ChevronsDownUp, ChevronsUpDown, Pencil, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { MAX_NIVEL, puedeCrearHijo, type FilaVisible } from '@/lib/cedularios/tree';
@@ -127,6 +127,29 @@ function EstructuraAutonoma({ cedularioId }: { cedularioId: string }) {
   );
 }
 
+/**
+ * Menu entry that expands or collapses a whole branch. Mounted only while the row menu is open, so
+ * it reads the current expansion of the subtree on demand: it offers Collapse all when the materia
+ * and everything below it is expanded, and Expand all otherwise.
+ */
+function ItemExpansionTotal({ id, arbolRef }: { id: string; arbolRef: RefObject<MateriaTreeHandle | null> }) {
+  const t = useTranslations('cedularios');
+  // Read once, when the menu opens. The tree handle is set long before (this component only mounts
+  // with the open menu) and the expansion lives in the tree's state, not in a prop, so a ref read is needed.
+  // eslint-disable-next-line react-hooks/refs
+  const [todoExpandido] = useState(() => arbolRef.current?.subarbolExpandido(id) ?? false);
+  const Icono = todoExpandido ? ChevronsDownUp : ChevronsUpDown;
+  return (
+    <DropdownMenuItem
+      data-accion={todoExpandido ? 'contraer-todo' : 'expandir-todo'}
+      onClick={() => (todoExpandido ? arbolRef.current?.contraerTodo(id) : arbolRef.current?.expandirTodo(id))}
+    >
+      <Icono aria-hidden="true" />
+      {todoExpandido ? t('estructura.contraer_todo') : t('estructura.expandir_todo')}
+    </DropdownMenuItem>
+  );
+}
+
 function EstructuraConAcciones({ cedularioId, acciones }: { cedularioId: string; acciones: MateriaAcciones }) {
   const t = useTranslations('cedularios');
   const { abrirCrear, abrirHija, abrirEditar, solicitarEliminar, arbolRef } = acciones;
@@ -141,6 +164,7 @@ function EstructuraConAcciones({ cedularioId, acciones }: { cedularioId: string;
   const accionesExtra = useCallback(
     (fila: FilaVisible) => (
       <>
+        {fila.tieneHijos && <ItemExpansionTotal id={fila.nodo.id} arbolRef={arbolRef} />}
         <DropdownMenuItem data-accion="editar" onClick={() => abrirEditar(fila.nodo.id)}>
           <Pencil aria-hidden="true" />
           {t('estructura.editar')}
@@ -159,7 +183,7 @@ function EstructuraConAcciones({ cedularioId, acciones }: { cedularioId: string;
         </DropdownMenuItem>
       </>
     ),
-    [abrirEditar, abrirHija, solicitarEliminar, t],
+    [abrirEditar, abrirHija, solicitarEliminar, arbolRef, t],
   );
 
   return (

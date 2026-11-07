@@ -34,7 +34,7 @@ export type CedularioDetalle = Pick<
 
 // Skinny list: no normativa / rubrica. `universidades(nombre)` is a many-to-one embed through
 // cedularios_universidad_id_fkey.
-const LIST_SELECT = 'id, nombre, version, universidad_id, updated_at, activo, created_by, universidades(nombre)';
+const LIST_SELECT = 'id, nombre, version, universidad_id, updated_at, activo, created_by, universidades(nombre, logo_url)';
 
 const DETAIL_SELECT =
   'id, universidad_id, nombre, version, descripcion, normativa, rubrica, activo, created_by, created_at, updated_by, updated_at, universidades(nombre, logo_url)';
@@ -54,6 +54,7 @@ export async function fetchCedularios(client: SupabaseClient<Database>): Promise
     version: row.version ?? '',
     universidadId: row.universidad_id,
     universidadNombre: row.universidades?.nombre ?? '',
+    universidadLogoUrl: row.universidades?.logo_url ?? null,
     updated_at: row.updated_at,
     activo: row.activo,
     createdBy: row.created_by,

@@ -1,6 +1,6 @@
 'use client';
 
-import { useId } from 'react';
+import { useId, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
@@ -11,7 +11,7 @@ import type { ActionError } from '@/lib/cedularios/action-result';
 import type { Universidad } from '@/lib/queries/cedularios/universidades';
 import { useCedulariosAction } from '../hooks/useCedulariosAction';
 import { useCrearUniversidad, useEditarUniversidad } from '../hooks/useUniversidades';
-import { LogoUploader } from './LogoUploader';
+import { LogoUploader, useSubirLogoUniversidad } from './LogoUploader';
 
 const CLASE_INPUT =
   'h-10 w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-input,var(--color-bg))] px-3 text-sm text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-brand-gold)] focus:ring-2 focus:ring-[var(--color-brand-gold)]/20 aria-[invalid=true]:border-[var(--color-error)]';
@@ -33,8 +33,9 @@ interface UniversidadFormProps {
  * Create / edit form of a universidad (Requirements 1.2, 1.3, 1.6, 11.11, 11.14), shown in a modal.
  *
  * The component is open while it is mounted: the parent (`UniversidadList`) mounts it from the
- * `ced_modal` URL value, so the form state starts clean every time it opens. The logo is uploaded
- * on its own (it is saved as soon as the file is chosen) and only for an existing universidad.
+ * `ced_modal` URL value, so the form state starts clean every time it opens. When editing, the logo
+ * is saved as soon as the file is chosen. When creating, the chosen file is uploaded right after
+ * the universidad is created.
  */
 export function UniversidadForm({ universidad = null, onClose }: UniversidadFormProps) {
   const t = useTranslations('cedularios');
@@ -45,7 +46,11 @@ export function UniversidadForm({ universidad = null, onClose }: UniversidadForm
   // Field errors are shown beneath the fields, so the generic error toast is skipped.
   const crear = useCrearUniversidad({ skipErrorToast: true });
   const editar = useEditarUniversidad({ skipErrorToast: true });
-  const guardando = crear.isPending || editar.isPending;
+  const { subir: subirLogo } = useSubirLogoUniversidad();
+  // Create mode: the logo picked before the universidad exists, uploaded right after creating it.
+  const [logoPendiente, setLogoPendiente] = useState<File | null>(null);
+  const [subiendoLogo, setSubiendoLogo] = useState(false);
+  const guardando = crear.isPending || editar.isPending || subiendoLogo;
 
   const {
     register,
@@ -68,10 +73,28 @@ export function UniversidadForm({ universidad = null, onClose }: UniversidadForm
   };
 
   const alEnviar = async (valores: UniversidadData) => {
-    const resultado = universidad
-      ? await editar.mutateAsync({ id: universidad.id, input: valores })
-      : await crear.mutateAsync(valores);
+    if (universidad) {
+      const resultado = await editar.mutateAsync({ id: universidad.id, input: valores });
+      if (resultado.ok) {
+        onClose();
+        return;
+      }
+      aplicarErrores(resultado.error);
+      return;
+    }
+
+    const resultado = await crear.mutateAsync(valores);
     if (resultado.ok) {
+      // The logo needs the new id: upload it now. If it fails an error toast is shown and the
+      // universidad stays created; the logo can be retried from the edit form.
+      if (logoPendiente) {
+        setSubiendoLogo(true);
+        try {
+          await subirLogo(resultado.data.id, logoPendiente);
+        } finally {
+          setSubiendoLogo(false);
+        }
+      }
       onClose();
       return;
     }
@@ -158,7 +181,7 @@ export function UniversidadForm({ universidad = null, onClose }: UniversidadForm
             {t('universidades.campos.logo')}{' '}
             <span className="text-xs font-normal text-[var(--color-text-muted)]">({t('comun.opcional')})</span>
           </span>
-          <LogoUploader universidad={universidad} />
+          <LogoUploader universidad={universidad} onArchivoChange={setLogoPendiente} disabled={guardando} />
         </div>
       </form>
     </Modal>

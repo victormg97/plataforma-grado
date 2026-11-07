@@ -24,6 +24,7 @@ export interface CedularioListItem {
   version: string;
   universidadId: string;
   universidadNombre: string;
+  universidadLogoUrl: string | null;
   updated_at: string;
   activo: boolean;
   createdBy: string | null;

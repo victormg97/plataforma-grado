@@ -1,12 +1,14 @@
 'use client';
 
-import { useEffect, useId, type ReactNode } from 'react';
+import { useEffect, useId, useState, type ReactNode } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
 import { AppSelect } from '@/components/common/AppSelect';
 import { Button } from '@/components/common/Button';
 import { Modal } from '@/components/common/Modal';
+import { SimpleRichEditor } from '@/components/common/SimpleRichEditor';
+import { descripcionAHtml, normalizarDescripcion } from '@/lib/cedularios/descripcion';
 import type { ActionError } from '@/lib/cedularios/action-result';
 import {
   LIMITES,
@@ -160,6 +162,8 @@ function CedularioFormContenido({ cedulario, universidadIdInicial, onClose }: Ce
   const universidadesQuery = useUniversidades();
   const formId = useId();
   const esEdicion = cedulario !== null;
+  // Legacy plain-text descriptions are converted once, when the form opens.
+  const [descripcionInicial] = useState(() => descripcionAHtml(cedulario?.descripcion));
 
   // Editing the universidad is offered only to an admin or the creator (the DB guard rejects the rest).
   const puedeCambiarUniversidad = !esEdicion || puedeGestionarCedularioDe(usuario, cedulario.created_by);
@@ -181,7 +185,7 @@ function CedularioFormContenido({ cedulario, universidadIdInicial, onClose }: Ce
       universidad_id: cedulario?.universidad_id ?? universidadIdInicial ?? '',
       nombre: cedulario?.nombre ?? '',
       version: cedulario?.version ?? '',
-      descripcion: cedulario?.descripcion ?? '',
+      descripcion: descripcionInicial,
     },
   });
 
@@ -329,14 +333,35 @@ function CedularioFormContenido({ cedulario, universidadIdInicial, onClose }: Ce
           contador={{ actual: largoDescripcion, max: LIMITES.cedularioDescripcion }}
         >
           {(ariaProps) => (
-            <textarea
-              id={`${formId}-descripcion`}
-              {...register('descripcion')}
-              {...ariaProps}
-              rows={4}
-              className={`${CLASE_INPUT} min-h-24 resize-y py-2`}
-              placeholder={t('cedularios.placeholders.descripcion')}
-              readOnly={guardando}
+            <Controller
+              control={control}
+              name="descripcion"
+              render={({ field }) => (
+                <div
+                  aria-invalid={ariaProps['aria-invalid']}
+                  aria-describedby={ariaProps['aria-describedby']}
+                  className={guardando ? 'pointer-events-none opacity-70' : undefined}
+                >
+                  <SimpleRichEditor
+                    id={`${formId}-descripcion`}
+                    // Initial value only: the editor owns its content while the form is open.
+                    content={descripcionInicial}
+                    placeholder={t('cedularios.placeholders.descripcion')}
+                    readOnly={guardando}
+                    onChange={(html) => field.onChange(normalizarDescripcion(html))}
+                    toolbarLabels={{
+                      group: t('cedularios.editor.barra'),
+                      bold: t('cedularios.editor.negrita'),
+                      italic: t('cedularios.editor.cursiva'),
+                      underline: t('cedularios.editor.subrayado'),
+                      strike: t('cedularios.editor.tachado'),
+                      bulletList: t('cedularios.editor.lista'),
+                      orderedList: t('cedularios.editor.lista_numerada'),
+                    }}
+                    className={ariaProps['aria-invalid'] === 'true' ? '!border-[var(--color-error)]' : undefined}
+                  />
+                </div>
+              )}
             />
           )}
         </Campo>

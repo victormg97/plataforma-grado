@@ -19,7 +19,7 @@ import { Input } from '@/components/ui/input';
 import { buscarMateriasTemario } from '@/app/actions/cedularios/materias';
 import { SEARCH_MAX_LENGTH, buscarEnArbol } from '@/lib/cedularios/busqueda';
 import { CEDULARIOS_I18N_NAMESPACE } from '@/lib/cedularios/errors';
-import { aplanarVisibles, conteoPorNivel, type FilaVisible, type MateriaNodo } from '@/lib/cedularios/tree';
+import { aplanarVisibles, conteoPorNivel, descendientes, type FilaVisible, type MateriaNodo } from '@/lib/cedularios/tree';
 import type { MateriaEstructura } from '@/lib/queries/cedularios/materias';
 import { codigoDeError } from '../hooks/cedulariosQuery';
 import { useCedulariosAction } from '../hooks/useCedulariosAction';
@@ -44,6 +44,13 @@ const NIVELES = [1, 2, 3, 4, 5] as const;
 const SIN_MATERIAS: MateriaEstructura[] = [];
 const SIN_IDS: ReadonlySet<string> = new Set<string>();
 
+/** Ids of the materia id and of its active descendants that have at least one active child. */
+function idsConHijos(flat: MateriaNodo[], id: string): string[] {
+  const conHijos = new Set<string>();
+  for (const n of flat) if (n.activo && n.parentId !== null) conHijos.add(n.parentId);
+  return [id, ...descendientes(flat, id).map((n) => n.id)].filter((x) => conHijos.has(x));
+}
+
 // ---------------------------------------------------------------------------
 // Public types
 // ---------------------------------------------------------------------------
@@ -52,6 +59,12 @@ const SIN_IDS: ReadonlySet<string> = new Set<string>();
 export interface MateriaTreeHandle {
   /** Expands a materia (for example the parent of a newly added child). Local state only. */
   expandir: (id: string) => void;
+  /** Expands a materia and every descendant that has children, all the way down. Local state only. */
+  expandirTodo: (id: string) => void;
+  /** Collapses a materia and all its descendants. Local state only. */
+  contraerTodo: (id: string) => void;
+  /** True when the materia and every descendant with children are expanded (leaves count as expanded). */
+  subarbolExpandido: (id: string) => boolean;
   /** Scrolls the row of a materia into view when it is currently visible in the tree. */
   scrollAMateria: (id: string) => void;
 }
@@ -428,12 +441,25 @@ function MateriaTreeContenido({
     () => ({
       expandir: (id) =>
         setExpandidos((previo) => (previo.has(id) ? previo : new Set(previo).add(id))),
+      expandirTodo: (id) => {
+        const ramas = idsConHijos(flat, id);
+        setExpandidos((previo) => new Set([...previo, ...ramas]));
+      },
+      contraerTodo: (id) => {
+        const ramas = idsConHijos(flat, id);
+        setExpandidos((previo) => {
+          const siguiente = new Set(previo);
+          for (const rama of ramas) siguiente.delete(rama);
+          return siguiente;
+        });
+      },
+      subarbolExpandido: (id) => idsConHijos(flat, id).every((rama) => expandidos.has(rama)),
       scrollAMateria: (id) => {
         const indice = filasRef.current.findIndex((f) => f.nodo.id === id);
         if (indice >= 0) listaRef.current?.scrollAIndice(indice);
       },
     }),
-    [],
+    [flat, expandidos],
   );
 
   // ── Rendering ─────────────────────────────────────────────────────────────

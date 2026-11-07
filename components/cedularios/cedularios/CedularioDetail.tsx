@@ -19,6 +19,8 @@ import { useCallback, useEffect, useId, useMemo, useState, type ReactNode } from
 import { ArrowLeft, Pencil, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/common/Button';
+import { SimpleRichEditor } from '@/components/common/SimpleRichEditor';
+import { descripcionAHtml, descripcionVacia } from '@/lib/cedularios/descripcion';
 import { Tabs, tabId, tabPanelId, type TabItem } from '@/components/common/Tabs';
 import { cn } from '@/lib/utils';
 import { sanitizeDoc, type TiptapDoc } from '@/lib/cedularios/richtext';
@@ -290,7 +292,8 @@ function CedularioDetailContenido({ cedulario }: CedularioDetailContenidoProps) 
     setCedularioId(null);
   };
 
-  const descripcion = cedulario.descripcion?.trim() ?? '';
+  const descripcionBruta = cedulario.descripcion?.trim() ?? '';
+  const descripcion = descripcionVacia(descripcionBruta) ? '' : descripcionBruta;
   const version = cedulario.version?.trim() ?? '';
   const universidad = cedulario.universidad;
   const mostrarInactivo = isAdmin && !cedulario.activo;
@@ -332,9 +335,8 @@ function CedularioDetailContenido({ cedulario }: CedularioDetailContenidoProps) 
               {version !== '' ? t('cedularios.version', { version }) : t('cedularios.sin_version')}
             </p>
             {descripcion !== '' ? (
-              <p className="whitespace-pre-line break-words text-sm text-[var(--color-text-secondary)]">
-                {descripcion}
-              </p>
+              // Read-only TipTap: it only renders what its schema allows, so stored HTML cannot inject markup.
+              <SimpleRichEditor readOnly content={descripcionAHtml(descripcion)} className="break-words" />
             ) : (
               <p className="text-sm text-[var(--color-text-muted)]">{t('detalle.sin_descripcion')}</p>
             )}

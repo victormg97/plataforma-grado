@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useRef, useState, type ChangeEvent } from 'react';
+import { useCallback, useEffect, useId, useRef, useState, type ChangeEvent } from 'react';
 import { Upload } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
@@ -21,23 +21,93 @@ import { UniversidadLogo } from './UniversidadLogo';
 const BUCKET_LOGOS = 'cedularios-logos';
 const ACCEPT = LOGO_MIME_PERMITIDOS.join(',');
 
+/**
+ * Uploads a logo file for an existing universidad: the file goes straight to the public
+ * `cedularios-logos` bucket at `<universidad_id>/<uuid>.<ext>`, then the URL is stored through
+ * `useGuardarLogoUniversidad`. If storing the URL fails, the new object is removed (best effort)
+ * and the previous logo stays. Resolves to the stored URL, or `null` when anything failed (an
+ * error toast has already been shown).
+ */
+export function useSubirLogoUniversidad() {
+  const t = useTranslations('cedularios');
+  const guardar = useGuardarLogoUniversidad();
+  const { mutateAsync } = guardar;
+
+  const subir = useCallback(
+    async (universidadId: string, archivo: File): Promise<string | null> => {
+      const mostrarErrorSubida = () => {
+        toast.error(t('universidades.logo.error_subida'), {
+          duration: TOAST_DURATION_MS,
+          dismissible: true,
+          closeButton: true,
+        });
+      };
+
+      const supabase = createClient();
+      let rutaSubida: string | null = null;
+      try {
+        const mime = archivo.type.trim().toLowerCase() as LogoMime;
+        const ruta = `${universidadId}/${crypto.randomUUID()}.${LOGO_EXTENSION_POR_MIME[mime]}`;
+
+        const { error } = await supabase.storage.from(BUCKET_LOGOS).upload(ruta, archivo, {
+          contentType: mime,
+          cacheControl: '3600',
+          upsert: false,
+        });
+        if (error) {
+          mostrarErrorSubida();
+          return null;
+        }
+        rutaSubida = ruta;
+
+        const resultado = await mutateAsync({ id: universidadId, path: ruta });
+        if (resultado.ok) {
+          rutaSubida = null;
+          return resultado.data.logo_url;
+        }
+        // The hook already showed the error toast; the previous logo_url is unchanged.
+        return null;
+      } catch {
+        mostrarErrorSubida();
+        return null;
+      } finally {
+        if (rutaSubida !== null) {
+          try {
+            await supabase.storage.from(BUCKET_LOGOS).remove([rutaSubida]);
+          } catch {
+            // Best effort: an orphan object does not affect the stored logo.
+          }
+        }
+      }
+    },
+    [mutateAsync, t],
+  );
+
+  return { subir, subiendo: guardar.isPending };
+}
+
 interface LogoUploaderProps {
   /**
-   * The saved universidad. `null` while it is being created: the logo can only be uploaded for an
-   * existing universidad, so the control is disabled and explains why.
+   * The saved universidad. `null` while it is being created: the chosen file is then only kept in
+   * the form (`onArchivoChange`) and uploaded right after the universidad is created.
    */
   universidad: Pick<Universidad, 'id' | 'nombre' | 'logo_url'> | null;
+  /** Create mode only: receives the validated file the user picked (the form uploads it later). */
+  onArchivoChange?: (archivo: File | null) => void;
+  /** Disables the picker, for example while the form is being saved. */
+  disabled?: boolean;
 }
 
 /**
- * Logo picker (Requirements 1.4, 1.5, 1.6). Validates type and size in the browser, uploads the
- * file straight to the public `cedularios-logos` bucket at `<universidad_id>/<uuid>.<ext>`, then
- * stores the URL through `useGuardarLogoUniversidad`. If storing the URL fails, the new object is
- * removed (best effort) and the previous logo stays.
+ * Logo picker (Requirements 1.4, 1.5, 1.6). Validates type and size in the browser.
+ *
+ * Editing: the file is uploaded and saved as soon as it is chosen. Creating: the file is only
+ * previewed and handed to the form through `onArchivoChange`, which uploads it once the
+ * universidad exists.
  */
-export function LogoUploader({ universidad }: LogoUploaderProps) {
+export function LogoUploader({ universidad, onArchivoChange, disabled = false }: LogoUploaderProps) {
   const t = useTranslations('cedularios');
-  const guardar = useGuardarLogoUniversidad();
+  const { subir, subiendo: guardandoUrl } = useSubirLogoUniversidad();
   const inputRef = useRef<HTMLInputElement>(null);
   const previewRef = useRef<string | null>(null);
   const mensajeId = useId();
@@ -54,19 +124,17 @@ export function LogoUploader({ universidad }: LogoUploaderProps) {
     };
   }, []);
 
-  const mostrarErrorSubida = () => {
-    toast.error(t('universidades.logo.error_subida'), {
-      duration: TOAST_DURATION_MS,
-      dismissible: true,
-      closeButton: true,
-    });
+  const cambiarPreview = (nueva: string | null) => {
+    if (previewRef.current) URL.revokeObjectURL(previewRef.current);
+    previewRef.current = nueva;
+    setPreview(nueva);
   };
 
   const alElegirArchivo = async (evento: ChangeEvent<HTMLInputElement>) => {
     const archivo = evento.target.files?.[0];
     // Lets the user pick the same file again after an error.
     evento.target.value = '';
-    if (!archivo || !universidad || subiendo) return;
+    if (!archivo || subiendo) return;
 
     const validacion = validarLogo(archivo);
     if (!validacion.ok) {
@@ -75,57 +143,31 @@ export function LogoUploader({ universidad }: LogoUploaderProps) {
     }
     setErrorCode(null);
 
-    const urlPreview = URL.createObjectURL(archivo);
-    previewRef.current = urlPreview;
-    setPreview(urlPreview);
+    // Create mode: keep the file for the form and show it as a preview.
+    if (!universidad) {
+      cambiarPreview(URL.createObjectURL(archivo));
+      onArchivoChange?.(archivo);
+      return;
+    }
+
+    // Edit mode: upload now.
+    cambiarPreview(URL.createObjectURL(archivo));
     setSubiendo(true);
-
-    const supabase = createClient();
-    let rutaSubida: string | null = null;
-
     try {
-      const mime = archivo.type.trim().toLowerCase() as LogoMime;
-      const ruta = `${universidad.id}/${crypto.randomUUID()}.${LOGO_EXTENSION_POR_MIME[mime]}`;
-
-      const { error } = await supabase.storage.from(BUCKET_LOGOS).upload(ruta, archivo, {
-        contentType: mime,
-        cacheControl: '3600',
-        upsert: false,
-      });
-      if (error) {
-        mostrarErrorSubida();
-        return;
-      }
-      rutaSubida = ruta;
-
-      const resultado = await guardar.mutateAsync({ id: universidad.id, path: ruta });
-      if (resultado.ok) {
-        rutaSubida = null;
-        setUrlGuardada(resultado.data.logo_url);
-      }
-      // On failure the hook already showed the error toast; the previous logo_url is unchanged.
-    } catch {
-      mostrarErrorSubida();
+      const url = await subir(universidad.id, archivo);
+      if (url !== null) setUrlGuardada(url);
     } finally {
-      if (rutaSubida !== null) {
-        try {
-          await supabase.storage.from(BUCKET_LOGOS).remove([rutaSubida]);
-        } catch {
-          // Best effort: an orphan object does not affect the stored logo.
-        }
-      }
-      URL.revokeObjectURL(urlPreview);
-      previewRef.current = null;
-      setPreview(null);
+      cambiarPreview(null);
       setSubiendo(false);
     }
   };
 
   const logoActual = preview ?? urlGuardada ?? universidad?.logo_url ?? null;
-  const tieneLogo = (urlGuardada ?? universidad?.logo_url ?? null) !== null;
-  const deshabilitado = universidad === null || subiendo;
+  const tieneLogo = preview !== null || (urlGuardada ?? universidad?.logo_url ?? null) !== null;
+  const ocupado = subiendo || guardandoUrl;
+  const deshabilitado = disabled || ocupado;
 
-  const etiquetaBoton = subiendo
+  const etiquetaBoton = ocupado
     ? t('universidades.logo.subiendo')
     : tieneLogo
       ? t('universidades.logo.cambiar')
@@ -145,7 +187,7 @@ export function LogoUploader({ universidad }: LogoUploaderProps) {
             variant="secondary"
             size="sm"
             icon={<Upload className="size-4" aria-hidden="true" />}
-            loading={subiendo}
+            loading={ocupado}
             disabled={deshabilitado}
             aria-describedby={mensajeId}
             onClick={() => inputRef.current?.click()}
@@ -163,9 +205,7 @@ export function LogoUploader({ universidad }: LogoUploaderProps) {
             onChange={alElegirArchivo}
           />
           <p id={mensajeId} className="text-xs text-[var(--color-text-muted)]">
-            {universidad === null
-              ? t('universidades.logo.guardar_universidad_primero')
-              : t('universidades.logo.formatos')}
+            {t('universidades.logo.formatos')}
           </p>
         </div>
       </div>
