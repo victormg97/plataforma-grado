@@ -59,7 +59,9 @@ export function useSegUrl(): UseSegUrlResult {
     const siguiente = aplicarSegPatch(actual, parche);
     if (siguiente === actual) return false;
     const url = `${pathname}${siguiente ? `?${siguiente}` : ''}${hash}`;
-    window.history.replaceState(window.history.state, '', url);
+    // Pass `null` on purpose: resending `window.history.state` (it carries Next's internal `__NA` keys)
+    // makes Next treat the change as its own and skip syncing `useSearchParams`.
+    window.history.replaceState(null, '', url);
     return true;
   }, []);
 
