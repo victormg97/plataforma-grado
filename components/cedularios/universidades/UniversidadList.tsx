@@ -30,9 +30,9 @@ function UniversidadListSkeleton({ etiqueta }: { etiqueta: string }) {
       {ESQUELETOS.map((i) => (
         <div
           key={i}
-          className="flex animate-pulse flex-col items-center gap-4 rounded-[var(--radius-md)] border border-[var(--color-border)] px-4 pb-4 pt-6"
+          className="flex animate-pulse flex-col items-center gap-4 overflow-hidden rounded-[var(--radius-md)] border border-[var(--color-border)] px-4 pb-4"
         >
-          <div className="size-28 rounded-[var(--radius-md)] bg-[var(--color-bg-secondary)]" />
+          <div className="-mx-4 h-44 w-[calc(100%+2rem)] bg-[var(--color-bg-secondary)]" />
           <div className="h-4 w-3/4 rounded bg-[var(--color-bg-secondary)]" />
           <div className="h-5 w-12 rounded-full bg-[var(--color-bg-secondary)]" />
           <div className="mt-1 h-4 w-full rounded bg-[var(--color-bg-secondary)]" />

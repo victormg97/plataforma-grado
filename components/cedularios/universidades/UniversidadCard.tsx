@@ -45,15 +45,22 @@ export function UniversidadCard({ universidad, cedulariosActivos, onEdit, onDele
         type="button"
         onClick={() => setUniversidadId(universidad.id)}
         aria-label={t('universidades.seleccionar_aria', { nombre: universidad.nombre })}
-        className="flex h-full w-full flex-col items-center gap-4 px-4 pb-4 pt-6 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-brand-gold)]"
+        className="flex h-full w-full flex-col items-center text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-brand-gold)]"
       >
-        <UniversidadLogo
-          url={universidad.logo_url}
-          nombre={universidad.nombre}
-          className="size-28 rounded-[var(--radius-lg,1rem)] bg-white shadow-sm"
-        />
+        {/* Hero: soft tinted backdrop with a glow, so transparent PNG logos float on it. */}
+        <span className="relative flex h-44 w-full items-center justify-center overflow-hidden bg-gradient-to-b from-[var(--color-bg-secondary)] to-transparent">
+          <span
+            aria-hidden="true"
+            className="absolute size-36 rounded-full bg-[var(--color-bg)] opacity-70 blur-2xl transition-opacity group-hover:opacity-100"
+          />
+          <UniversidadLogo
+            url={universidad.logo_url}
+            nombre={universidad.nombre}
+            className="relative size-32 rounded-2xl border-0 bg-transparent drop-shadow-[0_6px_10px_rgba(0,0,0,0.15)] transition-transform duration-300 group-hover:scale-105"
+          />
+        </span>
 
-        <span className="flex w-full min-w-0 flex-1 flex-col items-center gap-2">
+        <span className="flex w-full min-w-0 flex-1 flex-col items-center gap-2 px-4 pt-1">
           <span className="line-clamp-2 min-h-[2.75rem] text-base font-semibold leading-snug text-[var(--color-text-primary)]">
             {universidad.nombre}
           </span>
@@ -69,7 +76,7 @@ export function UniversidadCard({ universidad, cedulariosActivos, onEdit, onDele
           </span>
         </span>
 
-        <span className="mt-1 flex w-full items-center justify-between gap-2 border-t border-[var(--color-border)] pt-3 text-sm">
+        <span className="mx-4 mb-4 mt-3 flex w-[calc(100%-2rem)] items-center justify-between gap-2 border-t border-[var(--color-border)] pt-3 text-sm">
           <span className="text-[var(--color-text-secondary)]">
             {cedulariosActivos !== null ? t('universidades.cedularios_activos', { count: cedulariosActivos }) : ''}
           </span>
