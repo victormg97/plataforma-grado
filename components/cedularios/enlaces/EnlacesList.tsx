@@ -419,7 +419,7 @@ export function EnlacesList({ scope, parentId, puedeEditar }: EnlacesListProps) 
         {puedeEditar && (
           <Button
             size="sm"
-            icon={<Plus aria-hidden="true" />}
+            icon={<Plus className="size-4" aria-hidden="true" />}
             onClick={() => setFormulario({ abierto: true, enlace: null })}
           >
             {t('enlaces.agregar')}

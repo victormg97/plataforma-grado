@@ -191,7 +191,7 @@ function EstructuraConAcciones({ cedularioId, acciones }: { cedularioId: string;
       ref={arbolRef}
       cedularioId={cedularioId}
       accionesToolbar={
-        <Button type="button" size="sm" icon={<Plus aria-hidden="true" />} onClick={abrirCrear}>
+        <Button type="button" size="sm" icon={<Plus className="size-4" aria-hidden="true" />} onClick={abrirCrear}>
           {t('estructura.agregar_materia')}
         </Button>
       }
