@@ -55,6 +55,7 @@ export const CEDULARIO_TABS = [
   'enlaces',
   'permisos',
   'historial',
+  'alumnos',
 ] as const;
 
 export type CedulariosTab = (typeof CEDULARIO_TABS)[number];

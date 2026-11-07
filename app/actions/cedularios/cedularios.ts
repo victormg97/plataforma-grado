@@ -219,7 +219,19 @@ export async function eliminarCedulario(
 
     const evaluacion = evaluarEliminacionCedulario(count ?? 0, tieneAsignaciones === true);
 
-    if (evaluacion.accion === 'bloqueado') return actionFail('cedulario_con_asignaciones');
+    if (evaluacion.accion === 'bloqueado') {
+      // Count of students with an active assignment, shown in the rejection message.
+      // If the count fails the plain message is still returned.
+      const { count: alumnosAsignados, error: errorAlumnos } = await supabase
+        .from('cedulario_asignaciones')
+        .select('id', { count: 'exact', head: true })
+        .eq('cedulario_id', cedularioId)
+        .eq('estado', 'activa');
+      if (errorAlumnos || alumnosAsignados === null || alumnosAsignados === undefined) {
+        return actionFail('cedulario_con_asignaciones');
+      }
+      return actionFail('cedulario_con_asignaciones', { params: { count: alumnosAsignados } });
+    }
     if (evaluacion.accion === 'confirmar' && !confirmado) {
       return actionOk<ResultadoEliminarCedulario>({
         eliminado: false,

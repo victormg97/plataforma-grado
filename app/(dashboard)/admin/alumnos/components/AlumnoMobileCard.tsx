@@ -2,6 +2,7 @@
 
 import { Avatar } from '@/components/common/Avatar';
 import { StatusBadge } from '@/components/common/StatusBadge';
+import { AlumnoHoverCard } from '@/components/cedularios/seguimiento/hover/AlumnoHoverCard';
 import { AlumnoActions, type AlumnoAdmin } from './AlumnoActions';
 
 type AlumnoStatus = 'pendiente' | 'bloqueado' | 'graduado' | 'activo';
@@ -33,16 +34,18 @@ export function AlumnoMobileCard({
     >
       {/* Info row */}
       <div className="flex items-center gap-3">
-        <Avatar nombre={alumno.nombre} apellido={alumno.apellido} avatarUrl={alumno.avatar_url} size="sm" />
-        <div className="min-w-0 flex-1">
-          <p className="font-medium text-[var(--color-text-primary)] truncate">{alumno.nombre} {[alumno.apellido, alumno.apellido_materno].filter(Boolean).join(' ')}</p>
-          <p className="text-xs text-[var(--color-text-muted)] truncate">{alumno.email}</p>
-          {alumno.profesor && (
-            <p className="mt-0.5 text-xs text-[var(--color-text-secondary)]">
-              Prof. {alumno.profesor.nombre} {alumno.profesor.apellido}
-            </p>
-          )}
-        </div>
+        <AlumnoHoverCard alumno={alumno} className="flex min-w-0 flex-1 items-center gap-3">
+          <Avatar nombre={alumno.nombre} apellido={alumno.apellido} avatarUrl={alumno.avatar_url} size="sm" />
+          <div className="min-w-0 flex-1">
+            <p className="font-medium text-[var(--color-text-primary)] truncate">{alumno.nombre} {[alumno.apellido, alumno.apellido_materno].filter(Boolean).join(' ')}</p>
+            <p className="text-xs text-[var(--color-text-muted)] truncate">{alumno.email}</p>
+            {alumno.profesor && (
+              <p className="mt-0.5 text-xs text-[var(--color-text-secondary)]">
+                Prof. {alumno.profesor.nombre} {alumno.profesor.apellido}
+              </p>
+            )}
+          </div>
+        </AlumnoHoverCard>
         <StatusBadge status={status} />
       </div>
 

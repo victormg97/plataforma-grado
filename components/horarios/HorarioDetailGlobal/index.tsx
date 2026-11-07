@@ -13,6 +13,7 @@ import { useUIStore } from '@/stores/useUIStore';
 import { useUserStore } from '@/stores/useUserStore';
 import { Modal } from '@/components/common/Modal';
 import { Avatar } from '@/components/common/Avatar';
+import { AlumnoHoverCard } from '@/components/cedularios/seguimiento/hover/AlumnoHoverCard';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { usePruebaTerm } from '@/lib/hooks/usePruebaTerm';
 import { NotasIndicator } from '@/components/notas/NotasIndicator';
@@ -75,7 +76,7 @@ export function HorarioDetailGlobal() {
       {!loading && horario && (
         <div className="space-y-4">
           {/* Alumno */}
-          <div className="flex items-center gap-3">
+          <AlumnoHoverCard alumno={horario.alumno} className="flex items-center gap-3">
             <Avatar
               nombre={horario.alumno?.nombre || ''}
               apellido={horario.alumno?.apellido || ''}
@@ -90,7 +91,7 @@ export function HorarioDetailGlobal() {
                 {horario.alumno?.email}
               </p>
             </div>
-          </div>
+          </AlumnoHoverCard>
 
           {/* Estado */}
           <div className="flex items-center gap-2">

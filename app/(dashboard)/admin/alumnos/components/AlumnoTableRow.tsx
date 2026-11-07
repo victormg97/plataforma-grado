@@ -3,6 +3,7 @@
 import { Avatar } from '@/components/common/Avatar';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { LastAccessBadge } from '@/components/common/LastAccessBadge';
+import { AlumnoHoverCard } from '@/components/cedularios/seguimiento/hover/AlumnoHoverCard';
 import { AlumnoActions, type AlumnoAdmin } from './AlumnoActions';
 
 type AlumnoStatus = 'pendiente' | 'bloqueado' | 'graduado' | 'activo';
@@ -30,7 +31,7 @@ export function AlumnoTableRow({
       onClick={() => onOpen(alumno.id)}
     >
       <td className="px-4 py-3">
-        <div className="flex items-center gap-3">
+        <AlumnoHoverCard alumno={alumno} className="flex items-center gap-3">
           <Avatar nombre={alumno.nombre} apellido={alumno.apellido} avatarUrl={alumno.avatar_url} size="sm" />
           <div>
             <p className="font-medium text-[var(--color-text-primary)]">
@@ -38,7 +39,7 @@ export function AlumnoTableRow({
             </p>
             <p className="text-xs text-[var(--color-text-muted)]">{alumno.email}</p>
           </div>
-        </div>
+        </AlumnoHoverCard>
       </td>
       <td className="px-4 py-3">
         {alumno.profesor ? (

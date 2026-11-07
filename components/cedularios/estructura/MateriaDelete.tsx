@@ -4,8 +4,11 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
+import { createClient } from '@/lib/supabase/client';
 import { descendientes, type MateriaNodo } from '@/lib/cedularios/tree';
+import { fetchAlumnosConMateria } from '@/lib/queries/cedularios/seguimiento/impacto';
 import { useCedulariosUrl } from '../hooks/CedulariosUrlContext';
+import { consultar } from '../hooks/cedulariosQuery';
 import { useEliminarMateria, useMateriasTree, useRestaurarMaterias } from '../hooks/useMaterias';
 
 /** How long the undo toast stays on screen (Requirement 12.11). */
@@ -17,17 +20,35 @@ interface DeleteMateriaDialogProps {
   nombre: string;
   /** Active descendants that will be deleted too. */
   descendientes: number;
+  /** Students with the materia (or an active descendant) assigned. Adds an extra line when above 0. */
+  alumnosAfectados?: number;
   loading: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 }
 
 /**
- * Confirmation of a materia deletion that has active descendants (Requirement 12.9). It is open
- * while it is mounted. Prefer `useEliminarMateriaFlujo`, which decides when to show it.
+ * Confirmation of a materia deletion that has active descendants (Requirement 12.9) or students
+ * with it assigned (Requirement 13.6). It is open while it is mounted. Prefer
+ * `useEliminarMateriaFlujo`, which decides when to show it.
  */
-export function DeleteMateriaDialog({ nombre, descendientes, loading, onConfirm, onCancel }: DeleteMateriaDialogProps) {
+export function DeleteMateriaDialog({
+  nombre,
+  descendientes,
+  alumnosAfectados = 0,
+  loading,
+  onConfirm,
+  onCancel,
+}: DeleteMateriaDialogProps) {
   const t = useTranslations('cedularios');
+  // The descendants line only makes sense when there are descendants.
+  const lineas: string[] = [];
+  if (descendientes > 0) {
+    lineas.push(t('dialogos.eliminar_materia.descripcion', { count: descendientes, nombre }));
+  }
+  if (alumnosAfectados > 0) {
+    lineas.push(t('dialogos.eliminar_materia.descripcion_con_alumnos', { count: alumnosAfectados }));
+  }
   return (
     <ConfirmModal
       open
@@ -36,7 +57,7 @@ export function DeleteMateriaDialog({ nombre, descendientes, loading, onConfirm,
       }}
       onConfirm={onConfirm}
       title={t('dialogos.eliminar_materia.titulo')}
-      description={t('dialogos.eliminar_materia.descripcion', { count: descendientes, nombre })}
+      description={lineas.join(' ')}
       confirmText={loading ? t('comun.eliminando') : t('dialogos.eliminar_materia.confirmar')}
       cancelText={t('comun.cancelar')}
       loading={loading}
@@ -48,13 +69,15 @@ interface ConfirmacionPendiente {
   id: string;
   nombre: string;
   descendientes: number;
+  alumnosAfectados: number;
 }
 
 export interface EliminarMateriaFlujo {
   /**
    * Call it when the user asks to delete a materia:
-   * - no ACTIVE descendants: it is deleted at once, with no dialog;
-   * - one or more: `dialogo` asks for confirmation and the deletion happens only after confirming.
+   * - no ACTIVE descendants and no student with the materia assigned: it is deleted at once;
+   * - otherwise: `dialogo` asks for confirmation and the deletion happens only after confirming.
+   * If the student count cannot be read, a connection error toast is shown and nothing is deleted.
    * After a successful deletion an undo toast (5 s) appears in both cases.
    */
   solicitarEliminar: (id: string) => void;
@@ -67,8 +90,9 @@ export interface EliminarMateriaFlujo {
 /**
  * Delete flow of a materia (Requirements 4.15, 4.16, 12.8 to 12.11, 12.13, 15.1).
  *
- * The count of active descendants comes from the flat structure list, so the decision to show the
- * dialog needs no request. `eliminarMateria` returns the ids it deactivated (the materia and its
+ * The count of active descendants comes from the flat structure list. The number of students with
+ * the materia assigned (phase 2) comes from `fetchAlumnosConMateria` before deciding.
+ * `eliminarMateria` returns the ids it deactivated (the materia and its
  * active descendants); the Undo button of the toast sends them to `restaurarMaterias`.
  *
  * Undo is all or nothing. `restaurar_materias` is one plpgsql function, so it runs in a single
@@ -90,6 +114,8 @@ export function useEliminarMateriaFlujo(cedularioId: string): EliminarMateriaFlu
   const restaurar = useRestaurarMaterias();
   const [pendiente, setPendiente] = useState<ConfirmacionPendiente | null>(null);
   const [enCurso, setEnCurso] = useState(false);
+  // Guards against a second request while the student count is still being fetched.
+  const consultandoRef = useRef(false);
 
   // The request resolves later: read the panel state at that moment, not at the click.
   const abiertaRef = useRef<{ materiaId: string | null; cerrar: () => void }>({ materiaId, cerrar: clearMateria });
@@ -135,17 +161,33 @@ export function useEliminarMateriaFlujo(cedularioId: string): EliminarMateriaFlu
 
   const solicitarEliminar = useCallback(
     (id: string) => {
-      if (enCurso || pendiente !== null) return;
+      if (enCurso || pendiente !== null || consultandoRef.current) return;
       const nodo = flat.find((n) => n.id === id && n.activo);
       if (!nodo) return;
       const activos = descendientes(flat, id).filter((n) => n.activo).length;
-      if (activos === 0) {
-        void ejecutar(id);
-      } else {
-        setPendiente({ id, nombre: nodo.nombre, descendientes: activos });
-      }
+
+      consultandoRef.current = true;
+      void (async () => {
+        try {
+          let alumnos: number;
+          try {
+            alumnos = await consultar(() => fetchAlumnosConMateria(createClient(), id));
+          } catch {
+            // Do not delete when the impact is unknown.
+            toast.error(t('errores.error_conexion'));
+            return;
+          }
+          if (activos === 0 && alumnos === 0) {
+            await ejecutar(id);
+          } else {
+            setPendiente({ id, nombre: nodo.nombre, descendientes: activos, alumnosAfectados: alumnos });
+          }
+        } finally {
+          consultandoRef.current = false;
+        }
+      })();
     },
-    [enCurso, ejecutar, flat, pendiente],
+    [enCurso, ejecutar, flat, pendiente, t],
   );
 
   const confirmar = useCallback(async () => {
@@ -164,6 +206,7 @@ export function useEliminarMateriaFlujo(cedularioId: string): EliminarMateriaFlu
         key={pendiente.id}
         nombre={pendiente.nombre}
         descendientes={pendiente.descendientes}
+        alumnosAfectados={pendiente.alumnosAfectados}
         loading={enCurso}
         onConfirm={() => void confirmar()}
         onCancel={() => setPendiente(null)}

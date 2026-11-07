@@ -10,6 +10,7 @@ import type { EstadoAsistencia } from '@/lib/supabase/types';
 import type { ReactNode } from 'react';
 import { usePruebaTerm } from '@/lib/hooks/usePruebaTerm';
 import { BotonConexion } from '@/components/agenda/conexion/BotonConexion';
+import { AlumnoHoverCard } from '@/components/cedularios/seguimiento/hover/AlumnoHoverCard';
 
 interface EventDetailHorario {
   id: string;
@@ -68,7 +69,7 @@ export function EventDetailModal({
           {headerSlot}
 
           {/* Alumno */}
-          <div className="flex items-center gap-3">
+          <AlumnoHoverCard alumno={horario.alumno} className="flex items-center gap-3">
             <Avatar
               nombre={horario.alumno?.nombre || ''}
               apellido={horario.alumno?.apellido || ''}
@@ -83,7 +84,7 @@ export function EventDetailModal({
                 {horario.alumno?.email}
               </p>
             </div>
-          </div>
+          </AlumnoHoverCard>
 
           {/* Estado + exam badge */}
           <div className="flex items-center gap-2">

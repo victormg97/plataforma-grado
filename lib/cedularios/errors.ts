@@ -20,6 +20,14 @@ export const CEDULARIO_ERROR_CODES = [
   'solo_creador_o_admin',
   'cedulario_con_asignaciones',
   'lista_desactualizada',
+  // Student tracking guards (CD010-CD016, phase 2)
+  'asignacion_duplicada',
+  'alumno_no_valido',
+  'asignacion_inactiva',
+  'clase_otro_alumno',
+  'materia_invalida',
+  'fecha_futura',
+  'cedulario_no_disponible',
   // Unique violations
   'codigo_universidad_duplicado',
   'codigo_duplicado_nivel',
@@ -80,6 +88,14 @@ const CODIGO_POR_SQLSTATE: Readonly<Record<string, CedularioErrorCode>> = {
   CD007: 'solo_creador_o_admin',
   CD008: 'cedulario_con_asignaciones',
   CD009: 'lista_desactualizada',
+  // Student tracking (migration 154)
+  CD010: 'asignacion_duplicada',
+  CD011: 'alumno_no_valido',
+  CD012: 'asignacion_inactiva',
+  CD013: 'clase_otro_alumno',
+  CD014: 'materia_invalida',
+  CD015: 'fecha_futura',
+  CD016: 'cedulario_no_disponible',
   '23514': 'validacion',
   '42501': 'sin_permisos',
   // PostgREST: missing, invalid or expired JWT.
@@ -94,6 +110,7 @@ const CODIGO_POR_CONSTRAINT_UNICA: ReadonlyArray<readonly [string, CedularioErro
   ['uq_universidades_codigo', 'codigo_universidad_duplicado'],
   ['uq_materias_codigo_hermanos', 'codigo_duplicado_nivel'],
   ['uq_cedulario_profesores', 'permiso_duplicado'],
+  ['uq_cedulario_asignaciones', 'asignacion_duplicada'],
 ];
 
 const PATRON_RED =
@@ -114,6 +131,21 @@ function esErrorDeRed(error: Record<string, unknown>): boolean {
   const causa = error.cause;
   if (esObjeto(causa) && PATRON_RED.test(`${textoDe(causa.code)} ${textoDe(causa.message)}`)) return true;
   return PATRON_RED.test(`${textoDe(error.message)} ${textoDe(error.code)}`);
+}
+
+/**
+ * Reads the integer carried in the `details` field (Postgres DETAIL) of a CD008 error.
+ * Returns `undefined` when it is missing or is not a non-negative integer.
+ */
+export function leerConteoDeDetalles(error: unknown): number | undefined {
+  if (!esObjeto(error)) return undefined;
+  const detalle = error.details;
+  if (typeof detalle === 'number') {
+    return Number.isSafeInteger(detalle) && detalle >= 0 ? detalle : undefined;
+  }
+  if (typeof detalle !== 'string' || !/^\s*\d+\s*$/.test(detalle)) return undefined;
+  const numero = Number(detalle);
+  return Number.isSafeInteger(numero) ? numero : undefined;
 }
 
 function textoDeBusqueda(error: Record<string, unknown>): string {
@@ -172,6 +204,11 @@ export function toActionError(error: unknown, ctx: MapDbErrorContext = {}): Acti
     const code = mapDbError(error, ctx);
     const resultado: ActionError = { code };
     if (ctx?.params) resultado.params = ctx.params;
+
+    if (code === 'cedulario_con_asignaciones') {
+      const conteo = leerConteoDeDetalles(error);
+      if (conteo !== undefined) resultado.params = { ...resultado.params, count: conteo };
+    }
 
     if (code === 'validacion' && esObjeto(error) && ctx?.camposPorConstraint) {
       const texto = textoDeBusqueda(error);

@@ -9,6 +9,7 @@ import { useUserStore } from '@/stores/useUserStore';
 import { useThemeSync } from '@/lib/hooks/useThemeSync';
 import { HorarioDetailGlobal } from '@/components/horarios/HorarioDetailGlobal';
 import { MotionProvider } from '@/components/common/MotionProvider';
+import { SeguimientoHost } from '@/components/cedularios/seguimiento/host/SeguimientoHost';
 import type { Profile } from '@/lib/supabase/types';
 
 export function DashboardLayoutClient({
@@ -56,6 +57,7 @@ export function DashboardLayoutClient({
             </main>
           </div>
           <HorarioDetailGlobal />
+          <SeguimientoHost />
         </div>
       </MotionProvider>
     </HydrationBoundary>

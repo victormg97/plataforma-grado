@@ -10,6 +10,7 @@ import { StatusBadge } from '@/components/common/StatusBadge';
 import { LastAccessBadge } from '@/components/common/LastAccessBadge';
 import { Button } from '@/components/common/Button';
 import { Tooltip } from '@/components/common/Tooltip';
+import { AlumnoHoverCard } from '@/components/cedularios/seguimiento/hover/AlumnoHoverCard';
 import type { EstadoAsistencia } from '@/lib/supabase/types';
 
 export type AlumnoConExtra = {
@@ -66,7 +67,7 @@ export function AlumnoCard({ alumno, onViewFicha, onGestionarAcceso, isOwn = tru
         </div>
       )}
 
-      <div className="flex items-start gap-3">
+      <AlumnoHoverCard alumno={alumno} className="flex items-start gap-3">
         <Avatar
           nombre={alumno.nombre}
           apellido={alumno.apellido}
@@ -79,7 +80,7 @@ export function AlumnoCard({ alumno, onViewFicha, onGestionarAcceso, isOwn = tru
           </p>
           <p className="truncate text-sm text-[var(--color-text-muted)]">{alumno.email}</p>
         </div>
-      </div>
+      </AlumnoHoverCard>
 
       {alumno.proxima_clase && (
         <div className="mt-3 rounded-[var(--radius-sm)] bg-[var(--color-bg-secondary)] p-2">

@@ -12,6 +12,8 @@ import { StatusBadge } from '@/components/common/StatusBadge';
 import { useRouter } from 'next/navigation';
 import { usePruebaTerm } from '@/lib/hooks/usePruebaTerm';
 import { NotasProfesorSection } from './NotasProfesorSection';
+// Direct path (not the cedularios barrel) to keep the Ficha bundle light.
+import { SeccionCedulariosFicha } from '@/components/cedularios/seguimiento/ficha/SeccionCedulariosFicha';
 import { buildClaseDetailHref, buildAlumnoHorarioDetailHref } from '@/lib/utils/horarioNavigation';
 
 interface NotaAlumno {
@@ -166,6 +168,9 @@ export function TabInformacion({ alumnoId, data, role = 'profesor' }: TabInforma
           <StatCard label={tf('stat_asistencia')} value={`${data.ficha_stats.tasa_asistencia}%`} color="gold" />
         </div>
       )}
+
+      {/* ── Cedularios assigned to the student (staff only) ── */}
+      {role !== 'alumno' && <SeccionCedulariosFicha alumnoId={alumnoId} role={role} />}
 
       {/* ── Notas del profesor (hidden for alumno self-view) ── */}
       {role !== 'alumno' && (

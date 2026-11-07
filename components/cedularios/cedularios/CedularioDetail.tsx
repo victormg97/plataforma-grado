@@ -39,6 +39,7 @@ import { MateriaPanel } from '../estructura/MateriaPanel';
 import { MateriaTree } from '../estructura/MateriaTree';
 import { HistorialTab } from '../historial/HistorialTab';
 import { PermisosTab } from '../permisos/PermisosTab';
+import { AlumnosTab } from '../seguimiento/alumnos-tab/AlumnosTab';
 import { UniversidadLogo } from '../universidades/UniversidadLogo';
 import { CedularioForm } from './CedularioForm';
 import { useEliminarCedularioFlujo } from './DeleteCedularioDialog';
@@ -239,6 +240,7 @@ function CedularioDetailContenido({ cedulario }: CedularioDetailContenidoProps) 
     () =>
       CEDULARIO_TABS.filter((clave) => {
         if (clave === 'permisos') return isStaff;
+        if (clave === 'alumnos') return isStaff;
         if (clave === 'historial') return puedeVerHistorial;
         return true;
       }),
@@ -419,6 +421,7 @@ function CedularioDetailContenido({ cedulario }: CedularioDetailContenidoProps) 
           />
         )}
         {panelTab === 'historial' && <HistorialTab cedularioId={cedulario.id} />}
+        {panelTab === 'alumnos' && <AlumnosTab cedulario={cedulario} />}
       </div>
 
       {formularioAbierto && (

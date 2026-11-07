@@ -37,8 +37,12 @@ export interface RunCedulariosActionOptions<T> {
 /**
  * Message for an `ActionError`: `errores.<code>`, or `errores.universidad_con_cedularios_conteo`
  * when the code is `universidad_con_cedularios` and `params.count` is present.
+ * Same for `cedulario_con_asignaciones` with `errores.cedulario_con_asignaciones_conteo`.
  */
 export function mensajeDeError(t: CedulariosTranslator, error: ActionError): string {
+  if (error.code === 'cedulario_con_asignaciones' && error.params?.count !== undefined) {
+    return t('errores.cedulario_con_asignaciones_conteo', error.params);
+  }
   if (error.code === 'universidad_con_cedularios' && error.params?.count !== undefined) {
     return t('errores.universidad_con_cedularios_conteo', error.params);
   }

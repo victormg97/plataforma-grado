@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card } from '@/components/common/Card';
 import { Avatar } from '@/components/common/Avatar';
+import { AlumnoHoverCard } from '@/components/cedularios/seguimiento/hover/AlumnoHoverCard';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { NotasIndicator } from '@/components/notas/NotasIndicator';
 import { usePruebaTerm } from '@/lib/hooks/usePruebaTerm';
@@ -367,7 +368,7 @@ export function ClaseDetailView({ rol }: ClaseDetailViewProps) {
             )}
             {/* Student info */}
             {horario.alumno && (
-              <div className="flex items-center gap-3">
+              <AlumnoHoverCard alumno={horario.alumno} className="flex items-center gap-3">
                 <Avatar
                   nombre={horario.alumno.nombre}
                   apellido={horario.alumno.apellido}
@@ -382,7 +383,7 @@ export function ClaseDetailView({ rol }: ClaseDetailViewProps) {
                     {horario.alumno.email}
                   </p>
                 </div>
-              </div>
+              </AlumnoHoverCard>
             )}
 
             {/* Status + notes indicator + change control */}

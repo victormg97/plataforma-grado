@@ -23,6 +23,7 @@ import type { ClaseAlumno } from '@/lib/hooks/useAsistencia';
 import Link from 'next/link';
 import { useTranslations, useLocale } from 'next-intl';
 import { RichDescription } from '@/components/common/RichDescription';
+import { TarjetaCedulariosDashboard } from '@/components/cedularios/seguimiento/alumno/TarjetaCedulariosDashboard';
 
 function AlumnoDashboardContent() {
   const { user } = useUserStore();
@@ -94,6 +95,8 @@ function AlumnoDashboardContent() {
       />
 
       <div className="mt-[var(--space-lg)] space-y-[var(--space-lg)]">
+        <TarjetaCedulariosDashboard />
+
         {/* Próxima clase destacada */}
         <section>
           <h2 className="text-sm font-semibold uppercase text-[var(--color-text-muted)] mb-3">{t('proxima_clase')}</h2>

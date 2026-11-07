@@ -3538,6 +3538,323 @@ export type Database = {
           },
         ]
       }
+      cedulario_asignaciones: {
+        Row: {
+          alumno_id: string
+          asignado_at: string
+          asignado_por: string | null
+          cedulario_id: string
+          created_at: string
+          desasignado_at: string | null
+          desasignado_por: string | null
+          estado: string
+          id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          alumno_id: string
+          asignado_at?: string
+          asignado_por?: string | null
+          cedulario_id: string
+          created_at?: string
+          desasignado_at?: string | null
+          desasignado_por?: string | null
+          estado?: string
+          id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          alumno_id?: string
+          asignado_at?: string
+          asignado_por?: string | null
+          cedulario_id?: string
+          created_at?: string
+          desasignado_at?: string | null
+          desasignado_por?: string | null
+          estado?: string
+          id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cedulario_asignaciones_cedulario_id_fkey"
+            columns: ["cedulario_id"]
+            isOneToOne: false
+            referencedRelation: "cedularios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cedulario_asignaciones_alumno_id_fkey"
+            columns: ["alumno_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cedulario_asignaciones_asignado_por_fkey"
+            columns: ["asignado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cedulario_asignaciones_desasignado_por_fkey"
+            columns: ["desasignado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cedulario_asignaciones_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      materia_progreso: {
+        Row: {
+          asignacion_id: string
+          asignada: boolean
+          created_at: string
+          cubierta_at: string | null
+          cubierta_por: string | null
+          estado: string
+          fecha_cubierta: string | null
+          id: string
+          materia_id: string
+          notas: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          asignacion_id: string
+          asignada?: boolean
+          created_at?: string
+          cubierta_at?: string | null
+          cubierta_por?: string | null
+          estado?: string
+          fecha_cubierta?: string | null
+          id?: string
+          materia_id: string
+          notas?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          asignacion_id?: string
+          asignada?: boolean
+          created_at?: string
+          cubierta_at?: string | null
+          cubierta_por?: string | null
+          estado?: string
+          fecha_cubierta?: string | null
+          id?: string
+          materia_id?: string
+          notas?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "materia_progreso_asignacion_id_fkey"
+            columns: ["asignacion_id"]
+            isOneToOne: false
+            referencedRelation: "cedulario_asignaciones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "materia_progreso_materia_id_fkey"
+            columns: ["materia_id"]
+            isOneToOne: false
+            referencedRelation: "materias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "materia_progreso_cubierta_por_fkey"
+            columns: ["cubierta_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "materia_progreso_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      materia_progreso_repasos: {
+        Row: {
+          asignacion_id: string
+          created_at: string
+          created_by: string | null
+          fecha: string
+          id: string
+          nota: string | null
+          progreso_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          asignacion_id?: string
+          created_at?: string
+          created_by?: string | null
+          fecha: string
+          id?: string
+          nota?: string | null
+          progreso_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          asignacion_id?: string
+          created_at?: string
+          created_by?: string | null
+          fecha?: string
+          id?: string
+          nota?: string | null
+          progreso_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "materia_progreso_repasos_progreso_id_fkey"
+            columns: ["progreso_id"]
+            isOneToOne: false
+            referencedRelation: "materia_progreso"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "materia_progreso_repasos_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "materia_progreso_repasos_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      materia_progreso_comentarios: {
+        Row: {
+          asignacion_id: string
+          created_at: string
+          created_by: string | null
+          edited_at: string | null
+          id: string
+          progreso_id: string
+          texto: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          asignacion_id?: string
+          created_at?: string
+          created_by?: string | null
+          edited_at?: string | null
+          id?: string
+          progreso_id: string
+          texto: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          asignacion_id?: string
+          created_at?: string
+          created_by?: string | null
+          edited_at?: string | null
+          id?: string
+          progreso_id?: string
+          texto?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "materia_progreso_comentarios_progreso_id_fkey"
+            columns: ["progreso_id"]
+            isOneToOne: false
+            referencedRelation: "materia_progreso"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "materia_progreso_comentarios_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "materia_progreso_comentarios_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      materia_progreso_clases: {
+        Row: {
+          asignacion_id: string
+          created_at: string
+          created_by: string | null
+          horario_id: string
+          id: string
+          progreso_id: string
+        }
+        Insert: {
+          asignacion_id?: string
+          created_at?: string
+          created_by?: string | null
+          horario_id: string
+          id?: string
+          progreso_id: string
+        }
+        Update: {
+          asignacion_id?: string
+          created_at?: string
+          created_by?: string | null
+          horario_id?: string
+          id?: string
+          progreso_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "materia_progreso_clases_progreso_id_fkey"
+            columns: ["progreso_id"]
+            isOneToOne: false
+            referencedRelation: "materia_progreso"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "materia_progreso_clases_horario_id_fkey"
+            columns: ["horario_id"]
+            isOneToOne: false
+            referencedRelation: "horarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "materia_progreso_clases_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       historial_cambios: {
         Row: {
           campo: string
@@ -3677,6 +3994,199 @@ export type Database = {
       cedulario_puede_gestionar: { Args: { p_id: string }; Returns: boolean }
       materia_puede_editar: { Args: { p_id: string }; Returns: boolean }
       cedulario_tiene_asignaciones: { Args: { p_id: string }; Returns: boolean }
+      // --- Seguimiento de cedularios por alumno (migration 154) ---
+      puede_gestionar_seguimiento_alumno: {
+        Args: { p_alumno_id: string }
+        Returns: boolean
+      }
+      asignar_cedulario_alumnos: {
+        Args: {
+          p_cedulario_id: string
+          p_alumno_ids: string[]
+          p_materia_ids?: string[] | null
+        }
+        Returns: {
+          alumno_id: string
+          resultado: string
+          asignacion_id: string | null
+          motivo: string | null
+        }[]
+      }
+      desasignar_cedulario_alumno: {
+        Args: { p_asignacion_id: string }
+        Returns: boolean
+      }
+      establecer_materias_asignadas: {
+        Args: {
+          p_asignacion_id: string
+          p_agregar: string[]
+          p_quitar: string[]
+        }
+        Returns: Json
+      }
+      establecer_estado_materia: {
+        Args: {
+          p_progreso_id: string
+          p_estado: string
+          p_fecha?: string | null
+        }
+        Returns: {
+          estado: string
+          fecha_cubierta: string | null
+          cambio: boolean
+        }[]
+      }
+      vincular_clases_progreso: {
+        Args: { p_progreso_id: string; p_horario_ids: string[] }
+        Returns: number
+      }
+      get_alumno_cedularios_resumen: {
+        Args: { p_alumno_id: string; p_incluir_desasignadas?: boolean }
+        Returns: {
+          alumno_id: string
+          alumno_nombre: string
+          alumno_apellido: string
+          alumno_apellido_materno: string | null
+          alumno_email: string
+          alumno_avatar_url: string | null
+          alumno_activo: boolean
+          puede_editar: boolean
+          asignacion_id: string | null
+          cedulario_id: string | null
+          cedulario_nombre: string | null
+          cedulario_version: string | null
+          cedulario_activo: boolean | null
+          universidad_id: string | null
+          universidad_nombre: string | null
+          estado: string | null
+          asignado_at: string | null
+          desasignado_at: string | null
+          total_asignadas: number | null
+          total_cubiertas: number | null
+          porcentaje: number | null
+          ultima_actividad: string | null
+        }[]
+      }
+      get_cedulario_alumnos_resumen: {
+        Args: {
+          p_cedulario_id: string
+          p_q?: string | null
+          p_limit?: number
+          p_offset?: number
+        }
+        Returns: {
+          asignacion_id: string
+          alumno_id: string
+          nombre: string
+          apellido: string
+          apellido_materno: string | null
+          email: string
+          avatar_url: string | null
+          alumno_activo: boolean
+          asignado_at: string
+          ultima_actividad: string | null
+          total_asignadas: number
+          total_cubiertas: number
+          porcentaje: number | null
+          puede_editar: boolean
+          total_filas: number
+        }[]
+      }
+      get_asignacion_progreso: {
+        Args: { p_asignacion_id: string }
+        Returns: {
+          id: string
+          materia_id: string
+          asignada: boolean
+          estado: string
+          fecha_cubierta: string | null
+          cubierta_por: string | null
+          cubierta_at: string | null
+          notas: string | null
+          repasos: number
+          comentarios: number
+          clases: number
+          updated_at: string
+        }[]
+      }
+      get_progreso_detalle: {
+        Args: { p_progreso_id: string }
+        Returns: Json
+      }
+      get_asignacion_materias_inactivas: {
+        Args: { p_asignacion_id: string }
+        Returns: {
+          materia_id: string
+          codigo: string
+          nombre: string
+          nivel: number
+          parent_id: string | null
+          estado: string
+          fecha_cubierta: string | null
+          repasos: number
+          comentarios: number
+        }[]
+      }
+      get_asignacion_actividad: {
+        Args: {
+          p_asignacion_id: string
+          p_limit?: number
+          p_cursor_created_at?: string | null
+          p_cursor_id?: string | null
+        }
+        Returns: {
+          id: string
+          cedulario_id: string | null
+          tabla: string
+          registro_id: string
+          registro_etiqueta: string | null
+          campo: string
+          valor_anterior: Json | null
+          valor_nuevo: Json | null
+          usuario_id: string | null
+          metadata: Json | null
+          created_at: string
+          usuario_nombre: string | null
+        }[]
+      }
+      listar_alumnos_asignables: {
+        Args: {
+          p_cedulario_id?: string | null
+          p_q?: string | null
+          p_limit?: number
+          p_offset?: number
+        }
+        Returns: {
+          id: string
+          nombre: string
+          apellido: string
+          apellido_materno: string | null
+          email: string
+          avatar_url: string | null
+          ya_asignado: boolean
+        }[]
+      }
+      listar_clases_vinculables: {
+        Args: {
+          p_asignacion_id: string
+          p_q?: string | null
+          p_limit?: number
+          p_offset?: number
+        }
+        Returns: {
+          id: string
+          titulo: string
+          fecha: string
+          hora_inicio: string
+          hora_fin: string
+          activo: boolean
+          ya_vinculada: boolean
+        }[]
+      }
+      contar_alumnos_materia_asignada: {
+        Args: { p_materia_id: string }
+        Returns: number
+      }
       admin_pagar_mes_columna: {
         Args: {
           p_anio: number
