@@ -2814,6 +2814,7 @@
       "editar_en_linea_aria": "Edit the code and name of the subject {nombre} in the row",
       "hijas": "{count, plural, one {# child subject} other {# child subjects}}",
       "nivel": "Level {nivel}",
+      "nivel_corto": "L{nivel}",
       "conteo_titulo": "Subjects by level",
       "conteo_nivel": "{count, plural, one {# subject} other {# subjects}}",
       "conteo_total": "{count, plural, one {# subject in total} other {# subjects in total}}",

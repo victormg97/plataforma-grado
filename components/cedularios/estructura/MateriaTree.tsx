@@ -13,7 +13,7 @@ import {
 } from 'react';
 import { useTranslations } from 'next-intl';
 import { defaultRangeExtractor, useVirtualizer, type Range } from '@tanstack/react-virtual';
-import { Search, X } from 'lucide-react';
+import { ChevronsDownUp, ChevronsUpDown, Search, X } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/ui/input';
 import { buscarMateriasTemario } from '@/app/actions/cedularios/materias';
@@ -41,8 +41,6 @@ export const UMBRAL_VIRTUALIZACION = 100;
 export const OVERSCAN_FILAS = 20;
 
 const NIVELES: readonly number[] = Array.from({ length: MAX_NIVEL }, (_, i) => i + 1);
-/** Levels always shown in the counters; deeper ones appear only when they have materias. */
-const NIVELES_BASE = 5;
 const SIN_MATERIAS: MateriaEstructura[] = [];
 const SIN_IDS: ReadonlySet<string> = new Set<string>();
 
@@ -386,6 +384,19 @@ function MateriaTreeContenido({
 
   const seleccionar = useCallback((id: string) => setMateriaId(id), [setMateriaId]);
 
+  // ── Expand / collapse the whole tree (header buttons) ─────────────────────
+  // Every active materia with at least one active child.
+  const ramas = useMemo(() => {
+    const activas = new Set(flat.filter((n) => n.activo).map((n) => n.id));
+    const conHijos = new Set<string>();
+    for (const n of flat) if (n.activo && n.parentId !== null && activas.has(n.parentId)) conHijos.add(n.parentId);
+    return [...conHijos];
+  }, [flat]);
+  const todoExpandido = ramas.length > 0 && ramas.every((id) => expandidos.has(id));
+  const nadaExpandido = ramas.every((id) => !expandidos.has(id));
+  const expandirArbol = useCallback(() => setExpandidos(new Set(ramas)), [ramas]);
+  const contraerArbol = useCallback(() => setExpandidos(SIN_IDS), []);
+
   const alternar = useCallback((id: string) => {
     setExpandidos((previo) => {
       const siguiente = new Set(previo);
@@ -574,20 +585,23 @@ function MateriaTreeContenido({
           aria-label={t('estructura.conteo_titulo')}
           className="flex flex-wrap gap-2 text-xs text-[var(--color-text-secondary)]"
         >
-          {NIVELES.filter((nivel) => nivel <= NIVELES_BASE || conteo[nivel] > 0).map((nivel) => (
-            <li
-              key={nivel}
-              className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-2.5 py-1"
-            >
-              <span className="font-medium text-[var(--color-text-primary)]">
-                {t('estructura.nivel', { nivel })}
-              </span>
-              <span>{t('estructura.conteo_nivel', { count: conteo[nivel] })}</span>
-            </li>
-          ))}
           <li className="inline-flex items-center rounded-full border border-[var(--color-brand-gold)] bg-[var(--color-brand-gold-muted)] px-2.5 py-1 text-[var(--color-text-primary)]">
             {t('estructura.conteo_total', { count: totalActivas })}
           </li>
+          {/* Compact per-level chips ("N1 8"): only levels with materias; full text in title/aria. */}
+          {NIVELES.filter((nivel) => conteo[nivel] > 0).map((nivel) => (
+            <li
+              key={nivel}
+              title={`${t('estructura.nivel', { nivel })}: ${t('estructura.conteo_nivel', { count: conteo[nivel] })}`}
+              aria-label={`${t('estructura.nivel', { nivel })}: ${t('estructura.conteo_nivel', { count: conteo[nivel] })}`}
+              className="inline-flex items-center gap-1 rounded-full border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-2 py-1 tabular-nums"
+            >
+              <span className="font-medium text-[var(--color-text-primary)]">
+                {t('estructura.nivel_corto', { nivel })}
+              </span>
+              <span>{conteo[nivel]}</span>
+            </li>
+          ))}
         </ul>
       )}
 
@@ -632,21 +646,50 @@ function MateriaTreeContenido({
             )}
           </div>
 
-          <div aria-live="polite" className="min-h-5 space-y-0.5 text-sm">
-            {buscando && busqueda && (
-              <p className="text-[var(--color-text-secondary)]">
-                {busqueda.total > 0
-                  ? t('estructura.resultados', { count: busqueda.total })
-                  : t('estructura.sin_resultados')}
-              </p>
-            )}
-            {cargandoTemario && (
-              <p className="text-xs text-[var(--color-text-muted)]">{t('estructura.buscando_temario')}</p>
-            )}
-            {errorTemario && (
-              <p role="alert" className="text-xs text-[var(--color-error)]">
-                {t('errores.error_conexion')}
-              </p>
+          <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
+            <div aria-live="polite" className="min-h-5 min-w-0 flex-1 space-y-0.5 text-sm">
+              {buscando && busqueda && (
+                <p className="text-[var(--color-text-secondary)]">
+                  {busqueda.total > 0
+                    ? t('estructura.resultados', { count: busqueda.total })
+                    : t('estructura.sin_resultados')}
+                </p>
+              )}
+              {cargandoTemario && (
+                <p className="text-xs text-[var(--color-text-muted)]">{t('estructura.buscando_temario')}</p>
+              )}
+              {errorTemario && (
+                <p role="alert" className="text-xs text-[var(--color-error)]">
+                  {t('errores.error_conexion')}
+                </p>
+              )}
+            </div>
+
+            {/* Expand / collapse every level at once, between the search and the tree. Shown to every
+                user, only when there are branches. */}
+            {ramas.length > 0 && (
+              <div className="flex shrink-0 items-center gap-1" role="group" aria-label={t('estructura.titulo')}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  icon={<ChevronsUpDown className="size-4" aria-hidden="true" />}
+                  onClick={expandirArbol}
+                  disabled={todoExpandido}
+                >
+                  {t('estructura.expandir_todo')}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  icon={<ChevronsDownUp className="size-4" aria-hidden="true" />}
+                  onClick={contraerArbol}
+                  disabled={nadaExpandido}
+                >
+                  {t('estructura.contraer_todo')}
+                </Button>
+              </div>
             )}
           </div>
         </div>

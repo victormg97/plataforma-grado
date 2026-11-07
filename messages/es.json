@@ -2818,6 +2818,7 @@
       "editar_en_linea_aria": "Editar el código y el nombre de la materia {nombre} en la fila",
       "hijas": "{count, plural, one {# materia hija} other {# materias hijas}}",
       "nivel": "Nivel {nivel}",
+      "nivel_corto": "N{nivel}",
       "conteo_titulo": "Materias por nivel",
       "conteo_nivel": "{count, plural, one {# materia} other {# materias}}",
       "conteo_total": "{count, plural, one {# materia en total} other {# materias en total}}",

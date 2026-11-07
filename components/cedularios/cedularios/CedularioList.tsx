@@ -53,6 +53,36 @@ function CedularioListSkeleton({ etiqueta }: { etiqueta: string }) {
   );
 }
 
+interface GrupoUniversidad {
+  universidadId: string;
+  universidadNombre: string;
+  universidadLogoUrl: string | null;
+  items: CedularioListItem[];
+}
+
+const compararTexto = (a: string, b: string) => a.localeCompare(b, 'es', { sensitivity: 'base', numeric: true });
+
+/** Groups cedularios by universidad: groups by universidad name, items by cedulario name (es locale). */
+function agruparPorUniversidad(items: readonly CedularioListItem[]): GrupoUniversidad[] {
+  const porId = new Map<string, GrupoUniversidad>();
+  for (const c of items) {
+    let grupo = porId.get(c.universidadId);
+    if (!grupo) {
+      grupo = {
+        universidadId: c.universidadId,
+        universidadNombre: c.universidadNombre,
+        universidadLogoUrl: c.universidadLogoUrl,
+        items: [],
+      };
+      porId.set(c.universidadId, grupo);
+    }
+    grupo.items.push(c);
+  }
+  const grupos = [...porId.values()].sort((a, b) => compararTexto(a.universidadNombre, b.universidadNombre));
+  for (const g of grupos) g.items.sort((a, b) => compararTexto(a.nombre, b.nombre));
+  return grupos;
+}
+
 function formatearFecha(iso: string): string | null {
   const fecha = new Date(iso);
   return isValid(fecha) ? format(fecha, 'dd/MM/yyyy', { locale: es }) : null;
@@ -131,10 +161,10 @@ function CedularioItem({
         </span>
 
         <span className="mx-4 mb-4 mt-3 flex w-[calc(100%-2rem)] items-center justify-between gap-2 border-t border-[var(--color-border)] pt-3 text-sm">
-          <span className="text-xs text-[var(--color-text-muted)]">
+          <span className="min-w-0 text-left text-xs leading-tight text-[var(--color-text-muted)]">
             {fecha !== null ? t('cedularios.actualizado', { fecha }) : ''}
           </span>
-          <span className="flex items-center gap-1 font-medium text-[var(--color-brand-gold)]">
+          <span className="flex shrink-0 items-center gap-1 whitespace-nowrap font-medium text-[var(--color-brand-gold)]">
             {t('cedularios.abrir')}
             <ArrowRight
               className="size-4 transition-transform group-hover:translate-x-0.5"
@@ -252,6 +282,9 @@ export function CedularioList() {
   );
 
   const hayFiltros = textoAplicado.trim() !== '' || filtroEfectivo !== null;
+
+  // Grouped by universidad (alphabetical), cedularios alphabetical inside each group.
+  const grupos = useMemo(() => agruparPorUniversidad(filtrados), [filtrados]);
 
   // Form driven by ced_modal. A shared URL can carry a modal the user may not open: close it.
   const abrirNuevo = modal === MODAL_NUEVO_CEDULARIO;
@@ -422,22 +455,51 @@ export function CedularioList() {
               <p className="text-sm text-[var(--color-text-muted)]">{t('cedularios.sin_resultados')}</p>
             </div>
           ) : (
-            <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {filtrados.map((cedulario) => (
-                <li key={cedulario.id} className="min-w-0">
-                  <CedularioItem
-                    cedulario={cedulario}
-                    mostrarUniversidad={universidadId === null}
-                    puedeGestionar={puedeGestionarCedularioDe(usuario, cedulario.createdBy)}
-                    eliminando={evaluandoId === cedulario.id}
-                    eliminacionBloqueada={evaluandoId !== null}
-                    onOpen={abrir}
-                    onEdit={(c) => setModal(modalEditarCedulario(c.id))}
-                    onDelete={(c) => void solicitarEliminacion({ id: c.id, nombre: c.nombre })}
-                  />
-                </li>
+            <div className="flex flex-col gap-8">
+              {grupos.map((grupo) => (
+                <section
+                  key={grupo.universidadId}
+                  aria-labelledby={`ced-grupo-${grupo.universidadId}`}
+                  className="flex flex-col gap-3"
+                >
+                  {/* Universidad header: only when listing every universidad (inside one it is the page title). */}
+                  {universidadId === null && (
+                    <header className="flex items-center gap-3 border-b border-[var(--color-border)] pb-2">
+                      <UniversidadLogo
+                        url={grupo.universidadLogoUrl}
+                        nombre={grupo.universidadNombre}
+                        className="size-9 rounded-lg border-0 bg-transparent"
+                      />
+                      <h4
+                        id={`ced-grupo-${grupo.universidadId}`}
+                        className="min-w-0 flex-1 truncate font-semibold text-[var(--color-text-primary)]"
+                      >
+                        {grupo.universidadNombre}
+                      </h4>
+                      <span className="shrink-0 rounded-full bg-[var(--color-bg-secondary)] px-2.5 py-0.5 text-xs font-medium text-[var(--color-text-secondary)]">
+                        {t('cedularios.cantidad', { count: grupo.items.length })}
+                      </span>
+                    </header>
+                  )}
+                  <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {grupo.items.map((cedulario) => (
+                      <li key={cedulario.id} className="min-w-0">
+                        <CedularioItem
+                          cedulario={cedulario}
+                          mostrarUniversidad={false}
+                          puedeGestionar={puedeGestionarCedularioDe(usuario, cedulario.createdBy)}
+                          eliminando={evaluandoId === cedulario.id}
+                          eliminacionBloqueada={evaluandoId !== null}
+                          onOpen={abrir}
+                          onEdit={(c) => setModal(modalEditarCedulario(c.id))}
+                          onDelete={(c) => void solicitarEliminacion({ id: c.id, nombre: c.nombre })}
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                </section>
               ))}
-            </ul>
+            </div>
           )}
         </>
       )}
