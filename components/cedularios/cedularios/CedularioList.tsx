@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { format, isValid } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { ArrowLeft, FileText, Pencil, Plus, Search, Trash2, X } from 'lucide-react';
+import { ArrowLeft, Building2, ChevronRight, FileText, Pencil, Plus, Search, Trash2, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { AppSelect } from '@/components/common/AppSelect';
 import { Button } from '@/components/common/Button';
@@ -29,7 +29,7 @@ const ESQUELETOS = [0, 1, 2, 3, 4, 5] as const;
 const VALOR_TODAS = '';
 
 const CLASE_ACCION =
-  'flex size-8 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-secondary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand-gold)] disabled:pointer-events-none disabled:opacity-50';
+  'flex size-8 items-center justify-center rounded-full text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-secondary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand-gold)] disabled:pointer-events-none disabled:opacity-50';
 
 function CedularioListSkeleton({ etiqueta }: { etiqueta: string }) {
   return (
@@ -82,35 +82,56 @@ function CedularioItem({
   const mostrarInactivo = usuario.isAdmin && !cedulario.activo;
 
   return (
-    <Card hover padding="sm" className={cn('flex items-center gap-2', !cedulario.activo && 'opacity-70')}>
+    <Card
+      hover
+      padding="none"
+      className={cn('group flex h-full items-stretch overflow-hidden', !cedulario.activo && 'opacity-70')}
+    >
       <button
         type="button"
         onClick={() => onOpen(cedulario)}
         aria-label={t('cedularios.seleccionar_aria', { nombre: cedulario.nombre })}
-        className="flex min-w-0 flex-1 items-center gap-3 rounded-[var(--radius-sm)] p-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand-gold)]"
+        className="flex min-w-0 flex-1 items-center gap-4 p-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-brand-gold)]"
       >
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-[var(--color-brand-gold-muted)] text-[var(--color-brand-gold)]">
-          <FileText className="size-5" aria-hidden="true" />
+        <span className="flex size-12 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-[var(--color-brand-gold-muted)] text-[var(--color-brand-gold)]">
+          <FileText className="size-6" aria-hidden="true" />
         </span>
-        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className="truncate font-semibold text-[var(--color-text-primary)]">{cedulario.nombre}</span>
+        <span className="flex min-w-0 flex-1 flex-col gap-1.5">
           {mostrarUniversidad && cedulario.universidadNombre !== '' && (
-            <span className="truncate text-sm text-[var(--color-text-secondary)]">{cedulario.universidadNombre}</span>
+            <span className="flex items-center gap-1.5 truncate text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">
+              <Building2 className="size-3.5 shrink-0" aria-hidden="true" />
+              <span className="truncate">{cedulario.universidadNombre}</span>
+            </span>
           )}
-          <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--color-text-muted)]">
-            <span>{cedulario.version.trim() !== '' ? t('cedularios.version', { version: cedulario.version }) : t('cedularios.sin_version')}</span>
+          <span className="line-clamp-2 text-base font-semibold leading-snug text-[var(--color-text-primary)]">
+            {cedulario.nombre}
+          </span>
+          <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[var(--color-text-muted)]">
+            <span className="rounded-full bg-[var(--color-bg-secondary)] px-2.5 py-0.5 font-medium text-[var(--color-text-secondary)]">
+              {cedulario.version.trim() !== '' ? t('cedularios.version', { version: cedulario.version }) : t('cedularios.sin_version')}
+            </span>
             {fecha !== null && <span>{t('cedularios.actualizado', { fecha })}</span>}
             {mostrarInactivo && (
-              <span className="rounded-full bg-[var(--color-bg-secondary)] px-2 py-0.5 font-medium text-[var(--color-text-muted)]">
+              <span className="rounded-full border border-[var(--color-border)] px-2.5 py-0.5 font-medium">
                 {t('cedularios.inactivo')}
               </span>
             )}
           </span>
         </span>
+        {!puedeGestionar && (
+          <ChevronRight
+            className="size-5 shrink-0 text-[var(--color-text-muted)] transition-transform group-hover:translate-x-0.5"
+            aria-hidden="true"
+          />
+        )}
       </button>
 
       {puedeGestionar && (
-        <div className="flex shrink-0 items-center gap-1" role="group" aria-label={t('comun.acciones')}>
+        <div
+          className="flex shrink-0 flex-col items-center justify-center gap-1 border-l border-[var(--color-border)] px-2"
+          role="group"
+          aria-label={t('comun.acciones')}
+        >
           <button
             type="button"
             onClick={() => onEdit(cedulario)}
@@ -371,7 +392,7 @@ export function CedularioList() {
               <p className="text-sm text-[var(--color-text-muted)]">{t('cedularios.sin_resultados')}</p>
             </div>
           ) : (
-            <ul className="flex flex-col gap-3">
+            <ul className="grid gap-3 lg:grid-cols-2">
               {filtrados.map((cedulario) => (
                 <li key={cedulario.id} className="min-w-0">
                   <CedularioItem

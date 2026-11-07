@@ -22,7 +22,7 @@ import { UniversidadCard } from './UniversidadCard';
 import { UniversidadForm } from './UniversidadForm';
 
 const ESQUELETOS = [0, 1, 2, 3, 4, 5] as const;
-const CLASE_GRILLA = 'grid gap-4 sm:grid-cols-2 xl:grid-cols-3';
+const CLASE_GRILLA = 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4';
 
 function UniversidadListSkeleton({ etiqueta }: { etiqueta: string }) {
   return (
@@ -30,14 +30,12 @@ function UniversidadListSkeleton({ etiqueta }: { etiqueta: string }) {
       {ESQUELETOS.map((i) => (
         <div
           key={i}
-          className="flex animate-pulse items-center gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] p-[var(--space-sm)]"
+          className="flex animate-pulse flex-col items-center gap-4 rounded-[var(--radius-md)] border border-[var(--color-border)] px-4 pb-4 pt-6"
         >
-          <div className="size-14 shrink-0 rounded-[var(--radius-md)] bg-[var(--color-bg-secondary)]" />
-          <div className="flex flex-1 flex-col gap-2">
-            <div className="h-4 w-3/4 rounded bg-[var(--color-bg-secondary)]" />
-            <div className="h-3 w-1/3 rounded bg-[var(--color-bg-secondary)]" />
-            <div className="h-3 w-1/2 rounded bg-[var(--color-bg-secondary)]" />
-          </div>
+          <div className="size-28 rounded-[var(--radius-md)] bg-[var(--color-bg-secondary)]" />
+          <div className="h-4 w-3/4 rounded bg-[var(--color-bg-secondary)]" />
+          <div className="h-5 w-12 rounded-full bg-[var(--color-bg-secondary)]" />
+          <div className="mt-1 h-4 w-full rounded bg-[var(--color-bg-secondary)]" />
         </div>
       ))}
     </div>

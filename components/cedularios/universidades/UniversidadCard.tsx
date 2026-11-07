@@ -1,6 +1,6 @@
 'use client';
 
-import { Pencil, Trash2 } from 'lucide-react';
+import { ArrowRight, Pencil, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Card } from '@/components/common/Card';
 import { cn } from '@/lib/utils';
@@ -11,7 +11,7 @@ import { puedeGestionarUniversidad } from './permisosUniversidad';
 import { UniversidadLogo } from './UniversidadLogo';
 
 const CLASE_ACCION =
-  'flex size-8 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-secondary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand-gold)]';
+  'flex size-8 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text-muted)] shadow-sm transition-colors hover:bg-[var(--color-bg-secondary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand-gold)]';
 
 interface UniversidadCardProps {
   universidad: Universidad;
@@ -22,10 +22,10 @@ interface UniversidadCardProps {
 }
 
 /**
- * Card of one universidad (Requirements 1.11, 1.13, 11.1): logo or placeholder, nombre, código,
- * active cedulario count, and an inactive badge for admin. Selecting it opens its cedularios
- * (`setUniversidadId`). The edit and delete buttons appear only for an admin or the profesor who
- * created the universidad.
+ * Vertical card of one universidad (Requirements 1.11, 1.13, 11.1): centered logo or placeholder,
+ * nombre, código, active cedulario count, and an inactive badge for admin. Selecting it opens its
+ * cedularios (`setUniversidadId`). The edit and delete buttons float in the top-right corner and
+ * appear only for an admin or the profesor who created the universidad.
  */
 export function UniversidadCard({ universidad, cedulariosActivos, onEdit, onDelete }: UniversidadCardProps) {
   const t = useTranslations('cedularios');
@@ -38,36 +38,57 @@ export function UniversidadCard({ universidad, cedulariosActivos, onEdit, onDele
   return (
     <Card
       hover
-      padding="sm"
-      className={cn('flex items-center gap-2', !universidad.activo && 'opacity-70')}
+      padding="none"
+      className={cn('group relative h-full overflow-hidden', !universidad.activo && 'opacity-70')}
     >
       <button
         type="button"
         onClick={() => setUniversidadId(universidad.id)}
         aria-label={t('universidades.seleccionar_aria', { nombre: universidad.nombre })}
-        className="flex min-w-0 flex-1 items-center gap-3 rounded-[var(--radius-sm)] p-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand-gold)]"
+        className="flex h-full w-full flex-col items-center gap-4 px-4 pb-4 pt-6 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-brand-gold)]"
       >
-        <UniversidadLogo url={universidad.logo_url} nombre={universidad.nombre} className="size-14" />
-        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className="truncate font-semibold text-[var(--color-text-primary)]">{universidad.nombre}</span>
-          <span className="truncate text-sm text-[var(--color-text-muted)]">{universidad.codigo}</span>
-          <span className="flex flex-wrap items-center gap-2">
-            {cedulariosActivos !== null && (
-              <span className="text-xs text-[var(--color-text-secondary)]">
-                {t('universidades.cedularios_activos', { count: cedulariosActivos })}
-              </span>
-            )}
+        <UniversidadLogo
+          url={universidad.logo_url}
+          nombre={universidad.nombre}
+          className="size-28 rounded-[var(--radius-lg,1rem)] bg-white shadow-sm"
+        />
+
+        <span className="flex w-full min-w-0 flex-1 flex-col items-center gap-2">
+          <span className="line-clamp-2 min-h-[2.75rem] text-base font-semibold leading-snug text-[var(--color-text-primary)]">
+            {universidad.nombre}
+          </span>
+          <span className="flex flex-wrap items-center justify-center gap-2">
+            <span className="rounded-full bg-[var(--color-bg-secondary)] px-2.5 py-0.5 text-xs font-semibold tracking-wide text-[var(--color-text-secondary)]">
+              {universidad.codigo}
+            </span>
             {mostrarInactiva && (
-              <span className="rounded-full bg-[var(--color-bg-secondary)] px-2 py-0.5 text-xs font-medium text-[var(--color-text-muted)]">
+              <span className="rounded-full border border-[var(--color-border)] px-2.5 py-0.5 text-xs font-medium text-[var(--color-text-muted)]">
                 {t('universidades.inactiva')}
               </span>
             )}
           </span>
         </span>
+
+        <span className="mt-1 flex w-full items-center justify-between gap-2 border-t border-[var(--color-border)] pt-3 text-sm">
+          <span className="text-[var(--color-text-secondary)]">
+            {cedulariosActivos !== null ? t('universidades.cedularios_activos', { count: cedulariosActivos }) : ''}
+          </span>
+          <span className="flex items-center gap-1 font-medium text-[var(--color-brand-gold)]">
+            {t('universidades.ver_cedularios')}
+            <ArrowRight
+              className="size-4 transition-transform group-hover:translate-x-0.5"
+              aria-hidden="true"
+            />
+          </span>
+        </span>
       </button>
 
       {puedeGestionar && (
-        <div className="flex shrink-0 items-center gap-1" role="group" aria-label={t('comun.acciones')}>
+        <div
+          className="absolute right-2 top-2 z-10 flex items-center gap-1.5"
+          role="group"
+          aria-label={t('comun.acciones')}
+        >
           <button
             type="button"
             onClick={() => onEdit(universidad)}
@@ -78,15 +99,15 @@ export function UniversidadCard({ universidad, cedulariosActivos, onEdit, onDele
             <Pencil className="size-4" aria-hidden="true" />
           </button>
           {universidad.activo && (
-          <button
-            type="button"
-            onClick={() => onDelete(universidad)}
-            aria-label={`${t('universidades.eliminar')}: ${universidad.nombre}`}
-            title={t('universidades.eliminar')}
-            className={cn(CLASE_ACCION, 'hover:text-[var(--color-error)]')}
-          >
-            <Trash2 className="size-4" aria-hidden="true" />
-          </button>
+            <button
+              type="button"
+              onClick={() => onDelete(universidad)}
+              aria-label={`${t('universidades.eliminar')}: ${universidad.nombre}`}
+              title={t('universidades.eliminar')}
+              className={cn(CLASE_ACCION, 'hover:text-[var(--color-error)]')}
+            >
+              <Trash2 className="size-4" aria-hidden="true" />
+            </button>
           )}
         </div>
       )}
