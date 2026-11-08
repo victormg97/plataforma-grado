@@ -227,6 +227,11 @@
     "plazo_vencido_mensaje": "El plazo para modificar la asistencia ha vencido.",
     "ver_detalle_completo": "Ver detalle completo",
     "ver_detalle_desc": "Notas, asistencia y más información",
+    "fecha_hora": {
+      "duracion_min": "{min} min",
+      "duracion_h": "{h} h",
+      "duracion_h_min": "{h} h {min} min"
+    },
     "tab_proximas": "Próximas",
     "tab_historial": "Historial",
     "buscar_proximas": "Buscar por título o fecha…",

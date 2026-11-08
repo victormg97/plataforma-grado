@@ -19,7 +19,8 @@ import { Button } from '@/components/common/Button';
 import { HorarioForm } from '@/components/horarios/HorarioForm';
 import { useTranslations, useLocale } from 'next-intl';
 import { Calendar, Clock, FileText, Lock, MessageSquare, Pencil, UserX, GraduationCap } from 'lucide-react';
-import { RichDescription } from '@/components/common/RichDescription';
+import { ClaseDescripcion } from '@/components/horarios/ClaseDescripcion';
+import { ClaseFechaHora } from '@/components/horarios/ClaseFechaHora';
 import { usePruebaTerm } from '@/lib/hooks/usePruebaTerm';
 import { CalendarioDownloadButton, type CalendarioExportEvent } from '@/components/calendario/CalendarioDownloadButton';
 import { CalendarioStyles } from '@/components/calendario/CalendarioStyles';
@@ -523,8 +524,10 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
         open={detailOpen}
         onClose={() => setDetailOpen(false)}
         title={selectedHorario?.titulo || t('editar_clase')}
+        size="xl"
+        contentClassName="sm:max-w-2xl md:max-w-3xl lg:max-w-4xl"
         footer={
-          <div className="flex gap-2">
+          <div className="flex w-full flex-wrap items-center justify-between gap-2">
             <Button variant="ghost" onClick={() => setDetailOpen(false)}>{tc('cerrar')}</Button>
             {selectedHorario?.asistencia?.[0]?.estado === 'confirmado' &&
              selectedHorario.fecha < new Date().toISOString().split('T')[0] && (
@@ -538,10 +541,19 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
                 {ta('estados.no_asistio')}
               </Button>
             )}
-            <Button onClick={handleEditFromDetail}>
-              <Pencil className="mr-1.5 size-4" />
-              {t('editar_horario')}
-            </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button variant="secondary" onClick={handleEditFromDetail}>
+                <Pencil className="mr-1.5 size-4" />
+                {t('editar_horario')}
+              </Button>
+              {selectedHorario && (
+                <ViewDetailButton
+                  compact
+                  href={buildClaseDetailHref(selectedHorario.id, userRol, `/${userRol}`)}
+                  onClick={() => setDetailOpen(false)}
+                />
+              )}
+            </div>
           </div>
         }
       >
@@ -580,26 +592,10 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
             </div>
 
             {/* Horario */}
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-bg-secondary)] px-2.5 py-1 text-xs text-[var(--color-text-secondary)]">
-                <Calendar className="size-3.5" style={{ color: 'var(--color-brand-gold)' }} />
-                <span className="capitalize">
-                  {format(new Date(selectedHorario.fecha + 'T12:00:00'), locale === 'en' ? "EEEE, MMMM d" : "EEEE d 'de' MMMM", { locale: locale === 'en' ? enUS : esDateFns })}
-                </span>
-              </span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-bg-secondary)] px-2.5 py-1 text-xs text-[var(--color-text-secondary)]">
-                <Clock className="size-3.5" style={{ color: 'var(--color-brand-gold)' }} />
-                {selectedHorario.hora_inicio.slice(0, 5)} - {selectedHorario.hora_fin.slice(0, 5)}
-              </span>
-            </div>
+            <ClaseFechaHora fecha={selectedHorario.fecha} horaInicio={selectedHorario.hora_inicio} horaFin={selectedHorario.hora_fin} />
 
             {/* Descripcion */}
-            {selectedHorario.descripcion && (
-              <div className="flex items-start gap-2 text-sm text-[var(--color-text-secondary)]">
-                <FileText className="mt-0.5 size-4 shrink-0" />
-                <RichDescription html={selectedHorario.descripcion} />
-              </div>
-            )}
+            {selectedHorario.descripcion && <ClaseDescripcion html={selectedHorario.descripcion} />}
 
             {/* Nota del alumno */}
             {selectedHorario.asistencia?.[0]?.nota_alumno && (
@@ -613,12 +609,6 @@ export function CalendarioProfesor({ profesorId, openNewClassTrigger, openHorari
                 </p>
               </div>
             )}
-
-            {/* Link to detail page */}
-            <ViewDetailButton
-              href={buildClaseDetailHref(selectedHorario.id, userRol, `/${userRol}`)}
-              onClick={() => setDetailOpen(false)}
-            />
           </div>
         )}
       </Modal>

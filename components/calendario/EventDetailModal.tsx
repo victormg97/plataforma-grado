@@ -1,8 +1,9 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { Clock, FileText, MessageSquare, GraduationCap } from 'lucide-react';
-import { RichDescription } from '@/components/common/RichDescription';
+import { MessageSquare, GraduationCap } from 'lucide-react';
+import { ClaseDescripcion } from '@/components/horarios/ClaseDescripcion';
+import { ClaseFechaHora } from '@/components/horarios/ClaseFechaHora';
 import { Modal } from '@/components/common/Modal';
 import { Avatar } from '@/components/common/Avatar';
 import { StatusBadge } from '@/components/common/StatusBadge';
@@ -62,6 +63,8 @@ export function EventDetailModal({
       onClose={onClose}
       title={horario?.titulo || t('editar_clase')}
       footer={footer}
+      size="xl"
+      contentClassName="sm:max-w-2xl md:max-w-3xl lg:max-w-4xl"
     >
       {horario && (
         <div className="space-y-4">
@@ -108,22 +111,14 @@ export function EventDetailModal({
 
           {/* Date/time */}
           {dateTimeSlot ?? (
-            <div className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
-              <Clock className="size-4" />
-              <span>{horario.fecha} · {horario.hora_inicio.slice(0, 5)} - {horario.hora_fin.slice(0, 5)}</span>
-            </div>
+            <ClaseFechaHora fecha={horario.fecha} horaInicio={horario.hora_inicio} horaFin={horario.hora_fin} />
           )}
 
           {/* Connection link (Zoom, Meet, etc.) */}
           <BotonConexion enlace={horario.enlace_conexion ?? null} />
 
           {/* Descripcion */}
-          {horario.descripcion && (
-            <div className="flex items-start gap-2 text-sm text-[var(--color-text-secondary)]">
-              <FileText className="mt-0.5 size-4 shrink-0" />
-              <RichDescription html={horario.descripcion} />
-            </div>
-          )}
+          {horario.descripcion && <ClaseDescripcion html={horario.descripcion} />}
 
           {/* Nota del alumno */}
           {horario.asistencia?.[0]?.nota_alumno && (

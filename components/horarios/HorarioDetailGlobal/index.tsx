@@ -2,10 +2,9 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { format } from 'date-fns';
-import { es as esDateFns } from 'date-fns/locale';
-import { Calendar, Clock, FileText, MessageSquare, GraduationCap, Scale } from 'lucide-react';
-import { RichDescription } from '@/components/common/RichDescription';
+import { MessageSquare, GraduationCap, Scale } from 'lucide-react';
+import { ClaseDescripcion } from '@/components/horarios/ClaseDescripcion';
+import { ClaseFechaHora } from '@/components/horarios/ClaseFechaHora';
 import { usePathname } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -63,8 +62,19 @@ export function HorarioDetailGlobal() {
       open={!!horarioDetailId}
       onClose={handleClose}
       title={loading ? tc('cargando') : (horario?.titulo || t('editar_clase'))}
+      size="xl"
+      contentClassName="sm:max-w-2xl md:max-w-3xl lg:max-w-4xl"
       footer={
-        <Button variant="ghost" onClick={handleClose}>{tc('cerrar')}</Button>
+        <div className="flex w-full flex-wrap items-center justify-between gap-2">
+          <Button variant="ghost" onClick={handleClose}>{tc('cerrar')}</Button>
+          {horario && (
+            <ViewDetailButton
+              compact
+              href={buildClaseDetailHref(horario.id, userRol, pathname)}
+              onClick={handleClose}
+            />
+          )}
+        </div>
       }
     >
       {loading && (
@@ -156,26 +166,10 @@ export function HorarioDetailGlobal() {
           )}
 
           {/* Date / time badges */}
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-bg-secondary)] px-2.5 py-1 text-xs text-[var(--color-text-secondary)]">
-              <Calendar className="size-3.5" style={{ color: 'var(--color-brand-gold)' }} />
-              <span className="capitalize">
-                {format(new Date(horario.fecha + 'T12:00:00'), "EEEE d 'de' MMMM", { locale: esDateFns })}
-              </span>
-            </span>
-            <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-bg-secondary)] px-2.5 py-1 text-xs text-[var(--color-text-secondary)]">
-              <Clock className="h-3.5 w-3.5" style={{ color: 'var(--color-brand-gold)' }} />
-              {horario.hora_inicio.slice(0, 5)} - {horario.hora_fin.slice(0, 5)}
-            </span>
-          </div>
+          <ClaseFechaHora fecha={horario.fecha} horaInicio={horario.hora_inicio} horaFin={horario.hora_fin} />
 
           {/* Descripcion */}
-          {horario.descripcion && (
-            <div className="flex items-start gap-2 text-sm text-[var(--color-text-secondary)]">
-              <FileText className="mt-0.5 size-4 shrink-0" />
-              <RichDescription html={horario.descripcion} />
-            </div>
-          )}
+          {horario.descripcion && <ClaseDescripcion html={horario.descripcion} />}
 
           {/* Nota del alumno */}
           {horario.asistencia?.[0]?.nota_alumno && (
@@ -194,12 +188,6 @@ export function HorarioDetailGlobal() {
           {(horario as HorarioDetailWithSimulacion).tipo_clase === 'simulacion' && (
             <SimulacionSection horario={horario as HorarioDetailWithSimulacion} userId={user?.id ?? ''} queryClient={queryClient} horarioDetailId={horarioDetailId} />
           )}
-
-          {/* Link to detail page */}
-          <ViewDetailButton
-            href={buildClaseDetailHref(horario.id, userRol, pathname)}
-            onClick={handleClose}
-          />
         </div>
       )}
     </Modal>

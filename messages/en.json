@@ -227,6 +227,11 @@
     "plazo_vencido_mensaje": "The deadline to modify attendance has passed.",
     "ver_detalle_completo": "View full detail",
     "ver_detalle_desc": "Notes, attendance and more information",
+    "fecha_hora": {
+      "duracion_min": "{min} min",
+      "duracion_h": "{h} h",
+      "duracion_h_min": "{h} h {min} min"
+    },
     "tab_proximas": "Upcoming",
     "tab_historial": "History",
     "buscar_proximas": "Search by title or date…",

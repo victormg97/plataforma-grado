@@ -9,13 +9,26 @@ import { useTranslations } from 'next-intl';
 interface ViewDetailButtonProps {
   href: string;
   onClick?: () => void;
+  /** Compact button style, meant for modal footers. */
+  compact?: boolean;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function ViewDetailButton({ href, onClick }: ViewDetailButtonProps) {
+export function ViewDetailButton({ href, onClick, compact = false }: ViewDetailButtonProps) {
   const t = useTranslations('horarios');
-
+  if (compact) {
+    return (
+      <Link
+        href={href}
+        onClick={onClick}
+        className="group inline-flex h-11 items-center justify-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-brand-gold)] px-5 text-sm font-medium text-[var(--color-brand-gold)] transition-colors hover:bg-[var(--color-brand-gold-muted)]"
+      >
+        {t('ver_detalle_completo')}
+        <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+      </Link>
+    );
+  }
   return (
     <Link
       href={href}

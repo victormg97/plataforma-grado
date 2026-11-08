@@ -608,12 +608,21 @@ export function CalendarioAdmin() {
         horario={selectedHorario}
         isExamen={selectedHorario ? (selectedHorario.pruebas?.length ?? 0) > 0 : false}
         footer={
-          <div className="flex gap-2">
+          <div className="flex w-full flex-wrap items-center justify-between gap-2">
             <Button variant="ghost" onClick={() => setDetailOpen(false)}>{tc('cerrar')}</Button>
-            <Button onClick={handleEditFromDetail}>
-              <Pencil className="mr-1.5 size-4" />
-              {t('editar_horario')}
-            </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button variant="secondary" onClick={handleEditFromDetail}>
+                <Pencil className="mr-1.5 size-4" />
+                {t('editar_horario')}
+              </Button>
+              {selectedHorario && (
+                <ViewDetailButton
+                  compact
+                  href={buildClaseDetailHref(selectedHorario.id, 'admin', pathname)}
+                  onClick={() => setDetailOpen(false)}
+                />
+              )}
+            </div>
           </div>
         }
         headerSlot={
@@ -631,14 +640,6 @@ export function CalendarioAdmin() {
                 </p>
               </div>
             </div>
-          ) : undefined
-        }
-        bottomSlot={
-          selectedHorario ? (
-            <ViewDetailButton
-              href={buildClaseDetailHref(selectedHorario.id, 'admin', pathname)}
-              onClick={() => setDetailOpen(false)}
-            />
           ) : undefined
         }
       />

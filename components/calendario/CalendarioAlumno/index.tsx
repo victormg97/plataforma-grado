@@ -24,11 +24,10 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Modal } from '@/components/common/Modal';
 import { Button } from '@/components/common/Button';
 import { StatusBadge } from '@/components/common/StatusBadge';
-import { RichDescription } from '@/components/common/RichDescription';
+import { ClaseDescripcion } from '@/components/horarios/ClaseDescripcion';
+import { ClaseFechaHora } from '@/components/horarios/ClaseFechaHora';
 import { ViewDetailButton } from '@/components/horarios/ViewDetailButton';
-import { Calendar, Clock, User, BookOpen, Scale } from 'lucide-react';
-import { format } from 'date-fns';
-import { es as esDateFns, enUS } from 'date-fns/locale';
+import { User, BookOpen, Scale } from 'lucide-react';
 
 // ─── Agenda imports ─────────────────────────────────────────────────────────
 import { useEventosAgenda } from '@/lib/agenda/nucleo';
@@ -498,9 +497,18 @@ export function CalendarioAlumno() {
       open={claseDetailOpen}
       onClose={() => setClaseDetailOpen(false)}
       title={selectedClase?.horario.titulo || tc('detalle')}
+      size="xl"
+      contentClassName="sm:max-w-2xl md:max-w-3xl lg:max-w-4xl"
       footer={
-        <div className="flex gap-2">
+        <div className="flex w-full flex-wrap items-center justify-between gap-2">
           <Button variant="ghost" onClick={() => setClaseDetailOpen(false)}>{tc('cerrar')}</Button>
+          {selectedClase && (
+            <ViewDetailButton
+              compact
+              href={buildAlumnoHorarioDetailHref(selectedClase.horario.id, currentPath)}
+              onClick={() => setClaseDetailOpen(false)}
+            />
+          )}
         </div>
       }
     >
@@ -526,18 +534,7 @@ export function CalendarioAlumno() {
           </div>
 
           {/* Date & time */}
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-bg-secondary)] px-2.5 py-1 text-xs text-[var(--color-text-secondary)]">
-              <Calendar className="size-3.5" style={{ color: 'var(--color-brand-gold)' }} />
-              <span className="capitalize">
-                {format(new Date(selectedClase.horario.fecha + 'T12:00:00'), locale === 'en' ? "EEEE, MMMM d" : "EEEE d 'de' MMMM", { locale: locale === 'en' ? enUS : esDateFns })}
-              </span>
-            </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-bg-secondary)] px-2.5 py-1 text-xs text-[var(--color-text-secondary)]">
-              <Clock className="size-3.5" style={{ color: 'var(--color-brand-gold)' }} />
-              {selectedClase.horario.hora_inicio.slice(0, 5)} - {selectedClase.horario.hora_fin.slice(0, 5)}
-            </span>
-          </div>
+          <ClaseFechaHora fecha={selectedClase.horario.fecha} horaInicio={selectedClase.horario.hora_inicio} horaFin={selectedClase.horario.hora_fin} />
 
           {/* Professor */}
           {selectedClase.horario.profesor && (
@@ -573,14 +570,8 @@ export function CalendarioAlumno() {
 
           {/* Description */}
           {selectedClase.horario.descripcion && (
-            <RichDescription html={selectedClase.horario.descripcion} />
+            <ClaseDescripcion html={selectedClase.horario.descripcion} />
           )}
-
-          {/* Link to full detail page */}
-          <ViewDetailButton
-            href={buildAlumnoHorarioDetailHref(selectedClase.horario.id, currentPath)}
-            onClick={() => setClaseDetailOpen(false)}
-          />
         </div>
       )}
     </Modal>
