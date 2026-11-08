@@ -39,6 +39,9 @@ import type { EstadoAsistencia } from '@/lib/supabase/types';
 import { useTranslations, useLocale } from 'next-intl';
 import { FilterChip } from '@/components/horarios/HorariosProfesorView/FilterChip';
 import { RichDescription } from '@/components/common/RichDescription';
+import { ClaseDetalleCollapsible } from '@/components/horarios/ClaseDetalleCollapsible';
+import { ClaseFechaHoraHero } from '@/components/horarios/ClaseFechaHoraHero';
+import { ClaseDescripcion } from '@/components/horarios/ClaseDescripcion';
 import { stripHtml } from '@/lib/utils';
 
 /* ── Search input ── */
@@ -619,8 +622,36 @@ function HorarioDetailView({ clase, user, confirmar, cancelar, pedirCambio: _ped
   return (
     <>
       <div className="mt-[var(--space-lg)] space-y-[var(--space-md)]">
-        <Card className={`border-2 ${borderColor()}`} padding="lg">
-          <div className="space-y-4">
+        <ClaseDetalleCollapsible
+          storageKey={`clase-detalle-abierto:${user?.id ?? 'anon'}:${clase.horario.id}`}
+          borderClass={borderColor()}
+          header={
+            <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
+              <h2 className="text-xl font-semibold leading-snug text-[var(--color-text-primary)]">{clase.horario.titulo}</h2>
+              <div className="flex items-center gap-2">
+                {hasPendingSolicitud && (
+                  <span className="inline-flex items-center rounded-full bg-amber-100 dark:bg-amber-900/30 px-2.5 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-700/50">
+                    {tCambio('solicitud_pendiente')}
+                  </span>
+                )}
+                <StatusBadge status={displayStatus} />
+              </div>
+            </div>
+          }
+          summary={
+            <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-[var(--color-text-secondary)]">
+              <span className="inline-flex items-center gap-1.5 capitalize">
+                <Calendar className="size-3.5 text-[var(--color-brand-gold)]" />
+                {format(new Date(clase.horario.fecha + 'T12:00:00'), locale === 'en' ? 'EEE, MMM d yyyy' : "EEE d 'de' MMM yyyy", { locale: dateFnsLocale })}
+              </span>
+              <span className="inline-flex items-center gap-1.5 tabular-nums">
+                <Clock className="size-3.5 text-[var(--color-brand-gold)]" />
+                {clase.horario.hora_inicio.slice(0, 5)} – {clase.horario.hora_fin.slice(0, 5)}
+              </span>
+            </p>
+          }
+        >
+          <>
             {/* Exam banner */}
             {isExamen && (
               <div className="flex items-center gap-2 rounded-[var(--radius-md)] px-3 py-2.5"
@@ -660,38 +691,11 @@ function HorarioDetailView({ clase, user, confirmar, cancelar, pedirCambio: _ped
                 </div>
               </div>
             )}
-            <div className="flex items-start justify-between">
-              <h2 className="text-xl font-semibold text-[var(--color-text-primary)]">{clase.horario.titulo}</h2>
-              <div className="flex items-center gap-2">
-                {hasPendingSolicitud && (
-                  <span className="inline-flex items-center rounded-full bg-amber-100 dark:bg-amber-900/30 px-2.5 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-700/50">
-                    {tCambio('solicitud_pendiente')}
-                  </span>
-                )}
-                <StatusBadge status={displayStatus} />
-              </div>
-            </div>
-
-            {clase.horario.descripcion && (
-              <RichDescription html={clase.horario.descripcion} />
-            )}
-
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-bg-secondary)] px-3 py-1.5 text-sm font-medium text-[var(--color-text-primary)]">
-                <Calendar className="size-3.5 text-[var(--color-brand-gold)]" />
-                <span className="capitalize">
-                  {format(new Date(clase.horario.fecha + 'T12:00:00'), locale === 'en' ? "EEEE, MMMM d yyyy" : "EEEE d 'de' MMMM yyyy", { locale: dateFnsLocale })}
-                </span>
-              </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-bg-secondary)] px-3 py-1.5 text-sm font-medium text-[var(--color-text-primary)]">
-                <Clock className="size-3.5 text-[var(--color-brand-gold)]" />
-                {clase.horario.hora_inicio.slice(0, 5)}
-              </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-bg-secondary)] px-3 py-1.5 text-sm font-medium text-[var(--color-text-primary)]">
-                <Clock className="size-3.5 text-[var(--color-text-muted)]" />
-                {clase.horario.hora_fin.slice(0, 5)}
-              </span>
-            </div>
+            <ClaseFechaHoraHero
+              fecha={clase.horario.fecha}
+              horaInicio={clase.horario.hora_inicio}
+              horaFin={clase.horario.hora_fin}
+            />
 
             {clase.horario.profesor && (
               <div className="flex items-center gap-3 rounded-[var(--radius-md)] bg-[var(--color-bg-secondary)] p-3">
@@ -708,6 +712,10 @@ function HorarioDetailView({ clase, user, confirmar, cancelar, pedirCambio: _ped
                   </p>
                 </div>
               </div>
+            )}
+
+            {clase.horario.descripcion && (
+              <ClaseDescripcion html={clase.horario.descripcion} />
             )}
 
             {clase.nota_alumno && (
@@ -787,8 +795,8 @@ function HorarioDetailView({ clase, user, confirmar, cancelar, pedirCambio: _ped
                 )}
               </div>
             )}
-          </div>
-        </Card>
+          </>
+        </ClaseDetalleCollapsible>
 
         {/* Acciones */}
         {/* Solo mostrar si hay algo accionable: no mostrar cuando confirmado y en curso o ya pasó */}

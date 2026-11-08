@@ -230,7 +230,13 @@
     "fecha_hora": {
       "duracion_min": "{min} min",
       "duracion_h": "{h} h",
-      "duracion_h_min": "{h} h {min} min"
+      "duracion_h_min": "{h} h {min} min",
+      "fecha": "Fecha",
+      "horario": "Horario",
+      "inicio": "Inicio",
+      "fin": "Término",
+      "colapsar_detalle": "Ocultar detalle",
+      "expandir_detalle": "Mostrar detalle"
     },
     "tab_proximas": "Próximas",
     "tab_historial": "Historial",
