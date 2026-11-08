@@ -13,6 +13,8 @@ interface ConfirmModalProps {
   cancelText?: string;
   loading?: boolean;
   isDanger?: boolean;
+  /** Extra classes for the popup (for example a higher z-index above the tracking overlay). */
+  contentClassName?: string;
 }
 
 export function ConfirmModal({
@@ -25,12 +27,14 @@ export function ConfirmModal({
   cancelText = 'Cancelar',
   loading = false,
   isDanger = true,
+  contentClassName,
 }: ConfirmModalProps) {
   return (
     <Modal
       open={open}
       onClose={onClose}
       title={title}
+      contentClassName={contentClassName}
       footer={
         <div className="flex w-full justify-end gap-3">
           <Button variant="ghost" onClick={onClose} disabled={loading}>

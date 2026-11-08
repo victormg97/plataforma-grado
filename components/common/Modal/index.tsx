@@ -27,6 +27,8 @@ interface ModalProps {
   footer?: ReactNode;
   preventOutsideClose?: boolean;
   size?: keyof typeof SIZE_CLASSES;
+  /** Extra classes for the popup (for example a higher z-index when opened above another overlay). */
+  contentClassName?: string;
 }
 
 export function Modal({
@@ -38,6 +40,7 @@ export function Modal({
   footer,
   preventOutsideClose = false,
   size = 'default',
+  contentClassName = '',
 }: ModalProps) {
   return (
     <Dialog
@@ -47,7 +50,7 @@ export function Modal({
       }}
     >
       <DialogContent
-        className={`${SIZE_CLASSES[size]} flex flex-col max-h-[90dvh] overflow-hidden border-[var(--color-border)] bg-[var(--color-bg)]`}
+        className={`${SIZE_CLASSES[size]} flex flex-col max-h-[90dvh] overflow-hidden border-[var(--color-border)] bg-[var(--color-bg)] ${contentClassName}`}
         showCloseButton={!preventOutsideClose}
       >
         {preventOutsideClose && (

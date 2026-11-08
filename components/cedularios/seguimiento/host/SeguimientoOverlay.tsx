@@ -21,6 +21,11 @@ interface SeguimientoOverlayProps {
    * view, detail panel). Escape is then left to that layer.
    */
   ownLayerOpen?: boolean;
+  /**
+   * When true, a click outside the popup never closes the overlay (used by the assign wizard,
+   * so a stray click cannot discard the progress). Default false.
+   */
+  blockOutsidePress?: boolean;
   className?: string;
   children: ReactNode;
 }
@@ -36,6 +41,7 @@ export function SeguimientoOverlay({
   ariaLabel,
   closeLabel,
   ownLayerOpen = false,
+  blockOutsidePress = false,
   className,
   children,
 }: SeguimientoOverlayProps) {
@@ -55,6 +61,10 @@ export function SeguimientoOverlay({
         if (nextOpen) return;
         // Escape is handled by useEscapeGuard so lower modals never see it.
         if (eventDetails.reason === 'escape-key') {
+          eventDetails.cancel();
+          return;
+        }
+        if (blockOutsidePress && eventDetails.reason === 'outside-press') {
           eventDetails.cancel();
           return;
         }

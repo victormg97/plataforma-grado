@@ -7,9 +7,12 @@ import { errorDeDb, obtenerContextoStaff, parsear, parsearId } from '@/lib/cedul
 import { toActionError, type CedularioErrorCode } from '@/lib/cedularios/errors';
 import { ALUMNOS_POR_LLAMADA } from '@/lib/cedularios/seguimiento/constants';
 import { motivoDeRechazo } from '@/lib/cedularios/seguimiento/errores';
+import type { ResultadoAsignacionCedulario } from '@/lib/cedularios/seguimiento/asignacion-wizard';
 import {
+  asignarCedulariosSchema,
   asignarSchema,
   subconjuntoSchema,
+  type AsignarCedulariosInput,
   type AsignarInput,
   type SubconjuntoInput,
 } from '@/lib/validations/cedularioSeguimiento.schema';
@@ -105,6 +108,59 @@ export async function asignarCedulario(
           const motivo = fila?.motivo ? motivoDeRechazo(fila.motivo) : 'error_generico';
           resultados.push({ alumnoId, resultado: 'rechazado', motivo });
         }
+      }
+    }
+
+    return actionOk(resultados);
+  });
+}
+
+/**
+ * Assigns several cedularios to ONE student, each with its own subjects. It calls the RPC once
+ * per cedulario, in series. It is not atomic across cedularios: every cedulario has its own
+ * result, so the caller can show the failures and retry only those. A cedulario the student
+ * already has active comes back as `rechazado` / `asignacion_duplicada` and creates no row.
+ */
+export async function asignarCedularios(
+  input: AsignarCedulariosInput,
+): Promise<ActionResult<ResultadoAsignacionCedulario[]>> {
+  let userId: string | null = null;
+
+  return runAction({ accion: 'asignarCedularios', userId: () => userId }, async () => {
+    const contexto = await obtenerContextoStaff();
+    if (!contexto.ok) return contexto;
+    const { supabase } = contexto.data;
+    userId = contexto.data.userId;
+
+    const datos = parsear(asignarCedulariosSchema, input);
+    if (!datos.ok) return datos;
+    const { alumnoId, cedularios } = datos.data;
+
+    const resultados: ResultadoAsignacionCedulario[] = [];
+
+    for (const { cedularioId, materias } of cedularios) {
+      const { data, error } = await supabase.rpc('asignar_cedulario_alumnos', {
+        p_cedulario_id: cedularioId,
+        p_alumno_ids: [alumnoId],
+        // `null` asks the RPC for every active subject of the cedulario.
+        p_materia_ids: materias === 'todas' ? null : materias,
+      });
+
+      if (error) {
+        resultados.push({ cedularioId, resultado: 'rechazado', motivo: motivoDeRechazo(error) });
+        continue;
+      }
+
+      const fila = (data ?? []).find((item) => item.alumno_id === alumnoId);
+      if (
+        fila &&
+        (fila.resultado === 'asignado' || fila.resultado === 'reactivado') &&
+        fila.asignacion_id
+      ) {
+        resultados.push({ cedularioId, resultado: fila.resultado, asignacionId: fila.asignacion_id });
+      } else {
+        const motivo = fila?.motivo ? motivoDeRechazo(fila.motivo) : 'error_generico';
+        resultados.push({ cedularioId, resultado: 'rechazado', motivo });
       }
     }
 

@@ -55,9 +55,10 @@ export type AccionesHoverCard = {
 };
 
 /**
- * Actions of the hover card (decision D-S20): "assign" only when the student has
- * no active assignment, the user can edit and the student is active. Being admin
- * does not relax the rule because the database rejects assigning inactive students.
+ * Actions of the hover card (decision D-S20): "assign" when the user can edit and the
+ * student is active, whatever the number of active assignments (a student can have several
+ * cedularios). Being admin does not relax the rule because the database rejects assigning
+ * inactive students.
  */
 export function accionesHoverCard(r: {
   totalActivas: number;
@@ -71,7 +72,7 @@ export function accionesHoverCard(r: {
 
   return {
     irAPerfil: true,
-    asignar: sinAsignaciones && r.puedeEditar && r.alumnoActivo,
+    asignar: r.puedeEditar && r.alumnoActivo,
     revisar,
     mensajeSinCedularios: sinAsignaciones && !r.puedeEditar,
     etiquetaInactivo: !r.alumnoActivo,

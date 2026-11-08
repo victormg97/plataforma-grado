@@ -21,6 +21,7 @@ import { z } from 'zod';
 import { esFechaFutura, hoyEnChile } from '@/lib/cedularios/seguimiento/fechas';
 import {
   MAX_ALUMNOS_POR_ASIGNACION,
+  MAX_CEDULARIOS_POR_ASIGNACION,
   MAX_COMENTARIO,
   MAX_NOTA,
   MAX_REPASO_NOTA,
@@ -137,6 +138,26 @@ export const asignarSchema = z.object({
   materias: materiasAsignadas,
 });
 
+/** One student, several cedularios, each one with its own subjects. */
+export const asignarCedulariosSchema = z.object({
+  alumnoId: idUuid('alumno_invalido'),
+  cedularios: z
+    .array(
+      z.object({
+        cedularioId: idUuid('cedulario_invalido'),
+        materias: materiasAsignadas,
+      }),
+      { error: 'cedulario_invalido' },
+    )
+    .min(1, 'cedulario_invalido')
+    .max(MAX_CEDULARIOS_POR_ASIGNACION, 'cedulario_invalido')
+    .refine(
+      (lista) =>
+        new Set(lista.map((fila) => fila.cedularioId.toLowerCase())).size === lista.length,
+      { error: 'ids_duplicados' },
+    ),
+});
+
 // ---------------------------------------------------------------------------
 // Subset of subjects
 // ---------------------------------------------------------------------------
@@ -213,6 +234,7 @@ export const vincularClasesSchema = z.object({
 // ---------------------------------------------------------------------------
 
 export type AsignarInput = z.input<typeof asignarSchema>;
+export type AsignarCedulariosInput = z.input<typeof asignarCedulariosSchema>;
 export type SubconjuntoInput = z.input<typeof subconjuntoSchema>;
 export type EstadoMateriaInput = z.input<typeof estadoMateriaSchema>;
 export type NotaInput = z.input<typeof notaSchema>;
@@ -221,6 +243,7 @@ export type RepasoInput = z.input<typeof repasoSchema>;
 export type VincularClasesInput = z.input<typeof vincularClasesSchema>;
 
 export type AsignarData = z.output<typeof asignarSchema>;
+export type AsignarCedulariosData = z.output<typeof asignarCedulariosSchema>;
 export type SubconjuntoData = z.output<typeof subconjuntoSchema>;
 export type EstadoMateriaData = z.output<typeof estadoMateriaSchema>;
 export type NotaData = z.output<typeof notaSchema>;

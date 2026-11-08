@@ -21,6 +21,9 @@ export const MAX_REPASO_NOTA = 500;
 /** Maximum number of students accepted by one assignment operation. */
 export const MAX_ALUMNOS_POR_ASIGNACION = 200;
 
+/** Maximum number of cedularios accepted by one multi-cedulario assignment operation. */
+export const MAX_CEDULARIOS_POR_ASIGNACION = 50;
+
 /** Students sent per RPC call, so large cedularios stay under the statement timeout. */
 export const ALUMNOS_POR_LLAMADA = 25;
 

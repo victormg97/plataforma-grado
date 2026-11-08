@@ -21,6 +21,7 @@ import dynamic from 'next/dynamic';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/common/Button';
+import { ConfirmModal } from '@/components/common/ConfirmModal';
 import { createClient } from '@/lib/supabase/client';
 import {
   CedulariosQueryError,
@@ -101,6 +102,9 @@ export function SeguimientoHostImpl() {
   const t = useTranslations('cedularios.seguimiento');
   const { estado, cerrar, fijar, limpiarInvalidos } = useSegUrl();
   const [ownLayerOpen, setOwnLayerOpen] = useState(false);
+  // Assign wizard: progress the user would lose, and the "discard?" confirmation
+  const [progresoAsignar, setProgresoAsignar] = useState(false);
+  const [confirmarCierre, setConfirmarCierre] = useState(false);
 
   const modal = estado.modal;
   const alumnoId = estado.alumno;
@@ -165,6 +169,13 @@ export function SeguimientoHostImpl() {
 
   if (modal === null) return null;
 
+  // Close requested by the user (Escape, X, Cancel): confirm first when there is progress
+  const solicitarCierreAsignar = () => {
+    if (ownLayerOpen) return;
+    if (progresoAsignar) setConfirmarCierre(true);
+    else cerrar();
+  };
+
   // ── Load error: keep the overlay open with a retry (never for invalid URLs) ─
   if (alumnoId !== null && resumenQuery.isError && !resumenQuery.data) {
     const tituloError =
@@ -210,15 +221,40 @@ export function SeguimientoHostImpl() {
         ? t('asignar.titulo_reasignar')
         : t('asignar.titulo_alumno');
     return (
-      <SeguimientoOverlay
-        open
-        onClose={cerrar}
-        ariaLabel={titulo}
-        closeLabel={t('comun.cerrar')}
-        ownLayerOpen={ownLayerOpen}
-      >
-        <AsignarCedularioDialog onCerrar={cerrar} onCapaPropiaChange={setOwnLayerOpen} />
-      </SeguimientoOverlay>
+      <>
+        <SeguimientoOverlay
+          open
+          onClose={solicitarCierreAsignar}
+          ariaLabel={titulo}
+          closeLabel={t('comun.cerrar')}
+          ownLayerOpen={ownLayerOpen || confirmarCierre}
+          blockOutsidePress
+        >
+          <AsignarCedularioDialog
+            onCerrar={() => {
+              setConfirmarCierre(false);
+              cerrar();
+            }}
+            onSolicitarCierre={solicitarCierreAsignar}
+            onProgresoChange={setProgresoAsignar}
+            onCapaPropiaChange={setOwnLayerOpen}
+          />
+        </SeguimientoOverlay>
+        <ConfirmModal
+          open={confirmarCierre}
+          onClose={() => setConfirmarCierre(false)}
+          onConfirm={() => {
+            setConfirmarCierre(false);
+            cerrar();
+          }}
+          title={t('asignar.wizard.cerrar_titulo')}
+          description={t('asignar.wizard.cerrar_descripcion')}
+          confirmText={t('asignar.wizard.descartar')}
+          cancelText={t('asignar.wizard.seguir_editando')}
+          contentClassName="z-[80]"
+          isDanger
+        />
+      </>
     );
   }
 

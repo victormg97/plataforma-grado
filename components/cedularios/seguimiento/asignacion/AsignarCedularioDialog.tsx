@@ -2,29 +2,23 @@
 
 /**
  * Assign dialog of the per-student tracking (seg_modal=asignar). It is the content of the
- * tracking overlay, so it renders its own header, body and footer and never a Dialog.
+ * tracking overlay. This container reads the seg_* URL params, loads what the mode needs and
+ * gates the wizard (`AsignarWizard`), which renders the header, steps and footer.
  *
  * Three modes, derived from the seg_* URL params:
- * - cedulario fixed (seg_cedulario only): student multi-picker + materia picker (tab Alumnos).
- * - student fixed (seg_alumno only): cedulario picker + materia picker (hover card and record).
+ * - cedulario fixed (seg_cedulario only): students step, materias step, confirm (tab Alumnos).
+ * - student fixed (seg_alumno only): cedularios step (several), materias of each, confirm.
  * - reassign (both): the assignment was unassigned. Both are fixed and the materias that were
  *   assigned when it was unassigned come preselected (read from the progress of that assignment).
  *
- * Rules:
- * - The form is validated with `asignarSchema` (react-hook-form + zodResolver).
- * - An inactive student cannot receive assignments from anyone (D-S20): no form, only a notice.
- * - Rejected students are listed with their reason (`ResultadoAsignacion`). Without rejections
- *   the dialog closes and the success toast (5 s) is shown by the mutation hook.
- * - `onCapaPropiaChange` tells the overlay while an operation is running, so Escape does not
- *   close the overlay and lose the result.
+ * An inactive student cannot receive assignments from anyone (D-S20): only a notice.
+ * `onCapaPropiaChange` tells the overlay while an operation is running, so Escape does not
+ * close the overlay and lose the result. `onProgresoChange` lets the host ask before closing.
  */
 
-import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
-import { useForm, useWatch } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query';
+import { useMemo, type ReactNode } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
-import { Avatar } from '@/components/common/Avatar';
 import { Button } from '@/components/common/Button';
 import { createClient } from '@/lib/supabase/client';
 import { useCedularios } from '@/components/cedularios/hooks/useCedularios';
@@ -36,50 +30,26 @@ import {
 } from '@/components/cedularios/hooks/cedulariosQuery';
 import { SEG_STALE_TIME, seguimientoKeys } from '@/lib/cedularios/seguimiento/keys';
 import { tieneDatosDeAvance } from '@/lib/cedularios/seguimiento/subconjunto';
-import {
-  fetchResumenAlumno,
-  type AlumnoResumen,
-  type ResumenAlumno,
-} from '@/lib/queries/cedularios/seguimiento/resumen';
-import type { AlumnoAsignable } from '@/lib/queries/cedularios/seguimiento/asignables';
-import {
-  asignarSchema,
-  type AsignarData,
-  type AsignarInput,
-} from '@/lib/validations/cedularioSeguimiento.schema';
-import type { ResultadoAsignacionAlumno } from '@/app/actions/cedularios/seguimiento/asignaciones';
-import { mostrarExitoSeguimiento } from '../hooks/segInvalidaciones';
-import { useAsignarCedulario } from '../hooks/useAsignarCedulario';
+import type { ModoWizard } from '@/lib/cedularios/seguimiento/asignacion-wizard';
+import { fetchResumenAlumno, type ResumenAlumno } from '@/lib/queries/cedularios/seguimiento/resumen';
 import { useProgresoAsignacion } from '../hooks/useProgresoAsignacion';
 import { useResumenAlumno } from '../hooks/useResumenAlumno';
 import { useSegUrl } from '../url/useSegUrl';
-import { AlumnosSelector } from './AlumnosSelector';
-import { CedularioPickerSelector } from './CedularioPickerSelector';
-import { MateriasSelector, type SeleccionMaterias } from './MateriasSelector';
-import { ResultadoAsignacion } from './ResultadoAsignacion';
+import type { SeleccionMaterias } from './MateriasSelector';
+import { AsignarWizard, type Bloqueo, type CedularioFijo } from './AsignarWizard';
 
 export interface AsignarCedularioDialogProps {
-  /** Closes the dialog. Defaults to removing every seg_* param from the URL. */
+  /** Closes the dialog without asking (after a save, from the result). Defaults to clearing seg_*. */
   onCerrar?: () => void;
+  /** Close requested by the user (Cancel). The host asks first when there is progress. */
+  onSolicitarCierre?: () => void;
+  /** Tells the host whether the user has progress that closing would lose. */
+  onProgresoChange?: (hayProgreso: boolean) => void;
   /** True while this dialog has its own layer open (an assignment is running). */
   onCapaPropiaChange?: (abierta: boolean) => void;
 }
 
-type ModoAsignar = 'cedulario' | 'alumno' | 'reasignar';
-
-type Bloqueo = 'inactivo' | 'sin_permisos' | 'ya_asignado';
-
-interface CedularioFijo {
-  id: string;
-  nombre: string;
-}
-
-function nombreCompleto(partes: readonly (string | null | undefined)[]): string {
-  return partes
-    .map((parte) => (parte ?? '').trim())
-    .filter((parte) => parte !== '')
-    .join(' ');
-}
+type ModoAsignar = ModoWizard;
 
 /**
  * Summary of the student including unassigned assignments (needed to find the assignment to
@@ -95,33 +65,16 @@ function useResumenConDesasignadas(alumnoId: string | null, enabled: boolean) {
   });
 }
 
-/** Names of the selected students, read from the selector pages already in the cache. */
-function nombresDeSeleccionados(
-  qc: ReturnType<typeof useQueryClient>,
-  cedularioId: string,
-  alumnoIds: readonly string[],
-): Record<string, string> {
-  const buscados = new Set(alumnoIds);
-  const nombres: Record<string, string> = {};
-  const entradas = qc.getQueriesData<InfiniteData<AlumnoAsignable[]>>({
-    queryKey: [...seguimientoKeys.all, 'asignables', cedularioId],
-  });
-  for (const [, data] of entradas) {
-    for (const pagina of data?.pages ?? []) {
-      for (const alumno of pagina) {
-        if (!buscados.has(alumno.id) || alumno.id in nombres) continue;
-        nombres[alumno.id] = nombreCompleto([alumno.nombre, alumno.apellido, alumno.apellidoMaterno]);
-      }
-    }
-  }
-  return nombres;
-}
-
 // ---------------------------------------------------------------------------
 // Container: reads the URL, loads what the mode needs and gates the form
 // ---------------------------------------------------------------------------
 
-export function AsignarCedularioDialog({ onCerrar, onCapaPropiaChange }: AsignarCedularioDialogProps) {
+export function AsignarCedularioDialog({
+  onCerrar,
+  onSolicitarCierre,
+  onProgresoChange,
+  onCapaPropiaChange,
+}: AsignarCedularioDialogProps) {
   const t = useTranslations('cedularios.seguimiento');
   const tErrores = useTranslations('cedularios.errores');
   const { estado, cerrar } = useSegUrl();
@@ -253,7 +206,7 @@ export function AsignarCedularioDialog({ onCerrar, onCapaPropiaChange }: Asignar
       : [];
 
   return (
-    <AsignarContenido
+    <AsignarWizard
       key={`${modo}:${alumnoId ?? ''}:${cedularioId ?? ''}:${previa?.asignacionId ?? ''}`}
       modo={modo}
       cedularioFijo={cedularioFijo}
@@ -263,289 +216,9 @@ export function AsignarCedularioDialog({ onCerrar, onCapaPropiaChange }: Asignar
       materiasIniciales={materiasIniciales}
       conAvance={conAvance}
       onCerrar={cerrarDialogo}
+      onSolicitarCierre={onSolicitarCierre ?? cerrarDialogo}
+      onProgresoChange={onProgresoChange}
       onCapaPropiaChange={onCapaPropiaChange}
     />
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Content: header, form and footer
-// ---------------------------------------------------------------------------
-
-interface AsignarContenidoProps {
-  modo: ModoAsignar;
-  cedularioFijo: CedularioFijo | null;
-  alumnoFijo: AlumnoResumen | null;
-  bloqueo: Bloqueo | null;
-  /** Cedulario ids the fixed student already has with an active assignment. */
-  idsAsignados: readonly string[];
-  materiasIniciales: SeleccionMaterias;
-  conAvance: ReadonlySet<string>;
-  onCerrar: () => void;
-  onCapaPropiaChange?: (abierta: boolean) => void;
-}
-
-interface ResultadoVista {
-  filas: ResultadoAsignacionAlumno[];
-  nombres: Record<string, string>;
-}
-
-function AsignarContenido({
-  modo,
-  cedularioFijo,
-  alumnoFijo,
-  bloqueo,
-  idsAsignados,
-  materiasIniciales,
-  conAvance,
-  onCerrar,
-  onCapaPropiaChange,
-}: AsignarContenidoProps) {
-  const t = useTranslations('cedularios.seguimiento');
-  const tErrores = useTranslations('cedularios.errores');
-  const formId = useId();
-  const qc = useQueryClient();
-  const mutation = useAsignarCedulario({ skipSuccessToast: modo === 'reasignar' });
-  const enviando = mutation.isPending;
-  const [resultado, setResultado] = useState<ResultadoVista | null>(null);
-
-  const {
-    control,
-    handleSubmit,
-    setValue,
-    formState: { errors, isSubmitted },
-  } = useForm<AsignarInput, unknown, AsignarData>({
-    resolver: zodResolver(asignarSchema),
-    defaultValues: {
-      cedularioId: cedularioFijo?.id ?? '',
-      alumnoIds: alumnoFijo && modo !== 'cedulario' ? [alumnoFijo.id] : [],
-      materias: materiasIniciales,
-    },
-  });
-
-  const cedularioSel = useWatch({ control, name: 'cedularioId' });
-  const alumnoIds = useWatch({ control, name: 'alumnoIds' });
-  const materias = useWatch({ control, name: 'materias' });
-
-  // Report the own layer (a running operation) to the overlay; always release it on unmount
-  const onCapaRef = useRef(onCapaPropiaChange);
-  useEffect(() => {
-    onCapaRef.current = onCapaPropiaChange;
-  });
-  useEffect(() => {
-    onCapaRef.current?.(enviando);
-  }, [enviando]);
-  useEffect(() => {
-    return () => onCapaRef.current?.(false);
-  }, []);
-
-  const mensajeError = (clave: string | undefined): string | null => {
-    if (!clave) return null;
-    return tErrores.has(clave) ? tErrores(clave) : t('comun.error_carga');
-  };
-
-  const nombreAlumnoFijo = alumnoFijo
-    ? nombreCompleto([alumnoFijo.nombre, alumnoFijo.apellido, alumnoFijo.apellidoMaterno])
-    : '';
-  const alumnoMostrado = nombreAlumnoFijo !== '' ? nombreAlumnoFijo : t('comun.alumno_sin_nombre');
-
-  const enviar = (datos: AsignarData) => {
-    if (enviando) return;
-    const nombres =
-      modo === 'cedulario'
-        ? nombresDeSeleccionados(qc, datos.cedularioId, datos.alumnoIds)
-        : alumnoFijo
-          ? { [alumnoFijo.id]: nombreAlumnoFijo }
-          : {};
-
-    mutation.mutate(datos, {
-      onSuccess: (respuesta) => {
-        if (!respuesta.ok) return;
-        if (respuesta.data.some((fila) => fila.resultado === 'rechazado')) {
-          setResultado({ filas: respuesta.data, nombres });
-          return;
-        }
-        if (modo === 'reasignar') mostrarExitoSeguimiento(t('toasts.reasignado'));
-        onCerrar();
-      },
-    });
-  };
-
-  const cerrar = () => {
-    // Do not close while the action runs, so the result is not lost
-    if (enviando) return;
-    onCerrar();
-  };
-
-  const titulo =
-    modo === 'cedulario'
-      ? t('asignar.titulo_cedulario')
-      : modo === 'alumno'
-        ? t('asignar.titulo_alumno')
-        : t('asignar.titulo_reasignar');
-  const descripcion =
-    modo === 'cedulario'
-      ? t('asignar.descripcion_cedulario', { cedulario: cedularioFijo?.nombre ?? '' })
-      : modo === 'alumno'
-        ? t('asignar.descripcion_alumno', { alumno: alumnoMostrado })
-        : t('asignar.descripcion_reasignar', {
-            cedulario: cedularioFijo?.nombre ?? '',
-            alumno: alumnoMostrado,
-          });
-
-  const materiasVacia = Array.isArray(materias) && materias.length === 0;
-  const errorCedulario = mensajeError(errors.cedularioId?.message);
-  const errorAlumnos = mensajeError(errors.alumnoIds?.message);
-
-  const claseBloque =
-    'flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-[var(--space-sm)] py-2 text-sm text-[var(--color-text-primary)]';
-
-  let cuerpo: ReactNode;
-  if (bloqueo) {
-    cuerpo = (
-      <p
-        role="status"
-        className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-[var(--space-sm)] text-sm text-[var(--color-text-primary)]"
-      >
-        {bloqueo === 'inactivo'
-          ? t('asignar.alumno_inactivo_aviso')
-          : bloqueo === 'sin_permisos'
-            ? tErrores('sin_permisos')
-            : tErrores('asignacion_duplicada')}
-      </p>
-    );
-  } else if (resultado) {
-    cuerpo = (
-      <ResultadoAsignacion
-        resultados={resultado.filas}
-        nombresAlumnos={resultado.nombres}
-        onCerrar={onCerrar}
-      />
-    );
-  } else {
-    cuerpo = (
-      <form
-        id={formId}
-        noValidate
-        onSubmit={(event) => {
-          void handleSubmit(enviar)(event);
-        }}
-        className="flex min-w-0 flex-col gap-[var(--space-md)]"
-      >
-        {modo !== 'cedulario' && alumnoFijo && (
-          <div className="flex min-w-0 flex-col gap-2">
-            <span className="text-sm font-medium text-[var(--color-text-primary)]">
-              {t('asignar.alumnos.alumno_fijo')}
-            </span>
-            <div className={claseBloque}>
-              <Avatar
-                nombre={alumnoFijo.nombre}
-                apellido={alumnoFijo.apellido}
-                avatarUrl={alumnoFijo.avatarUrl}
-                size="sm"
-                className="shrink-0"
-              />
-              <span className="min-w-0 truncate font-medium">{alumnoMostrado}</span>
-            </div>
-          </div>
-        )}
-
-        {modo === 'cedulario' && (
-          <div className="flex min-w-0 flex-col gap-1">
-            <AlumnosSelector
-              cedularioId={cedularioFijo?.id}
-              value={alumnoIds}
-              onChange={(ids) =>
-                setValue('alumnoIds', ids, { shouldDirty: true, shouldValidate: isSubmitted })
-              }
-              disabled={enviando}
-            />
-            {errorAlumnos && (
-              <p role="alert" className="text-xs text-[var(--color-error)]">
-                {errorAlumnos}
-              </p>
-            )}
-          </div>
-        )}
-
-        {modo === 'alumno' && (
-          <div className="flex min-w-0 flex-col gap-1">
-            <CedularioPickerSelector
-              value={cedularioSel === '' ? null : cedularioSel}
-              onChange={(id) => {
-                setValue('cedularioId', id, { shouldDirty: true, shouldValidate: isSubmitted });
-                // A different cedulario has a different tree, so start again from "all"
-                setValue('materias', 'todas', { shouldDirty: true });
-              }}
-              idsAsignados={idsAsignados}
-              disabled={enviando}
-            />
-            {errorCedulario && (
-              <p role="alert" className="text-xs text-[var(--color-error)]">
-                {errorCedulario}
-              </p>
-            )}
-          </div>
-        )}
-
-        {modo === 'reasignar' && cedularioFijo && (
-          <div className="flex min-w-0 flex-col gap-2">
-            <span className="text-sm font-medium text-[var(--color-text-primary)]">
-              {t('asignar.cedulario.etiqueta')}
-            </span>
-            <div className={claseBloque}>
-              <span className="min-w-0 truncate font-medium">{cedularioFijo.nombre}</span>
-            </div>
-          </div>
-        )}
-
-        {cedularioSel !== '' && (
-          <MateriasSelector
-            cedularioId={cedularioSel}
-            value={materias}
-            onChange={(valor) =>
-              setValue('materias', valor, { shouldDirty: true, shouldValidate: isSubmitted })
-            }
-            conAvance={conAvance}
-            disabled={enviando}
-            forzarError={isSubmitted && materiasVacia}
-          />
-        )}
-      </form>
-    );
-  }
-
-  const mostrarAcciones = !bloqueo && !resultado;
-
-  return (
-    <div className="flex h-full min-h-0 flex-col bg-[var(--color-bg)]">
-      <header className="flex flex-col gap-1 border-b border-[var(--color-border)] p-[var(--space-md)] pr-12">
-        <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">{titulo}</h2>
-        <p className="text-sm text-[var(--color-text-muted)]">{descripcion}</p>
-      </header>
-
-      <div className="min-h-0 flex-1 overflow-y-auto p-[var(--space-md)]">{cuerpo}</div>
-
-      {mostrarAcciones ? (
-        <footer className="flex flex-col-reverse gap-2 border-t border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-[var(--space-md)] sm:flex-row sm:justify-end">
-          <Button type="button" variant="ghost" onClick={cerrar} disabled={enviando}>
-            {t('comun.cancelar')}
-          </Button>
-          <Button type="submit" form={formId} loading={enviando}>
-            {enviando
-              ? t('asignar.asignando')
-              : modo === 'reasignar'
-                ? t('asignar.confirmar_reasignar')
-                : t('asignar.confirmar')}
-          </Button>
-        </footer>
-      ) : bloqueo ? (
-        <footer className="flex justify-end border-t border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-[var(--space-md)]">
-          <Button type="button" variant="ghost" onClick={cerrar}>
-            {t('comun.cerrar')}
-          </Button>
-        </footer>
-      ) : null}
-    </div>
   );
 }

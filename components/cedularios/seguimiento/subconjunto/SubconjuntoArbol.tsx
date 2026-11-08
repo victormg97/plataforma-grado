@@ -46,6 +46,10 @@ export interface SubconjuntoArbolProps {
   /** Ids of materias that hold progress data (shows the "has recorded progress" marker). */
   conAvance?: ReadonlySet<string>;
   disabled?: boolean;
+  /** Ids of the collapsed materias. Optional: without it the tree keeps its own state. */
+  colapsados?: ReadonlySet<string>;
+  /** Receives the new collapsed set. Needed together with `colapsados`. */
+  onColapsadosChange?: (colapsados: Set<string>) => void;
   className?: string;
 }
 
@@ -236,12 +240,18 @@ export function SubconjuntoArbol({
   onChange,
   conAvance,
   disabled = false,
+  colapsados: colapsadosControlados,
+  onColapsadosChange,
   className,
 }: SubconjuntoArbolProps) {
   const t = useTranslations('cedularios.seguimiento');
 
   // Everything starts expanded: the user must see which materias are selected.
-  const [colapsados, setColapsados] = useState<ReadonlySet<string>>(() => new Set());
+  const [colapsadosPropios, setColapsadosPropios] = useState<ReadonlySet<string>>(() => new Set());
+  const controlado = colapsadosControlados !== undefined && onColapsadosChange !== undefined;
+  const colapsados = controlado ? colapsadosControlados : colapsadosPropios;
+  const colapsadosRef = useRef(colapsados);
+  const onColapsadosChangeRef = useRef(onColapsadosChange);
   const [focoId, setFocoId] = useState<string | null>(null);
   const casillas = useRef(new Map<string, HTMLInputElement>());
 
@@ -254,6 +264,8 @@ export function SubconjuntoArbol({
     seleccionRef.current = seleccion;
     flatRef.current = flat;
     onChangeRef.current = onChange;
+    colapsadosRef.current = colapsados;
+    onColapsadosChangeRef.current = onColapsadosChange;
   });
 
   const expandidos = useMemo(() => {
@@ -298,12 +310,15 @@ export function SubconjuntoArbol({
   }, []);
 
   const onAlternarExpansion = useCallback((id: string) => {
-    setColapsados((previo) => {
+    const alternar = (previo: ReadonlySet<string>) => {
       const siguiente = new Set(previo);
       if (siguiente.has(id)) siguiente.delete(id);
       else siguiente.add(id);
       return siguiente;
-    });
+    };
+    const cambio = onColapsadosChangeRef.current;
+    if (cambio) cambio(alternar(colapsadosRef.current));
+    else setColapsadosPropios(alternar);
   }, []);
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
