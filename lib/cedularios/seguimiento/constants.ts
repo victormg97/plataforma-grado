@@ -33,6 +33,12 @@ export const UMBRAL_VIRTUALIZACION_FILAS = 100;
 /** Extra rows rendered above and below the viewport in the virtualized list. */
 export const OVERSCAN_FILAS = 20;
 
+/**
+ * Maximum progress rows changed by one batch coverage call (parent / child cascade).
+ * Mirror of the limit of `establecer_estado_materias` (migration 156): both must change together.
+ */
+export const MAX_LOTE_PROGRESO = 500;
+
 /** Height in pixels of one tree row. */
 export const ALTURA_FILA = 44;
 

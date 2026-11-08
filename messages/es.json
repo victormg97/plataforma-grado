@@ -3429,7 +3429,16 @@
           "expandir": "Expandir {materia}",
           "contraer": "Contraer {materia}",
           "porcentaje_rama": "{porcentaje} de la rama cubierta",
-          "sin_materias_rama": "Sin materias asignadas en esta rama"
+          "sin_materias_rama": "Sin materias asignadas en esta rama",
+          "marcar_rama": "Marcar {materia} y sus materias hijas",
+          "desmarcar_rama": "Desmarcar {materia} y sus materias hijas",
+          "parcial": "Parcial"
+        },
+        "cascada": {
+          "desmarcar_titulo": "¿Desmarcar la rama completa?",
+          "desmarcar_descripcion": "Se quitará la fecha de cobertura de {count} materias de esta rama. Los repasos, notas y comentarios se conservan.",
+          "desmarcar_confirmar": "Desmarcar",
+          "desmarcar_cancelar": "Cancelar"
         },
         "sin_asignadas": {
           "titulo": "Sin materias asignadas",

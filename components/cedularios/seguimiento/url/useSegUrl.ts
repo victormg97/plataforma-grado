@@ -39,7 +39,9 @@ export interface UseSegUrlResult {
  * component, so all instances agree) and writes it with `history.replaceState`.
  * Next patches `replaceState`, so `useSearchParams` updates without a server
  * round trip. Never uses `router.push` nor `useShallowQueryParam`.
- * Browser back does not close the overlay because only `replaceState` is used.
+ * Opening/closing never adds history entries, so browser Back leaves the current entry: the
+ * overlay closes (or the page is left) and unsaved state is lost. Overlays with progress protect
+ * themselves with `useBackGuard` (sentinel entry + confirmation).
  */
 export function useSegUrl(): UseSegUrlResult {
   const searchParams = useSearchParams();

@@ -35,11 +35,13 @@ import { ListPlus, Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Button } from '@/components/common/Button';
+import { ConfirmModal } from '@/components/common/ConfirmModal';
 import { Tabs, tabId, tabPanelId, type TabItem } from '@/components/common/Tabs';
 import { useMateriasTree } from '@/components/cedularios/hooks/useMaterias';
 import { cn } from '@/lib/utils';
 import { agregadoGlobal, construirAgregados } from '@/lib/cedularios/seguimiento/agregados';
 import { clasificarMaterias } from '@/lib/cedularios/seguimiento/arbol';
+import { estadoVisual } from '@/lib/cedularios/seguimiento/cascada';
 import { aplicarFiltroYBusqueda } from '@/lib/cedularios/seguimiento/filtros';
 import { modoRevisor } from '@/lib/cedularios/seguimiento/permisos';
 import { calcularPorcentaje } from '@/lib/cedularios/seguimiento/porcentaje';
@@ -48,6 +50,7 @@ import type {
   ResumenAlumno,
 } from '@/lib/queries/cedularios/seguimiento/resumen';
 import { useAsignacionRealtime } from '../hooks/useAsignacionRealtime';
+import { useCascadaCobertura } from '../hooks/useCascadaCobertura';
 import { useProgresoAsignacion } from '../hooks/useProgresoAsignacion';
 import { useResumenAlumno } from '../hooks/useResumenAlumno';
 import { useSegRol } from '../hooks/useSegRol';
@@ -257,9 +260,13 @@ function RevisionContenido({
     onCapaRef.current = onCapaPropiaChange;
     onCerrarRef.current = onCerrar;
   });
+  // ── Parent / child coverage (one batch per click) ─────────────────────────
+  const cascada = useCascadaCobertura(asignacionId ?? '', flat);
+  const confirmandoCascada = cascada.confirmacion !== null;
+
   useEffect(() => {
-    onCapaRef.current?.(ownLayerOpen);
-  }, [ownLayerOpen]);
+    onCapaRef.current?.(ownLayerOpen || confirmandoCascada);
+  }, [ownLayerOpen, confirmandoCascada]);
   useEffect(() => {
     return () => onCapaRef.current?.(false);
   }, []);
@@ -353,6 +360,7 @@ function RevisionContenido({
   const progresoDetalle = materiaAbierta
     ? filasProgreso.find((fila) => fila.materiaId === materiaAbierta)
     : undefined;
+  const agregadoDetalle = materiaAbierta ? agregados.get(materiaAbierta) : undefined;
 
   const accionEditarMaterias = () =>
     abrir({ modal: 'editar_materias', alumno: alumnoId, cedulario: asignacionVista.cedularioId });
@@ -418,6 +426,7 @@ function RevisionContenido({
               editable={editable}
               materiaSeleccionadaId={materiaAbierta}
               onAbrirDetalle={abrirDetalle}
+              onAlternarCobertura={cascada.alternar}
             />
           </>
         )}
@@ -446,6 +455,10 @@ function RevisionContenido({
           progreso={progresoDetalle}
           datosListos={datosListos}
           editable={editable}
+          estadoCobertura={estadoVisual(agregadoDetalle)}
+          esRama={(agregadoDetalle?.total ?? 0) > 1}
+          onAlternarCobertura={cascada.alternar}
+          guardandoCobertura={cascada.guardando}
           onCerrar={cerrarPanel}
           onCapaPropiaChange={setOwnLayerOpen}
           className="min-w-0 md:max-h-[70vh]"
@@ -456,19 +469,26 @@ function RevisionContenido({
 
   return (
     <section aria-label={t('titulo')} className={contenedor}>
+      {/*
+        The overlay container is a fixed-height flex column with overflow-y-auto. The tab bar is a
+        scroll container (overflow-x-auto), so its automatic min-height is 0 and, once the content
+        grows (expanded tree, activity list), flex shrinks it to nothing. `shrink-0` on the direct
+        children keeps them at their natural height; the container scrolls instead.
+      */}
       <RevisionCabecera
         resumen={resumenCabecera}
         asignacion={asignacionVista}
-        className={esOverlay ? 'pr-8' : undefined}
+        className={cn('shrink-0', esOverlay && 'pr-8')}
       />
 
-      {perdioEdicion && <Aviso>{t('perdiste_edicion')}</Aviso>}
+      {perdioEdicion && <Aviso className="shrink-0">{t('perdiste_edicion')}</Aviso>}
       {!editable && !perdioEdicion && !inactiva && esOverlay && (
-        <Aviso>{t('modo_lectura_aviso')}</Aviso>
+        <Aviso className="shrink-0">{t('modo_lectura_aviso')}</Aviso>
       )}
 
       {conPestanas && (
         <Tabs
+          className="shrink-0"
           items={items}
           active={pestanaActiva}
           onChange={(clave) => setPestana(clave === 'actividad' ? 'actividad' : 'avance')}
@@ -489,6 +509,20 @@ function RevisionContenido({
           cuerpoAvance
         )}
       </div>
+
+      <ConfirmModal
+        open={confirmandoCascada}
+        onClose={cascada.cancelar}
+        onConfirm={cascada.confirmar}
+        title={t('cascada.desmarcar_titulo')}
+        description={t('cascada.desmarcar_descripcion', {
+          count: cascada.confirmacion?.perdidas ?? 0,
+        })}
+        confirmText={t('cascada.desmarcar_confirmar')}
+        cancelText={t('cascada.desmarcar_cancelar')}
+        contentClassName="z-[80]"
+        isDanger
+      />
     </section>
   );
 }

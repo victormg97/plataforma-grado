@@ -3425,7 +3425,16 @@
           "expandir": "Expand {materia}",
           "contraer": "Collapse {materia}",
           "porcentaje_rama": "{porcentaje} of the branch covered",
-          "sin_materias_rama": "No subjects assigned in this branch"
+          "sin_materias_rama": "No subjects assigned in this branch",
+          "marcar_rama": "Mark {materia} and its child subjects",
+          "desmarcar_rama": "Unmark {materia} and its child subjects",
+          "parcial": "Partial"
+        },
+        "cascada": {
+          "desmarcar_titulo": "Uncheck the whole branch?",
+          "desmarcar_descripcion": "The covered date of {count} subjects of this branch will be removed. Reviews, notes and comments are kept.",
+          "desmarcar_confirmar": "Uncheck",
+          "desmarcar_cancelar": "Cancel"
         },
         "sin_asignadas": {
           "titulo": "No subjects assigned",

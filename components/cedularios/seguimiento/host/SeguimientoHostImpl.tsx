@@ -16,7 +16,7 @@
  * The state is restored on page load because everything is derived from the URL.
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
@@ -43,6 +43,7 @@ import { useResumenAlumno } from '../hooks/useResumenAlumno';
 import { RevisionCedularioAlumno } from '../revision/RevisionCedularioAlumno';
 import { useSegUrl } from '../url/useSegUrl';
 import { SeguimientoOverlay } from './SeguimientoOverlay';
+import { useBackGuard } from './useBackGuard';
 
 // ---------------------------------------------------------------------------
 // Heavy content loaded on demand (the reviewer is imported directly: this whole
@@ -108,6 +109,19 @@ export function SeguimientoHostImpl() {
 
   const modal = estado.modal;
   const alumnoId = estado.alumno;
+  // Browser Back with progress in the assign wizard: stay on the page and ask to confirm.
+  // The ref keeps the handler reading the live layers (it runs from a popstate listener).
+  const capasRef = useRef({ ownLayerOpen, confirmarCierre });
+  useEffect(() => {
+    capasRef.current = { ownLayerOpen, confirmarCierre };
+  }, [ownLayerOpen, confirmarCierre]);
+  const { liberar } = useBackGuard({
+    enabled: modal === 'asignar' && progresoAsignar,
+    onBlocked: () => {
+      const capas = capasRef.current;
+      if (!capas.ownLayerOpen && !capas.confirmarCierre) setConfirmarCierre(true);
+    },
+  });
 
   // ── Summary of the student ────────────────────────────────────────────────
   // Only "assign dialog with a student and no cedulario" works with active assignments alone;
@@ -233,7 +247,7 @@ export function SeguimientoHostImpl() {
           <AsignarCedularioDialog
             onCerrar={() => {
               setConfirmarCierre(false);
-              cerrar();
+              liberar(cerrar);
             }}
             onSolicitarCierre={solicitarCierreAsignar}
             onProgresoChange={setProgresoAsignar}
@@ -245,7 +259,7 @@ export function SeguimientoHostImpl() {
           onClose={() => setConfirmarCierre(false)}
           onConfirm={() => {
             setConfirmarCierre(false);
-            cerrar();
+            liberar(cerrar);
           }}
           title={t('asignar.wizard.cerrar_titulo')}
           description={t('asignar.wizard.cerrar_descripcion')}

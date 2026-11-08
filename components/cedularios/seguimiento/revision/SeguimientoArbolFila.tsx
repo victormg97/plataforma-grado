@@ -6,11 +6,14 @@
  * - Assigned materia: coverage checkbox, code, name (highlighted on search), covered date,
  *   indicators (reviews, note, comments, linked classes) and the branch percentage when the
  *   materia has children.
- * - Context materia: dimmed, no checkbox, never counts. It only gives context to assigned ones.
+ * - Context materia: dimmed, never counts. It only gives context to assigned ones; its checkbox
+ *   is derived from its assigned descendants and a click acts on them.
+ * - The checkbox of a branch shows checked, unchecked or mixed from the branch aggregate and a
+ *   click runs the parent / child cascade (`onAlternarCobertura`, one batch).
  *
  * The row is a treeitem with a roving tabindex owned by the tree. Space toggles the checkbox,
- * Enter opens the detail and the arrow keys are forwarded to the tree. The coverage mutation is
- * created only for assigned rows (one hook instance per progress row) in an inner component.
+ * Enter opens the detail and the arrow keys are forwarded to the tree. The covered-date mutation
+ * is created only for assigned rows (one hook instance per progress row) in an inner component.
  */
 
 import { memo, useCallback, useEffect, useMemo, useRef, type KeyboardEvent } from 'react';
@@ -22,13 +25,14 @@ import { Resaltado } from '@/components/cedularios/estructura/MateriaTreeRow';
 import { ALTURA_FILA } from '@/lib/cedularios/seguimiento/constants';
 import { calcularPorcentaje, formatearPorcentaje } from '@/lib/cedularios/seguimiento/porcentaje';
 import type { Agregado } from '@/lib/cedularios/seguimiento/agregados';
+import { estadoVisual } from '@/lib/cedularios/seguimiento/cascada';
 import type { ProgresoFila, RolMateria } from '@/lib/cedularios/seguimiento/tipos';
 import type { TeclaArbol } from '@/lib/cedularios/seguimiento/tree-nav';
 import type { MateriaNodo } from '@/lib/cedularios/tree';
 import { PorcentajeTexto } from '../compartidos/PorcentajeTexto';
 import { useEstablecerEstadoMateria } from '../hooks/useEstablecerEstadoMateria';
 import { FechaCubiertaPicker } from './FechaCubiertaPicker';
-import { ProgresoCheck } from './ProgresoCheck';
+import { ariaCheckedDe, ProgresoCheck } from './ProgresoCheck';
 
 /** Indentation added per level of depth, in px. */
 const SANGRIA_POR_NIVEL = 20;
@@ -72,14 +76,17 @@ export interface SeguimientoArbolFilaProps {
   coincide: boolean;
   onAbrirDetalle: (materiaId: string) => void;
   onAlternar: (materiaId: string) => void;
+  /**
+   * Toggles the coverage of the materia and its branch (parent / child cascade). Stable
+   * callback; only used in edit mode.
+   */
+  onAlternarCobertura: (materiaId: string) => void;
   onTecla: (indice: number, tecla: TeclaArbol) => void;
   /** The row received DOM focus (updates the roving tabindex). */
   onEnfocada: (materiaId: string) => void;
 }
 
 interface FilaContenidoProps extends SeguimientoArbolFilaProps {
-  /** Toggles the coverage. Undefined when the row cannot be edited. */
-  onToggle: (() => void) | undefined;
   /** Sets the covered date. Undefined when the row cannot be edited. */
   onFecha: ((fecha: string) => void) | undefined;
 }
@@ -102,9 +109,9 @@ function FilaContenido({
   coincide,
   onAbrirDetalle,
   onAlternar,
+  onAlternarCobertura,
   onTecla,
   onEnfocada,
-  onToggle,
   onFecha,
 }: FilaContenidoProps) {
   const t = useTranslations('cedularios.seguimiento.revision.fila');
@@ -112,6 +119,11 @@ function FilaContenido({
 
   const esContexto = rol === 'contexto';
   const cubierta = progreso?.estado === 'cubierta';
+  // Checkbox of the branch: assigned rows, and context rows with assigned descendants (derived
+  // from the aggregate, a click acts on the descendants).
+  const conCheck = !esContexto || (agregado?.total ?? 0) > 0;
+  const estadoCheck = estadoVisual(agregado);
+  const onToggle = editable && conCheck ? () => onAlternarCobertura(nodo.id) : undefined;
 
   useEffect(() => {
     if (enfocar) elemento.current?.focus();
@@ -141,7 +153,7 @@ function FilaContenido({
     if (e.target !== e.currentTarget) return;
     if (e.key === ' ') {
       e.preventDefault();
-      if (!esContexto && editable) onToggle?.();
+      onToggle?.();
       return;
     }
     if (e.key === 'Enter') {
@@ -161,7 +173,7 @@ function FilaContenido({
       role="treeitem"
       aria-level={profundidad + 1}
       aria-expanded={tieneHijos ? expandido : undefined}
-      aria-checked={esContexto ? undefined : cubierta}
+      aria-checked={conCheck ? ariaCheckedDe(estadoCheck) : undefined}
       aria-selected={seleccionada}
       tabIndex={tabulable ? 0 : -1}
       data-materia-id={nodo.id}
@@ -202,15 +214,17 @@ function FilaContenido({
         <span aria-hidden="true" className="size-7 shrink-0" />
       )}
 
-      {esContexto ? (
-        <span aria-hidden="true" className="size-5 shrink-0" />
-      ) : (
+      {conCheck ? (
         <ProgresoCheck
-          cubierta={cubierta}
+          estado={estadoCheck}
+          rama={mostrarPorcentajeRama}
           materia={nodo.nombre}
           editable={editable}
           onToggle={onToggle}
+          className={esContexto ? 'opacity-70' : undefined}
         />
+      ) : (
+        <span aria-hidden="true" className="size-5 shrink-0" />
       )}
 
       <div
@@ -315,15 +329,10 @@ function FilaContenido({
   );
 }
 
-/** Assigned row: owns the coverage mutation of its progress row. */
+/** Assigned row: owns the covered-date mutation of its progress row (coverage is a batch). */
 function FilaAsignada(props: SeguimientoArbolFilaProps & { progreso: ProgresoFila }) {
   const { asignacionId, progreso, editable } = props;
   const { mutate } = useEstablecerEstadoMateria(asignacionId, progreso.id);
-  const cubierta = progreso.estado === 'cubierta';
-
-  const onToggle = useCallback(() => {
-    mutate({ estado: cubierta ? 'pendiente' : 'cubierta' });
-  }, [mutate, cubierta]);
 
   const onFecha = useCallback(
     (fecha: string) => {
@@ -333,18 +342,14 @@ function FilaAsignada(props: SeguimientoArbolFilaProps & { progreso: ProgresoFil
   );
 
   return (
-    <FilaContenido
-      {...props}
-      onToggle={editable ? onToggle : undefined}
-      onFecha={editable ? onFecha : undefined}
-    />
+    <FilaContenido {...props} onFecha={editable ? onFecha : undefined} />
   );
 }
 
 function SeguimientoArbolFilaBase(props: SeguimientoArbolFilaProps) {
   const { rol, progreso } = props;
   if (rol === 'asignada' && progreso) return <FilaAsignada {...props} progreso={progreso} />;
-  return <FilaContenido {...props} onToggle={undefined} onFecha={undefined} />;
+  return <FilaContenido {...props} onFecha={undefined} />;
 }
 
 export const SeguimientoArbolFila = memo(SeguimientoArbolFilaBase);

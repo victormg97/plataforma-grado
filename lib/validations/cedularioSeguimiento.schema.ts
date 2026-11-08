@@ -23,6 +23,7 @@ import {
   MAX_ALUMNOS_POR_ASIGNACION,
   MAX_CEDULARIOS_POR_ASIGNACION,
   MAX_COMENTARIO,
+  MAX_LOTE_PROGRESO,
   MAX_NOTA,
   MAX_REPASO_NOTA,
 } from '@/lib/cedularios/seguimiento/constants';
@@ -192,6 +193,37 @@ export const estadoMateriaSchema = z.object({
   fecha: fechaNoFutura().optional(),
 });
 
+/** Progress ids of one side of a batch (may be empty). */
+const listaProgresoLote = listaDeIds(
+  'progreso_invalido',
+  'progreso_invalido',
+  0,
+  MAX_LOTE_PROGRESO,
+  'progreso_invalido',
+);
+
+/**
+ * Batch coverage of one assignment (parent / child cascade): ids to cover and ids to make
+ * pending. Both lists are disjoint and together hold at most `MAX_LOTE_PROGRESO` ids.
+ */
+export const estadosMateriasSchema = z
+  .object({
+    asignacionId: idUuid('asignacion_invalida'),
+    cubiertas: listaProgresoLote,
+    pendientes: listaProgresoLote,
+  })
+  .refine((v) => v.cubiertas.length + v.pendientes.length <= MAX_LOTE_PROGRESO, {
+    error: 'progreso_invalido',
+    path: ['pendientes'],
+  })
+  .refine(
+    (v) => {
+      const cubiertas = new Set(v.cubiertas.map((id) => id.toLowerCase()));
+      return !v.pendientes.some((id) => cubiertas.has(id.toLowerCase()));
+    },
+    { error: 'ids_duplicados', path: ['pendientes'] },
+  );
+
 // ---------------------------------------------------------------------------
 // Note, comments and reviews
 // ---------------------------------------------------------------------------
@@ -237,6 +269,7 @@ export type AsignarInput = z.input<typeof asignarSchema>;
 export type AsignarCedulariosInput = z.input<typeof asignarCedulariosSchema>;
 export type SubconjuntoInput = z.input<typeof subconjuntoSchema>;
 export type EstadoMateriaInput = z.input<typeof estadoMateriaSchema>;
+export type EstadosMateriasInput = z.input<typeof estadosMateriasSchema>;
 export type NotaInput = z.input<typeof notaSchema>;
 export type ComentarioInput = z.input<typeof comentarioSchema>;
 export type RepasoInput = z.input<typeof repasoSchema>;
@@ -246,6 +279,7 @@ export type AsignarData = z.output<typeof asignarSchema>;
 export type AsignarCedulariosData = z.output<typeof asignarCedulariosSchema>;
 export type SubconjuntoData = z.output<typeof subconjuntoSchema>;
 export type EstadoMateriaData = z.output<typeof estadoMateriaSchema>;
+export type EstadosMateriasData = z.output<typeof estadosMateriasSchema>;
 export type NotaData = z.output<typeof notaSchema>;
 export type ComentarioData = z.output<typeof comentarioSchema>;
 export type RepasoData = z.output<typeof repasoSchema>;

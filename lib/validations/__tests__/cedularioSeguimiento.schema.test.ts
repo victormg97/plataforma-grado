@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { MAX_CEDULARIOS_POR_ASIGNACION } from '@/lib/cedularios/seguimiento/constants';
-import { asignarCedulariosSchema } from '../cedularioSeguimiento.schema';
+import {
+  MAX_CEDULARIOS_POR_ASIGNACION,
+  MAX_LOTE_PROGRESO,
+} from '@/lib/cedularios/seguimiento/constants';
+import { asignarCedulariosSchema, estadosMateriasSchema } from '../cedularioSeguimiento.schema';
 
 const alumnoId = '11111111-1111-4111-8111-111111111111';
 
@@ -60,6 +63,56 @@ describe('asignarCedulariosSchema', () => {
         alumnoId: 'x',
         cedularios: [{ cedularioId: uuid(1), materias: 'todas' }],
       }).success,
+    ).toBe(false);
+  });
+});
+
+describe('estadosMateriasSchema', () => {
+  const asignacionId = uuid(999);
+  const ids = (desde: number, n: number) => Array.from({ length: n }, (_, i) => uuid(desde + i));
+
+  it('acepta lotes disjuntos, incluidos lados vacios', () => {
+    expect(
+      estadosMateriasSchema.safeParse({ asignacionId, cubiertas: ids(1, 3), pendientes: ids(10, 2) }).success,
+    ).toBe(true);
+    expect(estadosMateriasSchema.safeParse({ asignacionId, cubiertas: [], pendientes: [] }).success).toBe(true);
+  });
+
+  it('rechaza ids repetidos dentro o entre ambos lados', () => {
+    expect(
+      estadosMateriasSchema.safeParse({ asignacionId, cubiertas: [uuid(1), uuid(1)], pendientes: [] }).success,
+    ).toBe(false);
+    expect(
+      estadosMateriasSchema.safeParse({
+        asignacionId,
+        cubiertas: [uuid(1)],
+        pendientes: [uuid(1).toUpperCase()],
+      }).success,
+    ).toBe(false);
+  });
+
+  it('acepta hasta el maximo en total y rechaza pasarse', () => {
+    const mitad = MAX_LOTE_PROGRESO / 2;
+    expect(
+      estadosMateriasSchema.safeParse({
+        asignacionId,
+        cubiertas: ids(1, mitad),
+        pendientes: ids(10_000, mitad),
+      }).success,
+    ).toBe(true);
+    expect(
+      estadosMateriasSchema.safeParse({
+        asignacionId,
+        cubiertas: ids(1, mitad),
+        pendientes: ids(10_000, mitad + 1),
+      }).success,
+    ).toBe(false);
+  });
+
+  it('rechaza una asignacion o un id invalido', () => {
+    expect(estadosMateriasSchema.safeParse({ asignacionId: 'x', cubiertas: [], pendientes: [] }).success).toBe(false);
+    expect(
+      estadosMateriasSchema.safeParse({ asignacionId, cubiertas: ['no-es-uuid'], pendientes: [] }).success,
     ).toBe(false);
   });
 });

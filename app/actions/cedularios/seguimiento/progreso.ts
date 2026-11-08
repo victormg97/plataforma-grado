@@ -2,7 +2,11 @@
 
 import { actionFail, actionOk, runAction, type ActionResult } from '@/lib/cedularios/action-result';
 import { errorDeDb, obtenerContextoStaff, parsear, parsearId } from '@/lib/cedularios/contexto-accion';
-import { estadoMateriaSchema, notaSchema } from '@/lib/validations/cedularioSeguimiento.schema';
+import {
+  estadoMateriaSchema,
+  estadosMateriasSchema,
+  notaSchema,
+} from '@/lib/validations/cedularioSeguimiento.schema';
 
 /** Result of `establecerEstadoMateria`: the stored coverage and whether the call changed anything. */
 export interface ResultadoEstadoMateria {
@@ -56,6 +60,45 @@ export async function establecerEstadoMateria(input: {
       fechaCubierta: fila.fecha_cubierta,
       cambio: fila.cambio,
     });
+  });
+}
+
+/** Result of `establecerEstadosMaterias`: how many progress rows actually changed. */
+export interface ResultadoEstadosMaterias {
+  cambiadas: number;
+}
+
+/**
+ * Sets the coverage of several subjects of one assignment in one transaction (RPC
+ * `establecer_estado_materias`, migration 156): the parent / child cascade of the reviewer.
+ * Idempotent per row; the audit trigger writes one activity entry per changed row and column.
+ */
+export async function establecerEstadosMaterias(input: {
+  asignacionId: string;
+  cubiertas: string[];
+  pendientes: string[];
+}): Promise<ActionResult<ResultadoEstadosMaterias>> {
+  let userId: string | null = null;
+
+  return runAction({ accion: 'establecerEstadosMaterias', userId: () => userId }, async () => {
+    const contexto = await obtenerContextoStaff();
+    if (!contexto.ok) return contexto;
+    const { supabase } = contexto.data;
+    userId = contexto.data.userId;
+
+    const parsed = parsear(estadosMateriasSchema, input);
+    if (!parsed.ok) return parsed;
+    const datos = parsed.data;
+
+    const { data, error } = await supabase.rpc('establecer_estado_materias', {
+      p_asignacion_id: datos.asignacionId,
+      p_cubiertas: datos.cubiertas,
+      p_pendientes: datos.pendientes,
+    });
+
+    if (error) return errorDeDb(error);
+
+    return actionOk<ResultadoEstadosMaterias>({ cambiadas: data ?? 0 });
   });
 }
 

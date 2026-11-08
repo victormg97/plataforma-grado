@@ -4047,6 +4047,14 @@ export type Database = {
           cambio: boolean
         }[]
       }
+      establecer_estado_materias: {
+        Args: {
+          p_asignacion_id: string
+          p_cubiertas: string[]
+          p_pendientes: string[]
+        }
+        Returns: number
+      }
       vincular_clases_progreso: {
         Args: { p_progreso_id: string; p_horario_ids: string[] }
         Returns: number

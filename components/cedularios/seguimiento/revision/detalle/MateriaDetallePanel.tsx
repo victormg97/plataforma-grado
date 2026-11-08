@@ -26,6 +26,7 @@ import { ArrowLeft } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/common/Button';
 import { cn } from '@/lib/utils';
+import type { EstadoVisual } from '@/lib/cedularios/seguimiento/cascada';
 import type { ProgresoFila } from '@/lib/cedularios/seguimiento/tipos';
 import type { MateriaNodo } from '@/lib/cedularios/tree';
 import { useEstablecerEstadoMateria } from '../../hooks/useEstablecerEstadoMateria';
@@ -54,6 +55,14 @@ export interface MateriaDetallePanelProps {
   datosListos: boolean;
   /** Edit mode. Read mode shows text only. */
   editable: boolean;
+  /** Checkbox state of the materia and its branch (`estadoVisual` of the branch aggregate). */
+  estadoCobertura: EstadoVisual;
+  /** True when the materia has assigned descendants (the checkbox acts on the branch). */
+  esRama?: boolean;
+  /** Toggles the coverage of the materia and its branch (parent / child cascade). */
+  onAlternarCobertura: (materiaId: string) => void;
+  /** True while a cascade batch is being saved. */
+  guardandoCobertura?: boolean;
   /** Closes the panel (the caller removes `seg_materia`). Also called for an invalid materia. */
   onCerrar: () => void;
   /** Reports whether the panel is an own layer, so the overlay Escape guard stays out. */
@@ -67,6 +76,10 @@ export function MateriaDetallePanel({
   progreso,
   datosListos,
   editable,
+  estadoCobertura,
+  esRama = false,
+  onAlternarCobertura,
+  guardandoCobertura = false,
   onCerrar,
   onCapaPropiaChange,
   className,
@@ -137,10 +150,13 @@ export function MateriaDetallePanel({
   );
 
   const cubierta = progreso?.estado === 'cubierta';
+  const guardando = guardandoEstado || guardandoCobertura;
 
+  // Same cascade as the tree, so the ancestors stay in sync from the detail too.
+  const materiaId = materia?.id ?? null;
   const alternarCobertura = useCallback(() => {
-    establecerEstado({ estado: cubierta ? 'pendiente' : 'cubierta' });
-  }, [establecerEstado, cubierta]);
+    if (materiaId) onAlternarCobertura(materiaId);
+  }, [onAlternarCobertura, materiaId]);
 
   const cambiarFecha = useCallback(
     (fecha: string) => {
@@ -193,9 +209,10 @@ export function MateriaDetallePanel({
           </span>
           <div className="flex flex-wrap items-center gap-3">
             <ProgresoCheck
-              cubierta={cubierta}
+              estado={estadoCobertura}
+              rama={esRama}
               materia={nombreCompleto}
-              editable={editable && !guardandoEstado}
+              editable={editable && !guardando}
               onToggle={alternarCobertura}
               focusable
             />
@@ -207,7 +224,7 @@ export function MateriaDetallePanel({
               materia={nombreCompleto}
               editable={editable}
               onChange={cambiarFecha}
-              disabled={guardandoEstado}
+              disabled={guardando}
               focusable
             />
           </div>

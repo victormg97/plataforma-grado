@@ -27,6 +27,8 @@ import {
 } from 'react';
 import { useTranslations } from 'next-intl';
 import { useVirtualizer } from '@tanstack/react-virtual';
+import { ChevronsDownUp, ChevronsUpDown } from 'lucide-react';
+import { Button } from '@/components/common/Button';
 import { cn } from '@/lib/utils';
 import { construirAgregados } from '@/lib/cedularios/seguimiento/agregados';
 import { nodosVisibles } from '@/lib/cedularios/seguimiento/arbol';
@@ -65,6 +67,8 @@ export interface SeguimientoArbolProps {
   materiaSeleccionadaId: string | null;
   /** Opens the detail of an assigned materia. */
   onAbrirDetalle: (materiaId: string) => void;
+  /** Toggles the coverage of a materia and its branch (parent / child cascade). Stable. */
+  onAlternarCobertura: (materiaId: string) => void;
   className?: string;
 }
 
@@ -196,9 +200,11 @@ function SeguimientoArbolContenido({
   editable,
   materiaSeleccionadaId,
   onAbrirDetalle,
+  onAlternarCobertura,
   className,
 }: SeguimientoArbolProps) {
   const t = useTranslations('cedularios.seguimiento.revision');
+  const tEstructura = useTranslations('cedularios.estructura');
 
   // Materias with a role, before the filter. Used to know which ones really have children.
   const conRol = useMemo(() => nodosVisibles(flat, roles), [flat, roles]);
@@ -247,6 +253,20 @@ function SeguimientoArbolContenido({
       return siguiente;
     });
   }, []);
+
+  // Branches of the rows that can be shown (after role and filter): what "expand all" opens.
+  const ramas = useMemo(() => {
+    const ids = new Set(nodos.map((nodo) => nodo.id));
+    const conHijos = new Set<string>();
+    for (const nodo of nodos) {
+      if (nodo.parentId !== null && ids.has(nodo.parentId)) conHijos.add(nodo.parentId);
+    }
+    return [...conHijos];
+  }, [nodos]);
+  const todoExpandido = ramas.length > 0 && ramas.every((id) => expandidos.has(id));
+  const nadaExpandido = ramas.every((id) => !expandidos.has(id));
+  const expandirTodo = useCallback(() => setExpandidos(new Set(ramas)), [ramas]);
+  const contraerTodo = useCallback(() => setExpandidos(SIN_IDS), []);
 
   const filas = useMemo(() => aplanarVisibles(nodos, expandidos), [nodos, expandidos]);
   const navegables = useMemo<FilaNavegable[]>(
@@ -325,6 +345,7 @@ function SeguimientoArbolContenido({
         coincide={filtro.coincidencias.has(id)}
         onAbrirDetalle={onAbrirDetalle}
         onAlternar={alternar}
+        onAlternarCobertura={onAlternarCobertura}
         onTecla={manejarTecla}
         onEnfocada={enfocada}
       />
@@ -332,21 +353,54 @@ function SeguimientoArbolContenido({
   };
 
   const etiqueta = t('arbol_aria');
-  return filas.length > UMBRAL_VIRTUALIZACION_FILAS ? (
-    <ListaVirtual
-      ref={listaRef}
-      filas={filas}
-      etiqueta={etiqueta}
-      renderFila={renderFila}
-      className={className}
-    />
-  ) : (
-    <ListaPlana
-      ref={listaRef}
-      filas={filas}
-      etiqueta={etiqueta}
-      renderFila={renderFila}
-      className={className}
-    />
+  const lista =
+    filas.length > UMBRAL_VIRTUALIZACION_FILAS ? (
+      <ListaVirtual
+        ref={listaRef}
+        filas={filas}
+        etiqueta={etiqueta}
+        renderFila={renderFila}
+        className={className}
+      />
+    ) : (
+      <ListaPlana
+        ref={listaRef}
+        filas={filas}
+        etiqueta={etiqueta}
+        renderFila={renderFila}
+        className={className}
+      />
+    );
+
+  return (
+    <div className="space-y-2">
+      {/* Expand / collapse every level at once, between the search and the tree (same pattern as
+          the cedulario structure tree). Only when there are branches. */}
+      {ramas.length > 0 && (
+        <div className="flex items-center gap-1" role="group" aria-label={etiqueta}>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            icon={<ChevronsUpDown className="size-4" aria-hidden="true" />}
+            onClick={expandirTodo}
+            disabled={todoExpandido}
+          >
+            {tEstructura('expandir_todo')}
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            icon={<ChevronsDownUp className="size-4" aria-hidden="true" />}
+            onClick={contraerTodo}
+            disabled={nadaExpandido}
+          >
+            {tEstructura('contraer_todo')}
+          </Button>
+        </div>
+      )}
+      {lista}
+    </div>
   );
 }
