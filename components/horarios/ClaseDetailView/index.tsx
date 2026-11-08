@@ -3,8 +3,11 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { es as esDateFns, enUS } from 'date-fns/locale';
-import { Calendar, Clock, FileText, MessageSquare, ArrowLeft, GraduationCap } from 'lucide-react';
-import { RichDescription } from '@/components/common/RichDescription';
+import { Calendar, Clock, MessageSquare, ArrowLeft, GraduationCap } from 'lucide-react';
+import { ClaseDetalleCollapsible } from '@/components/horarios/ClaseDetalleCollapsible';
+import { ClaseFechaHoraHero } from '@/components/horarios/ClaseFechaHoraHero';
+import { ClaseDescripcion } from '@/components/horarios/ClaseDescripcion';
+import { useUserStore } from '@/stores/useUserStore';
 import Link from 'next/link';
 import { useTranslations, useLocale } from 'next-intl';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -215,6 +218,7 @@ export function ClaseDetailView({ rol }: ClaseDetailViewProps) {
   const backHref = getClaseDetailBackHref(from, rol);
   const queryClient = useQueryClient();
   const [changingEstado, setChangingEstado] = useState(false);
+  const { user } = useUserStore();
 
   const { data: horario = null, isLoading: loading, isError: error } = useQuery<HorarioConAsistencia | null>({
     queryKey: ['horario-detail', horarioId],
@@ -323,8 +327,56 @@ export function ClaseDetailView({ rol }: ClaseDetailViewProps) {
       />
 
       <div className="mt-[var(--space-lg)] space-y-[var(--space-md)]">
-        <Card className={`border-2 ${borderColor()}`} padding="lg">
-          <div className="space-y-4">
+        <ClaseDetalleCollapsible
+          storageKey={`clase-detalle-abierto:${user?.id ?? 'anon'}:${horario.id}`}
+          borderClass={borderColor()}
+          header={
+            <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
+              {horario.alumno ? (
+                <AlumnoHoverCard alumno={horario.alumno} className="flex items-center gap-3">
+                  <Avatar
+                    nombre={horario.alumno.nombre}
+                    apellido={horario.alumno.apellido}
+                    avatarUrl={horario.alumno.avatar_url}
+                    size="md"
+                  />
+                  <div>
+                    <p className="font-medium text-[var(--color-text-primary)]">
+                      {horario.alumno.nombre} {horario.alumno.apellido}{horario.alumno.apellido_materno ? ` ${horario.alumno.apellido_materno}` : ''}
+                    </p>
+                    <p className="text-sm text-[var(--color-text-muted)]">{horario.alumno.email}</p>
+                  </div>
+                </AlumnoHoverCard>
+              ) : (
+                <h2 className="text-xl font-semibold leading-snug text-[var(--color-text-primary)]">{horario.titulo}</h2>
+              )}
+              <div className="flex flex-wrap items-center gap-2">
+                <StatusBadge status={estado} />
+                <NotasIndicator count={notasCounts[horario.id] ?? 0} />
+                {(horario.pruebas?.length ?? 0) > 0 && (
+                  <span className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium"
+                    style={{ backgroundColor: 'var(--color-brand-gold-muted)', borderColor: 'color-mix(in srgb, var(--color-brand-gold) 40%, transparent)', color: 'var(--color-brand-gold)' }}>
+                    <GraduationCap className="size-3" />
+                    {t('badge_examen', { term: pruebaTerm.singular })}
+                  </span>
+                )}
+              </div>
+            </div>
+          }
+          summary={
+            <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-[var(--color-text-secondary)]">
+              <span className="inline-flex items-center gap-1.5 capitalize">
+                <Calendar className="size-3.5 text-[var(--color-brand-gold)]" />
+                {format(new Date(horario.fecha + 'T12:00:00'), locale === 'en' ? 'EEE, MMM d yyyy' : "EEE d 'de' MMM yyyy", { locale: dateFnsLocale })}
+              </span>
+              <span className="inline-flex items-center gap-1.5 tabular-nums">
+                <Clock className="size-3.5 text-[var(--color-brand-gold)]" />
+                {horario.hora_inicio.slice(0, 5)} – {horario.hora_fin.slice(0, 5)}
+              </span>
+            </p>
+          }
+        >
+          <>
             {/* Exam banner */}
             {(horario.pruebas?.length ?? 0) > 0 && (
               <div className="flex items-center gap-2 rounded-[var(--radius-md)] px-3 py-2.5"
@@ -366,40 +418,6 @@ export function ClaseDetailView({ rol }: ClaseDetailViewProps) {
                 </div>
               </div>
             )}
-            {/* Student info */}
-            {horario.alumno && (
-              <AlumnoHoverCard alumno={horario.alumno} className="flex items-center gap-3">
-                <Avatar
-                  nombre={horario.alumno.nombre}
-                  apellido={horario.alumno.apellido}
-                  avatarUrl={horario.alumno.avatar_url}
-                  size="md"
-                />
-                <div>
-                  <p className="font-medium text-[var(--color-text-primary)]">
-                    {horario.alumno.nombre} {horario.alumno.apellido}{horario.alumno.apellido_materno ? ` ${horario.alumno.apellido_materno}` : ''}
-                  </p>
-                  <p className="text-sm text-[var(--color-text-muted)]">
-                    {horario.alumno.email}
-                  </p>
-                </div>
-              </AlumnoHoverCard>
-            )}
-
-            {/* Status + notes indicator + change control */}
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm text-[var(--color-text-muted)]">{ta('estado_label')}:</span>
-              <StatusBadge status={estado} />
-              <NotasIndicator count={notasCounts[horario.id] ?? 0} />
-              {(horario.pruebas?.length ?? 0) > 0 && (
-                <span className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium"
-                  style={{ backgroundColor: 'var(--color-brand-gold-muted)', borderColor: 'color-mix(in srgb, var(--color-brand-gold) 40%, transparent)', color: 'var(--color-brand-gold)' }}>
-                  <GraduationCap className="size-3" />
-                  {t('badge_examen', { term: pruebaTerm.singular })}
-                </span>
-              )}
-            </div>
-
             {/* Profesor/Admin: change attendance status */}
             {asistenciaId && (
               <div className="flex flex-wrap items-center gap-3">
@@ -414,27 +432,9 @@ export function ClaseDetailView({ rol }: ClaseDetailViewProps) {
               </div>
             )}
 
-            {/* Date / time */}
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="flex items-center gap-2 text-sm text-[var(--color-text-primary)]">
-                <Calendar className="size-4 text-[var(--color-brand-gold)]" />
-                <span className="capitalize">
-                  {format(new Date(horario.fecha + 'T12:00:00'), locale === 'en' ? "EEEE, MMMM d yyyy" : "EEEE d 'de' MMMM yyyy", { locale: dateFnsLocale })}
-                </span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-[var(--color-text-primary)]">
-                <Clock className="h-4 w-4 text-[var(--color-brand-gold)]" />
-                <span>{horario.hora_inicio.slice(0, 5)} - {horario.hora_fin.slice(0, 5)}</span>
-              </div>
-            </div>
+            <ClaseFechaHoraHero fecha={horario.fecha} horaInicio={horario.hora_inicio} horaFin={horario.hora_fin} />
 
-            {/* Description */}
-            {horario.descripcion && (
-              <div className="flex items-start gap-2 text-sm text-[var(--color-text-secondary)]">
-                <FileText className="mt-0.5 h-4 w-4 shrink-0" />
-                <RichDescription html={horario.descripcion} />
-              </div>
-            )}
+            {horario.descripcion && <ClaseDescripcion html={horario.descripcion} />}
 
             {/* Student note */}
             {horario.asistencia?.[0]?.nota_alumno && (
@@ -463,8 +463,8 @@ export function ClaseDetailView({ rol }: ClaseDetailViewProps) {
             <div className="pt-3 border-t border-[var(--color-border)]">
               <ReminderButton horarioId={horario.id} />
             </div>
-          </div>
-        </Card>
+          </>
+        </ClaseDetalleCollapsible>
 
         {/* Class notes */}
         {showNotas && (
