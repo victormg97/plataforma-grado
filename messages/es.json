@@ -1784,7 +1784,7 @@
     "streak_lost_dismiss": "Cerrar aviso",
     "streak_details_label": "Ver detalles de la racha",
     "lives_tip_title": "Tus vidas",
-    "lives_tip_count": "{current} de {maximo}",
+    "lives_tip_count": "{current} de {max}",
     "lives_tip_cost": "Fallar una respuesta puede costarte una vida.",
     "lives_tip_regen_per_life": "Recuperas 1 vida cada {hours} h.",
     "lives_tip_regen_full": "Se recargan todas cada {hours} h.",
@@ -1796,9 +1796,9 @@
     "onboarding_submit": "Empezar a jugar",
     "nickname_label": "Mote",
     "nickname_placeholder": "Tu mote",
-    "nickname_hint": "Entre {min} y {maximo} caracteres: letras, números, guiones y guiones bajos.",
+    "nickname_hint": "Entre {min} y {max} caracteres: letras, números, guiones y guiones bajos.",
     "nickname_submit": "Guardar mote",
-    "nickname_error_format": "El mote debe tener entre {min} y {maximo} caracteres válidos.",
+    "nickname_error_format": "El mote debe tener entre {min} y {max} caracteres válidos.",
     "nickname_error_taken": "Ese mote ya está en uso. Elige uno distinto.",
     "nickname_error_cooldown": "Podrás cambiar tu mote en {days} día(s).",
     "daily_title": "Pregunta del Día",
@@ -2665,7 +2665,7 @@
       "inactiva": "Inactiva",
       "solo_lectura": "Solo lectura",
       "sin_valor": "Sin valor",
-      "caracteres": "{actual} de {maximo} caracteres",
+      "caracteres": "{actual} de {max} caracteres",
       "abre_nueva_pestana": "Se abre en una pestaña nueva"
     },
     "universidades": {
@@ -3434,6 +3434,12 @@
           "desmarcar_rama": "Desmarcar {materia} y sus materias hijas",
           "parcial": "Parcial"
         },
+        "panel": {
+          "descartar_titulo": "¿Descartar los cambios sin guardar?",
+          "descartar_descripcion": "Tienes texto sin guardar en esta materia (nota, comentario o repaso). Si continúas, se perderá.",
+          "descartar_confirmar": "Descartar cambios",
+          "descartar_cancelar": "Seguir editando"
+        },
         "cascada": {
           "desmarcar_titulo": "¿Desmarcar la rama completa?",
           "desmarcar_descripcion": "Se quitará la fecha de cobertura de {count} materias de esta rama. Los repasos, notas y comentarios se conservan.",
@@ -3480,6 +3486,8 @@
       "detalle": {
         "titulo": "Detalle de la materia",
         "aria_panel": "Detalle de {materia}",
+        "cerrar": "Cerrar detalle",
+        "cerrar_aria": "Cerrar el detalle de {materia}",
         "volver": "Volver a las materias",
         "cargando": "Cargando detalle...",
         "error_carga": "No se pudo cargar el detalle de la materia. Inténtalo nuevamente.",
@@ -3499,7 +3507,7 @@
           "aria": "Nota de la materia",
           "guardar": "Guardar nota",
           "guardando": "Guardando...",
-          "contador": "{actual} de {maximo} caracteres",
+          "contador": "{actual} de {max} caracteres",
           "vacia": "Sin nota"
         },
         "comentarios": {
@@ -3516,7 +3524,7 @@
           "eliminar": "Eliminar comentario",
           "editado": "editado",
           "autor_fecha": "{autor} · {fecha}",
-          "contador": "{actual} de {maximo} caracteres",
+          "contador": "{actual} de {max} caracteres",
           "confirmar_eliminar_titulo": "Eliminar comentario",
           "confirmar_eliminar_descripcion": "El comentario se eliminará de forma permanente.",
           "confirmar_eliminar": "Eliminar comentario"
@@ -3535,7 +3543,7 @@
           "cancelar_edicion": "Cancelar edición",
           "eliminar": "Eliminar repaso",
           "sin_nota": "Sin nota",
-          "contador": "{actual} de {maximo} caracteres",
+          "contador": "{actual} de {max} caracteres",
           "confirmar_eliminar_titulo": "Eliminar repaso",
           "confirmar_eliminar_descripcion": "El repaso del {fecha} se eliminará de forma permanente.",
           "confirmar_eliminar": "Eliminar repaso"
@@ -3588,7 +3596,7 @@
           "sin_alumnos_a_cargo": "No tienes alumnos a tu cargo para asignar.",
           "ya_asignado": "ya asignado",
           "seleccionados": "{count, plural, =0 {Ningún alumno seleccionado} one {# alumno seleccionado} other {# alumnos seleccionados}}",
-          "limite": "Puedes asignar hasta {maximo} alumnos a la vez.",
+          "limite": "Puedes asignar hasta {max} alumnos a la vez.",
           "cargar_mas": "Cargar más alumnos",
           "alumno_fijo": "Alumno"
         },

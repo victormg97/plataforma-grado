@@ -19,6 +19,7 @@ import { MAX_NOTA } from '@/lib/cedularios/seguimiento/constants';
 import { notaSchema } from '@/lib/validations/cedularioSeguimiento.schema';
 import { useCedulariosAction } from '@/components/cedularios/hooks/useCedulariosAction';
 import { useDetalleMutations } from '../../hooks/useDetalleMutations';
+import { useRegistrarCambios } from './cambiosSinGuardar';
 
 /** The form wraps the shared note schema so its error key lands on the `texto` field. */
 const notaFormSchema = z.object({ texto: notaSchema });
@@ -109,6 +110,8 @@ function NotaFormulario({ asignacionId, progresoId, nota, idBase }: NotaFormular
   }, [nota, reset]);
 
   const texto = useWatch({ control, name: 'texto' }) ?? '';
+  // Unsaved note: the Revisor asks before closing the panel or switching materia.
+  useRegistrarCambios(isDirty);
 
   const alEnviar = (datos: NotaFormData) => {
     const guardado = datos.texto ?? '';

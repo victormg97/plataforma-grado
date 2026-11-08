@@ -29,6 +29,7 @@ import {
 } from '@/lib/validations/cedularioSeguimiento.schema';
 import { useCedulariosAction } from '@/components/cedularios/hooks/useCedulariosAction';
 import { esIdTemporal, useDetalleMutations } from '../../hooks/useDetalleMutations';
+import { useRegistrarCambios } from './cambiosSinGuardar';
 
 const CLASE_CAMPO =
   'w-full rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-bg)] px-3 text-sm text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-brand-gold)] focus:ring-2 focus:ring-[var(--color-brand-gold)]/20 aria-[invalid=true]:border-[var(--color-error)] read-only:opacity-70';
@@ -240,6 +241,8 @@ export function RepasosSection({
           confirmText={t('confirmar_eliminar')}
           cancelText={tComun('cancelar')}
           loading={eliminarRepaso.isPending}
+          // Above the Revisor overlay (z-[70]).
+          contentClassName="z-[80]"
         />
       )}
     </section>
@@ -282,7 +285,7 @@ function RepasoFormulario({
     handleSubmit,
     reset,
     control,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<RepasoInput, unknown, RepasoData>({
     resolver: zodResolver(repasoSchema),
     mode: 'onChange',
@@ -290,6 +293,8 @@ function RepasoFormulario({
   });
 
   const nota = useWatch({ control, name: 'nota' }) ?? '';
+  // Unsaved repaso (new or being edited): the Revisor asks before closing the panel.
+  useRegistrarCambios(isDirty);
   const errorFecha = errors.fecha?.message;
   const errorNota = errors.nota?.message;
   // The date input is capped at today in the platform time zone.

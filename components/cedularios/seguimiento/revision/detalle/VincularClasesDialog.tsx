@@ -116,6 +116,8 @@ export function VincularClasesDialog({
       title={t('dialogo_titulo')}
       description={t('dialogo_descripcion')}
       footer={footer}
+      // The Revisor overlay sits at z-[70]; without this the picker opened behind it.
+      contentClassName="z-[80]"
     >
       <div className="flex flex-col gap-3">
         <input

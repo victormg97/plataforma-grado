@@ -22,7 +22,7 @@
  */
 
 import { useCallback, useEffect, useId, useRef } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/common/Button';
 import { cn } from '@/lib/utils';
@@ -33,6 +33,7 @@ import { useEstablecerEstadoMateria } from '../../hooks/useEstablecerEstadoMater
 import { useProgresoDetalle } from '../../hooks/useProgresoDetalle';
 import { FechaCubiertaPicker } from '../FechaCubiertaPicker';
 import { ProgresoCheck } from '../ProgresoCheck';
+import { CambiosSinGuardarProvider } from './cambiosSinGuardar';
 import { ClasesVinculadasSection } from './ClasesVinculadasSection';
 import { ComentariosSection } from './ComentariosSection';
 import { NotaSection } from './NotaSection';
@@ -63,8 +64,18 @@ export interface MateriaDetallePanelProps {
   onAlternarCobertura: (materiaId: string) => void;
   /** True while a cascade batch is being saved. */
   guardandoCobertura?: boolean;
-  /** Closes the panel (the caller removes `seg_materia`). Also called for an invalid materia. */
+  /**
+   * User asked to close the panel (X button, "Volver", Escape). The caller asks first when a form
+   * holds unsaved text, then removes `seg_materia`.
+   */
   onCerrar: () => void;
+  /**
+   * The materia is not an assigned materia of the assignment any more: close without asking.
+   * Defaults to `onCerrar`.
+   */
+  onInvalida?: () => void;
+  /** Reports whether any form of the panel holds unsaved text. */
+  onCambiosPendientesChange?: (hayCambios: boolean) => void;
   /** Reports whether the panel is an own layer, so the overlay Escape guard stays out. */
   onCapaPropiaChange?: (abierta: boolean) => void;
   className?: string;
@@ -81,6 +92,8 @@ export function MateriaDetallePanel({
   onAlternarCobertura,
   guardandoCobertura = false,
   onCerrar,
+  onInvalida,
+  onCambiosPendientesChange,
   onCapaPropiaChange,
   className,
 }: MateriaDetallePanelProps) {
@@ -95,15 +108,18 @@ export function MateriaDetallePanel({
 
   // Latest callbacks live in refs so the effects below depend only on real state.
   const onCerrarRef = useRef(onCerrar);
+  const onInvalidaRef = useRef(onInvalida ?? onCerrar);
   const onCapaRef = useRef(onCapaPropiaChange);
   useEffect(() => {
     onCerrarRef.current = onCerrar;
+    onInvalidaRef.current = onInvalida ?? onCerrar;
     onCapaRef.current = onCapaPropiaChange;
-  }, [onCerrar, onCapaPropiaChange]);
+  }, [onCerrar, onInvalida, onCapaPropiaChange]);
 
-  // Drop `seg_materia` when it is not an assigned materia of this assignment.
+  // Drop `seg_materia` when it is not an assigned materia of this assignment (no question asked:
+  // there is nothing left to edit).
   useEffect(() => {
-    if (datosListos && !valida) onCerrarRef.current();
+    if (datosListos && !valida) onInvalidaRef.current();
   }, [datosListos, valida]);
 
   // Report the own layer while the panel shows a valid materia.
@@ -172,6 +188,7 @@ export function MateriaDetallePanel({
   const datos = detalle.data;
 
   return (
+    <CambiosSinGuardarProvider onChange={onCambiosPendientesChange}>
     <section
       ref={raizRef}
       aria-label={t('aria_panel', { materia: nombreCompleto })}
@@ -192,13 +209,25 @@ export function MateriaDetallePanel({
           {t('volver')}
         </Button>
 
-        <h3
-          ref={tituloRef}
-          tabIndex={-1}
-          className="break-words text-base font-semibold text-[var(--color-text-primary)] outline-none"
-        >
-          {nombreCompleto}
-        </h3>
+        <div className="flex items-start justify-between gap-2">
+          <h3
+            ref={tituloRef}
+            tabIndex={-1}
+            className="min-w-0 break-words text-base font-semibold text-[var(--color-text-primary)] outline-none"
+          >
+            {nombreCompleto}
+          </h3>
+          {/* Close button (md and up; small screens use "Volver" above). Guarded by the caller. */}
+          <button
+            type="button"
+            onClick={onCerrar}
+            aria-label={t('cerrar_aria', { materia: nombreCompleto })}
+            title={t('cerrar')}
+            className="-mr-1 -mt-1 hidden size-8 shrink-0 items-center justify-center rounded-[var(--radius-md)] text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand-gold)] md:flex"
+          >
+            <X className="size-4" aria-hidden="true" />
+          </button>
+        </div>
 
         <div className="flex flex-col gap-2" role="group" aria-labelledby={`${idBase}-cobertura`}>
           <span
@@ -308,5 +337,6 @@ export function MateriaDetallePanel({
         </div>
       )}
     </section>
+    </CambiosSinGuardarProvider>
   );
 }

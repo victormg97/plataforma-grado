@@ -264,9 +264,15 @@ function RevisionContenido({
   const cascada = useCascadaCobertura(asignacionId ?? '', flat);
   const confirmandoCascada = cascada.confirmacion !== null;
 
+  // ── Unsaved text in the detail panel: ask before closing it or switching materia ─
+  const [panelConCambios, setPanelConCambios] = useState(false);
+  // Action waiting for the "discard changes" confirmation (close the panel or open another materia).
+  const [accionPendiente, setAccionPendiente] = useState<{ ejecutar: () => void } | null>(null);
+  const confirmandoDescarte = accionPendiente !== null;
+
   useEffect(() => {
-    onCapaRef.current?.(ownLayerOpen || confirmandoCascada);
-  }, [ownLayerOpen, confirmandoCascada]);
+    onCapaRef.current?.(ownLayerOpen || confirmandoCascada || confirmandoDescarte);
+  }, [ownLayerOpen, confirmandoCascada, confirmandoDescarte]);
   useEffect(() => {
     return () => onCapaRef.current?.(false);
   }, []);
@@ -280,8 +286,44 @@ function RevisionContenido({
     onCerrarRef.current?.();
   }, [inactiva, esAlumno, mensajeDesasignadaAlumno]);
 
-  const cerrarPanel = useCallback(() => fijar({ materia: null }), [fijar]);
-  const abrirDetalle = useCallback((materiaId: string) => fijar({ materia: materiaId }), [fijar]);
+  // Closes the panel at once, without asking (used when the materia is no longer valid).
+  const cerrarPanelSinPreguntar = useCallback(() => fijar({ materia: null }), [fijar]);
+
+  /** Runs `accion` now, or after the user confirms discarding the unsaved text of the panel. */
+  const protegerCambios = useCallback(
+    (accion: () => void) => {
+      if (panelConCambios) setAccionPendiente({ ejecutar: accion });
+      else accion();
+    },
+    [panelConCambios],
+  );
+
+  // Close button, Escape and "Volver": guarded.
+  const cerrarPanel = useCallback(
+    () => protegerCambios(cerrarPanelSinPreguntar),
+    [protegerCambios, cerrarPanelSinPreguntar],
+  );
+
+  // Clicking the open materia again closes the panel; another materia switches to it. Both guarded.
+  const materiaAbiertaActual = estado.materia;
+  const abrirDetalle = useCallback(
+    (materiaId: string) => {
+      if (materiaId === materiaAbiertaActual) {
+        protegerCambios(cerrarPanelSinPreguntar);
+        return;
+      }
+      protegerCambios(() => fijar({ materia: materiaId }));
+    },
+    [materiaAbiertaActual, protegerCambios, cerrarPanelSinPreguntar, fijar],
+  );
+
+  const descartarYContinuar = () => {
+    const accion = accionPendiente;
+    setAccionPendiente(null);
+    // The panel unmounts or remounts for the next materia, so its forms start clean.
+    setPanelConCambios(false);
+    accion?.ejecutar();
+  };
 
   const reintentarDatos = () => {
     if (arbolQuery.isError) void arbolQuery.refetch();
@@ -460,6 +502,8 @@ function RevisionContenido({
           onAlternarCobertura={cascada.alternar}
           guardandoCobertura={cascada.guardando}
           onCerrar={cerrarPanel}
+          onInvalida={cerrarPanelSinPreguntar}
+          onCambiosPendientesChange={setPanelConCambios}
           onCapaPropiaChange={setOwnLayerOpen}
           className="min-w-0 md:max-h-[70vh]"
         />
@@ -520,6 +564,18 @@ function RevisionContenido({
         })}
         confirmText={t('cascada.desmarcar_confirmar')}
         cancelText={t('cascada.desmarcar_cancelar')}
+        contentClassName="z-[80]"
+        isDanger
+      />
+
+      <ConfirmModal
+        open={confirmandoDescarte}
+        onClose={() => setAccionPendiente(null)}
+        onConfirm={descartarYContinuar}
+        title={t('panel.descartar_titulo')}
+        description={t('panel.descartar_descripcion')}
+        confirmText={t('panel.descartar_confirmar')}
+        cancelText={t('panel.descartar_cancelar')}
         contentClassName="z-[80]"
         isDanger
       />

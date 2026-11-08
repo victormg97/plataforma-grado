@@ -29,6 +29,7 @@ import { comentarioSchema } from '@/lib/validations/cedularioSeguimiento.schema'
 import { useCedulariosAction } from '@/components/cedularios/hooks/useCedulariosAction';
 import { esIdTemporal, useDetalleMutations } from '../../hooks/useDetalleMutations';
 import { useSegRol } from '../../hooks/useSegRol';
+import { useRegistrarCambios } from './cambiosSinGuardar';
 
 /** The form wraps the shared comment schema so its error key lands on the `texto` field. */
 const comentarioFormSchema = z.object({ texto: comentarioSchema });
@@ -247,6 +248,8 @@ export function ComentariosSection({
           confirmText={t('confirmar_eliminar')}
           cancelText={tComun('cancelar')}
           loading={eliminarComentario.isPending}
+          // Above the Revisor overlay (z-[70]).
+          contentClassName="z-[80]"
         />
       )}
     </section>
@@ -292,7 +295,7 @@ function ComentarioFormulario({
     handleSubmit,
     reset,
     control,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<ComentarioFormInput, unknown, ComentarioFormData>({
     resolver: zodResolver(comentarioFormSchema),
     mode: 'onSubmit',
@@ -301,6 +304,8 @@ function ComentarioFormulario({
   });
 
   const texto = useWatch({ control, name: 'texto' }) ?? '';
+  // Unsaved comment (new or being edited): the Revisor asks before closing the panel.
+  useRegistrarCambios(isDirty);
   const errorTexto = errors.texto?.message;
 
   const alEnviar = (datos: ComentarioFormData) => {

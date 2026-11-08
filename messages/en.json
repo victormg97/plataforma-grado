@@ -1780,7 +1780,7 @@
     "streak_lost_dismiss": "Dismiss",
     "streak_details_label": "Show streak details",
     "lives_tip_title": "Your lives",
-    "lives_tip_count": "{current} of {maximo}",
+    "lives_tip_count": "{current} of {max}",
     "lives_tip_cost": "A wrong answer may cost you a life.",
     "lives_tip_regen_per_life": "You recover 1 life every {hours} h.",
     "lives_tip_regen_full": "All lives refill every {hours} h.",
@@ -1792,9 +1792,9 @@
     "onboarding_submit": "Start playing",
     "nickname_label": "Nickname",
     "nickname_placeholder": "Your nickname",
-    "nickname_hint": "Between {min} and {maximo} characters: letters, numbers, hyphens and underscores.",
+    "nickname_hint": "Between {min} and {max} characters: letters, numbers, hyphens and underscores.",
     "nickname_submit": "Save nickname",
-    "nickname_error_format": "The nickname must be {min} to {maximo} valid characters.",
+    "nickname_error_format": "The nickname must be {min} to {max} valid characters.",
     "nickname_error_taken": "That nickname is already taken. Choose a different one.",
     "nickname_error_cooldown": "You can change your nickname in {days} day(s).",
     "daily_title": "Daily Question",
@@ -2661,7 +2661,7 @@
       "inactiva": "Inactive",
       "solo_lectura": "Read-only",
       "sin_valor": "No value",
-      "caracteres": "{actual} of {maximo} characters",
+      "caracteres": "{actual} of {max} characters",
       "abre_nueva_pestana": "Opens in a new tab"
     },
     "universidades": {
@@ -3430,6 +3430,12 @@
           "desmarcar_rama": "Unmark {materia} and its child subjects",
           "parcial": "Partial"
         },
+        "panel": {
+          "descartar_titulo": "Discard unsaved changes?",
+          "descartar_descripcion": "You have unsaved text in this subject (note, comment or review). If you continue, it will be lost.",
+          "descartar_confirmar": "Discard changes",
+          "descartar_cancelar": "Keep editing"
+        },
         "cascada": {
           "desmarcar_titulo": "Uncheck the whole branch?",
           "desmarcar_descripcion": "The covered date of {count} subjects of this branch will be removed. Reviews, notes and comments are kept.",
@@ -3476,6 +3482,8 @@
       "detalle": {
         "titulo": "Subject details",
         "aria_panel": "Details of {materia}",
+        "cerrar": "Close detail",
+        "cerrar_aria": "Close the detail of {materia}",
         "volver": "Back to subjects",
         "cargando": "Loading details...",
         "error_carga": "The subject details could not be loaded. Please try again.",
@@ -3495,7 +3503,7 @@
           "aria": "Subject note",
           "guardar": "Save note",
           "guardando": "Saving...",
-          "contador": "{actual} of {maximo} characters",
+          "contador": "{actual} of {max} characters",
           "vacia": "No note"
         },
         "comentarios": {
@@ -3512,7 +3520,7 @@
           "eliminar": "Delete comment",
           "editado": "edited",
           "autor_fecha": "{autor} · {fecha}",
-          "contador": "{actual} of {maximo} characters",
+          "contador": "{actual} of {max} characters",
           "confirmar_eliminar_titulo": "Delete comment",
           "confirmar_eliminar_descripcion": "The comment will be permanently deleted.",
           "confirmar_eliminar": "Delete comment"
@@ -3531,7 +3539,7 @@
           "cancelar_edicion": "Cancel editing",
           "eliminar": "Delete review",
           "sin_nota": "No note",
-          "contador": "{actual} of {maximo} characters",
+          "contador": "{actual} of {max} characters",
           "confirmar_eliminar_titulo": "Delete review",
           "confirmar_eliminar_descripcion": "The review from {fecha} will be permanently deleted.",
           "confirmar_eliminar": "Delete review"
@@ -3584,7 +3592,7 @@
           "sin_alumnos_a_cargo": "You have no students in your charge to assign.",
           "ya_asignado": "already assigned",
           "seleccionados": "{count, plural, =0 {No students selected} one {# student selected} other {# students selected}}",
-          "limite": "You can assign up to {maximo} students at a time.",
+          "limite": "You can assign up to {max} students at a time.",
           "cargar_mas": "Load more students",
           "alumno_fijo": "Student"
         },

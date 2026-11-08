@@ -45,6 +45,8 @@ export function ConfirmarQuitarDialog({
       cancelText={t('cancelar')}
       loading={loading}
       isDanger
+      // The subset editor lives in the tracking overlay (z-[70]).
+      contentClassName="z-[80]"
     />
   );
 }
