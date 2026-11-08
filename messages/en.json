@@ -227,6 +227,19 @@
     "plazo_vencido_mensaje": "The deadline to modify attendance has passed.",
     "ver_detalle_completo": "View full detail",
     "ver_detalle_desc": "Notes, attendance and more information",
+    "countdown": {
+      "comienza_en": "Class starts in",
+      "en_curso": "Class in progress · ends in",
+      "dias": "{count, plural, one {day} other {days}}",
+      "horas": "{count, plural, one {hour} other {hours}}",
+      "min": "min",
+      "seg": "sec",
+      "aria_en_curso": "The class is in progress",
+      "aria_faltan": "{d} days, {h} hours, {m} minutes and {s} seconds until the class starts"
+    },
+    "panel_asistencia": "Student attendance",
+    "panel_nota_prueba": "Grade",
+    "panel_recordatorio": "Email reminder",
     "fecha_hora": {
       "duracion_min": "{min} min",
       "duracion_h": "{h} h",

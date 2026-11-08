@@ -60,7 +60,7 @@ export function SimulacionGradeSection({ evaluaciones, horarioId: _horarioId }: 
   return (
     <div className="mt-4 pt-4 border-t border-[var(--color-border)]">
       <div className="flex items-center gap-2 mb-3">
-        <Scale className="size-4 text-[var(--color-brand-gold)]" />
+        <Scale className="size-4 text-[var(--color-accent-fg)]" />
         <span className="text-sm font-semibold text-[var(--color-text-primary)]">
           {t('simulacion_calificaciones')}
         </span>
@@ -146,7 +146,7 @@ function EvaluacionRow({ evaluacion, isOwn }: { evaluacion: EvaluacionData; isOw
         <div className="min-w-0">
           <p className="text-sm font-medium text-[var(--color-text-primary)] truncate">
             {profName}
-            {isOwn && <span className="ml-1.5 text-[10px] text-[var(--color-brand-gold)]">({t('tu_evaluacion')})</span>}
+            {isOwn && <span className="ml-1.5 text-[10px] text-[var(--color-accent-fg)]">({t('tu_evaluacion')})</span>}
           </p>
         </div>
       </div>
@@ -174,7 +174,7 @@ function EvaluacionRow({ evaluacion, isOwn }: { evaluacion: EvaluacionData; isOw
                 backgroundColor: evaluacion.nota >= 4.0
                   ? 'color-mix(in srgb, var(--color-success) 15%, transparent)'
                   : 'color-mix(in srgb, var(--color-error) 15%, transparent)',
-                color: evaluacion.nota >= 4.0 ? 'var(--color-success)' : 'var(--color-error)',
+                color: evaluacion.nota >= 4.0 ? 'var(--color-success-fg)' : 'var(--color-error-fg)',
                 border: `1px solid color-mix(in srgb, ${evaluacion.nota >= 4.0 ? 'var(--color-success)' : 'var(--color-error)'} 30%, transparent)`,
               }}
             >

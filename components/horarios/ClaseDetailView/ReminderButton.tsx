@@ -100,8 +100,8 @@ export function ReminderButton({ horarioId }: ReminderButtonProps) {
       className={cn(
         'flex items-center gap-2 rounded-[var(--radius-sm)] border px-3.5 py-2 text-sm font-medium transition-colors',
         !disabled
-          ? 'border-[var(--color-brand-gold)] text-[var(--color-brand-gold)] hover:bg-[color-mix(in_srgb,var(--color-brand-gold)_8%,transparent)]'
-          : 'border-[var(--color-border)] text-[var(--color-text-muted)] cursor-not-allowed opacity-60',
+          ? 'border-[var(--color-accent-border)] bg-[var(--color-bg)] text-[var(--color-accent-fg)] hover:bg-[var(--color-accent-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-fg)]'
+          : 'border-[var(--color-border)] text-[var(--color-text-secondary)] cursor-not-allowed opacity-60',
       )}
     >
       {sending ? (
@@ -111,7 +111,7 @@ export function ReminderButton({ horarioId }: ReminderButtonProps) {
       )}
       {t('boton')}
       {totalEnviados > 0 && (
-        <span className="ml-1 inline-flex size-5 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--color-brand-gold)_15%,transparent)] text-xs font-bold text-[var(--color-brand-gold)]">
+        <span className="ml-1 inline-flex size-5 items-center justify-center rounded-full bg-[var(--color-accent-soft)] text-xs font-bold text-[var(--color-accent-fg)]">
           {totalEnviados}
         </span>
       )}

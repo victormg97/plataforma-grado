@@ -3,10 +3,13 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { es as esDateFns, enUS } from 'date-fns/locale';
-import { Calendar, Clock, MessageSquare, ArrowLeft, GraduationCap } from 'lucide-react';
+import { Calendar, Clock, MessageSquare, ArrowLeft, GraduationCap, Mail, UserCheck } from 'lucide-react';
 import { ClaseDetalleCollapsible } from '@/components/horarios/ClaseDetalleCollapsible';
 import { ClaseFechaHoraHero } from '@/components/horarios/ClaseFechaHoraHero';
 import { ClaseDescripcion } from '@/components/horarios/ClaseDescripcion';
+import { ClaseCountdown } from '@/components/horarios/ClaseCountdown';
+import { ClaseTipoBadge } from '@/components/horarios/ClaseTipoBadge';
+import { AsistenciaEstadoSwitcher } from './AsistenciaEstadoSwitcher';
 import { useUserStore } from '@/stores/useUserStore';
 import Link from 'next/link';
 import { useTranslations, useLocale } from 'next-intl';
@@ -20,7 +23,6 @@ import { StatusBadge } from '@/components/common/StatusBadge';
 import { NotasIndicator } from '@/components/notas/NotasIndicator';
 import { usePruebaTerm } from '@/lib/hooks/usePruebaTerm';
 import { NotasSection } from '@/components/notas/NotasSection';
-import { AppSelect } from '@/components/common/AppSelect';
 import { useNotasCount } from '@/lib/hooks/useNotasCount';
 import { useQueryParam } from '@/lib/hooks/useQueryParam';
 import { getClaseDetailBackHref } from '@/lib/utils/horarioNavigation';
@@ -98,7 +100,11 @@ function GradeInlineForm({
   }
 
   return (
-    <div className="mt-4 pt-4 border-t border-[var(--color-border)]">
+    <section className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4">
+      <h3 className="mb-3 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-secondary)]">
+        <GraduationCap className="size-3.5" />
+        {th('panel_nota_prueba')}
+      </h3>
       <div className="flex flex-col sm:flex-row sm:items-end gap-4 w-full">
         <div className="flex flex-col gap-1.5">
           <label className="text-[13px] font-semibold text-[var(--color-text-secondary)] whitespace-nowrap">
@@ -189,7 +195,7 @@ function GradeInlineForm({
               className="flex h-10 items-center justify-center rounded-full px-5 font-bold text-[13px] shadow-sm ml-auto sm:ml-0"
               style={{
                 backgroundColor: isAprobado ? 'color-mix(in srgb, var(--color-success) 15%, transparent)' : 'color-mix(in srgb, var(--color-error) 15%, transparent)',
-                color: isAprobado ? 'var(--color-success)' : 'var(--color-error)',
+                color: isAprobado ? 'var(--color-success-fg)' : 'var(--color-error-fg)',
                 border: `1px solid color-mix(in srgb, ${isAprobado ? 'var(--color-success)' : 'var(--color-error)'} 30%, transparent)`,
               }}
             >
@@ -198,7 +204,7 @@ function GradeInlineForm({
           );
         })()}
       </div>{/* flex flex-col sm:flex-row */}
-    </div>
+    </section>
   );
 }
 
@@ -327,6 +333,8 @@ export function ClaseDetailView({ rol }: ClaseDetailViewProps) {
       />
 
       <div className="mt-[var(--space-lg)] space-y-[var(--space-md)]">
+        <ClaseCountdown fecha={horario.fecha} horaInicio={horario.hora_inicio} horaFin={horario.hora_fin} />
+
         <ClaseDetalleCollapsible
           storageKey={`clase-detalle-abierto:${user?.id ?? 'anon'}:${horario.id}`}
           borderClass={borderColor()}
@@ -354,11 +362,10 @@ export function ClaseDetailView({ rol }: ClaseDetailViewProps) {
                 <StatusBadge status={estado} />
                 <NotasIndicator count={notasCounts[horario.id] ?? 0} />
                 {(horario.pruebas?.length ?? 0) > 0 && (
-                  <span className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium"
-                    style={{ backgroundColor: 'var(--color-brand-gold-muted)', borderColor: 'color-mix(in srgb, var(--color-brand-gold) 40%, transparent)', color: 'var(--color-brand-gold)' }}>
-                    <GraduationCap className="size-3" />
-                    {t('badge_examen', { term: pruebaTerm.singular })}
-                  </span>
+                  <ClaseTipoBadge label={t('badge_examen', { term: pruebaTerm.singular })} />
+                )}
+                {horario.tipo_clase === 'simulacion' && (horario.pruebas?.length ?? 0) === 0 && (
+                  <ClaseTipoBadge label={t('badge_simulacion')} />
                 )}
               </div>
             </div>
@@ -366,35 +373,17 @@ export function ClaseDetailView({ rol }: ClaseDetailViewProps) {
           summary={
             <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-[var(--color-text-secondary)]">
               <span className="inline-flex items-center gap-1.5 capitalize">
-                <Calendar className="size-3.5 text-[var(--color-brand-gold)]" />
+                <Calendar className="size-3.5 text-[var(--color-accent-fg)]" />
                 {format(new Date(horario.fecha + 'T12:00:00'), locale === 'en' ? 'EEE, MMM d yyyy' : "EEE d 'de' MMM yyyy", { locale: dateFnsLocale })}
               </span>
               <span className="inline-flex items-center gap-1.5 tabular-nums">
-                <Clock className="size-3.5 text-[var(--color-brand-gold)]" />
+                <Clock className="size-3.5 text-[var(--color-accent-fg)]" />
                 {horario.hora_inicio.slice(0, 5)} – {horario.hora_fin.slice(0, 5)}
               </span>
             </p>
           }
         >
           <>
-            {/* Exam banner */}
-            {(horario.pruebas?.length ?? 0) > 0 && (
-              <div className="flex items-center gap-2 rounded-[var(--radius-md)] px-3 py-2.5"
-                style={{ backgroundColor: 'var(--color-brand-gold-muted)', border: '1px solid color-mix(in srgb, var(--color-brand-gold) 40%, transparent)' }}>
-                <GraduationCap className="size-4 shrink-0" style={{ color: 'var(--color-brand-gold)' }} />
-                <span className="text-sm font-medium" style={{ color: 'var(--color-brand-gold)' }}>{t('es_examen', { term: pruebaTerm.singular })}</span>
-              </div>
-            )}
-
-            {/* Simulación banner */}
-            {horario.tipo_clase === 'simulacion' && (
-              <div className="flex items-center gap-2 rounded-[var(--radius-md)] px-3 py-2.5"
-                style={{ backgroundColor: 'var(--color-brand-gold-muted)', border: '1px solid color-mix(in srgb, var(--color-brand-gold) 40%, transparent)' }}>
-                <GraduationCap className="size-4 shrink-0" style={{ color: 'var(--color-brand-gold)' }} />
-                <span className="text-sm font-medium" style={{ color: 'var(--color-brand-gold)' }}>{t('badge_simulacion')}</span>
-              </div>
-            )}
-
             {/* Comisión evaluadora (simulación) */}
             {horario.tipo_clase === 'simulacion' && horario.simulacion_comision && horario.simulacion_comision.length > 0 && (
               <div className="space-y-2">
@@ -418,21 +407,24 @@ export function ClaseDetailView({ rol }: ClaseDetailViewProps) {
                 </div>
               </div>
             )}
+            <ClaseFechaHoraHero fecha={horario.fecha} horaInicio={horario.hora_inicio} horaFin={horario.hora_fin} />
+
             {/* Profesor/Admin: change attendance status */}
             {asistenciaId && (
-              <div className="flex flex-wrap items-center gap-3">
-                <span className="text-sm text-[var(--color-text-muted)]">{ta('cambiar_estado')}:</span>
-                <AppSelect
+              <section className="space-y-2.5 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4">
+                <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-secondary)]">
+                  <UserCheck className="size-3.5" />
+                  {t('panel_asistencia')}
+                </h3>
+                <AsistenciaEstadoSwitcher
                   value={estado}
-                  onChange={handleEstadoChange}
                   options={estadoOptions}
+                  onChange={handleEstadoChange}
                   disabled={changingEstado}
-                  className="min-w-[160px]"
+                  ariaLabel={ta('cambiar_estado')}
                 />
-              </div>
+              </section>
             )}
-
-            <ClaseFechaHoraHero fecha={horario.fecha} horaInicio={horario.hora_inicio} horaFin={horario.hora_fin} />
 
             {horario.descripcion && <ClaseDescripcion html={horario.descripcion} />}
 
@@ -460,7 +452,11 @@ export function ClaseDetailView({ rol }: ClaseDetailViewProps) {
             )}
 
             {/* Email reminder button */}
-            <div className="pt-3 border-t border-[var(--color-border)]">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--color-border)] pt-4">
+              <p className="flex items-center gap-1.5 text-sm text-[var(--color-text-secondary)]">
+                <Mail className="size-4" />
+                {t('panel_recordatorio')}
+              </p>
               <ReminderButton horarioId={horario.id} />
             </div>
           </>

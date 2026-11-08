@@ -6,7 +6,7 @@ import { es, enUS, type Locale } from 'date-fns/locale';
 import {
   Calendar, Clock, User, ArrowLeft, CheckCircle, XCircle, ArrowRight,
   CalendarOff, Search, X, SlidersHorizontal, BookOpen, History,
-  ChevronDown, FileText, GraduationCap, Scale,
+  ChevronDown, FileText, GraduationCap, Scale, MousePointerClick,
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -42,6 +42,8 @@ import { RichDescription } from '@/components/common/RichDescription';
 import { ClaseDetalleCollapsible } from '@/components/horarios/ClaseDetalleCollapsible';
 import { ClaseFechaHoraHero } from '@/components/horarios/ClaseFechaHoraHero';
 import { ClaseDescripcion } from '@/components/horarios/ClaseDescripcion';
+import { ClaseCountdown } from '@/components/horarios/ClaseCountdown';
+import { ClaseTipoBadge } from '@/components/horarios/ClaseTipoBadge';
 import { stripHtml } from '@/lib/utils';
 
 /* ── Search input ── */
@@ -622,6 +624,8 @@ function HorarioDetailView({ clase, user, confirmar, cancelar, pedirCambio: _ped
   return (
     <>
       <div className="mt-[var(--space-lg)] space-y-[var(--space-md)]">
+        <ClaseCountdown fecha={clase.horario.fecha} horaInicio={clase.horario.hora_inicio} horaFin={clase.horario.hora_fin} />
+
         <ClaseDetalleCollapsible
           storageKey={`clase-detalle-abierto:${user?.id ?? 'anon'}:${clase.horario.id}`}
           borderClass={borderColor()}
@@ -634,6 +638,8 @@ function HorarioDetailView({ clase, user, confirmar, cancelar, pedirCambio: _ped
                     {tCambio('solicitud_pendiente')}
                   </span>
                 )}
+                {isExamen && <ClaseTipoBadge label={t('badge_examen', { term: pruebaTerm.singular })} />}
+                {clase.horario.tipo_clase === 'simulacion' && !isExamen && <ClaseTipoBadge label={t('badge_simulacion')} />}
                 <StatusBadge status={displayStatus} />
               </div>
             </div>
@@ -641,33 +647,17 @@ function HorarioDetailView({ clase, user, confirmar, cancelar, pedirCambio: _ped
           summary={
             <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-[var(--color-text-secondary)]">
               <span className="inline-flex items-center gap-1.5 capitalize">
-                <Calendar className="size-3.5 text-[var(--color-brand-gold)]" />
+                <Calendar className="size-3.5 text-[var(--color-accent-fg)]" />
                 {format(new Date(clase.horario.fecha + 'T12:00:00'), locale === 'en' ? 'EEE, MMM d yyyy' : "EEE d 'de' MMM yyyy", { locale: dateFnsLocale })}
               </span>
               <span className="inline-flex items-center gap-1.5 tabular-nums">
-                <Clock className="size-3.5 text-[var(--color-brand-gold)]" />
+                <Clock className="size-3.5 text-[var(--color-accent-fg)]" />
                 {clase.horario.hora_inicio.slice(0, 5)} – {clase.horario.hora_fin.slice(0, 5)}
               </span>
             </p>
           }
         >
           <>
-            {/* Exam banner */}
-            {isExamen && (
-              <div className="flex items-center gap-2 rounded-[var(--radius-md)] px-3 py-2.5"
-                style={{ backgroundColor: 'var(--color-brand-gold-muted)', border: '1px solid color-mix(in srgb, var(--color-brand-gold) 40%, transparent)' }}>
-                <GraduationCap className="size-4 shrink-0" style={{ color: 'var(--color-brand-gold)' }} />
-                <span className="text-sm font-medium" style={{ color: 'var(--color-brand-gold)' }}>{t('es_examen', { term: pruebaTerm.singular })}</span>
-              </div>
-            )}
-            {/* Simulación banner */}
-            {clase.horario.tipo_clase === 'simulacion' && !isExamen && (
-              <div className="flex items-center gap-2 rounded-[var(--radius-md)] px-3 py-2.5"
-                style={{ backgroundColor: 'var(--color-brand-gold-muted)', border: '1px solid color-mix(in srgb, var(--color-brand-gold) 40%, transparent)' }}>
-                <GraduationCap className="size-4 shrink-0" style={{ color: 'var(--color-brand-gold)' }} />
-                <span className="text-sm font-medium" style={{ color: 'var(--color-brand-gold)' }}>{t('badge_simulacion')}</span>
-              </div>
-            )}
             {/* Comisión evaluadora (simulación) */}
             {clase.horario.tipo_clase === 'simulacion' && clase.horario.simulacion_comision && clase.horario.simulacion_comision.length > 0 && (
               <div className="space-y-2">
@@ -803,7 +793,10 @@ function HorarioDetailView({ clase, user, confirmar, cancelar, pedirCambio: _ped
         {/* Acciones — se oculta cuando la clase está confirmada y ya empezó o terminó */}
         {!(clase.estado === 'confirmado' && (enCurso || yaPaso)) && (
         <Card padding="lg">
-          <h3 className="text-sm font-semibold uppercase text-[var(--color-text-muted)] mb-3">{t('acciones')}</h3>
+          <h3 className="mb-4 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-secondary)]">
+            <MousePointerClick className="size-3.5" />
+            {t('acciones')}
+          </h3>
 
           {/* Informative message when deadline has passed but class hasn't ended yet */}
           {plazoVencido && !yaPaso && clase.estado !== 'cambiado' && (
@@ -836,7 +829,7 @@ function HorarioDetailView({ clase, user, confirmar, cancelar, pedirCambio: _ped
               <button
                 onClick={() => setModal({ type: 'cancelar', clase })}
                 disabled={!canChangeStatus}
-                className={`flex-1 flex items-center justify-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-error)] px-4 py-3 text-sm font-medium text-[var(--color-error)] hover:bg-red-50 dark:hover:bg-red-950/20 min-h-[48px] ${!canChangeStatus ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`flex-1 flex items-center justify-center gap-2 rounded-[var(--radius-md)] border border-[color-mix(in_srgb,var(--color-error)_55%,transparent)] px-4 py-3 text-sm font-medium text-[var(--color-error-fg)] transition-colors hover:bg-[color-mix(in_srgb,var(--color-error)_12%,transparent)] min-h-[48px] ${!canChangeStatus ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <XCircle className="size-5" />
                 {t('cancelar_asistencia')}
@@ -847,7 +840,7 @@ function HorarioDetailView({ clase, user, confirmar, cancelar, pedirCambio: _ped
           {clase.estado === 'confirmado' && canChangeStatus && (
             <button
               onClick={() => setModal({ type: 'cancelar', clase })}
-              className="flex items-center justify-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-error)] px-4 py-3 text-sm font-medium text-[var(--color-error)] hover:bg-red-50 dark:hover:bg-red-950/20 min-h-[48px] w-full sm:w-auto"
+              className="flex items-center justify-center gap-2 rounded-[var(--radius-md)] border border-[color-mix(in_srgb,var(--color-error)_55%,transparent)] px-4 py-3 text-sm font-medium text-[var(--color-error-fg)] transition-colors hover:bg-[color-mix(in_srgb,var(--color-error)_12%,transparent)] min-h-[48px] w-full sm:w-auto"
             >
               <XCircle className="size-4" />
               {t('cancelar_confirmado')}
@@ -862,7 +855,7 @@ function HorarioDetailView({ clase, user, confirmar, cancelar, pedirCambio: _ped
 
           {clase.estado === 'cancelado' && (
             <div className="space-y-2">
-              <p className="text-sm text-[var(--color-error)]">{t('cancelaste')}</p>
+              <p className="text-sm font-medium text-[var(--color-error-fg)]">{t('cancelaste')}</p>
               {canChangeStatus && (
                 <button
                   onClick={() => setModal({ type: 'confirmar', clase })}
@@ -893,7 +886,7 @@ function HorarioDetailView({ clase, user, confirmar, cancelar, pedirCambio: _ped
           )}
 
           {clase.estado === 'cambiado' && (
-            <p className="text-sm text-[var(--color-info)]">
+            <p className="text-sm text-[var(--color-info-fg)]">
               {t('esperando_cambio')}
             </p>
           )}

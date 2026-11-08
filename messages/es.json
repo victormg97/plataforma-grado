@@ -227,6 +227,19 @@
     "plazo_vencido_mensaje": "El plazo para modificar la asistencia ha vencido.",
     "ver_detalle_completo": "Ver detalle completo",
     "ver_detalle_desc": "Notas, asistencia y más información",
+    "countdown": {
+      "comienza_en": "La clase comienza en",
+      "en_curso": "Clase en curso · termina en",
+      "dias": "{count, plural, one {día} other {días}}",
+      "horas": "{count, plural, one {hora} other {horas}}",
+      "min": "min",
+      "seg": "seg",
+      "aria_en_curso": "La clase está en curso",
+      "aria_faltan": "Faltan {d} días, {h} horas, {m} minutos y {s} segundos para que comience la clase"
+    },
+    "panel_asistencia": "Asistencia del alumno",
+    "panel_nota_prueba": "Calificación",
+    "panel_recordatorio": "Recordatorio por correo",
     "fecha_hora": {
       "duracion_min": "{min} min",
       "duracion_h": "{h} h",

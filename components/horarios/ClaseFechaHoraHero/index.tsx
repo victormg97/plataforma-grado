@@ -57,7 +57,7 @@ export function ClaseFechaHoraHero({ fecha, horaInicio, horaFin }: ClaseFechaHor
           </span>
         </div>
         <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">{t('fecha')}</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-secondary)]">{t('fecha')}</p>
           <p className="text-lg font-semibold capitalize leading-tight text-[var(--color-text-primary)]">{weekday}</p>
           <p className="text-sm text-[var(--color-text-secondary)]">{fullDate}</p>
         </div>
@@ -66,9 +66,9 @@ export function ClaseFechaHoraHero({ fecha, horaInicio, horaFin }: ClaseFechaHor
       {/* Time */}
       <div className="flex flex-col justify-center gap-3 bg-[var(--color-bg-secondary)] p-4">
         <div className="flex items-center justify-between gap-2">
-          <p className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">{t('horario')}</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-secondary)]">{t('horario')}</p>
           {duracion && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-brand-gold-muted)] px-2 py-0.5 text-xs font-medium text-[var(--color-brand-gold)]">
+            <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-accent-soft)] px-2 py-0.5 text-xs font-medium text-[var(--color-accent-fg)]">
               <Timer className="size-3" />
               {duracion}
             </span>
@@ -77,16 +77,16 @@ export function ClaseFechaHoraHero({ fecha, horaInicio, horaFin }: ClaseFechaHor
         <div className="flex items-center gap-3">
           <div>
             <p className="text-2xl font-semibold leading-none tabular-nums text-[var(--color-text-primary)]">{horaInicio.slice(0, 5)}</p>
-            <p className="mt-1 text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">{t('inicio')}</p>
+            <p className="mt-1 text-[11px] uppercase tracking-wide text-[var(--color-text-secondary)]">{t('inicio')}</p>
           </div>
           <div className="flex min-w-6 flex-1 items-center" aria-hidden="true">
-            <span className="size-1.5 rounded-full bg-[var(--color-brand-gold)]" />
+            <span className="size-1.5 rounded-full bg-[var(--color-accent-fg)]" />
             <span className="h-px flex-1 bg-[var(--color-border-strong)]" />
-            <span className="size-1.5 rounded-full border border-[var(--color-brand-gold)]" />
+            <span className="size-1.5 rounded-full border border-[var(--color-accent-fg)]" />
           </div>
           <div className="text-right">
             <p className="text-2xl font-semibold leading-none tabular-nums text-[var(--color-text-primary)]">{horaFin.slice(0, 5)}</p>
-            <p className="mt-1 text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">{t('fin')}</p>
+            <p className="mt-1 text-[11px] uppercase tracking-wide text-[var(--color-text-secondary)]">{t('fin')}</p>
           </div>
         </div>
       </div>
