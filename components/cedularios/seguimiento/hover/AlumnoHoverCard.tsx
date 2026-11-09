@@ -71,7 +71,9 @@ function AlumnoHoverCardActiva({
     <HoverCard
       ariaLabel={t('aria', { nombre })}
       className={className}
-      content={({ close }) => <AlumnoHoverCardContenido alumno={alumno} close={close} />}
+      content={({ close, lockSide }) => (
+        <AlumnoHoverCardContenido alumno={alumno} close={close} fijarLado={lockSide} />
+      )}
     >
       {children}
     </HoverCard>

@@ -12,7 +12,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Loader2 } from 'lucide-react';
+import { ChevronRight, Loader2 } from 'lucide-react';
 import { Avatar } from '@/components/common/Avatar';
 import { Button } from '@/components/common/Button';
 import { agregadoAlumno } from '@/lib/cedularios/seguimiento/agregados';
@@ -34,9 +34,11 @@ export interface AlumnoHoverCardContenidoProps {
   alumno: AlumnoHoverCardAlumno;
   /** Closes the card. */
   close: () => void;
+  /** Pins the card to its current side (top or bottom) so switching views does not make it jump. */
+  fijarLado?: () => void;
 }
 
-export function AlumnoHoverCardContenido({ alumno, close }: AlumnoHoverCardContenidoProps) {
+export function AlumnoHoverCardContenido({ alumno, close, fijarLado }: AlumnoHoverCardContenidoProps) {
   const t = useTranslations('cedularios.seguimiento.hover');
   const router = useRouter();
   const { rol } = useSegRol();
@@ -104,6 +106,9 @@ export function AlumnoHoverCardContenido({ alumno, close }: AlumnoHoverCardConte
     if (acciones.revisar === 'directo' && activas[0]) {
       revisar(activas[0].cedularioId);
     } else if (acciones.revisar === 'menu') {
+      // The list has another height: stay on the side the card is on so it does not jump away
+      // from the pointer (it would leave an empty gap that closes the card).
+      fijarLado?.();
       setListaAbierta(true);
     }
   };
@@ -212,19 +217,29 @@ export function AlumnoHoverCardContenido({ alumno, close }: AlumnoHoverCardConte
 
       {mostrarLista ? (
         <div ref={listaRef} className="space-y-2">
-          <p className="text-xs font-medium text-[var(--color-text-primary)]">
-            {t('elegir_cedulario')}
-          </p>
+          <div className="space-y-0.5">
+            <p className="text-xs font-medium text-[var(--color-text-primary)]">
+              {t('elegir_cedulario')}
+            </p>
+            <p className="text-xs text-[var(--color-text-muted)]">{t('elegir_cedulario_ayuda')}</p>
+          </div>
           <ul aria-label={t('lista_cedularios_aria')} className="space-y-1">
             {activas.map((asignacion) => (
               <li key={asignacion.asignacionId}>
                 <button
                   type="button"
                   onClick={() => revisar(asignacion.cedularioId)}
-                  className="flex w-full items-center justify-between gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 py-2 text-left text-sm text-[var(--color-text-primary)] transition-colors hover:bg-[var(--color-bg-secondary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand-gold)]"
+                  title={t('abrir_revision', { cedulario: asignacion.cedularioNombre })}
+                  className="group flex w-full items-center justify-between gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 py-2 text-left text-sm text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-brand-gold)] hover:bg-[var(--color-bg-secondary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand-gold)]"
                 >
                   <span className="min-w-0 truncate">{asignacion.cedularioNombre}</span>
-                  <PorcentajeTexto porcentaje={asignacion.porcentaje} className="shrink-0 text-xs" />
+                  <span className="flex shrink-0 items-center gap-1">
+                    <PorcentajeTexto porcentaje={asignacion.porcentaje} className="text-xs" />
+                    <ChevronRight
+                      className="size-4 text-[var(--color-text-muted)] transition-transform group-hover:translate-x-0.5 group-hover:text-[var(--color-brand-gold)] motion-reduce:transition-none"
+                      aria-hidden="true"
+                    />
+                  </span>
                 </button>
               </li>
             ))}

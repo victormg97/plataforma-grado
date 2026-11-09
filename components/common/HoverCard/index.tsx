@@ -21,8 +21,12 @@ type OpenOrigin = 'hover' | 'focus' | 'click';
 export interface HoverCardProps {
   /** Trigger content. The wrapper renders the trigger element itself. */
   children: ReactNode;
-  /** Card content. Receives `close` for inner buttons. Mounted only while open. */
-  content: (api: { close: () => void }) => ReactNode;
+  /**
+   * Card content. Mounted only while open. Receives `close` for inner buttons and `lockSide`:
+   * call it right before the content changes size to keep the card on the side (top or bottom)
+   * where it currently is, instead of letting it flip to the other one. Reset on close.
+   */
+  content: (api: { close: () => void; lockSide: () => void }) => ReactNode;
   /** Accessible name of both the trigger and the card. */
   ariaLabel: string;
   /** Classes of the trigger element (keeps the layout of the caller). */
@@ -61,11 +65,19 @@ function getHoverServerSnapshot() {
 function CardContent({
   render,
   close,
+  lockSide,
 }: {
   render: HoverCardProps['content'];
   close: () => void;
+  lockSide: () => void;
 }) {
-  return <>{render({ close })}</>;
+  return <>{render({ close, lockSide })}</>;
+}
+
+type Side = NonNullable<HoverCardProps['side']>;
+
+function isSide(value: string | null): value is Side {
+  return value === 'top' || value === 'bottom' || value === 'left' || value === 'right';
 }
 
 function originFromReason(reason: string): OpenOrigin {
@@ -108,6 +120,14 @@ export function HoverCard({
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const popupRef = useRef<HTMLDivElement | null>(null);
   const suppressFocusUntilRef = useRef(0);
+  const positionerRef = useRef<HTMLDivElement | null>(null);
+  // Side the card is pinned to once the content asked for it (null = free to flip).
+  const [lockedSide, setLockedSide] = useState<Side | null>(null);
+
+  const lockSide = useCallback(() => {
+    const current = positionerRef.current?.getAttribute('data-side') ?? null;
+    if (isSide(current)) setLockedSide(current);
+  }, []);
 
   const suppressFocusOpen = useCallback(() => {
     suppressFocusUntilRef.current = Date.now() + FOCUS_SUPPRESS_MS;
@@ -118,6 +138,7 @@ export function HoverCard({
       if (next && origin) originRef.current = origin;
       if (openRef.current === next) return;
       openRef.current = next;
+      if (!next) setLockedSide(null);
       setOpen(next);
       onOpenChange?.(next);
     },
@@ -216,10 +237,13 @@ export function HoverCard({
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Positioner
-          side={side}
+          ref={positionerRef}
+          side={lockedSide ?? side}
           align={align}
           sideOffset={6}
           collisionPadding={8}
+          // Pinned: keep the side, only slide along it so the card stays on screen.
+          collisionAvoidance={lockedSide ? { side: 'none', align: 'shift', fallbackAxisSide: 'none' } : undefined}
           className="z-[60]"
         >
           <Popover.Popup
@@ -241,7 +265,7 @@ export function HoverCard({
               if (event.key === 'Enter' || event.key === ' ') event.stopPropagation();
             }}
           >
-            <CardContent render={content} close={close} />
+            <CardContent render={content} close={close} lockSide={lockSide} />
           </Popover.Popup>
         </Popover.Positioner>
       </Popover.Portal>
