@@ -139,13 +139,24 @@ export async function fetchProgresoAsignacion(
   client: Client,
   asignacionId: string
 ): Promise<ProgresoFila[]> {
-  const { data, error } = await client.rpc('get_asignacion_progreso', {
-    p_asignacion_id: asignacionId,
-  });
+  // PostgREST caps each response (1000 rows by default), so read it page by page,
+  // ordered by id so the pages do not overlap.
+  const PAGINA = 1000;
+  const filas: Database['public']['Functions']['get_asignacion_progreso']['Returns'] = [];
+  for (let desde = 0; ; desde += PAGINA) {
+    const { data, error } = await client
+      .rpc('get_asignacion_progreso', { p_asignacion_id: asignacionId })
+      .order('id', { ascending: true })
+      .range(desde, desde + PAGINA - 1);
 
-  if (error) throw error;
+    if (error) throw error;
 
-  return (data ?? []).map(
+    const pagina = data ?? [];
+    filas.push(...pagina);
+    if (pagina.length < PAGINA) break;
+  }
+
+  return filas.map(
     (fila): ProgresoFila => ({
       id: fila.id,
       materiaId: fila.materia_id,

@@ -14,6 +14,9 @@ const COLUMNAS_ESTRUCTURA =
 const COLUMNAS_MATERIA =
   'id, cedulario_id, parent_id, codigo, nombre, descripcion, nivel, orden, activo, temario, temario_texto, created_at, updated_at, updated_by';
 
+/** Rows per request when reading the structure; must not exceed the server's max rows. */
+const PAGINA_ESTRUCTURA = 1000;
+
 /** A materia of the structure list: tree node plus metadata, without temario. */
 export interface MateriaEstructura extends MateriaNodo {
   cedularioId: string;
@@ -42,17 +45,27 @@ export async function fetchMateriasEstructura(
   client: Client,
   cedularioId: string
 ): Promise<MateriaEstructura[]> {
-  const { data, error } = await client
-    .from('materias')
-    .select(COLUMNAS_ESTRUCTURA)
-    .eq('cedulario_id', cedularioId)
-    .order('nivel', { ascending: true })
-    .order('orden', { ascending: true })
-    .order('id', { ascending: true });
+  // PostgREST caps each response (1000 rows by default), so read it page by page.
+  // The ordering is total (ends in `id`), which keeps the pages consistent.
+  const filas: FilaEstructura[] = [];
+  for (let desde = 0; ; desde += PAGINA_ESTRUCTURA) {
+    const { data, error } = await client
+      .from('materias')
+      .select(COLUMNAS_ESTRUCTURA)
+      .eq('cedulario_id', cedularioId)
+      .order('nivel', { ascending: true })
+      .order('orden', { ascending: true })
+      .order('id', { ascending: true })
+      .range(desde, desde + PAGINA_ESTRUCTURA - 1);
 
-  if (error) throw error;
+    if (error) throw error;
 
-  return ((data ?? []) as FilaEstructura[]).map((m) => ({
+    const pagina = (data ?? []) as FilaEstructura[];
+    filas.push(...pagina);
+    if (pagina.length < PAGINA_ESTRUCTURA) break;
+  }
+
+  return filas.map((m) => ({
     id: m.id,
     cedularioId: m.cedulario_id,
     parentId: m.parent_id,
