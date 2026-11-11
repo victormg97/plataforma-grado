@@ -1,23 +1,18 @@
 'use client';
 
 import { useMemo, useState, useRef } from 'react';
-import { format, isToday, isTomorrow } from 'date-fns';
-import { es, enUS, type Locale } from 'date-fns/locale';
+import { es, enUS } from 'date-fns/locale';
 import {
-  Calendar, Clock, CalendarOff, Search, X, SlidersHorizontal,
+  CalendarOff, Search, X, SlidersHorizontal,
   BookOpen, History, ChevronDown, FileText, GraduationCap,
-  ExternalLink, Edit2, Trash2, Plus, User,
+  Plus, User,
 } from 'lucide-react';
-import Link from 'next/link';
 import { toast } from 'sonner';
 import { useTranslations, useLocale } from 'next-intl';
 
-import { StatusBadge } from '@/components/common/StatusBadge';
 import { usePruebaTerm } from '@/lib/hooks/usePruebaTerm';
-import { NotasIndicator } from '@/components/notas/NotasIndicator';
 import { HorarioForm } from '@/components/horarios/HorarioForm';
 import { ConfirmModal } from '@/components/common/ConfirmModal';
-import { Tooltip } from '@/components/common/Tooltip';
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent,
   DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator,
@@ -25,10 +20,10 @@ import {
 
 import { useHorarios } from '@/lib/hooks/useHorarios';
 import { usePruebas } from '@/lib/hooks/usePruebas';
-import { buildClaseDetailHref } from '@/lib/utils/horarioNavigation';
-import type { HorarioConAsistencia } from '@/lib/hooks/useHorarios';
 import { useHorariosFilters } from './useHorariosFilters';
 import { FilterChip } from './FilterChip';
+import { ProximaClaseCard } from './ProximaClaseCard';
+import { HistorialClaseCard } from './HistorialClaseCard';
 
 type EstadoAsistencia = 'pendiente' | 'confirmado' | 'no_asistio' | 'cancelado' | 'cambiado';
 
@@ -191,22 +186,6 @@ function TabButton({
   );
 }
 
-function DayBadge({ fecha }: { fecha: string }) {
-  const t = useTranslations('horarios');
-  const d = new Date(fecha + 'T12:00:00');
-  if (isToday(d)) return (
-    <span className="inline-flex items-center rounded-full bg-[var(--color-brand-gold)] px-2 py-0.5 text-[10px] font-semibold text-white uppercase tracking-wide">
-      {t('hoy_badge')}
-    </span>
-  );
-  if (isTomorrow(d)) return (
-    <span className="inline-flex items-center rounded-full bg-[var(--color-brand-gold-muted)] px-2 py-0.5 text-[10px] font-semibold text-[var(--color-brand-gold)] uppercase tracking-wide border border-[var(--color-brand-gold)]/40">
-      {t('proxima_badge')}
-    </span>
-  );
-  return null;
-}
-
 function SkeletonCard() {
   return (
     <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg)] p-4 animate-pulse">
@@ -217,275 +196,6 @@ function SkeletonCard() {
       <div className="flex gap-2">
         <div className="h-6 w-28 rounded-full bg-[var(--color-bg-elevated)]" />
         <div className="h-6 w-20 rounded-full bg-[var(--color-bg-elevated)]" />
-      </div>
-    </div>
-  );
-}
-
-/* ─────────────────────────── Próximas card ── */
-
-function ProximaClaseCard({
-  horario,
-  isFirst,
-  isExamen,
-  locale,
-  dateFnsLocale,
-  alumnoBasePath,
-  fromPath,
-  role,
-  onEdit,
-  onDelete,
-}: {
-  horario: HorarioConAsistencia;
-  isFirst: boolean;
-  isExamen: boolean;
-  locale: string;
-  dateFnsLocale: Locale;
-  alumnoBasePath: string;
-  fromPath: string;
-  role: 'profesor' | 'admin';
-  onEdit: () => void;
-  onDelete: () => void;
-}) {
-  const t = useTranslations('horarios');
-  const tc = useTranslations('common');
-  const ta = useTranslations('alumnos');
-  const pruebaTerm = usePruebaTerm();
-  const estado = horario.asistencia?.[0]?.estado ?? 'pendiente';
-
-  return (
-    <div
-      onClick={onEdit}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onEdit(); } }}
-      className={`relative rounded-[var(--radius-lg)] border bg-[var(--color-bg)] shadow-[var(--shadow-sm)] overflow-hidden cursor-pointer transition-all hover:shadow-[var(--shadow-md)] hover:-translate-y-0.5 ${
-        isFirst
-          ? 'border-[var(--color-brand-gold)]/50 shadow-[var(--shadow-gold)]'
-          : 'border-[var(--color-border)]'
-      }`}
-    >
-      {isFirst && (
-        <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-[var(--radius-lg)] bg-[var(--color-brand-gold)]" />
-      )}
-      <div className={`p-4 ${isFirst ? 'pl-5' : ''}`}>
-        {/* Alumno name + status */}
-        <div className="flex items-start justify-between gap-3 mb-1.5">
-          <div className="min-w-0 flex-1">
-            {horario.alumno ? (
-              <Tooltip content={ta('ficha_titulo')} position="top">
-                <Link
-                  href={`${alumnoBasePath}/${horario.alumno.id}?from=${encodeURIComponent(fromPath)}`}
-                  onClick={(e) => e.stopPropagation()}
-                  className="inline font-semibold text-[var(--color-text-primary)] underline decoration-dashed decoration-[var(--color-brand-gold)]/60 underline-offset-4 hover:bg-[var(--color-brand-gold-muted)] hover:text-[var(--color-brand-gold)] hover:decoration-solid transition-all rounded px-1 -ml-1"
-                >
-                  {horario.alumno.nombre} {horario.alumno.apellido}
-                </Link>
-              </Tooltip>
-            ) : (
-              <span className="font-semibold text-[var(--color-text-muted)]">—</span>
-            )}
-          </div>
-          <StatusBadge status={estado} />
-        </div>
-
-        {/* Title + day badge + exam badge */}
-        <div className="flex items-center gap-1.5 flex-wrap mb-3">
-          <p className="text-sm text-[var(--color-text-secondary)] truncate">{horario.titulo}</p>
-          <DayBadge fecha={horario.fecha} />
-          {isExamen && (
-            <span
-              className="inline-flex items-center gap-0.5 rounded-full border px-1.5 py-0.5 text-[10px] font-semibold shrink-0"
-              style={{
-                backgroundColor: 'var(--color-brand-gold-muted)',
-                borderColor: 'color-mix(in srgb, var(--color-brand-gold) 40%, transparent)',
-                color: 'var(--color-brand-gold)',
-              }}
-            >
-              <GraduationCap className="size-2.5" />
-              {t('badge_examen', { term: pruebaTerm.singular })}
-            </span>
-          )}
-        </div>
-
-        {/* Info pills */}
-        <div className="flex flex-wrap gap-2 text-xs text-[var(--color-text-muted)]">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-bg-secondary)] px-3 py-1">
-            <Calendar className="size-3.5 text-[var(--color-brand-gold)] flex-shrink-0" />
-            <span className="capitalize">
-              {format(
-                new Date(horario.fecha + 'T12:00:00'),
-                locale === 'en' ? "EEE, MMM d" : "EEE d 'de' MMM",
-                { locale: dateFnsLocale }
-              )}
-            </span>
-          </span>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-bg-secondary)] px-3 py-1">
-            <Clock className="h-3.5 w-3.5 text-[var(--color-brand-gold)] flex-shrink-0" />
-            {horario.hora_inicio.slice(0, 5)} – {horario.hora_fin.slice(0, 5)}
-          </span>
-        </div>
-
-        {/* Action buttons */}
-        <div className="mt-3 pt-3 border-t border-[var(--color-border)] flex justify-end gap-1">
-          <Tooltip content={t('ver_detalle_completo')} position="top">
-            <Link
-              href={buildClaseDetailHref(horario.id, role, fromPath)}
-              onClick={(e) => e.stopPropagation()}
-              className="inline-flex rounded p-1.5 text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-brand-gold)]"
-            >
-              <ExternalLink className="size-4" />
-            </Link>
-          </Tooltip>
-          <Tooltip content={tc('editar')} position="top">
-            <button
-              onClick={(e) => { e.stopPropagation(); onEdit(); }}
-              className="rounded p-1.5 text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-brand-gold)]"
-            >
-              <Edit2 className="size-4" />
-            </button>
-          </Tooltip>
-          <Tooltip content={tc('eliminar')} position="top">
-            <button
-              onClick={(e) => { e.stopPropagation(); onDelete(); }}
-              className="rounded p-1.5 text-[var(--color-text-muted)] transition-colors hover:bg-red-50 hover:text-[var(--color-error)]"
-            >
-              <Trash2 className="size-4" />
-            </button>
-          </Tooltip>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ─────────────────────────── Historial card ── */
-
-function HistorialClaseCard({
-  horario,
-  isExamen,
-  locale,
-  dateFnsLocale,
-  notasCount,
-  alumnoBasePath,
-  fromPath,
-  role,
-  onEdit,
-  onDelete,
-}: {
-  horario: HorarioConAsistencia;
-  isExamen: boolean;
-  locale: string;
-  dateFnsLocale: Locale;
-  notasCount: number;
-  alumnoBasePath: string;
-  fromPath: string;
-  role: 'profesor' | 'admin';
-  onEdit: () => void;
-  onDelete: () => void;
-}) {
-  const t = useTranslations('horarios');
-  const tc = useTranslations('common');
-  const ta = useTranslations('alumnos');
-  const pruebaTerm = usePruebaTerm();
-  const estado = horario.asistencia?.[0]?.estado ?? 'pendiente';
-
-  return (
-    <div
-      onClick={onEdit}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onEdit(); } }}
-      className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg)] shadow-[var(--shadow-sm)] overflow-hidden cursor-pointer transition-all hover:shadow-[var(--shadow-md)] hover:border-[var(--color-border-strong)]"
-    >
-      <div className="p-4">
-        {/* Alumno name */}
-        <div className="flex items-start justify-between gap-3 mb-1">
-          <div className="min-w-0 flex-1">
-            {horario.alumno ? (
-              <Tooltip content={ta('ficha_titulo')} position="top">
-                <Link
-                  href={`${alumnoBasePath}/${horario.alumno.id}?from=${encodeURIComponent(fromPath)}`}
-                  onClick={(e) => e.stopPropagation()}
-                  className="text-sm font-semibold text-[var(--color-text-primary)] underline decoration-dashed decoration-[var(--color-brand-gold)]/60 underline-offset-4 hover:text-[var(--color-brand-gold)] rounded px-1 -ml-1 inline"
-                >
-                  {horario.alumno.nombre} {horario.alumno.apellido}
-                </Link>
-              </Tooltip>
-            ) : (
-              <span className="text-sm font-semibold text-[var(--color-text-muted)]">—</span>
-            )}
-          </div>
-          <div className="flex items-center gap-1.5 flex-shrink-0">
-            {notasCount > 0 && <NotasIndicator count={notasCount} />}
-            <StatusBadge status={estado} />
-          </div>
-        </div>
-
-        {/* Title + exam badge */}
-        <div className="flex items-center gap-1.5 flex-wrap mb-2">
-          <p className="text-sm text-[var(--color-text-secondary)] truncate">{horario.titulo}</p>
-          {isExamen && (
-            <span
-              className="inline-flex items-center gap-0.5 rounded-full border px-1.5 py-0.5 text-[10px] font-semibold shrink-0"
-              style={{
-                backgroundColor: 'var(--color-brand-gold-muted)',
-                borderColor: 'color-mix(in srgb, var(--color-brand-gold) 40%, transparent)',
-                color: 'var(--color-brand-gold)',
-              }}
-            >
-              <GraduationCap className="size-2.5" />
-              {t('badge_examen', { term: pruebaTerm.singular })}
-            </span>
-          )}
-        </div>
-
-        {/* Info pills */}
-        <div className="flex flex-wrap gap-1.5 text-xs text-[var(--color-text-muted)]">
-          <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-bg-secondary)] px-2.5 py-0.5">
-            <Calendar className="size-3 text-[var(--color-brand-gold)] flex-shrink-0" />
-            <span className="capitalize">
-              {format(
-                new Date(horario.fecha + 'T12:00:00'),
-                locale === 'en' ? "MMM d, yyyy" : "d 'de' MMM yyyy",
-                { locale: dateFnsLocale }
-              )}
-            </span>
-          </span>
-          <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-bg-secondary)] px-2.5 py-0.5">
-            <Clock className="h-3 w-3 text-[var(--color-brand-gold)] flex-shrink-0" />
-            {horario.hora_inicio.slice(0, 5)}
-          </span>
-        </div>
-
-        {/* Action buttons */}
-        <div className="mt-3 pt-3 border-t border-[var(--color-border)] flex justify-end gap-1">
-          <Tooltip content={t('ver_detalle_completo')} position="top">
-            <Link
-              href={buildClaseDetailHref(horario.id, role, fromPath)}
-              onClick={(e) => e.stopPropagation()}
-              className="inline-flex rounded p-1.5 text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-brand-gold)]"
-            >
-              <ExternalLink className="size-4" />
-            </Link>
-          </Tooltip>
-          <Tooltip content={tc('editar')} position="top">
-            <button
-              onClick={(e) => { e.stopPropagation(); onEdit(); }}
-              className="rounded p-1.5 text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-brand-gold)]"
-            >
-              <Edit2 className="size-4" />
-            </button>
-          </Tooltip>
-          <Tooltip content={tc('eliminar')} position="top">
-            <button
-              onClick={(e) => { e.stopPropagation(); onDelete(); }}
-              className="rounded p-1.5 text-[var(--color-text-muted)] transition-colors hover:bg-red-50 hover:text-[var(--color-error)]"
-            >
-              <Trash2 className="size-4" />
-            </button>
-          </Tooltip>
-        </div>
       </div>
     </div>
   );
@@ -697,14 +407,14 @@ export function HorariosProfesorView({ profesorId, role, activeTab: activeTabPro
               </p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
               {filters.filteredUpcoming.map((h, idx) => (
                 <ProximaClaseCard
                   key={h.id}
+                  indice={idx}
                   horario={h}
                   isFirst={idx === 0 && !filters.debouncedProximas.trim() && filters.estadoProximas === 'todos' && !filters.soloPruebasProximas && !filters.selectedAlumnoId}
                   isExamen={pruebaHorarioIds.has(h.id)}
-                  locale={locale}
                   dateFnsLocale={dateFnsLocale}
                   alumnoBasePath={alumnoBasePath}
                   fromPath={fromPath}
@@ -809,13 +519,13 @@ export function HorariosProfesorView({ profesorId, role, activeTab: activeTabPro
               </p>
             </div>
           ) : (
-            <div className="space-y-2.5">
-              {filters.filteredHistorial.map((h) => (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+              {filters.filteredHistorial.map((h, idx) => (
                 <HistorialClaseCard
                   key={h.id}
+                  indice={idx}
                   horario={h}
                   isExamen={pruebaHorarioIds.has(h.id)}
-                  locale={locale}
                   dateFnsLocale={dateFnsLocale}
                   notasCount={filters.notasCounts[h.id] ?? 0}
                   alumnoBasePath={alumnoBasePath}
