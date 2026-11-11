@@ -72,7 +72,12 @@ export function ProfesorCard({
       {/* Banner */}
       <div
         aria-hidden="true"
-        className="h-20 bg-gradient-to-br from-[var(--color-brand-gold)] via-[var(--color-brand-gold-light)] to-[var(--color-brand-gold)] opacity-90"
+        className={cn(
+          'h-20',
+          // Light: tints of the tenant accent. Dark: shades of it, so the strip does not glare.
+          'bg-[radial-gradient(circle_at_20%_0%,rgba(255,255,255,0.35),transparent_55%),linear-gradient(135deg,color-mix(in_srgb,var(--color-brand-gold)_80%,white),color-mix(in_srgb,var(--color-brand-gold)_45%,white))]',
+          'dark:bg-[radial-gradient(circle_at_20%_0%,rgba(255,255,255,0.10),transparent_55%),linear-gradient(135deg,color-mix(in_srgb,var(--color-brand-gold)_50%,black),color-mix(in_srgb,var(--color-brand-gold)_18%,black))]',
+        )}
       />
 
       {/* Top-right quick actions */}
@@ -105,7 +110,7 @@ export function ProfesorCard({
       </div>
 
       {/* Identity */}
-      <div className="-mt-10 flex flex-col items-center gap-1 px-[var(--space-md)] text-center">
+      <div className="relative z-10 -mt-10 flex flex-col items-center gap-1 px-[var(--space-md)] text-center">
         <Avatar
           nombre={p.nombre}
           apellido={p.apellido}
