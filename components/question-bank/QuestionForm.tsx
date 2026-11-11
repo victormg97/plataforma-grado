@@ -156,7 +156,6 @@ export function QuestionForm({ categories, tags, subjects, editId, onSaved, onCa
   });
 
   // Populate form when editing
-  /* eslint-disable react-hooks/set-state-in-effect -- populating form from fetched data */
   useEffect(() => {
     if (editData) {
       setType(editData.type);
@@ -181,8 +180,7 @@ export function QuestionForm({ categories, tags, subjects, editId, onSaved, onCa
         setMatchingPairs(editData.options?.pairs || [{ left: '', right: '' }, { left: '', right: '' }]);
       }
     }
-  }, [editData]);
-  /* eslint-enable react-hooks/set-state-in-effect */
+  }, [editData, setExplanationOpen]);
 
   // Stable callbacks for RichTextEditor to prevent re-render cascades.
   // We store whatever TipTap produces (including '<p></p>' for empty) to avoid

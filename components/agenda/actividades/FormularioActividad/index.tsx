@@ -27,7 +27,7 @@ import { Label } from '@/components/ui/label';
 
 import { SelectorAlcance } from './SelectorAlcance';
 import { SelectorDestinatarios, type AlumnoOption } from './SelectorDestinatarios';
-import { CATEGORIAS, COLOR_POR_CATEGORIA, fetchAlumnosForActividad } from './helpers';
+import { CATEGORIAS, COLOR_POR_CATEGORIA, buildActividadDefaults, fetchAlumnosForActividad } from './helpers';
 
 type AlcanceActividad = Extract<AgendaAlcance, 'alumnos_seleccionados' | 'todos_alumnos'>;
 
@@ -104,19 +104,12 @@ export function FormularioActividad({
     formState: { errors, isSubmitting },
   } = useForm<ActividadFormData>({
     resolver: zodResolver(crearActividadSchema) as never,
-    defaultValues: {
-      titulo: '', fecha: '', hora_inicio: undefined, hora_fin: undefined,
-      dia_completo: false, categoria: 'otro', visibilidad: 'privada',
-      alcance: 'todos_alumnos', destinatarios: [],
-      descripcion: '', nota: '', lugar: '', enlace_conexion: '',
-    },
+    defaultValues: buildActividadDefaults(),
   });
 
-  const diaCompleto = watch('dia_completo');
-  const fecha = watch('fecha');
-  const horaInicio = watch('hora_inicio');
-  const horaFin = watch('hora_fin');
-  const alcance = watch('alcance');
+  const [diaCompleto, fecha, horaInicio, horaFin, alcance] = watch(
+    ['dia_completo', 'fecha', 'hora_inicio', 'hora_fin', 'alcance'],
+  );
 
   // Report dirty state to parent (inline mode)
   useEffect(() => {
@@ -140,16 +133,7 @@ export function FormularioActividad({
         enlace_conexion: actividadExistente.enlace_conexion ?? '',
       });
     } else {
-      const endTime = defaultEndTime ?? (defaultTime
-        ? `${String(Math.min(Number(defaultTime.split(':')[0]) + 1, 23)).padStart(2, '0')}:${defaultTime.split(':')[1]}`
-        : undefined);
-      reset({
-        titulo: '', fecha: defaultDate ?? '',
-        hora_inicio: defaultTime ?? undefined, hora_fin: endTime ?? undefined,
-        dia_completo: false, categoria: 'otro', visibilidad: 'privada',
-        alcance: 'todos_alumnos', destinatarios: [],
-        descripcion: '', nota: '', lugar: '', enlace_conexion: '',
-      });
+      reset(buildActividadDefaults(defaultDate, defaultTime, defaultEndTime));
     }
     setTimeout(() => { isResettingRef.current = false; }, 50);
   }, [open, actividadExistente, defaultDate, defaultTime, defaultEndTime, reset]);

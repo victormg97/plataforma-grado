@@ -2,7 +2,6 @@
 
 import { useTranslations } from 'next-intl';
 import { X, ChevronLeft, ChevronRight, Edit, Copy, Trash2 } from 'lucide-react';
-import { Button } from '@/components/common/Button';
 import { Tooltip } from '@/components/common/Tooltip';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';

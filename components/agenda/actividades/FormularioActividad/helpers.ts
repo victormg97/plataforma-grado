@@ -55,3 +55,31 @@ export async function fetchAlumnosForActividad(
     .order('nombre');
   return (profiles as AlumnoOption[]) ?? [];
 }
+
+// ─── Default form values ────────────────────────────────────────────────────
+
+/** Valores por defecto de un formulario de actividad nueva. */
+export function buildActividadDefaults(
+  defaultDate?: string,
+  defaultTime?: string,
+  defaultEndTime?: string,
+) {
+  const endTime = defaultEndTime ?? (defaultTime
+    ? `${String(Math.min(Number(defaultTime.split(':')[0]) + 1, 23)).padStart(2, '0')}:${defaultTime.split(':')[1]}`
+    : undefined);
+  return {
+    titulo: '',
+    fecha: defaultDate ?? '',
+    hora_inicio: defaultTime ?? undefined,
+    hora_fin: endTime ?? undefined,
+    dia_completo: false,
+    categoria: 'otro' as CategoriaAgenda,
+    visibilidad: 'privada' as 'privada' | 'publica',
+    alcance: 'todos_alumnos' as 'alumnos_seleccionados' | 'todos_alumnos',
+    destinatarios: [] as string[],
+    descripcion: '',
+    nota: '',
+    lugar: '',
+    enlace_conexion: '',
+  };
+}
