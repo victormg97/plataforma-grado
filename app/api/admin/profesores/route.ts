@@ -11,9 +11,11 @@ export async function GET() {
   }
 
   // Run rol check and main query in parallel
-  const [{ data: profile }, { data: rows, error }] = await Promise.all([
+  // The calendar colour is read in the same round trip (the RPC does not return it).
+  const [{ data: profile }, { data: rows, error }, { data: colores }] = await Promise.all([
     supabase.from('profiles').select('rol').eq('id', user.id).single(),
     supabase.rpc('get_profesores_admin'),
+    supabase.from('profiles').select('id, color_calendario').in('rol', ['profesor', 'admin']),
   ]);
 
   if (profile?.rol !== 'admin') {
@@ -24,7 +26,10 @@ export async function GET() {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json(rows ?? []);
+  const colorPorId = new Map((colores ?? []).map((c) => [c.id, c.color_calendario]));
+  return NextResponse.json(
+    (rows ?? []).map((r: { id: string }) => ({ ...r, color_calendario: colorPorId.get(r.id) ?? null })),
+  );
 }
 
 export async function POST(request: NextRequest) {

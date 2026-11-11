@@ -4087,6 +4087,13 @@ export type Database = {
           alumno_rol: string
         }[]
       }
+      get_cedularios_alumnos_resumen: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          alumno_id: string
+          total_activas: number
+        }[]
+      }
       get_cedularios_staff_resumen: {
         Args: Record<PropertyKey, never>
         Returns: {

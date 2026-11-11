@@ -18,7 +18,9 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
-import { AlumnoMobileCard, AlumnoTableRow, type AlumnoAdmin } from './components';
+import { useConteosAlumnos } from '@/components/cedularios/seguimiento/hooks/useConteosAlumnos';
+import { useSegUrl } from '@/components/cedularios/seguimiento/url/useSegUrl';
+import { AlumnoProfileCard, type AlumnoAdmin, type AlumnoStatus } from './components';
 
 type ProfesorOption = {
   id: string;
@@ -71,7 +73,12 @@ function AdminAlumnosContent() {
   // Ficha alumno — navigate to full page
   const openFicha = (alumnoId: string) => router.push(`/admin/alumnos/${alumnoId}`);
 
-  const getAlumnoStatus = (a: AlumnoAdmin): 'activo' | 'pendiente' | 'bloqueado' | 'graduado' => {
+  const { data: conteosCedularios } = useConteosAlumnos();
+  const { abrir: abrirSeg } = useSegUrl();
+  const abrirCedulario = (a: AlumnoAdmin, total: number) =>
+    abrirSeg({ modal: total > 0 ? 'revision' : 'asignar', alumno: a.id });
+
+  const getAlumnoStatus = (a: AlumnoAdmin): AlumnoStatus => {
     return a.estado ?? 'activo';
   };
 
@@ -223,7 +230,7 @@ function AdminAlumnosContent() {
 
   const renderStatusCard = (status: string) => {
     const items = alumnosByStatus[status] || [];
-    const label = status.charAt(0).toUpperCase() + status.slice(1);
+    const label = ta(`estado_${status}`);
 
     // For 'activo', always show (even if empty with message)
     // For others, only show if there are items (already handled by visibleStatuses)
@@ -262,50 +269,21 @@ function AdminAlumnosContent() {
           {label} ({items.length})
         </h2>
 
-        {/* Mobile: card list */}
-        <div className="space-y-[var(--space-sm)] md:hidden">
-          {items.map((a) => (
-            <AlumnoMobileCard
+        <div className="grid grid-cols-1 gap-[var(--space-md)] sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+          {items.map((a, indice) => (
+            <AlumnoProfileCard
               key={a.id}
               alumno={a}
-              status={getAlumnoStatus(a) as 'activo' | 'pendiente' | 'bloqueado' | 'graduado'}
+              status={getAlumnoStatus(a)}
+              indice={indice}
+              cedularios={conteosCedularios?.[a.id] ?? 0}
               onOpen={openFicha}
+              onCedulario={abrirCedulario}
               onReassign={(al) => { setReassign(al); setNewProfesorId(al.profesor_id || ''); }}
               onGraduate={setGraduateModal}
               onToggleBlock={setConfirmBlock}
             />
           ))}
-        </div>
-
-        {/* Desktop: table */}
-        <div className="hidden md:block overflow-hidden rounded-[var(--radius-md)] border border-[var(--color-border)]">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-left text-xs font-semibold uppercase text-[var(--color-text-muted)]">
-                  <th className="px-4 py-3">{ta('col_alumno')}</th>
-                  <th className="px-4 py-3">{ta('col_profesor')}</th>
-                  <th className="px-4 py-3">{tc('estado')}</th>
-                  <th className="px-4 py-3 hidden lg:table-cell">{ta('col_ultimo_acceso')}</th>
-                  <th className="px-4 py-3 hidden xl:table-cell">{ta('col_universidad')}</th>
-                  <th className="px-4 py-3 text-right">{ta('col_acciones')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.map((a) => (
-                  <AlumnoTableRow
-                    key={a.id}
-                    alumno={a}
-                    status={getAlumnoStatus(a) as 'activo' | 'pendiente' | 'bloqueado' | 'graduado'}
-                    onOpen={openFicha}
-                    onReassign={(al) => { setReassign(al); setNewProfesorId(al.profesor_id || ''); }}
-                    onGraduate={setGraduateModal}
-                    onToggleBlock={setConfirmBlock}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </div>
         </div>
       </div>
     );
@@ -352,7 +330,7 @@ function AdminAlumnosContent() {
             disabled={!hasMultipleStatuses}
           >
             <span>
-              {estadoFilter ? (estadoFilter.charAt(0).toUpperCase() + estadoFilter.slice(1)) : ta('todos_estados')}
+              {estadoFilter ? ta(`estado_${estadoFilter}`) : ta('todos_estados')}
             </span>
             <ChevronDown className="size-4 shrink-0 text-[var(--color-text-muted)]" />
           </DropdownMenuTrigger>
@@ -360,7 +338,7 @@ function AdminAlumnosContent() {
             <DropdownMenuItem onClick={() => setEstadoFilter(null)}>{ta('todos_estados')}</DropdownMenuItem>
             {existingStatuses.map((status) => (
               <DropdownMenuItem key={status} onClick={() => setEstadoFilter(status)}>
-                {status.charAt(0).toUpperCase() + status.slice(1)}
+                {ta(`estado_${status}`)}
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>

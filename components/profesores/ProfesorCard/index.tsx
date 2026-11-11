@@ -7,6 +7,7 @@
  * respect `prefers-reduced-motion`.
  */
 
+import type { CSSProperties } from 'react';
 import Link from 'next/link';
 import { m, useReducedMotion } from 'framer-motion';
 import { useTranslations } from 'next-intl';
@@ -25,6 +26,8 @@ export interface ProfesorCardData {
   avatar_url: string | null;
   activo: boolean;
   rol: string;
+  /** Hex colour the user picked for the calendar (profile); null uses the brand colour. */
+  color_calendario?: string | null;
   alumnos_count: number;
   estado_cuenta?: 'Pendiente' | 'Activo';
 }
@@ -59,6 +62,7 @@ export function ProfesorCard({
 
   return (
     <m.article
+      style={{ '--pc': p.color_calendario ?? 'var(--color-brand-gold)' } as CSSProperties}
       initial={reducir ? false : { opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, delay: reducir ? 0 : Math.min(indice, 8) * 0.05, ease: 'easeOut' }}
@@ -74,9 +78,10 @@ export function ProfesorCard({
         aria-hidden="true"
         className={cn(
           'h-20',
-          // Light: tints of the tenant accent. Dark: shades of it, so the strip does not glare.
-          'bg-[radial-gradient(circle_at_20%_0%,rgba(255,255,255,0.35),transparent_55%),linear-gradient(135deg,color-mix(in_srgb,var(--color-brand-gold)_80%,white),color-mix(in_srgb,var(--color-brand-gold)_45%,white))]',
-          'dark:bg-[radial-gradient(circle_at_20%_0%,rgba(255,255,255,0.10),transparent_55%),linear-gradient(135deg,color-mix(in_srgb,var(--color-brand-gold)_50%,black),color-mix(in_srgb,var(--color-brand-gold)_18%,black))]',
+          // Gradient of the colour the user chose for the calendar (--pc); lighter in light mode,
+          // deeper in dark mode so the strip does not glare.
+          'bg-[radial-gradient(circle_at_20%_0%,rgba(255,255,255,0.35),transparent_55%),linear-gradient(135deg,color-mix(in_srgb,var(--pc)_95%,white),color-mix(in_srgb,var(--pc)_55%,white))]',
+          'dark:bg-[radial-gradient(circle_at_20%_0%,rgba(255,255,255,0.10),transparent_55%),linear-gradient(135deg,color-mix(in_srgb,var(--pc)_70%,black),color-mix(in_srgb,var(--pc)_28%,black))]',
         )}
       />
 

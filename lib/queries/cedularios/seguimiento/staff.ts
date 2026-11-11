@@ -9,6 +9,18 @@ import type { Database } from '@/lib/supabase/types';
 
 type Client = SupabaseClient<Database>;
 
+/** Map `alumno_id -> total_activas` for the Alumnos list, in one RPC. */
+export async function fetchConteosAlumnos(client: Client): Promise<Record<string, number>> {
+  const { data, error } = await client.rpc('get_cedularios_alumnos_resumen');
+  if (error) throw error;
+
+  const conteos: Record<string, number> = {};
+  for (const fila of data ?? []) {
+    conteos[fila.alumno_id] = Number(fila.total_activas);
+  }
+  return conteos;
+}
+
 /** Map `asignatario_id -> total_activas`. */
 export async function fetchConteosStaff(client: Client): Promise<Record<string, number>> {
   const { data, error } = await client.rpc('get_cedularios_staff_resumen');

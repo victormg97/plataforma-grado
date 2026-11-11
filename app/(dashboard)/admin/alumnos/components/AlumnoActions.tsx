@@ -32,9 +32,11 @@ interface AlumnoActionsProps {
   onReassign: (alumno: AlumnoAdmin) => void;
   onGraduate: (alumno: AlumnoAdmin) => void;
   onToggleBlock: (alumno: AlumnoAdmin) => void;
+  /** Layout classes of the button row. */
+  className?: string;
 }
 
-export function AlumnoActions({ alumno, onReassign, onGraduate, onToggleBlock }: AlumnoActionsProps) {
+export function AlumnoActions({ alumno, onReassign, onGraduate, onToggleBlock, className }: AlumnoActionsProps) {
   const router = useRouter();
   const tc = useTranslations('common');
   const ta = useTranslations('alumnos');
@@ -43,7 +45,7 @@ export function AlumnoActions({ alumno, onReassign, onGraduate, onToggleBlock }:
   const canGraduate = !alumno.paso_prueba && alumno.activo;
 
   return (
-    <div className="flex items-center gap-1 w-[112px] justify-end">
+    <div className={`flex items-center gap-1 ${className ?? 'w-[112px] justify-end'}`}>
       <Tooltip content={tc('editar')}>
         <button
           onClick={() => router.push(`/admin/alumnos/${alumno.id}/editar`)}

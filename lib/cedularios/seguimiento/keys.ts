@@ -27,6 +27,8 @@ export const seguimientoKeys = {
     [...RAIZ, 'asignables', cedularioId, q] as const,
   /** Active assignments per profesor/administrador (one RPC for the professors list). */
   staffConteos: () => [...RAIZ, 'staff_conteos'] as const,
+  /** Active assignments per alumno (one RPC for the admin Alumnos list). */
+  alumnosConteos: () => [...RAIZ, 'alumnos_conteos'] as const,
   /** Classes of the student that can be linked to a materia. */
   vinculables: (asignacionId: string, q: string = '') =>
     [...RAIZ, 'vinculables', asignacionId, q] as const,
@@ -48,6 +50,7 @@ export const SEG_STALE_TIME = {
   asignables: 30 * SEGUNDO_MS,
   vinculables: 30 * SEGUNDO_MS,
   staffConteos: 60 * SEGUNDO_MS,
+  alumnosConteos: 60 * SEGUNDO_MS,
 } as const;
 
 export type SegStaleTimeKey = keyof typeof SEG_STALE_TIME;

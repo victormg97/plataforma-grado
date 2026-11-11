@@ -43,6 +43,7 @@ export function invalidarSeguimiento(qc: QueryClient, alcance: AlcanceInvalidaci
   });
   void qc.invalidateQueries({ queryKey: prefijoAsignables(cedularioId) });
   void qc.invalidateQueries({ queryKey: seguimientoKeys.staffConteos() });
+  void qc.invalidateQueries({ queryKey: seguimientoKeys.alumnosConteos() });
 
   for (const asignacionId of asignacionIds ?? []) {
     void qc.invalidateQueries({ queryKey: seguimientoKeys.progreso(asignacionId) });
