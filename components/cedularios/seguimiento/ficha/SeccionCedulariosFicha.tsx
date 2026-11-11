@@ -29,9 +29,15 @@ export interface SeccionCedulariosFichaProps {
   alumnoId: string;
   /** Caller role of the record. The section is never shown to the student. */
   role?: 'profesor' | 'admin' | 'alumno';
+  /** 'propio': the staff member's own cedularios (own copy, no alumno wording). */
+  variante?: 'ficha' | 'propio';
 }
 
-export function SeccionCedulariosFicha({ alumnoId, role = 'profesor' }: SeccionCedulariosFichaProps) {
+export function SeccionCedulariosFicha({
+  alumnoId,
+  role = 'profesor',
+  variante = 'ficha',
+}: SeccionCedulariosFichaProps) {
   const t = useTranslations('cedularios.seguimiento.ficha');
   const tComun = useTranslations('cedularios.seguimiento.comun');
   const { abrir } = useSegUrl();
@@ -49,10 +55,16 @@ export function SeccionCedulariosFicha({ alumnoId, role = 'profesor' }: SeccionC
 
   if (role === 'alumno') return null;
 
+  const propio = variante === 'propio';
+  const tituloTexto = propio ? t('propio_titulo') : t('titulo');
+  const descripcionTexto = propio ? t('propio_descripcion') : t('descripcion');
+  const vacioTitulo = propio ? t('propio_vacio_titulo') : t('vacio_titulo');
+  const vacioDescripcion = propio ? t('propio_vacio_descripcion') : t('vacio_descripcion');
+
   const titulo = (
     <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-[var(--color-text-primary)]">
       <BookOpen className="size-4 text-[var(--color-brand-gold)]" aria-hidden="true" />
-      {t('titulo')}
+      {tituloTexto}
     </h3>
   );
   const claseSeccion =
@@ -60,7 +72,7 @@ export function SeccionCedulariosFicha({ alumnoId, role = 'profesor' }: SeccionC
 
   if (isPending) {
     return (
-      <section aria-label={t('titulo')} className={claseSeccion}>
+      <section aria-label={tituloTexto} className={claseSeccion}>
         {titulo}
         <div
           role="status"
@@ -75,7 +87,7 @@ export function SeccionCedulariosFicha({ alumnoId, role = 'profesor' }: SeccionC
 
   if (isError && !data) {
     return (
-      <section aria-label={t('titulo')} className={claseSeccion}>
+      <section aria-label={tituloTexto} className={claseSeccion}>
         {titulo}
         <div role="alert" className="flex flex-col items-start gap-2">
           <p className="text-sm text-[var(--color-error)]">{t('error_carga')}</p>
@@ -108,14 +120,14 @@ export function SeccionCedulariosFicha({ alumnoId, role = 'profesor' }: SeccionC
   const asignar = () => abrir({ modal: 'asignar', alumno: alumnoId });
 
   return (
-    <section aria-label={t('titulo')} className={claseSeccion}>
+    <section aria-label={tituloTexto} className={claseSeccion}>
       <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <h3 className="flex items-center gap-2 text-sm font-semibold text-[var(--color-text-primary)]">
             <BookOpen className="size-4 text-[var(--color-brand-gold)]" aria-hidden="true" />
-            {t('titulo')}
+            {tituloTexto}
           </h3>
-          <p className="mt-0.5 text-xs text-[var(--color-text-muted)]">{t('descripcion')}</p>
+          <p className="mt-0.5 text-xs text-[var(--color-text-muted)]">{descripcionTexto}</p>
         </div>
         {puedeAsignar && activas.length > 0 && (
           <Button type="button" size="sm" variant="secondary" onClick={asignar}>
@@ -124,7 +136,7 @@ export function SeccionCedulariosFicha({ alumnoId, role = 'profesor' }: SeccionC
         )}
       </div>
 
-      {!alumno.activo && (
+      {!propio && !alumno.activo && (
         <p
           role="status"
           className="mb-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-[var(--space-sm)] text-sm text-[var(--color-text-muted)]"
@@ -149,8 +161,8 @@ export function SeccionCedulariosFicha({ alumnoId, role = 'profesor' }: SeccionC
         </ul>
       ) : (
         <div className="flex flex-col items-start gap-2 rounded-[var(--radius-md)] bg-[var(--color-bg-secondary)] p-3">
-          <p className="text-sm font-medium text-[var(--color-text-primary)]">{t('vacio_titulo')}</p>
-          <p className="text-xs text-[var(--color-text-muted)]">{t('vacio_descripcion')}</p>
+          <p className="text-sm font-medium text-[var(--color-text-primary)]">{vacioTitulo}</p>
+          <p className="text-xs text-[var(--color-text-muted)]">{vacioDescripcion}</p>
           {puedeAsignar && (
             <Button type="button" size="sm" onClick={asignar}>
               {t('asignar_cedulario')}

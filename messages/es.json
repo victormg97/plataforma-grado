@@ -514,7 +514,8 @@
     "subtitulo": "Gestión de profesores",
     "ver_alumnos": "Ver alumnos",
     "ver_clases": "Ver clases",
-    "ver_agenda": "Ver agenda",
+    "asignar_cedulario": "Asignar cedulario",
+    "revisar_cedularios": "{count, plural, one {Revisar cedulario} other {Revisar cedularios}}",
     "ver_clases_subtitulo": "Historial de clases del profesor",
     "clases_de": "Clases de {nombre}",
     "alumnos_asignados": "{count} alumnos asignados",
@@ -558,6 +559,8 @@
   "perfil": {
     "titulo": "Editar perfil",
     "editar_perfil": "Editar perfil",
+    "asignar_cedulario": "Asignar cedulario",
+    "revisar_cedularios": "{count, plural, one {Revisar cedulario} other {Revisar cedularios}}",
     "tab_info": "Información",
     "tab_seguridad": "Seguridad",
     "nombre": "Nombre",
@@ -3325,6 +3328,8 @@
         "ya_asignado": "ya asignado",
         "sin_valor": "—",
         "alumno_sin_nombre": "Alumno sin nombre",
+        "rol_profesor": "Profesor",
+        "rol_admin": "Administrador",
         "avance_aria": "Avance: {porcentaje}",
         "materias_conteo": "{count, plural, =0 {Sin materias} one {# materia} other {# materias}}",
         "materias_cubiertas": "{cubiertas} de {total, plural, one {# materia} other {# materias}}",
@@ -3368,6 +3373,10 @@
         "desasignar_aria": "Desasignar {cedulario}",
         "vacio_titulo": "Sin cedularios asignados",
         "vacio_descripcion": "Este alumno todavía no tiene cedularios asignados.",
+        "propio_titulo": "Mis cedularios",
+        "propio_descripcion": "Cedularios que te asignaste para llevar tu propio seguimiento de estudio.",
+        "propio_vacio_titulo": "Sin cedularios propios",
+        "propio_vacio_descripcion": "Asígnate un cedulario para llevar tu propio seguimiento de estudio.",
         "desasignados_titulo": "Cedularios desasignados",
         "desasignados_conteo": "{count, plural, one {# cedulario desasignado} other {# cedularios desasignados}}",
         "desasignado_el": "Desasignado el {fecha}",
@@ -3598,6 +3607,7 @@
         "titulo_reasignar": "Reasignar cedulario",
         "descripcion_cedulario": "Elige los alumnos que recibirán {cedulario}.",
         "descripcion_alumno": "Elige los cedularios que se asignarán a {alumno}.",
+        "descripcion_persona": "Elige los cedularios que se asignarán a {alumno}.",
         "descripcion_reasignar": "Se reactivará {cedulario} para {alumno}. Su avance anterior se conserva.",
         "cedulario": {
           "etiqueta": "Cedulario",
@@ -3619,7 +3629,8 @@
           "seleccionados": "{count, plural, =0 {Ningún alumno seleccionado} one {# alumno seleccionado} other {# alumnos seleccionados}}",
           "limite": "Puedes asignar hasta {max} alumnos a la vez.",
           "cargar_mas": "Cargar más alumnos",
-          "alumno_fijo": "Alumno"
+          "alumno_fijo": "Alumno",
+          "persona_fija": "Persona"
         },
         "materias": {
           "etiqueta": "Materias",

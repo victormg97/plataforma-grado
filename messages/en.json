@@ -514,7 +514,8 @@
     "subtitulo": "Professor management",
     "ver_alumnos": "View students",
     "ver_clases": "View classes",
-    "ver_agenda": "View schedule",
+    "asignar_cedulario": "Assign cedulario",
+    "revisar_cedularios": "{count, plural, one {Review cedulario} other {Review cedularios}}",
     "ver_clases_subtitulo": "Professor's class history",
     "clases_de": "Classes for {nombre}",
     "alumnos_asignados": "{count} students assigned",
@@ -558,6 +559,8 @@
   "perfil": {
     "titulo": "Edit profile",
     "editar_perfil": "Edit profile",
+    "asignar_cedulario": "Assign cedulario",
+    "revisar_cedularios": "{count, plural, one {Review cedulario} other {Review cedularios}}",
     "tab_info": "Information",
     "tab_seguridad": "Security",
     "nombre": "First name",
@@ -3321,6 +3324,8 @@
         "ya_asignado": "already assigned",
         "sin_valor": "—",
         "alumno_sin_nombre": "Unnamed student",
+        "rol_profesor": "Professor",
+        "rol_admin": "Administrator",
         "avance_aria": "Progress: {porcentaje}",
         "materias_conteo": "{count, plural, =0 {No subjects} one {# subject} other {# subjects}}",
         "materias_cubiertas": "{cubiertas} of {total, plural, one {# subject} other {# subjects}}",
@@ -3364,6 +3369,10 @@
         "desasignar_aria": "Unassign {cedulario}",
         "vacio_titulo": "No syllabi assigned",
         "vacio_descripcion": "This student does not have any syllabi assigned yet.",
+        "propio_titulo": "My syllabi",
+        "propio_descripcion": "Syllabi you assigned to yourself to track your own study progress.",
+        "propio_vacio_titulo": "No syllabi of your own",
+        "propio_vacio_descripcion": "Assign yourself a syllabus to track your own study progress.",
         "desasignados_titulo": "Unassigned syllabi",
         "desasignados_conteo": "{count, plural, one {# unassigned syllabus} other {# unassigned syllabi}}",
         "desasignado_el": "Unassigned on {fecha}",
@@ -3594,6 +3603,7 @@
         "titulo_reasignar": "Reassign syllabus",
         "descripcion_cedulario": "Choose the students who will receive {cedulario}.",
         "descripcion_alumno": "Choose the syllabi to assign to {alumno}.",
+        "descripcion_persona": "Choose the syllabi to assign to {alumno}.",
         "descripcion_reasignar": "{cedulario} will be reactivated for {alumno}. Their previous progress is kept.",
         "cedulario": {
           "etiqueta": "Syllabus",
@@ -3615,7 +3625,8 @@
           "seleccionados": "{count, plural, =0 {No students selected} one {# student selected} other {# students selected}}",
           "limite": "You can assign up to {max} students at a time.",
           "cargar_mas": "Load more students",
-          "alumno_fijo": "Student"
+          "alumno_fijo": "Student",
+          "persona_fija": "Person"
         },
         "materias": {
           "etiqueta": "Subjects",

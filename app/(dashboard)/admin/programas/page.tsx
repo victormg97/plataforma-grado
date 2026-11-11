@@ -11,6 +11,7 @@ import { Modal } from '@/components/common/Modal';
 import { ProgramaCard } from '@/components/programas/ProgramaCard';
 import { ProgramaForm } from '@/components/programas/ProgramaForm';
 import { CedulariosModule } from '@/components/cedularios';
+import { MisCedulariosStaff } from '@/components/cedularios/seguimiento/staff/MisCedulariosStaff';
 import {
   useProgramas,
   useCrearPrograma,
@@ -183,6 +184,7 @@ export default function AdminProgramasPage() {
         </div>
       )}
 
+      <MisCedulariosStaff />
       <CedulariosModule />
 
       {/* Soft-delete confirmation modal */}

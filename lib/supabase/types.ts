@@ -4084,6 +4084,14 @@ export type Database = {
           total_cubiertas: number | null
           porcentaje: number | null
           ultima_actividad: string | null
+          alumno_rol: string
+        }[]
+      }
+      get_cedularios_staff_resumen: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          asignatario_id: string
+          total_activas: number
         }[]
       }
       get_cedulario_alumnos_resumen: {
@@ -4109,6 +4117,7 @@ export type Database = {
           porcentaje: number | null
           puede_editar: boolean
           total_filas: number
+          alumno_rol: string
         }[]
       }
       get_asignacion_progreso: {
@@ -4183,6 +4192,7 @@ export type Database = {
           email: string
           avatar_url: string | null
           ya_asignado: boolean
+          rol: string
         }[]
       }
       listar_clases_vinculables: {

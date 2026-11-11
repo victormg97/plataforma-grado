@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { Suspense } from 'react';
 import { Menu, LogOut, UserCog } from 'lucide-react';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import { Avatar } from '@/components/common/Avatar';
@@ -17,6 +18,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Globe } from 'lucide-react';
+import { CedularioPropioMenuItem } from '@/components/cedularios/seguimiento/staff/CedularioPropioMenuItem';
 
 export function Navbar() {
   const { toggleSidebar } = useUIStore();
@@ -104,6 +106,11 @@ export function Navbar() {
                     {tc('navbar_label')}
                   </DropdownMenuItem>
                 </>
+              )}
+              {(user.rol === 'admin' || user.rol === 'profesor') && (
+                <Suspense fallback={null}>
+                  <CedularioPropioMenuItem />
+                </Suspense>
               )}
               <DropdownMenuSeparator />
               <DropdownMenuItem

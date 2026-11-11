@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, UserCheck, UserX, Eye, Pencil, CalendarDays, BookOpen, CalendarRange, Link2 } from 'lucide-react';
+import { Plus, UserCheck, UserX, Eye, Pencil, CalendarDays, BookOpen, ClipboardList, Link2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card } from '@/components/common/Card';
@@ -15,6 +15,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Tooltip } from '@/components/common/Tooltip';
+import { useConteosStaff } from '@/components/cedularios/seguimiento/staff/useConteosStaff';
+import { useSegUrl } from '@/components/cedularios/seguimiento/url/useSegUrl';
 
 type Profesor = {
   id: string;
@@ -45,6 +47,16 @@ export default function ProfesoresPage() {
     },
     staleTime: 60_000,
   });
+
+  const { data: conteosCedularios } = useConteosStaff();
+  const { abrir: abrirSeg } = useSegUrl();
+  const totalCedularios = (id: string) => conteosCedularios?.[id] ?? 0;
+  const etiquetaCedulario = (id: string) =>
+    totalCedularios(id) > 0
+      ? tp('revisar_cedularios', { count: totalCedularios(id) })
+      : tp('asignar_cedulario');
+  const abrirCedulario = (id: string) =>
+    abrirSeg({ modal: totalCedularios(id) > 0 ? 'revision' : 'asignar', alumno: id });
 
   const [confirmAction, setConfirmAction] = useState<{ id: string; nombre: string; activo: boolean } | null>(null);
 
@@ -168,14 +180,15 @@ export default function ProfesoresPage() {
                     {tp('ver_clases')}
                   </Link>
                 </Tooltip>
-                <Tooltip content={tp('ver_agenda')}>
-                  <Link
-                    href={`/admin/profesores/${p.id}/horarios?tab=agenda`}
+                <Tooltip content={etiquetaCedulario(p.id)}>
+                  <button
+                    type="button"
+                    onClick={() => abrirCedulario(p.id)}
                     className="flex items-center gap-1 rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 py-1.5 text-xs font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)]"
                   >
-                    <CalendarRange className="size-3.5" />
-                    {tp('ver_agenda')}
-                  </Link>
+                    <ClipboardList className="size-3.5" />
+                    {etiquetaCedulario(p.id)}
+                  </button>
                 </Tooltip>
               </div>
 
@@ -210,10 +223,10 @@ export default function ProfesoresPage() {
                       onClick: () => router.push(`/admin/profesores/${p.id}/horarios`),
                     },
                     {
-                      key: 'ver_agenda',
-                      label: tp('ver_agenda'),
-                      icon: <CalendarRange className="size-4" />,
-                      onClick: () => router.push(`/admin/profesores/${p.id}/horarios?tab=agenda`),
+                      key: 'cedulario',
+                      label: etiquetaCedulario(p.id),
+                      icon: <ClipboardList className="size-4" />,
+                      onClick: () => abrirCedulario(p.id),
                     },
                   ]}
                 />

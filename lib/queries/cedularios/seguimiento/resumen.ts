@@ -9,6 +9,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/supabase/types';
 import { SEG_BUSQUEDA_MAX } from '@/lib/cedularios/seguimiento/constants';
+import { normalizarAsignatarioRol, type AsignatarioRol } from '@/lib/cedularios/seguimiento/asignatario';
 
 type Client = SupabaseClient<Database>;
 type Functions = Database['public']['Functions'];
@@ -27,6 +28,8 @@ export interface AlumnoResumen {
   email: string;
   avatarUrl: string | null;
   activo: boolean;
+  /** Role of the assignee (alumno, or profesor/admin tracking their own study). */
+  rol: AsignatarioRol;
 }
 
 /** One assignment of a student to a cedulario, with its progress totals. */
@@ -68,6 +71,7 @@ export interface AlumnoDeCedulario {
   email: string;
   avatarUrl: string | null;
   alumnoActivo: boolean;
+  rol: AsignatarioRol;
   asignadoAt: string;
   ultimaActividad: string | null;
   totalAsignadas: number;
@@ -140,6 +144,7 @@ export async function fetchResumenAlumno(
       email: primera.alumno_email,
       avatarUrl: primera.alumno_avatar_url,
       activo: primera.alumno_activo,
+      rol: normalizarAsignatarioRol(primera.alumno_rol),
     },
     puedeEditar: primera.puede_editar,
     puedeAsignar: primera.puede_editar && primera.alumno_activo,
@@ -157,6 +162,7 @@ function aAlumnoDeCedulario(fila: AlumnoCedularioFila): AlumnoDeCedulario {
     email: fila.email,
     avatarUrl: fila.avatar_url,
     alumnoActivo: fila.alumno_activo,
+    rol: normalizarAsignatarioRol(fila.alumno_rol),
     asignadoAt: fila.asignado_at,
     ultimaActividad: fila.ultima_actividad,
     totalAsignadas: fila.total_asignadas,

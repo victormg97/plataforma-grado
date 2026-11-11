@@ -10,6 +10,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/lib/supabase/types'
 import { SEG_BUSQUEDA_MAX } from '@/lib/cedularios/seguimiento/constants'
+import { normalizarAsignatarioRol, type AsignatarioRol } from '@/lib/cedularios/seguimiento/asignatario'
 
 type Client = SupabaseClient<Database>
 
@@ -26,6 +27,8 @@ export interface AlumnoAsignable {
   avatarUrl: string | null
   /** True when the student already has an active assignment of the cedulario. */
   yaAsignado: boolean
+  /** Role of the assignee; staff (profesor/admin) can assign cedularios to themselves. */
+  rol: AsignatarioRol
 }
 
 /** A class of the student that can be linked to a materia progress. */
@@ -73,6 +76,7 @@ export async function fetchAlumnosAsignables(
     email: row.email,
     avatarUrl: row.avatar_url,
     yaAsignado: row.ya_asignado,
+    rol: normalizarAsignatarioRol(row.rol),
   }))
 }
 

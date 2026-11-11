@@ -16,6 +16,7 @@ import { Avatar } from '@/components/common/Avatar';
 import { SEG_BUSQUEDA_MAX, MAX_ALUMNOS_POR_ASIGNACION } from '@/lib/cedularios/seguimiento/constants';
 import type { AlumnoAsignable } from '@/lib/queries/cedularios/seguimiento/asignables';
 import { useAlumnosAsignables } from '../hooks/useAlumnosAsignables';
+import { RolAsignatarioBadge } from '../compartidos/RolAsignatarioBadge';
 
 interface AlumnosSelectorProps {
   /** Cedulario the students will be assigned to. */
@@ -161,6 +162,7 @@ export function AlumnosSelector({
                       </span>
                       <span className="truncate text-xs text-[var(--color-text-muted)]">{alumno.email}</span>
                     </span>
+                    <RolAsignatarioBadge rol={alumno.rol} />
                     {alumno.yaAsignado && (
                       <span className="shrink-0 rounded-full bg-[var(--color-bg-secondary)] px-2 py-0.5 text-xs font-medium text-[var(--color-text-muted)]">
                         {t('asignar.alumnos.ya_asignado')}

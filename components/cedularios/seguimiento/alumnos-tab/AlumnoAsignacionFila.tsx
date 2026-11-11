@@ -17,6 +17,7 @@ import { Button } from '@/components/common/Button';
 import type { AlumnoDeCedulario } from '@/lib/queries/cedularios/seguimiento/resumen';
 import { PorcentajeTexto } from '../compartidos/PorcentajeTexto';
 import { ProgresoBarra } from '../compartidos/ProgresoBarra';
+import { RolAsignatarioBadge } from '../compartidos/RolAsignatarioBadge';
 import { DesasignarDialog } from '../asignacion/DesasignarDialog';
 import { useSegUrl } from '../url/useSegUrl';
 
@@ -69,6 +70,7 @@ export function AlumnoAsignacionFila({
             <span className="truncate text-sm font-medium text-[var(--color-text-primary)]">
               {nombreVisible}
             </span>
+            <RolAsignatarioBadge rol={alumno.rol} />
             {!alumno.alumnoActivo && (
               <span className="shrink-0 rounded-full border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-2 py-0.5 text-xs text-[var(--color-text-muted)]">
                 {t('comun.inactivo')}
