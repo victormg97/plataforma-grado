@@ -11,9 +11,10 @@ import { useCedulariosUsuario } from './hooks/useCedulariosUsuario';
 import { PARAM_UNIVERSIDAD, esVistaValida, type CedulariosVista } from './hooks/useCedulariosUrlState';
 import { useUniversidades } from './hooks/useUniversidades';
 import { UniversidadList } from './universidades/UniversidadList';
+import { MisCedulariosStaff } from './seguimiento/staff/MisCedulariosStaff';
 
 const PREFIJO_IDS = 'ced-vistas';
-const VISTAS: readonly CedulariosVista[] = ['universidades', 'cedularios'];
+const VISTAS_BASE: readonly CedulariosVista[] = ['universidades', 'cedularios'];
 
 function CedulariosSkeleton({ etiqueta }: { etiqueta: string }) {
   return (
@@ -51,9 +52,16 @@ function CedulariosContenido() {
     if (universidadInvalida) clearInvalid(PARAM_UNIVERSIDAD);
   }, [universidadInvalida, clearInvalid]);
 
+  // `mis_cedularios` (own tracking) exists only for admin and profesor.
+  const vistas = useMemo<readonly CedulariosVista[]>(
+    () => (usuario.isStaff ? [...VISTAS_BASE, 'mis_cedularios'] : VISTAS_BASE),
+    [usuario.isStaff],
+  );
+  const vistaActiva: CedulariosVista = vistas.includes(vista) ? vista : 'universidades';
+
   const items = useMemo<TabItem[]>(
-    () => VISTAS.map((clave) => ({ key: clave, label: t(`${clave}.titulo`) })),
-    [t],
+    () => vistas.map((clave) => ({ key: clave, label: t(`${clave}.titulo`) })),
+    [t, vistas],
   );
 
   if (cedularioId !== null) return <CedularioDetail cedularioId={cedularioId} />;
@@ -63,15 +71,21 @@ function CedulariosContenido() {
     <div className="flex flex-col gap-4">
       <Tabs
         items={items}
-        active={vista}
+        active={vistaActiva}
         onChange={(clave) => {
           if (esVistaValida(clave)) setVista(clave);
         }}
         idPrefix={PREFIJO_IDS}
         aria-label={t('seccion.vistas_aria')}
       />
-      <div role="tabpanel" id={tabPanelId(PREFIJO_IDS, vista)} aria-labelledby={tabId(PREFIJO_IDS, vista)}>
-        {vista === 'cedularios' ? <CedularioList /> : <UniversidadList />}
+      <div role="tabpanel" id={tabPanelId(PREFIJO_IDS, vistaActiva)} aria-labelledby={tabId(PREFIJO_IDS, vistaActiva)}>
+        {vistaActiva === 'mis_cedularios' ? (
+          <MisCedulariosStaff />
+        ) : vistaActiva === 'cedularios' ? (
+          <CedularioList />
+        ) : (
+          <UniversidadList />
+        )}
       </div>
     </div>
   );

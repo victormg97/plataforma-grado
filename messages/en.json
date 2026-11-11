@@ -2688,6 +2688,9 @@
       "caracteres": "{actual} of {max} characters",
       "abre_nueva_pestana": "Opens in a new tab"
     },
+    "mis_cedularios": {
+      "titulo": "My syllabi"
+    },
     "universidades": {
       "titulo": "Universities",
       "subtitulo": "Select a university to see its syllabi.",

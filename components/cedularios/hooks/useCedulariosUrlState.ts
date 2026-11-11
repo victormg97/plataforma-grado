@@ -22,7 +22,7 @@ export const PARAM_MATERIA = 'ced_materia';
 export const PARAM_BUSQUEDA = 'ced_q';
 export const PARAM_FILTRO_UNIVERSIDAD = 'ced_filtro_uni';
 export const PARAM_MODAL = 'ced_modal';
-/** Root level view: `universidades` (default) or `cedularios` (every cedulario). */
+/** Root level view: `universidades` (default), `cedularios` (every cedulario) or `mis_cedularios` (staff). */
 export const PARAM_VISTA = 'ced_vista';
 
 export const CED_PARAMS = [
@@ -38,7 +38,8 @@ export const CED_PARAMS = [
 
 export type CedParam = (typeof CED_PARAMS)[number];
 
-export const CED_VISTAS = ['universidades', 'cedularios'] as const;
+/** `mis_cedularios` is the staff member's own tracking; only admin and profesor see it. */
+export const CED_VISTAS = ['universidades', 'cedularios', 'mis_cedularios'] as const;
 
 export type CedulariosVista = (typeof CED_VISTAS)[number];
 

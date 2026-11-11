@@ -2692,6 +2692,9 @@
       "caracteres": "{actual} de {max} caracteres",
       "abre_nueva_pestana": "Se abre en una pestaña nueva"
     },
+    "mis_cedularios": {
+      "titulo": "Mis cedularios"
+    },
     "universidades": {
       "titulo": "Universidades",
       "subtitulo": "Selecciona una universidad para ver sus cedularios.",
