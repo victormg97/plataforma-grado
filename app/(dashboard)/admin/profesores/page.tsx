@@ -1,20 +1,17 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, UserCheck, UserX, Eye, Pencil, CalendarDays, BookOpen, ClipboardList, Link2 } from 'lucide-react';
+import { Plus, Link2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
-import { Avatar } from '@/components/common/Avatar';
-import { StatusBadge } from '@/components/common/StatusBadge';
 import { Modal } from '@/components/common/Modal';
-import { CardActions, type CardAction } from '@/components/common/CardActions';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Tooltip } from '@/components/common/Tooltip';
+import { ListaProfesores } from '@/components/profesores/ListaProfesores';
+import type { ProfesorCardData } from '@/components/profesores/ProfesorCard';
 import { useConteosStaff } from '@/components/cedularios/seguimiento/staff/useConteosStaff';
 import { useSegUrl } from '@/components/cedularios/seguimiento/url/useSegUrl';
 
@@ -77,16 +74,7 @@ export default function ProfesoresPage() {
     }
   };
 
-  const sortedProfesores = useMemo(
-    () => [...profesores].sort((a, b) => {
-      if (a.rol === 'admin' && b.rol !== 'admin') return -1;
-      if (a.rol !== 'admin' && b.rol === 'admin') return 1;
-      return 0;
-    }),
-    [profesores]
-  );
-
-  const nombreCompleto = (p: Profesor) =>
+  const nombreCompleto = (p: ProfesorCardData) =>
     [p.nombre, p.apellido, p.apellido_materno].filter(Boolean).join(' ');
 
 
@@ -109,7 +97,7 @@ export default function ProfesoresPage() {
         }
       />
 
-      <div className="mt-[var(--space-lg)] space-y-3">
+      <div className="mt-[var(--space-lg)]">
         {loading ? (
           <div className="flex justify-center py-12">
             <div className="size-8 animate-spin rounded-full border-4 border-[var(--color-brand-gold)] border-t-transparent" />
@@ -119,120 +107,13 @@ export default function ProfesoresPage() {
             <p className="text-[var(--color-text-muted)]">{tp('sin_profesores')}</p>
           </Card>
         ) : (
-          sortedProfesores.map((p) => (
-            <Card key={p.id} className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <Avatar nombre={p.nombre} apellido={p.apellido} avatarUrl={p.avatar_url} size="md" />
-                <div>
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium text-[var(--color-text-primary)]">{nombreCompleto(p)}</p>
-                    {p.rol === 'admin' ? (
-                      <span className="rounded-full bg-[var(--color-brand-gold-muted)] px-2 py-0.5 text-xs font-medium text-[var(--color-brand-gold)]">Admin</span>
-                    ) : (
-                      <StatusBadge status={p.estado_cuenta === 'Pendiente' ? 'pendiente' : (p.activo ? 'activo' : 'inactivo')} />
-                    )}
-                  </div>
-                  <p className="text-sm text-[var(--color-text-muted)]">{p.email}</p>
-                  <p className="text-xs text-[var(--color-text-muted)]">{tp('alumnos_asignados', { count: p.alumnos_count })}</p>
-                </div>
-              </div>
-
-              {/* ── Desktop: full button row (unchanged design) ── */}
-              <div className="hidden lg:flex items-center gap-2 ml-auto lg:ml-0">
-                <Tooltip content={tc('editar')}>
-                  <button
-                    onClick={() => router.push(`/admin/profesores/${p.id}/editar`)}
-                    className="rounded p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)]"
-                  >
-                    <Pencil className="size-4" />
-                  </button>
-                </Tooltip>
-                {p.rol !== 'admin' && (
-                  <Tooltip content={p.activo ? tp('deshabilitar') : tp('habilitar')}>
-                    <button
-                      onClick={() => setConfirmAction({ id: p.id, nombre: nombreCompleto(p), activo: p.activo })}
-                      className={`flex items-center gap-1 rounded-[var(--radius-md)] border px-3 py-1.5 text-xs font-medium transition-colors ${
-                        p.activo
-                          ? 'border-[var(--color-error)] text-[var(--color-error)] hover:bg-red-50 dark:hover:bg-red-950/20'
-                          : 'border-[var(--color-success)] text-[var(--color-success)] hover:bg-green-50 dark:hover:bg-green-950/20'
-                      }`}
-                    >
-                      {p.activo ? <UserX className="size-3.5" /> : <UserCheck className="size-3.5" />}
-                      {p.activo ? tp('deshabilitar') : tp('habilitar')}
-                    </button>
-                  </Tooltip>
-                )}
-                <Tooltip content={tp('ver_alumnos')}>
-                  <Link
-                    href={`/admin/alumnos?profesor_id=${p.id}`}
-                    className="flex items-center gap-1 rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 py-1.5 text-xs font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)]"
-                  >
-                    <Eye className="size-3.5" />
-                    {tp('ver_alumnos')}
-                  </Link>
-                </Tooltip>
-                <Tooltip content={tp('ver_clases')}>
-                  <Link
-                    href={`/admin/profesores/${p.id}/horarios`}
-                    className="flex items-center gap-1 rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 py-1.5 text-xs font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)]"
-                  >
-                    <CalendarDays className="size-3.5" />
-                    {tp('ver_clases')}
-                  </Link>
-                </Tooltip>
-                <Tooltip content={etiquetaCedulario(p.id)}>
-                  <button
-                    type="button"
-                    onClick={() => abrirCedulario(p.id)}
-                    className="flex items-center gap-1 rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 py-1.5 text-xs font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)]"
-                  >
-                    <ClipboardList className="size-3.5" />
-                    {etiquetaCedulario(p.id)}
-                  </button>
-                </Tooltip>
-              </div>
-
-              {/* ── Mobile: ellipsis menu ── */}
-              <div className="flex lg:hidden items-center ml-auto">
-                <CardActions
-                  mobileOnly
-                  actions={[
-                    {
-                      key: 'editar',
-                      label: tc('editar'),
-                      icon: <Pencil className="size-4" />,
-                      onClick: () => router.push(`/admin/profesores/${p.id}/editar`),
-                    },
-                    ...(p.rol !== 'admin' ? [{
-                      key: 'toggle',
-                      label: p.activo ? tp('deshabilitar') : tp('habilitar'),
-                      icon: p.activo ? <UserX className="size-4" /> : <UserCheck className="size-4" />,
-                      onClick: () => setConfirmAction({ id: p.id, nombre: nombreCompleto(p), activo: p.activo }),
-                      danger: p.activo,
-                    } as CardAction] : []),
-                    {
-                      key: 'ver_alumnos',
-                      label: tp('ver_alumnos'),
-                      icon: <Eye className="size-4" />,
-                      onClick: () => router.push(`/admin/alumnos?profesor_id=${p.id}`),
-                    },
-                    {
-                      key: 'ver_clases',
-                      label: tp('ver_clases'),
-                      icon: <BookOpen className="size-4" />,
-                      onClick: () => router.push(`/admin/profesores/${p.id}/horarios`),
-                    },
-                    {
-                      key: 'cedulario',
-                      label: etiquetaCedulario(p.id),
-                      icon: <ClipboardList className="size-4" />,
-                      onClick: () => abrirCedulario(p.id),
-                    },
-                  ]}
-                />
-              </div>
-            </Card>
-          ))
+          <ListaProfesores
+            profesores={profesores}
+            etiquetaCedulario={etiquetaCedulario}
+            onEditar={(p) => router.push(`/admin/profesores/${p.id}/editar`)}
+            onToggleActivo={(p) => setConfirmAction({ id: p.id, nombre: nombreCompleto(p), activo: p.activo })}
+            onCedulario={(p) => abrirCedulario(p.id)}
+          />
         )}
       </div>
 

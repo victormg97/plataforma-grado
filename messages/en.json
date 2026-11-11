@@ -519,6 +519,8 @@
     "ver_clases_subtitulo": "Professor's class history",
     "clases_de": "Classes for {nombre}",
     "alumnos_asignados": "{count} students assigned",
+    "seccion_admins": "Administrators",
+    "seccion_profesores": "Professors",
     "editar_titulo": "Edit professor",
     "nuevo_titulo": "New Professor",
     "habilitar_titulo": "Enable professor",

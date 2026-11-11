@@ -519,6 +519,8 @@
     "ver_clases_subtitulo": "Historial de clases del profesor",
     "clases_de": "Clases de {nombre}",
     "alumnos_asignados": "{count} alumnos asignados",
+    "seccion_admins": "Administradores",
+    "seccion_profesores": "Profesores",
     "editar_titulo": "Editar profesor",
     "nuevo_titulo": "Nuevo Profesor",
     "habilitar_titulo": "Habilitar profesor",
