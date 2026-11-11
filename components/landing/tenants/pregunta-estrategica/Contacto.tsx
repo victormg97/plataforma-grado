@@ -70,21 +70,24 @@ export function Contacto() {
             >
               {t('agendar')}
             </p>
-            <p
-              className="text-[clamp(0.8rem,1.1vw,0.95rem)] font-semibold uppercase tracking-wider text-[var(--color-text-muted)]"
-            >
-              {t('canales')}
-            </p>
+            {entries.length > 0 && (
+              <p
+                className="text-[clamp(0.8rem,1.1vw,0.95rem)] font-semibold uppercase tracking-wider text-[var(--color-text-muted)]"
+              >
+                {t('canales')}
+              </p>
+            )}
           </Reveal>
 
           {/* Tarjetas de contacto */}
+          {entries.length > 0 && (
           <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2 sm:[grid-template-columns:repeat(2,minmax(0,1fr))]">
             {entries.map((entry, i) => {
               const { Icon, color } = resolveIcon(entry);
               const isEmail = entry.type === 'email';
 
               return (
-                <Reveal key={entry.id} direction="up" delay={i * 0.08} className="min-w-0">
+                <Reveal key={entry.id} direction="up" delay={i * 0.08} className="min-w-0 sm:last:odd:col-span-2 sm:last:odd:mx-auto sm:last:odd:w-[calc(50%-0.5rem)]">
                   <a
                     href={entry.url}
                     target={isEmail ? undefined : '_blank'}
@@ -117,6 +120,7 @@ export function Contacto() {
               );
             })}
           </div>
+          )}
         </div>
 
         {/* Logo completo en esquina inferior derecha */}

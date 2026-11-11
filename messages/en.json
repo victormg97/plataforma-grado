@@ -1532,6 +1532,7 @@
     "editor_imagen_error_upload": "Upload failed. The previous image has been preserved.",
     "editor_contacto_titulo": "Contact information",
     "editor_contacto_agregar": "Add entry",
+    "editor_contacto_mostrar": "Show on site",
     "editor_contacto_label": "Name / Network",
     "editor_contacto_value": "Value (username or phone)",
     "editor_contacto_url": "URL",

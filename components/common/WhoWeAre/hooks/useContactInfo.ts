@@ -10,10 +10,12 @@ async function fetchContactInfo(tenantSlug: string): Promise<TenantContactInfo[]
     .from('tenant_contact_info')
     .select('*')
     .eq('tenant_slug', tenantSlug)
+    .eq('activo', true)
     .order('sort_order', { ascending: true });
 
   if (error || !data) return [];
-  return data;
+  // Entradas sin valor o sin enlace no se pueden mostrar de forma útil.
+  return data.filter((e) => e.value?.trim() && e.url?.trim());
 }
 
 export function useContactInfo(tenantSlug: string) {

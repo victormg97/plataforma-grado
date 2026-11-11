@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { LazyMotion, domAnimation, m } from 'framer-motion';
 import { X, ChevronUp, ChevronDown } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { cn } from '@/lib/utils';
 import { MarkdownRenderer } from '@/components/common/MarkdownRenderer';
 import { HeroImage } from './HeroImage';
 import { ContactColumn } from './ContactColumn';
@@ -22,6 +23,7 @@ export function WhoWeAreModal({ tenantSlug, markdown, onClose }: WhoWeAreModalPr
   const { url: heroUrl, found: heroFound } = useHeroImage(tenantSlug);
   const { entries } = useContactInfo(tenantSlug);
   const [contactOpen, setContactOpen] = useState(false);
+  const hasContacts = entries.length > 0;
 
   // Bloquear el scroll de la página de fondo mientras el modal está abierto.
   useEffect(() => {
@@ -95,9 +97,11 @@ export function WhoWeAreModal({ tenantSlug, markdown, onClose }: WhoWeAreModalPr
             </div>
 
             {/* Right: Contact column */}
+            {hasContacts && (
             <div className="w-64 shrink-0 h-full overflow-y-auto border-l border-[var(--color-border)] px-4 py-8">
               <ContactColumn entries={entries} />
             </div>
+            )}
           </div>
 
           {/* ── Mobile layout (< md) ── */}
@@ -111,7 +115,7 @@ export function WhoWeAreModal({ tenantSlug, markdown, onClose }: WhoWeAreModalPr
               )}
 
               {/* Center: Markdown content */}
-              <div className="flex-1 min-w-0 h-full overflow-y-auto px-4 py-6 pb-16">
+              <div className={cn('flex-1 min-w-0 h-full overflow-y-auto px-4 py-6', hasContacts && 'pb-16')}>
                 <div style={{ fontFamily: 'var(--font-body)' }}>
                   <MarkdownRenderer content={markdown} />
                 </div>
@@ -123,6 +127,7 @@ export function WhoWeAreModal({ tenantSlug, markdown, onClose }: WhoWeAreModalPr
                 content when opening, and tapping it (now "Cerrar contacto")
                 slides the sheet back down. Anchored at bottom-0 and grows
                 upward, so there's no gap between the header and the list. */}
+            {hasContacts && (
             <div className="absolute inset-x-0 bottom-0 z-20 flex flex-col rounded-t-[var(--radius-xl)] border-t border-[var(--color-border)] bg-[var(--color-bg)] shadow-[var(--shadow-lg)]">
               <button
                 type="button"
@@ -149,6 +154,7 @@ export function WhoWeAreModal({ tenantSlug, markdown, onClose }: WhoWeAreModalPr
                 </div>
               </m.div>
             </div>
+            )}
           </div>
         </div>
       </m.div>

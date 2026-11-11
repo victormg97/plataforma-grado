@@ -13,6 +13,7 @@ import { useUserStore } from '@/stores/useUserStore';
 import { tenantConfig } from '@/config';
 import { RichTextEditor } from '@/components/common/RichTextEditor';
 import { cn } from '@/lib/utils';
+import { Switch } from '@/components/ui/switch';
 import type { TenantContactInfo } from '@/lib/supabase/types';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -235,6 +236,7 @@ export default function QuienesSomosEditorPage() {
       url: '',
       icon_key: 'link',
       sort_order: contacts.length + 1,
+      activo: true,
       _isNew: true,
     };
     setContacts((prev) => [...prev, newEntry]);
@@ -263,6 +265,18 @@ export default function QuienesSomosEditorPage() {
     });
   }
 
+  function toggleContactActivo(id: string, activo: boolean) {
+    setContacts((prev) => prev.map((c) => (c.id === id ? { ...c, activo } : c)));
+    if (!activo) {
+      // Un contacto oculto no se valida: limpia sus errores.
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        for (const f of ['label', 'value', 'url']) delete next[`${id}-${f}`];
+        return next;
+      });
+    }
+  }
+
   function deleteContact(id: string) {
     setContacts((prev) =>
       prev.map((c) => (c.id === id ? { ...c, _deleted: true } : c))
@@ -286,6 +300,7 @@ export default function QuienesSomosEditorPage() {
     const visible = contacts.filter((c) => !c._deleted);
     const errors: Record<string, string> = {};
     visible.forEach((c) => {
+      if (!c.activo) return;
       if (!c.label.trim()) errors[`${c.id}-label`] = t('editor_contacto_error_validacion');
       if (!c.value.trim()) errors[`${c.id}-value`] = t('editor_contacto_error_validacion');
       if (!c.url.trim()) errors[`${c.id}-url`] = t('editor_contacto_error_validacion');
@@ -313,6 +328,7 @@ export default function QuienesSomosEditorPage() {
         url: c.url.trim(),
         icon_key: c.icon_key,
         sort_order: i + 1,
+        activo: c.activo,
       }));
 
       if (toUpsert.length > 0) {
@@ -483,6 +499,15 @@ export default function QuienesSomosEditorPage() {
                       {entry.type}
                     </span>
                   </div>
+                  <div className="flex items-center gap-3">
+                    <label className="flex items-center gap-2 text-xs text-[var(--color-text-secondary)]">
+                      <Switch
+                        checked={entry.activo}
+                        onCheckedChange={(checked) => toggleContactActivo(entry.id, checked)}
+                        aria-label={t('editor_contacto_mostrar')}
+                      />
+                      {t('editor_contacto_mostrar')}
+                    </label>
                   <button
                     type="button"
                     onClick={() => deleteContact(entry.id)}
@@ -491,10 +516,14 @@ export default function QuienesSomosEditorPage() {
                   >
                     <Trash2 className="size-4" />
                   </button>
+                  </div>
                 </div>
 
                 {/* Fields */}
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <fieldset
+                  disabled={!entry.activo}
+                  className={cn('grid grid-cols-1 gap-3 sm:grid-cols-2 min-w-0', !entry.activo && 'opacity-50')}
+                >
                   {/* Label / Name */}
                   <div className="space-y-1">
                     <label className="text-xs font-medium text-[var(--color-text-secondary)]">
@@ -562,7 +591,7 @@ export default function QuienesSomosEditorPage() {
                       <p className="text-xs text-[var(--color-error)]">{fieldErrors[`${entry.id}-url`]}</p>
                     )}
                   </div>
-                </div>
+                </fieldset>
               </div>
             ))}
             <button

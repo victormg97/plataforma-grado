@@ -1779,6 +1779,7 @@ export type Database = {
           url: string
           icon_key: string | null
           sort_order: number
+          activo: boolean
           created_at: string
           updated_at: string
         }
@@ -1791,6 +1792,7 @@ export type Database = {
           url: string
           icon_key?: string | null
           sort_order?: number
+          activo?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -1803,6 +1805,7 @@ export type Database = {
           url?: string
           icon_key?: string | null
           sort_order?: number
+          activo?: boolean
           created_at?: string
           updated_at?: string
         }

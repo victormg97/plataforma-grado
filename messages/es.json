@@ -1532,6 +1532,7 @@
     "editor_imagen_error_upload": "Error al subir la imagen. La imagen anterior se conserva.",
     "editor_contacto_titulo": "Información de contacto",
     "editor_contacto_agregar": "Agregar entrada",
+    "editor_contacto_mostrar": "Mostrar en el sitio",
     "editor_contacto_label": "Nombre / Red",
     "editor_contacto_value": "Valor (usuario o teléfono)",
     "editor_contacto_url": "URL",
